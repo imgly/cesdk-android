@@ -13,7 +13,9 @@ sealed interface CameraResult : Parcelable {
      *
      * @param recordings Recordings done by the user.
      */
-    data class Record(val recordings: List<Recording>) : CameraResult {
+    data class Record(
+        val recordings: List<Recording>,
+    ) : CameraResult {
         override fun writeToParcel(
             dest: Parcel,
             flags: Int,
@@ -29,7 +31,10 @@ sealed interface CameraResult : Parcelable {
      * @param video The video that was reacted to.
      * @param reaction Recordings of the user's reaction to the video.
      */
-    data class Reaction(val video: Video, val reaction: List<Recording>) : CameraResult {
+    data class Reaction(
+        val video: Video,
+        val reaction: List<Recording>,
+    ) : CameraResult {
         override fun writeToParcel(
             dest: Parcel,
             flags: Int,
@@ -49,26 +54,21 @@ sealed interface CameraResult : Parcelable {
 
     companion object {
         @JvmField
-        val CREATOR =
-            object : Parcelable.Creator<CameraResult> {
-                override fun createFromParcel(parcel: Parcel): CameraResult {
-                    return when (parcel.readInt()) {
-                        0 ->
-                            Record(
-                                recordings = parcel.createTypedArrayList(Recording)!!,
-                            )
-                        1 ->
-                            Reaction(
-                                video = ParcelCompat.readParcelable(parcel, Video::class.java.classLoader, Video::class.java)!!,
-                                reaction = parcel.createTypedArrayList(Recording)!!,
-                            )
-                        else -> throw IllegalArgumentException("Invalid CameraResult type")
-                    }
-                }
-
-                override fun newArray(size: Int): Array<CameraResult?> {
-                    return arrayOfNulls(size)
-                }
+        val CREATOR = object : Parcelable.Creator<CameraResult> {
+            override fun createFromParcel(parcel: Parcel): CameraResult = when (parcel.readInt()) {
+                0 ->
+                    Record(
+                        recordings = parcel.createTypedArrayList(Recording)!!,
+                    )
+                1 ->
+                    Reaction(
+                        video = ParcelCompat.readParcelable(parcel, Video::class.java.classLoader, Video::class.java)!!,
+                        reaction = parcel.createTypedArrayList(Recording)!!,
+                    )
+                else -> throw IllegalArgumentException("Invalid CameraResult type")
             }
+
+            override fun newArray(size: Int): Array<CameraResult?> = arrayOfNulls(size)
+        }
     }
 }

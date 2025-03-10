@@ -151,12 +151,11 @@ fun EventsHandler.timelineEvents(
 
         val secondClipId = engine.block.duplicate(selectedClip.id)
         // We need to set the trim to the fill on videos but to the block itself for everything else.
-        val secondClipTrimmableId =
-            if (selectedClip.clipType == ClipType.Video) {
-                engine.block.getFill(secondClipId)
-            } else {
-                secondClipId
-            }
+        val secondClipTrimmableId = if (selectedClip.clipType == ClipType.Video) {
+            engine.block.getFill(secondClipId)
+        } else {
+            secondClipId
+        }
 
         val firstClipDuration = playheadPosition - absoluteStartTime
         val secondClipDuration = (originalClipDuration - firstClipDuration).toDouble(DurationUnit.SECONDS)
@@ -189,10 +188,9 @@ fun EventsHandler.timelineEvents(
     register<BlockEvent.OnReorder> {
         // optimistically reorder manually
         val backgroundClips = timelineState.dataSource.backgroundTrack.clips
-        val oldIndex =
-            backgroundClips.indexOfFirst { clip ->
-                clip.id == it.block
-            }
+        val oldIndex = backgroundClips.indexOfFirst { clip ->
+            clip.id == it.block
+        }
         backgroundClips.add(it.newIndex, backgroundClips.removeAt(oldIndex))
 
         engine.block.insertChild(

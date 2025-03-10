@@ -40,33 +40,29 @@ internal fun ExportProgressIndicator(
         animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
     )
 
-    val stroke =
-        with(LocalDensity.current) {
-            Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
-        }
+    val stroke = with(LocalDensity.current) {
+        Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
+    }
 
     val transition = rememberInfiniteTransition()
     val rotationAngle by transition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
-        animationSpec =
-            infiniteRepeatable(
-                animation = tween(1500, easing = LinearEasing),
-            ),
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearEasing),
+        ),
         label = "Gradient Rotation",
     )
 
-    val sweepGradient =
-        remember(gradientColor) {
-            Brush.sweepGradient(
-                colorStops =
-                    listOf(
-                        0.02f to Color.Transparent,
-                        0.5f to gradientColor.copy(alpha = 0.24f),
-                        1f to Color.Transparent,
-                    ).toTypedArray(),
-            )
-        }
+    val sweepGradient = remember(gradientColor) {
+        Brush.sweepGradient(
+            colorStops = listOf(
+                0.02f to Color.Transparent,
+                0.5f to gradientColor.copy(alpha = 0.24f),
+                1f to Color.Transparent,
+            ).toTypedArray(),
+        )
+    }
 
     Canvas(
         Modifier

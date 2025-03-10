@@ -47,12 +47,11 @@ data class Selection(
                 designBlock = designBlock,
                 parentDesignBlock = parentDesignBlock,
                 type = DesignBlockType.get(engine.block.getType(designBlock)),
-                fillType =
-                    if (engine.block.supportsFill(designBlock)) {
-                        FillType.get(engine.block.getType(engine.block.getFill(designBlock)))
-                    } else {
-                        null
-                    },
+                fillType = if (engine.block.supportsFill(designBlock)) {
+                    FillType.get(engine.block.getType(engine.block.getFill(designBlock)))
+                } else {
+                    null
+                },
                 kind = engine.block.getKind(designBlock),
                 indexInParent = parentDesignBlock?.let { engine.block.getChildren(it).indexOf(designBlock) } ?: -1,
                 screenSpaceBoundingBoxRect = engine.block.getScreenSpaceBoundingBoxRect(listOf(designBlock)),

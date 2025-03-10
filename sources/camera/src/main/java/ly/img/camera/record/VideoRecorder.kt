@@ -17,7 +17,9 @@ import java.util.Locale
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 
-internal class VideoRecorder(private val videoCapture: VideoCapture<Recorder>) {
+internal class VideoRecorder(
+    private val videoCapture: VideoCapture<Recorder>,
+) {
     private var recording: Recording? = null
 
     @OptIn(ExperimentalPersistentRecording::class)
@@ -29,28 +31,27 @@ internal class VideoRecorder(private val videoCapture: VideoCapture<Recorder>) {
         val videoFile = createFile(context)
         val fileOutputOptions = FileOutputOptions.Builder(videoFile).build()
 
-        recording =
-            videoCapture.output
-                .prepareRecording(context, fileOutputOptions)
-                .asPersistentRecording()
-                .withAudioEnabled()
-                .start(ContextCompat.getMainExecutor(context)) { recordEvent ->
-                    val duration = recordEvent.recordingStats.recordedDurationNanos.nanoseconds
-                    when (recordEvent) {
-                        is VideoRecordEvent.Status -> {
-                            onRecordStatusUpdate(RecordingStatus.Recording(duration))
-                        }
+        recording = videoCapture.output
+            .prepareRecording(context, fileOutputOptions)
+            .asPersistentRecording()
+            .withAudioEnabled()
+            .start(ContextCompat.getMainExecutor(context)) { recordEvent ->
+                val duration = recordEvent.recordingStats.recordedDurationNanos.nanoseconds
+                when (recordEvent) {
+                    is VideoRecordEvent.Status -> {
+                        onRecordStatusUpdate(RecordingStatus.Recording(duration))
+                    }
 
-                        is VideoRecordEvent.Finalize -> {
-                            val outputUri = recordEvent.outputResults.outputUri
-                            if (!recordEvent.hasError()) {
-                                onRecordStatusUpdate(RecordingStatus.Finished(outputUri, duration))
-                            } else {
-                                onRecordStatusUpdate(RecordingStatus.Error(outputUri, duration))
-                            }
+                    is VideoRecordEvent.Finalize -> {
+                        val outputUri = recordEvent.outputResults.outputUri
+                        if (!recordEvent.hasError()) {
+                            onRecordStatusUpdate(RecordingStatus.Finished(outputUri, duration))
+                        } else {
+                            onRecordStatusUpdate(RecordingStatus.Error(outputUri, duration))
                         }
                     }
                 }
+            }
     }
 
     fun stopRecording() {
@@ -76,11 +77,21 @@ internal class VideoRecorder(private val videoCapture: VideoCapture<Recorder>) {
         return File(context.filesDir, "VIDEO_$timeStamp.mp4")
     }
 
-    sealed class RecordingStatus(val duration: Duration) {
-        class Recording(duration: Duration) : RecordingStatus(duration)
+    sealed class RecordingStatus(
+        val duration: Duration,
+    ) {
+        class Recording(
+            duration: Duration,
+        ) : RecordingStatus(duration)
 
-        class Finished(val outputUri: Uri, duration: Duration) : RecordingStatus(duration)
+        class Finished(
+            val outputUri: Uri,
+            duration: Duration,
+        ) : RecordingStatus(duration)
 
-        class Error(val outputUri: Uri, duration: Duration) : RecordingStatus(duration)
+        class Error(
+            val outputUri: Uri,
+            duration: Duration,
+        ) : RecordingStatus(duration)
     }
 }

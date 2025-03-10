@@ -31,16 +31,15 @@ fun EngineConfiguration.Companion.rememberForDesign(
     baseUri: Uri = defaultBaseUri,
     sceneUri: Uri = defaultDesignSceneUri,
     renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-): EngineConfiguration =
-    remember(
-        license = license,
-        userId = userId,
-        baseUri = baseUri,
-        renderTarget = renderTarget,
-        onCreate = {
-            EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler)
-        },
-    )
+): EngineConfiguration = remember(
+    license = license,
+    userId = userId,
+    baseUri = baseUri,
+    renderTarget = renderTarget,
+    onCreate = {
+        EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler)
+    },
+)
 
 /**
  * A composable helper function that creates and remembers an [EngineConfiguration] instance when launching [PhotoEditor].
@@ -68,36 +67,34 @@ fun EngineConfiguration.Companion.rememberForPhoto(
     userId: String? = null,
     baseUri: Uri = defaultBaseUri,
     renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-): EngineConfiguration =
-    remember(
-        license = license,
-        userId = userId,
-        baseUri = baseUri,
-        renderTarget = renderTarget,
-        onCreate = {
-            EditorDefaults.onCreateFromImage(editorContext.engine, imageUri, editorContext.eventHandler, imageSize)
-        },
-        onExport = {
-            EditorDefaults.run {
-                val engine = editorContext.engine
-                val eventHandler = editorContext.eventHandler
-                eventHandler.send(ShowLoading)
-                val blob =
-                    engine.block.export(
-                        block = requireNotNull(engine.scene.get()),
-                        mimeType = MimeType.PNG,
-                    )
-                val tempFile = writeToTempFile(blob, mimeType = MimeType.PNG)
-                eventHandler.send(HideLoading)
-                eventHandler.send(
-                    ShareFileEvent(
-                        file = tempFile,
-                        mimeType = MimeType.PNG.key,
-                    ),
-                )
-            }
-        },
-    )
+): EngineConfiguration = remember(
+    license = license,
+    userId = userId,
+    baseUri = baseUri,
+    renderTarget = renderTarget,
+    onCreate = {
+        EditorDefaults.onCreateFromImage(editorContext.engine, imageUri, editorContext.eventHandler, imageSize)
+    },
+    onExport = {
+        EditorDefaults.run {
+            val engine = editorContext.engine
+            val eventHandler = editorContext.eventHandler
+            eventHandler.send(ShowLoading)
+            val blob = engine.block.export(
+                block = requireNotNull(engine.scene.get()),
+                mimeType = MimeType.PNG,
+            )
+            val tempFile = writeToTempFile(blob, mimeType = MimeType.PNG)
+            eventHandler.send(HideLoading)
+            eventHandler.send(
+                ShareFileEvent(
+                    file = tempFile,
+                    mimeType = MimeType.PNG.key,
+                ),
+            )
+        }
+    },
+)
 
 /**
  * A composable helper function that creates and remembers an [EngineConfiguration] instance when launching [ApparelEditor].
@@ -126,16 +123,15 @@ fun EngineConfiguration.Companion.rememberForApparel(
     baseUri: Uri = defaultBaseUri,
     sceneUri: Uri = defaultApparelSceneUri,
     renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-): EngineConfiguration =
-    remember(
-        license = license,
-        userId = userId,
-        baseUri = baseUri,
-        renderTarget = renderTarget,
-        onCreate = {
-            EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler)
-        },
-    )
+): EngineConfiguration = remember(
+    license = license,
+    userId = userId,
+    baseUri = baseUri,
+    renderTarget = renderTarget,
+    onCreate = {
+        EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler)
+    },
+)
 
 /**
  * A composable helper function that creates and remembers an [EngineConfiguration] instance when launching [PostcardEditor].
@@ -164,16 +160,15 @@ fun EngineConfiguration.Companion.rememberForPostcard(
     baseUri: Uri = defaultBaseUri,
     sceneUri: Uri = defaultPostcardSceneUri,
     renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-): EngineConfiguration =
-    remember(
-        license = license,
-        userId = userId,
-        baseUri = baseUri,
-        renderTarget = renderTarget,
-        onCreate = {
-            EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler)
-        },
-    )
+): EngineConfiguration = remember(
+    license = license,
+    userId = userId,
+    baseUri = baseUri,
+    renderTarget = renderTarget,
+    onCreate = {
+        EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler)
+    },
+)
 
 /**
  * A composable helper function that creates and remembers an [EngineConfiguration] instance when launching [VideoEditor].
@@ -199,13 +194,12 @@ fun EngineConfiguration.Companion.rememberForVideo(
     baseUri: Uri = defaultBaseUri,
     sceneUri: Uri = defaultVideoSceneUri,
     renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-): EngineConfiguration =
-    remember(
-        license = license,
-        userId = userId,
-        baseUri = baseUri,
-        renderTarget = renderTarget,
-        onCreate = {
-            EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler)
-        },
-    )
+): EngineConfiguration = remember(
+    license = license,
+    userId = userId,
+    baseUri = baseUri,
+    renderTarget = renderTarget,
+    onCreate = {
+        EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler)
+    },
+)

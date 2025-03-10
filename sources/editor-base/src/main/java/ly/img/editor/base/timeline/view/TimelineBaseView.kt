@@ -16,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.UiComposable
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
@@ -33,9 +32,7 @@ import ly.img.editor.core.ui.utils.toPx
 internal fun TimelineBaseView(
     timelineState: TimelineState,
     onEvent: (Event) -> Unit,
-    content:
-        @Composable @UiComposable
-        BoxWithConstraintsScope.(ScrollState) -> Unit,
+    content: @Composable BoxWithConstraintsScope.(ScrollState) -> Unit,
 ) {
     val zoomState = timelineState.zoomState
 

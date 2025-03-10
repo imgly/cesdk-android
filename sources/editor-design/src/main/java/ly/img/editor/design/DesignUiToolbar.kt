@@ -41,9 +41,11 @@ fun DesignUiToolbar(
         },
         navigationIcon = {
             if (isPagesScreenActive.not()) {
-                IconButton(onClick = {
-                    onEvent(Event.OnBack)
-                }) {
+                IconButton(
+                    onClick = {
+                        onEvent(Event.OnBack)
+                    },
+                ) {
                     Icon(
                         navigationIcon,
                         contentDescription = stringResource(coreR.string.ly_img_editor_back),
@@ -51,11 +53,10 @@ fun DesignUiToolbar(
                 }
             }
         },
-        colors =
-            TopAppBarDefaults.smallTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            ),
+        colors = TopAppBarDefaults.smallTopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        ),
         actions = {
             IconButton(
                 onClick = { onEvent(Event.OnUndoClick) },
@@ -70,27 +71,24 @@ fun DesignUiToolbar(
                 Icon(IconPack.Redo, contentDescription = stringResource(R.string.ly_img_editor_redo))
             }
             ToggleIconButton(
-                modifier =
-                    Modifier
-                        .height(40.dp)
-                        .padding(horizontal = 8.dp),
+                modifier = Modifier
+                    .height(40.dp)
+                    .padding(horizontal = 8.dp),
                 checked = isPagesScreenActive,
                 checkedContainerColor = MaterialTheme.colorScheme.primary,
                 onCheckedChange = { onEvent(Event.OnTogglePagesMode) },
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(IconPack.Book, contentDescription = stringResource(R.string.ly_img_editor_toggle_preview_mode))
-                    val textAlpha =
-                        when {
-                            pageCount == 0 -> 0F
-                            isPagesScreenActive -> 0.75F
-                            else -> 1F
-                        }
+                    val textAlpha = when {
+                        pageCount == 0 -> 0F
+                        isPagesScreenActive -> 0.75F
+                        else -> 1F
+                    }
                     Text(
-                        modifier =
-                            Modifier
-                                .padding(start = 3.dp)
-                                .alpha(textAlpha),
+                        modifier = Modifier
+                            .padding(start = 3.dp)
+                            .alpha(textAlpha),
                         text = "$pageCount",
                         style = MaterialTheme.typography.labelLarge,
                     )

@@ -8,12 +8,11 @@ enum class OffsetDirection {
     Right,
 }
 
-fun Modifier.offsetByWidth(offsetDirection: OffsetDirection) =
-    layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints)
-        layout(placeable.width, placeable.height) {
-            val offset = placeable.width / 2
-            val directionedOffset = if (offsetDirection == OffsetDirection.Left) -offset else offset
-            placeable.placeRelative(directionedOffset, 0)
-        }
+fun Modifier.offsetByWidth(offsetDirection: OffsetDirection) = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    layout(placeable.width, placeable.height) {
+        val offset = placeable.width / 2
+        val directionedOffset = if (offsetDirection == OffsetDirection.Left) -offset else offset
+        placeable.placeRelative(directionedOffset, 0)
     }
+}

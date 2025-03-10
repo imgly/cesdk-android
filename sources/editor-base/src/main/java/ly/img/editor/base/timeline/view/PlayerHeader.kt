@@ -62,11 +62,10 @@ fun PlayerHeader(
         }
 
         Row(
-            modifier =
-                Modifier
-                    .align(Alignment.Center)
-                    // Offset is needed to make the play button appear in the center
-                    .offset(x = 24.dp),
+            modifier = Modifier
+                .align(Alignment.Center)
+                // Offset is needed to make the play button appear in the center
+                .offset(x = 24.dp),
         ) {
             IconButton(
                 onClick = {
@@ -78,12 +77,11 @@ fun PlayerHeader(
                 Icon(
                     modifier = Modifier.size(36.dp),
                     imageVector = if (isPlaying) IconPack.Pause else IconPack.Play,
-                    contentDescription =
-                        if (isPlaying) {
-                            stringResource(R.string.ly_img_editor_pause)
-                        } else {
-                            stringResource(R.string.ly_img_editor_play)
-                        },
+                    contentDescription = if (isPlaying) {
+                        stringResource(R.string.ly_img_editor_pause)
+                    } else {
+                        stringResource(R.string.ly_img_editor_play)
+                    },
                 )
             }
             val isLooping = timelineState.playerState.isLooping
@@ -92,11 +90,10 @@ fun PlayerHeader(
                 onCheckedChange = {
                     timelineState.playerState.toggleLooping()
                 },
-                colors =
-                    IconButtonDefaults.iconToggleButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        checkedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    ),
+                colors = IconButtonDefaults.iconToggleButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    checkedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
             ) {
                 Icon(
                     if (isLooping) IconPack.Repeat else IconPack.RepeatOff,
@@ -112,19 +109,17 @@ fun PlayerHeader(
                     onToggleExpand()
                 },
                 colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
-                modifier =
-                    Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(horizontal = 4.dp),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(horizontal = 4.dp),
             ) {
                 Icon(IconPack.Expandmore, contentDescription = stringResource(ly.img.editor.core.R.string.ly_img_editor_close))
             }
         } else {
             TextButton(
-                modifier =
-                    Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(horizontal = 4.dp),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(horizontal = 4.dp),
                 onClick = {
                     onToggleExpand()
                 },

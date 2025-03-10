@@ -31,10 +31,9 @@ private fun StringBox(
     @StringRes id: Int,
 ) {
     Box(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .height(AssetLibraryUiConfig.contentRowHeight(assetType)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(AssetLibraryUiConfig.contentRowHeight(assetType)),
     ) {
         Text(
             stringResource(id = id),

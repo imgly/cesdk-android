@@ -70,7 +70,8 @@ class TimelineState(
         val blocks = engine.block.getChildren(page)
 
         // If the block order has changed OR a block was destroyed or created, we refresh the entire timeline
-        if (blocks != pageChildren || events.find {
+        if (blocks != pageChildren ||
+            events.find {
                 it.type == DesignBlockEvent.Type.CREATED || it.type == DesignBlockEvent.Type.DESTROYED
             } != null
         ) {
@@ -110,26 +111,24 @@ class TimelineState(
         // Go back a tiny bit so that we’re at the end of this clip and not at the beginning of the next.
         val clipOut = startTime + clip.duration - EPS_DURATION
 
-        val clampedTime =
-            if (currentPlayheadPosition < clipIn) {
-                clipIn
-            } else if (currentPlayheadPosition > clipOut) {
-                clipOut
-            } else {
-                // No need to clamp if clip is already within range
-                return
-            }
+        val clampedTime = if (currentPlayheadPosition < clipIn) {
+            clipIn
+        } else if (currentPlayheadPosition > clipOut) {
+            clipOut
+        } else {
+            // No need to clamp if clip is already within range
+            return
+        }
 
         playerState.setPlaybackTime(clampedTime)
     }
 
     private fun updateSelection(designBlock: DesignBlock?) {
-        val selection =
-            if (designBlock == null) {
-                null
-            } else {
-                dataSource.findClip(designBlock)
-            }
+        val selection = if (designBlock == null) {
+            null
+        } else {
+            dataSource.findClip(designBlock)
+        }
 
         if (selection != null && selection != selectedClip) {
             playerState.pause()
@@ -171,11 +170,10 @@ class TimelineState(
             }
 
             fillType == FillType.Image -> {
-                clipType =
-                    when (engine.block.getKindEnum(designBlock)) {
-                        BlockKind.Sticker -> ClipType.Sticker
-                        else -> ClipType.Image
-                    }
+                clipType = when (engine.block.getKindEnum(designBlock)) {
+                    BlockKind.Sticker -> ClipType.Sticker
+                    else -> ClipType.Image
+                }
             }
 
             blockType == DesignBlockType.Graphic.key -> {
@@ -197,34 +195,30 @@ class TimelineState(
             }
         }
 
-        val fillId =
-            if (engine.block.hasFill(designBlock)) {
-                engine.block.getFill(designBlock)
-            } else {
-                null
-            }
+        val fillId = if (engine.block.hasFill(designBlock)) {
+            engine.block.getFill(designBlock)
+        } else {
+            null
+        }
         val trimmableId = fillId ?: designBlock
 
-        val shapeId =
-            if (engine.block.hasShape(designBlock)) {
-                engine.block.getShape(designBlock)
-            } else {
-                null
-            }
+        val shapeId = if (engine.block.hasShape(designBlock)) {
+            engine.block.getShape(designBlock)
+        } else {
+            null
+        }
 
-        val blurId =
-            if (engine.block.hasBlur(designBlock)) {
-                engine.block.getBlur(designBlock)
-            } else {
-                null
-            }
+        val blurId = if (engine.block.hasBlur(designBlock)) {
+            engine.block.getBlur(designBlock)
+        } else {
+            null
+        }
 
-        val effectIds =
-            if (engine.block.hasEffects(designBlock)) {
-                engine.block.getEffects(designBlock)
-            } else {
-                null
-            }
+        val effectIds = if (engine.block.hasEffects(designBlock)) {
+            engine.block.getEffects(designBlock)
+        } else {
+            null
+        }
 
         val isInBackgroundTrack = engine.block.isParentBackgroundTrack(designBlock)
 
@@ -233,17 +227,16 @@ class TimelineState(
 
         val allowsTrimming = engine.block.hasTrim(trimmableId)
 
-        val trimOffset =
-            if (allowsTrimming) {
-                // The trimOffset isn't known until the resource has loaded
-                try {
-                    engine.block.getTrimOffset(trimmableId).seconds
-                } catch (ex: EngineException) {
-                    0.seconds
-                }
-            } else {
+        val trimOffset = if (allowsTrimming) {
+            // The trimOffset isn't known until the resource has loaded
+            try {
+                engine.block.getTrimOffset(trimmableId).seconds
+            } catch (ex: EngineException) {
                 0.seconds
             }
+        } else {
+            0.seconds
+        }
 
         var footageDuration: Duration? = null
         val isMuted: Boolean
@@ -278,37 +271,35 @@ class TimelineState(
 
         val allowsSelecting = engine.block.isAllowedByScope(designBlock, Scope.EditorSelect)
 
-        val clip =
-            Clip(
-                id = designBlock,
-                clipType = clipType,
-                trimmableId = trimmableId,
-                fillId = fillId,
-                shapeId = shapeId,
-                blurId = blurId,
-                effectIds = effectIds,
-                title = title,
-                duration = duration,
-                footageDuration = footageDuration,
-                timeOffset = timeOffset,
-                allowsTrimming = allowsTrimming,
-                allowsSelecting = allowsSelecting,
-                trimOffset = trimOffset,
-                isMuted = isMuted,
-                volume = volume,
-                isInBackgroundTrack = isInBackgroundTrack,
-                hasLoaded = hasLoaded,
-            )
+        val clip = Clip(
+            id = designBlock,
+            clipType = clipType,
+            trimmableId = trimmableId,
+            fillId = fillId,
+            shapeId = shapeId,
+            blurId = blurId,
+            effectIds = effectIds,
+            title = title,
+            duration = duration,
+            footageDuration = footageDuration,
+            timeOffset = timeOffset,
+            allowsTrimming = allowsTrimming,
+            allowsSelecting = allowsSelecting,
+            trimOffset = trimOffset,
+            isMuted = isMuted,
+            volume = volume,
+            isInBackgroundTrack = isInBackgroundTrack,
+            hasLoaded = hasLoaded,
+        )
 
         // Find which track the clip will go to
-        val track =
-            if (clip.isInBackgroundTrack) {
-                dataSource.backgroundTrack
-            } else if (existingClip != null) {
-                dataSource.findTrack(existingClip)
-            } else {
-                Track()
-            }
+        val track = if (clip.isInBackgroundTrack) {
+            dataSource.backgroundTrack
+        } else if (existingClip != null) {
+            dataSource.findTrack(existingClip)
+        } else {
+            Track()
+        }
 
         updateClip(track, clip, existingClip)
 
@@ -344,17 +335,16 @@ class TimelineState(
     }
 
     private fun updateDuration() {
-        totalDuration =
-            if (dataSource.backgroundTrack.clips.isNotEmpty()) {
-                engine.block.getDuration(backgroundTrack).seconds
-            } else {
-                // If background track is empty, iterate over all clips and make make sure they’re all accessible.
-                dataSource.tracks.fold(0.seconds) { partialResult, track ->
-                    // non video tracks only have one clip
-                    val clip = track.clips.first()
-                    maxOf(partialResult, clip.timeOffset + clip.duration)
-                }
+        totalDuration = if (dataSource.backgroundTrack.clips.isNotEmpty()) {
+            engine.block.getDuration(backgroundTrack).seconds
+        } else {
+            // If background track is empty, iterate over all clips and make make sure they’re all accessible.
+            dataSource.tracks.fold(0.seconds) { partialResult, track ->
+                // non video tracks only have one clip
+                val clip = track.clips.first()
+                maxOf(partialResult, clip.timeOffset + clip.duration)
             }
+        }
 
         val oldDuration = engine.block.getDuration(page)
         // This check is important to avoid an infinite loop through the update events.

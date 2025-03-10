@@ -69,12 +69,10 @@ fun LayerOptionsSheet(
                 colors = UiDefaults.cardColors,
                 modifier = Modifier.sheetCardContentModifier(),
             ) {
-                val selectedIndex =
-                    remember(
-                        uiState.blendMode,
-                    ) { blendModesList.indexOfFirst { uiState.blendMode == it.second } }
-                val lazyListState =
-                    rememberLazyListState(initialFirstVisibleItemIndex = selectedIndex)
+                val selectedIndex = remember(
+                    uiState.blendMode,
+                ) { blendModesList.indexOfFirst { uiState.blendMode == it.second } }
+                val lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = selectedIndex)
                 LazyColumn(state = lazyListState) {
                     items(blendModesList) {
                         val isChecked = uiState.blendMode == it.second

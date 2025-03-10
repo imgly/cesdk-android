@@ -24,25 +24,23 @@ internal fun LibrarySectionColumn(
     launchGetContent: (String, UploadAssetSourceType) -> Unit,
     launchCamera: (Boolean) -> Unit,
 ) {
-    val nestedScrollConnection =
-        remember(uiState.libraryCategory) {
-            object : NestedScrollConnection {
-                override fun onPreScroll(
-                    available: Offset,
-                    source: NestedScrollSource,
-                ): Offset {
-                    onLibraryEvent(LibraryEvent.OnEnterSearchMode(false, uiState.libraryCategory))
-                    return Offset.Zero
-                }
+    val nestedScrollConnection = remember(uiState.libraryCategory) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
+                onLibraryEvent(LibraryEvent.OnEnterSearchMode(false, uiState.libraryCategory))
+                return Offset.Zero
             }
         }
+    }
 
     LazyColumn(
-        modifier =
-            Modifier
-                .nestedScroll(nestedScrollConnection)
-                .testTag(tag = "LibrarySectionColumn")
-                .fillMaxSize(),
+        modifier = Modifier
+            .nestedScroll(nestedScrollConnection)
+            .testTag(tag = "LibrarySectionColumn")
+            .fillMaxSize(),
     ) {
         items(uiState.sectionItems, key = { it.id }, contentType = { it.javaClass }) { sectionItem ->
             when (sectionItem) {

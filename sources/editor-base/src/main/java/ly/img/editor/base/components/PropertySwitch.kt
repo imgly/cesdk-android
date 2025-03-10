@@ -33,13 +33,13 @@ fun PropertySwitch(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface1)
-                .ifTrue(enabled) {
-                    clickable { showMenu = true }
-                }.padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface1)
+            .ifTrue(enabled) {
+                clickable { showMenu = true }
+            }
+            .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {

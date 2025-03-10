@@ -1,4 +1,4 @@
-package ly.img.editor.postcard.bottomsheet.message_font
+package ly.img.editor.postcard.bottomsheet.font
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable

@@ -20,12 +20,11 @@ fun ThumbnailsView(thumbnails: List<VideoThumbnailResult>) {
         thumbnails.forEach {
             val key = "VideoThumbnailResult(width=${it.width}, height=${it.height}, imageData=${it.imageData.hashCode()})"
             AsyncImage(
-                model =
-                    ImageRequest.Builder(LocalContext.current)
-                        .fetcherFactory(VideoThumbnailResultFetcher.Factory())
-                        .memoryCacheKey(key)
-                        .data(it)
-                        .build(),
+                model = ImageRequest.Builder(LocalContext.current)
+                    .fetcherFactory(VideoThumbnailResultFetcher.Factory())
+                    .memoryCacheKey(key)
+                    .data(it)
+                    .build(),
                 modifier = Modifier.fillMaxHeight(),
                 alignment = Alignment.CenterStart,
                 contentScale = ContentScale.FillHeight,

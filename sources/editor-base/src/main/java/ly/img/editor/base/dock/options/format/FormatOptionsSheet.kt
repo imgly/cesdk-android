@@ -104,23 +104,21 @@ fun FormatOptionsSheet(
                                 ) {
                                     Icon(
                                         IconPack.Formatitalic,
-                                        contentDescription =
-                                            stringResource(
-                                                R.string.ly_img_editor_italic,
-                                            ),
+                                        contentDescription = stringResource(
+                                            R.string.ly_img_editor_italic,
+                                        ),
                                     )
                                 }
                             }
 
                             PropertyLink(
-                                value =
-                                    stringResource(
-                                        getWeightStringResource(
-                                            androidx.compose.ui.text.font
-                                                .FontWeight(uiState.fontFamilyWeight.value),
-                                            uiState.fontFamilyStyle,
-                                        ),
+                                value = stringResource(
+                                    getWeightStringResource(
+                                        androidx.compose.ui.text.font
+                                            .FontWeight(uiState.fontFamilyWeight.value),
+                                        uiState.fontFamilyStyle,
                                     ),
+                                ),
                             ) {
                                 screenState = ScreenState.SelectFontWeight
                             }
@@ -223,10 +221,9 @@ fun FormatOptionsSheet(
                         colors = UiDefaults.cardColors,
                     ) {
                         Row(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             TextCase.entries.forEach {
@@ -305,29 +302,28 @@ private enum class ScreenState {
 @Preview(showBackground = true)
 fun DefaultPreview() {
     FormatOptionsSheet(
-        uiState =
-            FormatUiState(
-                fontFamily = "Roboto",
-                fontSize = 16f,
-                letterSpacing = 0f,
-                lineHeight = 1f,
-                isBold = true,
-                isItalic = false,
-                canToggleBold = true,
-                canToggleItalic = true,
-                horizontalAlignment = HorizontalAlignment.Left,
-                verticalAlignment = VerticalAlignment.Top,
-                sizeModeRes = R.string.ly_img_editor_fixed_size,
-                isArrangeResizeAllowed = true,
-                libraryCategory = LibraryCategory.Text,
-                casing = TextCase.UPPER_CASE,
-                paragraphSpacing = 0f,
-                fontFamilyWeight = FontWeight.NORMAL,
-                availableWeights = emptyList(),
-                fontFamilyStyle = FontStyle.NORMAL,
-                hasClippingOption = true,
-                isClipped = true,
-            ),
+        uiState = FormatUiState(
+            fontFamily = "Roboto",
+            fontSize = 16f,
+            letterSpacing = 0f,
+            lineHeight = 1f,
+            isBold = true,
+            isItalic = false,
+            canToggleBold = true,
+            canToggleItalic = true,
+            horizontalAlignment = HorizontalAlignment.Left,
+            verticalAlignment = VerticalAlignment.Top,
+            sizeModeRes = R.string.ly_img_editor_fixed_size,
+            isArrangeResizeAllowed = true,
+            libraryCategory = LibraryCategory.Text,
+            casing = TextCase.UPPER_CASE,
+            paragraphSpacing = 0f,
+            fontFamilyWeight = FontWeight.NORMAL,
+            availableWeights = emptyList(),
+            fontFamilyStyle = FontStyle.NORMAL,
+            hasClippingOption = true,
+            isClipped = true,
+        ),
         onEvent = {},
     )
 }

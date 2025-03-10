@@ -46,13 +46,10 @@ class PhotoUiViewModel(
         }
     }
 
-    private fun getPage() =
-        engine.scene
-            .getPages()
-            .let {
-                require(it.size == 1) { REQUIREMENT_ERROR_MESSAGE }
-                it.first()
-            }
+    private fun getPage() = engine.scene.getPages().let {
+        require(it.size == 1) { REQUIREMENT_ERROR_MESSAGE }
+        it.first()
+    }
 
     override val horizontalPageInset: Float
         get() = if (engine.editor.getEditMode() == CROP_EDIT_MODE) CROP_MODE_INSET else 0F
@@ -60,24 +57,19 @@ class PhotoUiViewModel(
     override val verticalPageInset: Float
         get() = if (engine.editor.getEditMode() == CROP_EDIT_MODE) CROP_MODE_INSET else 0F
 
-    override fun getBlockForEvents(): Block {
-        return super.getBlockForEvents() ?: Block(
-            designBlock = getPage(),
-            type = BlockType.Image,
-        )
-    }
+    override fun getBlockForEvents(): Block = super.getBlockForEvents() ?: Block(
+        designBlock = getPage(),
+        type = BlockType.Image,
+    )
 
-    override fun getSelectedBlock(): DesignBlock {
-        return super.getSelectedBlock() ?: getPage()
-    }
+    override fun getSelectedBlock(): DesignBlock = super.getSelectedBlock() ?: getPage()
 
     override fun setSelectedBlock(block: Block?) {
-        val updatedBlock =
-            if (block?.designBlock == getPage()) {
-                null
-            } else {
-                block
-            }
+        val updatedBlock = if (block?.designBlock == getPage()) {
+            null
+        } else {
+            block
+        }
         super.setSelectedBlock(updatedBlock)
     }
 

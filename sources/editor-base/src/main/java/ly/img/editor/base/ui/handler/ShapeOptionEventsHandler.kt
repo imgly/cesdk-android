@@ -1,7 +1,11 @@
 package ly.img.editor.base.ui.handler
 
 import ly.img.editor.base.engine.getSmallerSide
-import ly.img.editor.base.ui.BlockEvent.*
+import ly.img.editor.base.ui.BlockEvent.OnChangePolygonCornerRadius
+import ly.img.editor.base.ui.BlockEvent.OnChangePolygonSides
+import ly.img.editor.base.ui.BlockEvent.OnChangeRectCornerRadius
+import ly.img.editor.base.ui.BlockEvent.OnChangeStarInnerDiameter
+import ly.img.editor.base.ui.BlockEvent.OnChangeStarPoints
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register

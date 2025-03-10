@@ -53,24 +53,19 @@ sealed interface CameraMode : Parcelable {
 
     companion object {
         @JvmField
-        val CREATOR =
-            object : Parcelable.Creator<CameraMode> {
-                override fun createFromParcel(parcel: Parcel): CameraMode {
-                    return when (parcel.readInt()) {
-                        0 -> Standard()
-                        1 ->
-                            Reaction(
-                                video = Uri.parse(parcel.readString()),
-                                cameraLayoutMode = CameraLayoutMode.valueOf(parcel.readString()!!),
-                                positionsSwapped = parcel.readInt() == 1,
-                            )
-                        else -> throw IllegalArgumentException("Invalid CameraMode type")
-                    }
-                }
-
-                override fun newArray(size: Int): Array<CameraMode?> {
-                    return arrayOfNulls(size)
-                }
+        val CREATOR = object : Parcelable.Creator<CameraMode> {
+            override fun createFromParcel(parcel: Parcel): CameraMode = when (parcel.readInt()) {
+                0 -> Standard()
+                1 ->
+                    Reaction(
+                        video = Uri.parse(parcel.readString()),
+                        cameraLayoutMode = CameraLayoutMode.valueOf(parcel.readString()!!),
+                        positionsSwapped = parcel.readInt() == 1,
+                    )
+                else -> throw IllegalArgumentException("Invalid CameraMode type")
             }
+
+            override fun newArray(size: Int): Array<CameraMode?> = arrayOfNulls(size)
+        }
     }
 }

@@ -48,11 +48,10 @@ internal fun createShapeOptionsUiState(
         ShapeType.Polygon ->
             PolygonShapeOptionsUiState(
                 sides = engine.block.getInt(shape, "shape/polygon/sides").toFloat(),
-                cornerRadius =
-                    engine.block.getFloat(
-                        shape,
-                        "shape/polygon/cornerRadius",
-                    ) / (engine.block.getSmallerSide(designBlock) / 2f),
+                cornerRadius = engine.block.getFloat(
+                    shape,
+                    "shape/polygon/cornerRadius",
+                ) / (engine.block.getSmallerSide(designBlock) / 2f),
             )
 
         ShapeType.Line ->

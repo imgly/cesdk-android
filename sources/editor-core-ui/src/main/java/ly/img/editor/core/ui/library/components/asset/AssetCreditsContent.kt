@@ -39,57 +39,53 @@ internal fun AssetCreditsContent(
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
 
-            val creditsLabel =
-                if (assetCreditsEvent.assetCredits != null && assetCreditsEvent.assetSourceCredits != null) {
-                    stringResource(
-                        R.string.ly_img_editor_credits_artist_on_source,
-                        assetCreditsEvent.assetCredits.name,
-                        assetCreditsEvent.assetSourceCredits.name,
-                    )
-                } else if (assetCreditsEvent.assetCredits != null) {
-                    stringResource(
-                        R.string.ly_img_editor_credits_artist,
-                        assetCreditsEvent.assetCredits.name,
-                    )
-                } else if (assetCreditsEvent.assetSourceCredits != null) {
-                    stringResource(
-                        R.string.ly_img_editor_credits_on_source,
-                        assetCreditsEvent.assetSourceCredits.name,
-                    )
-                } else {
-                    null
-                }
+            val creditsLabel = if (assetCreditsEvent.assetCredits != null && assetCreditsEvent.assetSourceCredits != null) {
+                stringResource(
+                    R.string.ly_img_editor_credits_artist_on_source,
+                    assetCreditsEvent.assetCredits.name,
+                    assetCreditsEvent.assetSourceCredits.name,
+                )
+            } else if (assetCreditsEvent.assetCredits != null) {
+                stringResource(
+                    R.string.ly_img_editor_credits_artist,
+                    assetCreditsEvent.assetCredits.name,
+                )
+            } else if (assetCreditsEvent.assetSourceCredits != null) {
+                stringResource(
+                    R.string.ly_img_editor_credits_on_source,
+                    assetCreditsEvent.assetSourceCredits.name,
+                )
+            } else {
+                null
+            }
 
             if (creditsLabel != null) {
                 HyperlinkText(
                     fullText = creditsLabel,
-                    hyperLinks =
-                        mutableMapOf(
-                            assetCreditsEvent.assetCredits?.name to assetCreditsEvent.assetCredits?.uri?.toString(),
-                            assetCreditsEvent.assetSourceCredits?.name to assetCreditsEvent.assetSourceCredits?.uri?.toString(),
-                        ),
+                    hyperLinks = mutableMapOf(
+                        assetCreditsEvent.assetCredits?.name to assetCreditsEvent.assetCredits?.uri?.toString(),
+                        assetCreditsEvent.assetSourceCredits?.name to assetCreditsEvent.assetSourceCredits?.uri?.toString(),
+                    ),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                 )
             }
 
-            val licenseLabel =
-                if (assetCreditsEvent.assetLicense != null) {
-                    assetCreditsEvent.assetLicense.name
-                } else if (assetCreditsEvent.assetSourceLicense != null) {
-                    assetCreditsEvent.assetSourceLicense.name
-                } else {
-                    null
-                }
+            val licenseLabel = if (assetCreditsEvent.assetLicense != null) {
+                assetCreditsEvent.assetLicense.name
+            } else if (assetCreditsEvent.assetSourceLicense != null) {
+                assetCreditsEvent.assetSourceLicense.name
+            } else {
+                null
+            }
 
             if (licenseLabel != null) {
                 Divider()
                 HyperlinkText(
                     fullText = licenseLabel,
-                    hyperLinks =
-                        mutableMapOf(
-                            assetCreditsEvent.assetLicense?.name to assetCreditsEvent.assetLicense?.uri?.toString(),
-                            assetCreditsEvent.assetSourceLicense?.name to assetCreditsEvent.assetSourceLicense?.uri?.toString(),
-                        ),
+                    hyperLinks = mutableMapOf(
+                        assetCreditsEvent.assetLicense?.name to assetCreditsEvent.assetLicense?.uri?.toString(),
+                        assetCreditsEvent.assetSourceLicense?.name to assetCreditsEvent.assetSourceLicense?.uri?.toString(),
+                    ),
                     textColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                 )

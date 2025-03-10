@@ -29,41 +29,39 @@ class TextAssetSource(
     private val engine: Engine,
     private val typeface: Typeface,
 ) : AssetSource(sourceId = AssetSourceType.Text.sourceId) {
-    private val assets =
-        listOf(
-            createAsset(
-                id = "title",
-                label = "Title",
-                fontWeight = FontWeight.BOLD,
-                fontSize = 32,
-                fontScale = 4F,
-            ),
-            createAsset(
-                id = "headline",
-                label = "Headline",
-                fontWeight = FontWeight.MEDIUM,
-                fontSize = 18,
-                fontScale = 2.8F,
-            ),
-            createAsset(
-                id = "body",
-                label = "Body",
-                fontWeight = FontWeight.NORMAL,
-                fontSize = 14,
-                fontScale = 2F,
-            ),
-        )
+    private val assets = listOf(
+        createAsset(
+            id = "title",
+            label = "Title",
+            fontWeight = FontWeight.BOLD,
+            fontSize = 32,
+            fontScale = 4F,
+        ),
+        createAsset(
+            id = "headline",
+            label = "Headline",
+            fontWeight = FontWeight.MEDIUM,
+            fontSize = 18,
+            fontScale = 2.8F,
+        ),
+        createAsset(
+            id = "body",
+            label = "Body",
+            fontWeight = FontWeight.NORMAL,
+            fontSize = 14,
+            fontScale = 2F,
+        ),
+    )
 
     override suspend fun findAssets(query: FindAssetsQuery): FindAssetsResult {
         val filteredAssets = assets.filter { it.id.contains(query.query ?: "", ignoreCase = true) }
         val totalPages = ceil(filteredAssets.size.toDouble() / query.perPage).toInt()
         return FindAssetsResult(
-            assets =
-                filteredAssets
-                    .subList(
-                        query.page * query.perPage,
-                        filteredAssets.size,
-                    ).take(query.perPage),
+            assets = filteredAssets
+                .subList(
+                    query.page * query.perPage,
+                    filteredAssets.size,
+                ).take(query.perPage),
             currentPage = query.page,
             nextPage = if (query.page == totalPages) -1 else query.page + 1,
             total = filteredAssets.size,
@@ -89,12 +87,11 @@ class TextAssetSource(
         fontSize: Int,
         fontScale: Float,
     ): Asset {
-        val fontUri =
-            typeface
-                .fonts
-                .filter { it.weight == fontWeight }
-                .minByOrNull { it.style }
-                ?.uri
+        val fontUri = typeface
+            .fonts
+            .filter { it.weight == fontWeight }
+            .minByOrNull { it.style }
+            ?.uri
         requireNotNull(fontUri) {
             "TextAssetSource.defaultTypeface must have support for ${fontWeight.name} font weight."
         }
@@ -103,15 +100,14 @@ class TextAssetSource(
             context = AssetContext(sourceId),
             label = label,
             locale = "en",
-            meta =
-                mapOf(
-                    "uri" to fontUri.toString(),
-                    "fontFamily" to typeface.name,
-                    "fontWeight" to fontWeight.value.toString(),
-                    "fontSize" to fontSize.toString(),
-                    "fontScale" to fontScale.toString(),
-                    "blockType" to DesignBlockType.Text.key,
-                ),
+            meta = mapOf(
+                "uri" to fontUri.toString(),
+                "fontFamily" to typeface.name,
+                "fontWeight" to fontWeight.value.toString(),
+                "fontSize" to fontSize.toString(),
+                "fontScale" to fontScale.toString(),
+                "blockType" to DesignBlockType.Text.key,
+            ),
             payload = AssetPayload(typeface = typeface),
         )
     }

@@ -55,10 +55,9 @@ fun TimelineContentView(
         val backgroundTrackGuideline = TimelineConfiguration.clipHeight + TimelineConfiguration.clipPadding * 2
 
         BackgroundTrackDivider(
-            modifier =
-                Modifier
-                    .padding(bottom = backgroundTrackGuideline)
-                    .align(Alignment.BottomStart),
+            modifier = Modifier
+                .padding(bottom = backgroundTrackGuideline)
+                .align(Alignment.BottomStart),
         )
 
         val timelineRulerHeight = TimelineConfiguration.rulerHeight
@@ -71,11 +70,10 @@ fun TimelineContentView(
                 Column {
                     Box(Modifier.offset(x = overlayWidth)) {
                         Box(
-                            modifier =
-                                Modifier
-                                    .width(durationWidth)
-                                    .height(timelineRulerHeight)
-                                    .background(MaterialTheme.colorScheme.surface3),
+                            modifier = Modifier
+                                .width(durationWidth)
+                                .height(timelineRulerHeight)
+                                .background(MaterialTheme.colorScheme.surface3),
                         )
                         TimelineRulerView(
                             duration = timelineState.totalDuration,
@@ -86,17 +84,15 @@ fun TimelineContentView(
                     }
 
                     LazyColumn(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .width(overlayWidth + durationWidth + overlayWidth),
+                        modifier = Modifier
+                            .weight(1f)
+                            .width(overlayWidth + durationWidth + overlayWidth),
                         state = verticalScrollState,
-                        contentPadding =
-                            PaddingValues(
-                                start = overlayWidth,
-                                top = TimelineConfiguration.clipPadding,
-                                bottom = TimelineConfiguration.clipPadding,
-                            ),
+                        contentPadding = PaddingValues(
+                            start = overlayWidth,
+                            top = TimelineConfiguration.clipPadding,
+                            bottom = TimelineConfiguration.clipPadding,
+                        ),
                         verticalArrangement = Arrangement.spacedBy(TimelineConfiguration.clipPadding),
                     ) {
                         val tracks = timelineState.dataSource.tracks
@@ -119,12 +115,11 @@ fun TimelineContentView(
                             TimelineButton(
                                 id = R.string.ly_img_editor_add_audio,
                                 icon = IconPack.AddAudio,
-                                modifier =
-                                    Modifier
-                                        .offset {
-                                            IntOffset(x = audioButtonOffset, y = 0)
-                                        }
-                                        .padding(start = 1.dp),
+                                modifier = Modifier
+                                    .offset {
+                                        IntOffset(x = audioButtonOffset, y = 0)
+                                    }
+                                    .padding(start = 1.dp),
                             ) {
                                 onEvent(
                                     EditorEvent.Sheet.Open(
@@ -137,10 +132,9 @@ fun TimelineContentView(
                         }
                     }
                     Box(
-                        modifier =
-                            Modifier
-                                .offset(x = overlayWidth)
-                                .padding(vertical = TimelineConfiguration.clipPadding),
+                        modifier = Modifier
+                            .offset(x = overlayWidth)
+                            .padding(vertical = TimelineConfiguration.clipPadding),
                     ) {
                         val backgroundTrack = timelineState.dataSource.backgroundTrack
                         TrackView(
@@ -157,40 +151,35 @@ fun TimelineContentView(
             }
         }
 
-        val scrollbarSettings =
-            ScrollbarSettings(
-                thumbColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-                alwaysShowScrollbar = false,
-            )
+        val scrollbarSettings = ScrollbarSettings(
+            thumbColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+            alwaysShowScrollbar = false,
+        )
 
         LazyColumnScrollbar(
             state = verticalScrollState,
-            modifier =
-                Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(bottom = backgroundTrackGuideline + 2.dp, top = timelineRulerHeight + 2.dp),
-            settings =
-                scrollbarSettings.copy(
-                    thumbThickness = 2.dp,
-                    scrollbarPadding = 2.dp,
-                ),
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(bottom = backgroundTrackGuideline + 2.dp, top = timelineRulerHeight + 2.dp),
+            settings = scrollbarSettings.copy(
+                thumbThickness = 2.dp,
+                scrollbarPadding = 2.dp,
+            ),
         )
 
         RowScrollbar(
             state = horizontalScrollState,
-            settings =
-                scrollbarSettings.copy(
-                    thumbThickness = 2.dp,
-                    scrollbarPadding = 1.dp,
-                ),
+            settings = scrollbarSettings.copy(
+                thumbThickness = 2.dp,
+                scrollbarPadding = 1.dp,
+            ),
             visibleLengthDp = maxWidth,
         )
 
         PlayheadView(
-            modifier =
-                Modifier
-                    .align(Alignment.Center)
-                    .padding(top = timelineRulerHeight - 1.dp),
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(top = timelineRulerHeight - 1.dp),
         )
     }
 }

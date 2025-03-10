@@ -41,24 +41,22 @@ fun PhotoUi(
         mutableStateOf(Unit)
     }
 
-    val libraryViewModel =
-        viewModel {
-            LibraryViewModel(
-                editorScope = editorScope,
-                onUpload = onUpload,
-            )
-        }
-    val viewModel =
-        viewModel {
-            PhotoUiViewModel(
-                editorScope = editorScope,
-                onCreate = onCreate,
-                onExport = onExport,
-                onClose = onClose,
-                onError = onError,
-                libraryViewModel = libraryViewModel,
-            )
-        }
+    val libraryViewModel = viewModel {
+        LibraryViewModel(
+            editorScope = editorScope,
+            onUpload = onUpload,
+        )
+    }
+    val viewModel = viewModel {
+        PhotoUiViewModel(
+            editorScope = editorScope,
+            onCreate = onCreate,
+            onExport = onExport,
+            onClose = onClose,
+            onError = onError,
+            libraryViewModel = libraryViewModel,
+        )
+    }
 
     val uiState by viewModel.uiState.collectAsState()
     val editorContext = editorScope.run { editorContext }

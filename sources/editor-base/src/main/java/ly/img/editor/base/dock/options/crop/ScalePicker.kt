@@ -62,32 +62,28 @@ fun ScalePicker(
     BoxWithConstraints(
         modifier = modifier.requiredHeight(44.dp),
     ) {
-        val textStyle =
-            TextStyle(
-                fontFamily = FontFamily.Default,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 0.1.sp,
-                lineHeight = 20.sp,
-                fontSize = 14.sp,
-            )
+        val textStyle = TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.Medium,
+            letterSpacing = 0.1.sp,
+            lineHeight = 20.sp,
+            fontSize = 14.sp,
+        )
 
-        val rangeStart =
-            remember(valueRange) {
-                if (rangeInclusionType.isStartIncluded()) valueRange.start else valueRange.start + rangeExclusionDifferential
-            }
+        val rangeStart = remember(valueRange) {
+            if (rangeInclusionType.isStartIncluded()) valueRange.start else valueRange.start + rangeExclusionDifferential
+        }
 
-        val rangeEnd =
-            remember(valueRange) {
-                if (rangeInclusionType.isEndIncluded()) valueRange.endInclusive else valueRange.endInclusive - rangeExclusionDifferential
-            }
+        val rangeEnd = remember(valueRange) {
+            if (rangeInclusionType.isEndIncluded()) valueRange.endInclusive else valueRange.endInclusive - rangeExclusionDifferential
+        }
 
-        val tickRange =
-            remember(valueRange, tickStep) {
-                generateSequence(valueRange.start) { previous ->
-                    val next = previous + tickStep
-                    if (next > valueRange.endInclusive) null else next
-                }.toList()
-            }
+        val tickRange = remember(valueRange, tickStep) {
+            generateSequence(valueRange.start) { previous ->
+                val next = previous + tickStep
+                if (next > valueRange.endInclusive) null else next
+            }.toList()
+        }
 
         var currentValue by remember(value) {
             mutableStateOf(value)
@@ -106,7 +102,9 @@ fun ScalePicker(
 
         fun getTickColor(value: Float): Color {
             val roundedValue = value.roundToInt()
-            return if ((currentValue < 0 && value <= 0 && value > currentValue) || (currentValue > 0 && value >= 0 && value < currentValue)) {
+            return if ((currentValue < 0 && value <= 0 && value > currentValue) ||
+                (currentValue > 0 && value >= 0 && value < currentValue)
+            ) {
                 if (roundedValue % specialTickStep == 0) highlightSpecialTickColor else highlightNormalTickColor
             } else {
                 if (roundedValue % specialTickStep == 0) neutralSpecialTickColor else neutralNormalTickColor
@@ -116,70 +114,65 @@ fun ScalePicker(
         val localView = LocalView.current
 
         Canvas(
-            modifier =
-                Modifier
-                    .fillMaxHeight()
-                    .width(maxWidth + tickersWidthDp)
-                    .pointerInput(value) {
-                        detectHorizontalDragGestures(
-                            onDragEnd = {
-                                onValueChangeFinished?.invoke(currentValue)
-                            },
-                            onHorizontalDrag = { _, dragAmount ->
-                                val changeInValue = (-dragAmount / totalTickWidthPx) * tickStep
-                                val changedValue =
-                                    (currentValue + changeInValue).coerceIn(
-                                        minimumValue = rangeStart,
-                                        maximumValue = rangeEnd,
-                                    )
-                                val canSnap = changedValue in (-0.5..0.5)
-                                val newValue =
-                                    if (snapState == SnapState.Disarmed) {
-                                        if (!canSnap) snapState = SnapState.Armed
-                                        changedValue
-                                    } else {
-                                        if (canSnap) {
-                                            if (abs(changedValue) > 0.2 && currentValue == 0f) {
-                                                snapState = SnapState.Disarmed
-                                            }
-                                            0f
-                                        } else {
-                                            changedValue
-                                        }
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(maxWidth + tickersWidthDp)
+                .pointerInput(value) {
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            onValueChangeFinished?.invoke(currentValue)
+                        },
+                        onHorizontalDrag = { _, dragAmount ->
+                            val changeInValue = (-dragAmount / totalTickWidthPx) * tickStep
+                            val changedValue = (currentValue + changeInValue).coerceIn(
+                                minimumValue = rangeStart,
+                                maximumValue = rangeEnd,
+                            )
+                            val canSnap = changedValue in (-0.5..0.5)
+                            val newValue = if (snapState == SnapState.Disarmed) {
+                                if (!canSnap) snapState = SnapState.Armed
+                                changedValue
+                            } else {
+                                if (canSnap) {
+                                    if (abs(changedValue) > 0.2 && currentValue == 0f) {
+                                        snapState = SnapState.Disarmed
                                     }
-                                if (integerCrossedOrReached(currentValue / tickStep, newValue / tickStep) ||
-                                    (newValue != currentValue && (newValue == rangeStart || newValue == rangeEnd))
-                                ) {
-                                    localView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                                    0f
+                                } else {
+                                    changedValue
                                 }
-                                currentValue = newValue
-                                onValueChange(currentValue)
-                            },
-                        )
-                    }
-                    // Workaround to enable alpha compositing
-                    // TODO: Use https://developer.android.com/jetpack/compose/graphics/draw/modifiers#compositing-strategy when available
-                    .graphicsLayer { alpha = 0.99F }
-                    .drawWithContent {
-                        drawContent()
-                        drawRect(
-                            brush =
-                                Brush.horizontalGradient(
-                                    0f to Color.Transparent,
-                                    0.25f to Color.Black,
-                                    0.75f to Color.Black,
-                                    1f to Color.Transparent,
-                                ),
-                            blendMode = BlendMode.DstIn,
-                        )
-                    },
+                            }
+                            if (integerCrossedOrReached(currentValue / tickStep, newValue / tickStep) ||
+                                (newValue != currentValue && (newValue == rangeStart || newValue == rangeEnd))
+                            ) {
+                                localView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                            }
+                            currentValue = newValue
+                            onValueChange(currentValue)
+                        },
+                    )
+                }
+                // Workaround to enable alpha compositing
+                // TODO: Use https://developer.android.com/jetpack/compose/graphics/draw/modifiers#compositing-strategy when available
+                .graphicsLayer { alpha = 0.99F }
+                .drawWithContent {
+                    drawContent()
+                    drawRect(
+                        brush = Brush.horizontalGradient(
+                            0f to Color.Transparent,
+                            0.25f to Color.Black,
+                            0.75f to Color.Black,
+                            1f to Color.Transparent,
+                        ),
+                        blendMode = BlendMode.DstIn,
+                    )
+                },
         ) {
             tickRange.forEach { tickValue ->
-                val startOffset =
-                    Offset(
-                        x = maxWidth.toPx() / 2 + ((tickValue - currentValue) * (totalTickWidthPx / tickStep)),
-                        y = size.height,
-                    )
+                val startOffset = Offset(
+                    x = maxWidth.toPx() / 2 + ((tickValue - currentValue) * (totalTickWidthPx / tickStep)),
+                    y = size.height,
+                )
                 drawLine(
                     getTickColor(tickValue),
                     start = startOffset,
@@ -189,10 +182,9 @@ fun ScalePicker(
             }
 
             val centerTickStartOffset = Offset(center.x, size.height)
-            val centerTickEndOffset =
-                centerTickStartOffset.minus(
-                    Offset(x = 0f, y = scaleHeight.toPx()),
-                )
+            val centerTickEndOffset = centerTickStartOffset.minus(
+                Offset(x = 0f, y = scaleHeight.toPx()),
+            )
 
             drawLine(
                 if (roundedCurrentValue == 0) neutralScaleColor else highlightScaleColor,
@@ -204,15 +196,13 @@ fun ScalePicker(
 
         Text(
             text = textToDraw,
-            style =
-                textStyle.copy(
-                    color = if (roundedCurrentValue == 0) neutralScaleColor else highlightScaleColor,
-                ),
-            modifier =
-                Modifier
-                    .align(Alignment.Center)
-                    .offset(x = 1.5.dp) // to make the number look centre-ish / account for the °
-                    .paddingFromBaseline(bottom = scaleHeight + 2.dp),
+            style = textStyle.copy(
+                color = if (roundedCurrentValue == 0) neutralScaleColor else highlightScaleColor,
+            ),
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset(x = 1.5.dp) // to make the number look centre-ish / account for the °
+                .paddingFromBaseline(bottom = scaleHeight + 2.dp),
         )
     }
 }

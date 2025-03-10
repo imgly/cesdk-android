@@ -29,80 +29,73 @@ fun ClipSelectionView(
         val verticalInsetPx = 2.dp.roundToPx().toFloat()
         val handleWidthPx = handleWidth.roundToPx()
 
-        val outerRect =
-            Rect(
-                topLeft = Offset.Zero,
-                bottomRight = Offset(x = size.width, y = size.height),
+        val outerRect = Rect(
+            topLeft = Offset.Zero,
+            bottomRight = Offset(x = size.width, y = size.height),
+        )
+
+        val innerRect = Rect(
+            left = outerRect.left + handleWidthPx,
+            top = outerRect.top + verticalInsetPx,
+            right = outerRect.right - handleWidthPx,
+            bottom = outerRect.bottom - verticalInsetPx,
+        )
+
+        val outerPath = Path().apply {
+            addRoundRect(
+                RoundRect(outerRect, cornerRadius = CornerRadius((cornerRadius + 2.dp).roundToPx().toFloat())),
             )
+        }
 
-        val innerRect =
-            Rect(
-                left = outerRect.left + handleWidthPx,
-                top = outerRect.top + verticalInsetPx,
-                right = outerRect.right - handleWidthPx,
-                bottom = outerRect.bottom - verticalInsetPx,
+        val innerPath = Path().apply {
+            addRoundRect(
+                RoundRect(innerRect, cornerRadius = CornerRadius((cornerRadius).roundToPx().toFloat())),
             )
-
-        val outerPath =
-            Path().apply {
-                addRoundRect(
-                    RoundRect(outerRect, cornerRadius = CornerRadius((cornerRadius + 2.dp).roundToPx().toFloat())),
-                )
-            }
-
-        val innerPath =
-            Path().apply {
-                addRoundRect(
-                    RoundRect(innerRect, cornerRadius = CornerRadius((cornerRadius).roundToPx().toFloat())),
-                )
-            }
+        }
 
         fun getTrianglePath(
             offset: Offset,
             pointingUp: Boolean,
             width: Float = markerWidthPx,
             height: Float = markerHeightPx,
-        ): Path {
-            return Path().apply {
-                moveTo(offset.x, offset.y)
-                if (pointingUp) {
-                    relativeLineTo(width, 0f)
-                    relativeLineTo(-width / 2, -height)
-                } else {
-                    relativeLineTo(width / 2, height)
-                    relativeLineTo(width / 2, -height)
-                }
-                close()
+        ): Path = Path().apply {
+            moveTo(offset.x, offset.y)
+            if (pointingUp) {
+                relativeLineTo(width, 0f)
+                relativeLineTo(-width / 2, -height)
+            } else {
+                relativeLineTo(width / 2, height)
+                relativeLineTo(width / 2, -height)
             }
+            close()
         }
 
-        val path =
-            Path().apply {
-                op(outerPath, innerPath, PathOperation.Difference)
-                op(
-                    this,
-                    getTrianglePath(Offset(x = handleWidthPx - markerWidthPx / 2, y = 0f), pointingUp = false),
-                    PathOperation.Difference,
-                )
-                op(
-                    this,
-                    getTrianglePath(Offset(x = size.width - handleWidthPx - markerWidthPx / 2, y = 0f), pointingUp = false),
-                    PathOperation.Difference,
-                )
-                op(
-                    this,
-                    getTrianglePath(Offset(x = handleWidthPx - markerWidthPx / 2, y = size.height), pointingUp = true),
-                    PathOperation.Difference,
-                )
-                op(
-                    this,
-                    getTrianglePath(
-                        Offset(x = size.width - handleWidthPx - markerWidthPx / 2, y = size.height),
-                        pointingUp = true,
-                    ),
-                    PathOperation.Difference,
-                )
-            }
+        val path = Path().apply {
+            op(outerPath, innerPath, PathOperation.Difference)
+            op(
+                this,
+                getTrianglePath(Offset(x = handleWidthPx - markerWidthPx / 2, y = 0f), pointingUp = false),
+                PathOperation.Difference,
+            )
+            op(
+                this,
+                getTrianglePath(Offset(x = size.width - handleWidthPx - markerWidthPx / 2, y = 0f), pointingUp = false),
+                PathOperation.Difference,
+            )
+            op(
+                this,
+                getTrianglePath(Offset(x = handleWidthPx - markerWidthPx / 2, y = size.height), pointingUp = true),
+                PathOperation.Difference,
+            )
+            op(
+                this,
+                getTrianglePath(
+                    Offset(x = size.width - handleWidthPx - markerWidthPx / 2, y = size.height),
+                    pointingUp = true,
+                ),
+                PathOperation.Difference,
+            )
+        }
 
         drawPath(path = path, color = color)
     }

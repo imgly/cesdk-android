@@ -31,23 +31,21 @@ fun ClipForegroundView(
         if (clip.clipType == ClipType.Audio) {
             AudioWaveformView(
                 zoomLevel = zoomState.zoomLevel,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomStart)
-                        .height(20.dp)
-                        .padding(vertical = 2.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomStart)
+                    .height(20.dp)
+                    .padding(vertical = 2.dp),
             )
         }
 
         if (isSelected && overlayShape != null) {
             ClipOverlay(
-                modifier =
-                    Modifier
-                        .align(Alignment.TopEnd)
-                        .clip(overlayShape)
-                        .width(overlayWidth)
-                        .fillMaxHeight(),
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .clip(overlayShape)
+                    .width(overlayWidth)
+                    .fillMaxHeight(),
             )
         }
     }

@@ -22,28 +22,27 @@ fun LazyItemScope.SwappableItem(
 ) {
     val dragging by swappableListState.isItemDragging(key)
     var itemPosition = remember { 0f }
-    val draggingModifier =
-        if (dragging) {
-            Modifier
-                .zIndex(1f)
-                .then(
-                    Modifier.graphicsLayer {
-                        translationX = swappableListState.draggingItemOffset
-                    },
-                )
-        } else if (key == swappableListState.previousDraggingItemKey) {
-            Modifier
-                .zIndex(1f)
-                .then(
-                    Modifier.graphicsLayer {
-                        translationX = swappableListState.previousDraggingItemOffset.value
-                    },
-                )
-        } else {
-            Modifier.animateItemPlacement()
-        }.onGloballyPositioned {
-            itemPosition = it.positionInRoot().x
-        }
+    val draggingModifier = if (dragging) {
+        Modifier
+            .zIndex(1f)
+            .then(
+                Modifier.graphicsLayer {
+                    translationX = swappableListState.draggingItemOffset
+                },
+            )
+    } else if (key == swappableListState.previousDraggingItemKey) {
+        Modifier
+            .zIndex(1f)
+            .then(
+                Modifier.graphicsLayer {
+                    translationX = swappableListState.previousDraggingItemOffset.value
+                },
+            )
+    } else {
+        Modifier.animateItemPlacement()
+    }.onGloballyPositioned {
+        itemPosition = it.positionInRoot().x
+    }
 
     Column(modifier = modifier.then(draggingModifier)) {
         SwappableItemScopeImpl(

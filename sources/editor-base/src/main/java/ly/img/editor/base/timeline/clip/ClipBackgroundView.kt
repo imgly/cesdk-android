@@ -24,18 +24,16 @@ fun ClipBackgroundView(
     modifier: Modifier = Modifier,
     inTimeline: Boolean = false,
 ) {
-    val backgroundColor =
-        when (clip.clipType) {
-            ClipType.Audio -> LocalExtendedColorScheme.current.purple.colorContainer
-            else -> MaterialTheme.colorScheme.surfaceVariant
-        }
+    val backgroundColor = when (clip.clipType) {
+        ClipType.Audio -> LocalExtendedColorScheme.current.purple.colorContainer
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
 
-    val thumbnails =
-        if (clip.clipType == ClipType.Audio) {
-            null
-        } else {
-            timelineState.getThumbnailProvider(clip.id)?.thumbnails ?: emptyList()
-        }
+    val thumbnails = if (clip.clipType == ClipType.Audio) {
+        null
+    } else {
+        timelineState.getThumbnailProvider(clip.id)?.thumbnails ?: emptyList()
+    }
     val isLoading = thumbnails != null && thumbnails.isEmpty()
 
     Box(
@@ -55,11 +53,10 @@ fun ClipBackgroundView(
             .ifTrue(inTimeline) {
                 if (clip.allowsSelecting) {
                     border(
-                        border =
-                            BorderStroke(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                            ),
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        ),
                         shape = MaterialTheme.shapes.small,
                     )
                 } else {

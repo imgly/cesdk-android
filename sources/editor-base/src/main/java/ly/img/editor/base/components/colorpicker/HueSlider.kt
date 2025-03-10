@@ -1,4 +1,4 @@
-package ly.img.editor.base.components.color_picker
+package ly.img.editor.base.components.colorpicker
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,10 +26,9 @@ internal fun HueSlider(
     onValueChangeFinished: () -> Unit,
 ) {
     var sliderValue by remember(value) { mutableStateOf(value) }
-    val colors =
-        SliderDefaults.colors(
-            thumbColor = HsvColor(hue = sliderValue, 1f, 1f, 1f).toComposeColor(),
-        )
+    val colors = SliderDefaults.colors(
+        thumbColor = HsvColor(hue = sliderValue, 1f, 1f, 1f).toComposeColor(),
+    )
     Slider(
         value = sliderValue,
         modifier = modifier,
@@ -50,20 +49,19 @@ internal fun HueSlider(
 @Composable
 private fun Track(modifier: Modifier = Modifier) {
     val trackHeight = 4.dp
-    val gradient =
-        remember {
-            Brush.linearGradient(
-                listOf(
-                    Color(0xFFEC5151),
-                    Color(0xFFFFDB00),
-                    Color(0xFF00F900),
-                    Color(0xFF00FCEC),
-                    Color(0xFF1D0EE3),
-                    Color(0xFFFF37C4),
-                    Color(0xFFFF271E),
-                ),
-            )
-        }
+    val gradient = remember {
+        Brush.linearGradient(
+            listOf(
+                Color(0xFFEC5151),
+                Color(0xFFFFDB00),
+                Color(0xFF00F900),
+                Color(0xFF00FCEC),
+                Color(0xFF1D0EE3),
+                Color(0xFFFF37C4),
+                Color(0xFFFF271E),
+            ),
+        )
+    }
     Canvas(
         modifier
             .fillMaxWidth()

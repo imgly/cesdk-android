@@ -8,11 +8,12 @@ import androidx.compose.runtime.compositionLocalOf
 abstract class EditorScope {
     protected abstract val impl: EditorContext
 
+    // It is an extension function on purpose to make accessing this object more obvious that it's part of the EditorScope and
+    // not a customer's property (italic in Android Studio makes it more obvious).
+
     /**
      * The context of the editor. This property should be used to access all the properties and functions within the editor.
      */
-    // It is an extension function on purpose to make accessing this object more obvious that it's part of the EditorScope and
-    // not a customer's property (italic in Android Studio makes it more obvious).
     val EditorScope.editorContext: EditorContext
         get() = impl
 }

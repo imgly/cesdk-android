@@ -25,9 +25,8 @@ enum class EditorUiMode {
 
 internal val EditorUiMode.useDarkTheme
     @Composable
-    get() =
-        when (this) {
-            EditorUiMode.SYSTEM -> isSystemInDarkTheme()
-            EditorUiMode.LIGHT -> false
-            EditorUiMode.DARK -> true
-        }
+    get() = when (this) {
+        EditorUiMode.SYSTEM -> isSystemInDarkTheme()
+        EditorUiMode.LIGHT -> false
+        EditorUiMode.DARK -> true
+    }

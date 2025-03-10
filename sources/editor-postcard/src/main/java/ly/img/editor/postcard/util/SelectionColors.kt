@@ -19,7 +19,10 @@ enum class ColorType {
     Stroke,
 }
 
-class NamedColor(val name: String, val color: RGBAColor) {
+class NamedColor(
+    val name: String,
+    val color: RGBAColor,
+) {
     val colorTypeBlocksMapping = hashMapOf<ColorType, HashSet<DesignBlock>>()
 }
 
@@ -37,9 +40,7 @@ class SelectionColors {
         blockSet.add(designBlock)
     }
 
-    fun getColors(): List<NamedColor> {
-        return namedColors.values.toList()
-    }
+    fun getColors(): List<NamedColor> = namedColors.values.toList()
 
     fun getNamedColor(name: String) = requireNotNull(namedColors[name])
 }
@@ -52,12 +53,7 @@ private fun Engine.getSelectionColors(
     ignoreScope: Boolean,
     selectionColors: SelectionColors,
 ) {
-    if (!(
-            block.isScopeEnabled(designBlock, Scope.FillChange) ||
-                block.isScopeEnabled(designBlock, Scope.StrokeChange)
-        ) &&
-        !ignoreScope
-    ) {
+    if (!(block.isScopeEnabled(designBlock, Scope.FillChange) || block.isScopeEnabled(designBlock, Scope.StrokeChange)) && !ignoreScope) {
         return
     }
     val name = block.getName(designBlock)
@@ -72,25 +68,24 @@ private fun Engine.getSelectionColors(
         colorType: ColorType,
         includeDisabled: Boolean = false,
     ): RGBAColor? {
-        val color =
-            when (colorType) {
-                ColorType.Fill ->
-                    if ((block.isFillEnabled(designBlock) || includeDisabled)) {
-                        when (val fillInfo = getFill(designBlock)) {
-                            is SolidFill, is GradientFill -> fillInfo.mainColor.toEngineColor()
-                            else -> null
-                        }
-                    } else {
-                        null
+        val color = when (colorType) {
+            ColorType.Fill ->
+                if ((block.isFillEnabled(designBlock) || includeDisabled)) {
+                    when (val fillInfo = getFill(designBlock)) {
+                        is SolidFill, is GradientFill -> fillInfo.mainColor.toEngineColor()
+                        else -> null
                     }
+                } else {
+                    null
+                }
 
-                ColorType.Stroke ->
-                    if (block.isStrokeEnabled(designBlock) || includeDisabled) {
-                        block.getStrokeColor(designBlock) as RGBAColor
-                    } else {
-                        null
-                    }
-            } ?: return null
+            ColorType.Stroke ->
+                if (block.isStrokeEnabled(designBlock) || includeDisabled) {
+                    block.getStrokeColor(designBlock) as RGBAColor
+                } else {
+                    null
+                }
+        } ?: return null
 
         selectionColors.add(designBlock, name, color, colorType)
         return color
@@ -105,11 +100,10 @@ private fun Engine.getSelectionColors(
             colorType: ColorType,
             color: RGBAColor,
         ) {
-            val propertyColor =
-                when (colorType) {
-                    ColorType.Fill -> getFill(designBlock)?.mainColor?.toEngineColor()
-                    ColorType.Stroke -> block.getStrokeColor(designBlock)
-                }
+            val propertyColor = when (colorType) {
+                ColorType.Fill -> getFill(designBlock)?.mainColor?.toEngineColor()
+                ColorType.Stroke -> block.getStrokeColor(designBlock)
+            }
             if (setDisabled && propertyColor != color) {
                 when (colorType) {
                     ColorType.Fill -> {
@@ -186,12 +180,10 @@ internal fun Engine.getPageSelectionColors(
     includeDisabled: Boolean = false,
     setDisabled: Boolean = false,
     ignoreScope: Boolean = false,
-): SelectionColors {
-    return getBlockSelectionColors(
-        designBlock = getPage(forPage),
-        includeUnnamed = includeUnnamed,
-        includeDisabled = includeDisabled,
-        setDisabled = setDisabled,
-        ignoreScope = ignoreScope,
-    )
-}
+): SelectionColors = getBlockSelectionColors(
+    designBlock = getPage(forPage),
+    includeUnnamed = includeUnnamed,
+    includeDisabled = includeDisabled,
+    setDisabled = setDisabled,
+    ignoreScope = ignoreScope,
+)

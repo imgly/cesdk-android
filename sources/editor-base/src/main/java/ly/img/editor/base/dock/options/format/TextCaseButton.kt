@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.Preview
 import ly.img.editor.base.R
 import ly.img.editor.base.components.ToggleIconButton
@@ -30,22 +29,20 @@ fun TextCaseButton(
             changeCasing(casing)
         },
     ) {
-        val contentDescription =
-            when (casing) {
-                TextCase.NORMAL -> stringResource(R.string.ly_img_editor_letter_casing_none)
-                TextCase.UPPER_CASE -> stringResource(R.string.ly_img_editor_letter_casing_uppercase)
-                TextCase.LOWER_CASE -> stringResource(R.string.ly_img_editor_letter_casing_lowercase)
-                TextCase.TITLE_CASE -> stringResource(R.string.ly_img_editor_letter_casing_capitalize)
-            }
+        val contentDescription = when (casing) {
+            TextCase.NORMAL -> stringResource(R.string.ly_img_editor_letter_casing_none)
+            TextCase.UPPER_CASE -> stringResource(R.string.ly_img_editor_letter_casing_uppercase)
+            TextCase.LOWER_CASE -> stringResource(R.string.ly_img_editor_letter_casing_lowercase)
+            TextCase.TITLE_CASE -> stringResource(R.string.ly_img_editor_letter_casing_capitalize)
+        }
 
         Icon(
-            imageVector =
-                when (casing) {
-                    TextCase.NORMAL -> IconPack.Nonecasing
-                    TextCase.UPPER_CASE -> IconPack.Uppercasing
-                    TextCase.LOWER_CASE -> IconPack.Lowercasing
-                    TextCase.TITLE_CASE -> IconPack.Capitalizecasing
-                },
+            imageVector = when (casing) {
+                TextCase.NORMAL -> IconPack.Nonecasing
+                TextCase.UPPER_CASE -> IconPack.Uppercasing
+                TextCase.LOWER_CASE -> IconPack.Lowercasing
+                TextCase.TITLE_CASE -> IconPack.Capitalizecasing
+            },
             contentDescription = contentDescription,
         )
     }
@@ -58,14 +55,13 @@ private fun Preview(
 ) {
     TextCaseButton(
         casing = textCase,
-        currentCasing =
-            if (checked) {
-                textCase
-            } else if (textCase == TextCase.NORMAL) {
-                TextCase.UPPER_CASE
-            } else {
-                TextCase.NORMAL
-            },
+        currentCasing = if (checked) {
+            textCase
+        } else if (textCase == TextCase.NORMAL) {
+            TextCase.UPPER_CASE
+        } else {
+            TextCase.NORMAL
+        },
         changeCasing = {},
     )
 }

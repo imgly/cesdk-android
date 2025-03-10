@@ -5,7 +5,7 @@ import android.os.Parcelable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import ly.img.editor.base.components.color_picker.fillAndStrokeColors
+import ly.img.editor.base.components.colorpicker.fillAndStrokeColors
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.component.CanvasMenu
 import ly.img.editor.core.component.Dock
@@ -57,19 +57,17 @@ class EditorConfiguration<STATE : Parcelable> private constructor(
     val canvasMenu: (@Composable EditorScope.() -> CanvasMenu)?,
     private val `_`: Nothing,
 ) {
-    override fun toString(): String {
-        return "$`_`EditorConfiguration(" +
-            "uiMode = $uiMode, " +
-            ", navigationIcon = $navigationIcon" +
-            ", assetLibrary = $assetLibrary" +
-            ", colorPalette = $colorPalette" +
-            ", onEvent = $onEvent" +
-            ", overlay = $overlay" +
-            ", dock = $dock" +
-            ", inspectorBar = $inspectorBar" +
-            ", canvasMenu = $canvasMenu" +
-            ")"
-    }
+    override fun toString(): String = "$`_`EditorConfiguration(" +
+        "uiMode = $uiMode, " +
+        ", navigationIcon = $navigationIcon" +
+        ", assetLibrary = $assetLibrary" +
+        ", colorPalette = $colorPalette" +
+        ", onEvent = $onEvent" +
+        ", overlay = $overlay" +
+        ", dock = $dock" +
+        ", inspectorBar = $inspectorBar" +
+        ", canvasMenu = $canvasMenu" +
+        ")"
 
     companion object {
         /**
@@ -124,8 +122,7 @@ class EditorConfiguration<STATE : Parcelable> private constructor(
             inspectorBar: (@Composable EditorScope.() -> InspectorBar)? = { InspectorBar.remember() },
             canvasMenu: (@Composable EditorScope.() -> CanvasMenu)? = { CanvasMenu.remember() },
             `_`: Nothing = nothing,
-        ): EditorConfiguration<STATE> =
-            // todo consider adding all parameters as keys. If we add now it crashes.
+        ): EditorConfiguration<STATE> = // todo consider adding all parameters as keys. If we add now it crashes.
             androidx.compose.runtime.remember {
                 EditorConfiguration(
                     initialState = initialState,

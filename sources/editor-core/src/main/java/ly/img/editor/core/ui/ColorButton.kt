@@ -30,12 +30,11 @@ fun ColorButton(
     selectionStrokeWidth: Dp = 2.dp,
 ) = FillButton(
     modifier = modifier,
-    fill =
-        remember(color) {
-            color?.let {
-                SolidFill(color)
-            }
-        },
+    fill = remember(color) {
+        color?.let {
+            SolidFill(color)
+        }
+    },
     selected = selected,
     punchHole = punchHole,
     onClick = onClick,

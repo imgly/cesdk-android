@@ -23,36 +23,33 @@ internal fun rememberScrollStateController(
     val thumbMaxLengthUpdated = rememberUpdatedState(thumbMaxLength)
     val alwaysShowScrollBarUpdated = rememberUpdatedState(alwaysShowScrollBar)
 
-    val fullLengthDp =
-        with(LocalDensity.current) {
-            remember {
-                derivedStateOf {
-                    state.maxValue.toDp() + visibleLengthDpUpdated.value
-                }
-            }
-        }
-
-    val thumbSizeNormalizedReal =
+    val fullLengthDp = with(LocalDensity.current) {
         remember {
             derivedStateOf {
-                if (fullLengthDp.value == 0.dp) {
-                    1f
-                } else {
-                    val normalizedDp = visibleLengthDpUpdated.value / fullLengthDp.value
-                    normalizedDp.coerceIn(0f, 1f)
-                }
+                state.maxValue.toDp() + visibleLengthDpUpdated.value
             }
         }
+    }
 
-    val thumbSizeNormalized =
-        remember {
-            derivedStateOf {
-                thumbSizeNormalizedReal.value.coerceIn(
-                    thumbMinLengthUpdated.value,
-                    thumbMaxLengthUpdated.value,
-                )
+    val thumbSizeNormalizedReal = remember {
+        derivedStateOf {
+            if (fullLengthDp.value == 0.dp) {
+                1f
+            } else {
+                val normalizedDp = visibleLengthDpUpdated.value / fullLengthDp.value
+                normalizedDp.coerceIn(0f, 1f)
             }
         }
+    }
+
+    val thumbSizeNormalized = remember {
+        derivedStateOf {
+            thumbSizeNormalizedReal.value.coerceIn(
+                thumbMinLengthUpdated.value,
+                thumbMaxLengthUpdated.value,
+            )
+        }
+    }
 
     fun offsetCorrection(top: Float): Float {
         val topRealMax = 1f
@@ -60,21 +57,19 @@ internal fun rememberScrollStateController(
         return top * topMax / topRealMax
     }
 
-    val thumbOffsetNormalized =
-        remember {
-            derivedStateOf {
-                if (state.maxValue == 0) return@derivedStateOf 0f
-                val normalized = state.value.toFloat() / state.maxValue.toFloat()
-                offsetCorrection(normalized)
-            }
+    val thumbOffsetNormalized = remember {
+        derivedStateOf {
+            if (state.maxValue == 0) return@derivedStateOf 0f
+            val normalized = state.value.toFloat() / state.maxValue.toFloat()
+            offsetCorrection(normalized)
         }
+    }
 
-    val thumbIsInAction =
-        remember {
-            derivedStateOf {
-                state.isScrollInProgress || alwaysShowScrollBarUpdated.value
-            }
+    val thumbIsInAction = remember {
+        derivedStateOf {
+            state.isScrollInProgress || alwaysShowScrollBarUpdated.value
         }
+    }
 
     return remember {
         ScrollStateController(

@@ -21,12 +21,11 @@ data class EditorUiViewState(
     val isDockVisible: Boolean = false,
     val timelineTrigger: Boolean = false,
     val pagesState: EditorPagesState? = null,
-    val openContract: EditorEvent.LaunchContract<*, *> =
-        EditorEvent.LaunchContract(
-            contract = DummyContract,
-            input = Unit,
-            onOutput = {},
-        ),
+    val openContract: EditorEvent.LaunchContract<*, *> = EditorEvent.LaunchContract(
+        contract = DummyContract,
+        input = Unit,
+        onOutput = {},
+    ),
 )
 
 object DummyContract : ActivityResultContract<Unit, Unit>() {

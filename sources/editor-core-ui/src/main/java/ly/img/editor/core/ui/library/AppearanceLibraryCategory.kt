@@ -14,26 +14,24 @@ object AppearanceLibraryCategory {
             tabTitleRes = R.string.ly_img_editor_filters,
             tabSelectedIcon = IconPack.LibraryElements,
             tabUnselectedIcon = IconPack.LibraryElementsOutline,
-            content =
-                LibraryContent.Sections(
-                    titleRes = R.string.ly_img_editor_filters,
-                    sections =
-                        listOf(
-                            LibraryContent.Section(
-                                sourceTypes = listOf(AppearanceAssetSourceType.DuoToneFilter),
-                                count = Int.MAX_VALUE,
-                                assetType = AssetType.Filter,
-                                expandContent = null,
-                            ),
-                            LibraryContent.Section(
-                                sourceTypes = listOf(AppearanceAssetSourceType.LutFilter),
-                                addGroupedSubSections = true,
-                                count = Int.MAX_VALUE,
-                                assetType = AssetType.Filter,
-                                expandContent = null,
-                            ),
-                        ),
+            content = LibraryContent.Sections(
+                titleRes = R.string.ly_img_editor_filters,
+                sections = listOf(
+                    LibraryContent.Section(
+                        sourceTypes = listOf(AppearanceAssetSourceType.DuoToneFilter),
+                        count = Int.MAX_VALUE,
+                        assetType = AssetType.Filter,
+                        expandContent = null,
+                    ),
+                    LibraryContent.Section(
+                        sourceTypes = listOf(AppearanceAssetSourceType.LutFilter),
+                        addGroupedSubSections = true,
+                        count = Int.MAX_VALUE,
+                        assetType = AssetType.Filter,
+                        expandContent = null,
+                    ),
                 ),
+            ),
         )
     }
 
@@ -42,19 +40,17 @@ object AppearanceLibraryCategory {
             tabTitleRes = R.string.ly_img_editor_effects,
             tabSelectedIcon = IconPack.LibraryElements,
             tabUnselectedIcon = IconPack.LibraryElementsOutline,
-            content =
-                LibraryContent.Sections(
-                    titleRes = R.string.ly_img_editor_effects,
-                    sections =
-                        listOf(
-                            LibraryContent.Section(
-                                sourceTypes = listOf(AppearanceAssetSourceType.FxEffect),
-                                count = Int.MAX_VALUE,
-                                assetType = AssetType.Effect,
-                                expandContent = null,
-                            ),
-                        ),
+            content = LibraryContent.Sections(
+                titleRes = R.string.ly_img_editor_effects,
+                sections = listOf(
+                    LibraryContent.Section(
+                        sourceTypes = listOf(AppearanceAssetSourceType.FxEffect),
+                        count = Int.MAX_VALUE,
+                        assetType = AssetType.Effect,
+                        expandContent = null,
+                    ),
                 ),
+            ),
         )
     }
 
@@ -63,19 +59,17 @@ object AppearanceLibraryCategory {
             tabTitleRes = R.string.ly_img_editor_blur,
             tabSelectedIcon = IconPack.LibraryElements,
             tabUnselectedIcon = IconPack.LibraryElementsOutline,
-            content =
-                LibraryContent.Sections(
-                    titleRes = R.string.ly_img_editor_blur,
-                    sections =
-                        listOf(
-                            LibraryContent.Section(
-                                sourceTypes = listOf(AppearanceAssetSourceType.Blur),
-                                count = Int.MAX_VALUE,
-                                assetType = AssetType.Blur,
-                                expandContent = null,
-                            ),
-                        ),
+            content = LibraryContent.Sections(
+                titleRes = R.string.ly_img_editor_blur,
+                sections = listOf(
+                    LibraryContent.Section(
+                        sourceTypes = listOf(AppearanceAssetSourceType.Blur),
+                        count = Int.MAX_VALUE,
+                        assetType = AssetType.Blur,
+                        expandContent = null,
+                    ),
                 ),
+            ),
         )
     }
 }

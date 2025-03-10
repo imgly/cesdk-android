@@ -31,18 +31,17 @@ internal fun NextButton(
         Icon(
             imageVector = IconPack.Arrowrightbig,
             contentDescription = stringResource(ly.img.editor.core.R.string.ly_img_editor_close),
-            modifier =
-                modifier
-                    .size(56.dp)
-                    .clip(shape)
-                    .clickable(onClick = onClick)
-                    .background(extendedColorScheme.white)
-                    .border(
-                        width = 2.dp,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        shape = shape,
-                    )
-                    .padding(16.dp),
+            modifier = modifier
+                .size(56.dp)
+                .clip(shape)
+                .clickable(onClick = onClick)
+                .background(extendedColorScheme.white)
+                .border(
+                    width = 2.dp,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    shape = shape,
+                )
+                .padding(16.dp),
         )
     }
 }

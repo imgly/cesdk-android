@@ -14,7 +14,7 @@ data class FillStrokeUiState(
     val strokeUiState: StrokeUiState?,
 ) {
     companion object Factory {
-        internal fun getFillStrokeTitleRes(
+        private fun getFillStrokeTitleRes(
             hasSolidOrGradientFill: Boolean,
             hasStroke: Boolean,
         ) = when {
@@ -44,26 +44,24 @@ data class FillStrokeUiState(
         ): FillStrokeUiState {
             val designBlock = block.designBlock
             val fillType = engine.block.getFillType(designBlock)
-            val hasSolidOrGradientFill = (
+            val hasSolidOrGradientFill =
                 fillType == FillType.Color ||
                     fillType == FillType.LinearGradient ||
                     fillType == FillType.RadialGradient ||
                     fillType == FillType.ConicalGradient
-            )
             val hasStroke = engine.block.supportsStroke(designBlock)
             val palette = colorPalette.take(6)
             return FillStrokeUiState(
                 titleRes = getFillStrokeTitleRes(hasSolidOrGradientFill, hasStroke),
-                fillUiState =
-                    if (hasSolidOrGradientFill) {
-                        createFillUiState(
-                            block,
-                            engine,
-                            palette,
-                        )
-                    } else {
-                        null
-                    },
+                fillUiState = if (hasSolidOrGradientFill) {
+                    createFillUiState(
+                        block,
+                        engine,
+                        palette,
+                    )
+                } else {
+                    null
+                },
                 strokeUiState = if (hasStroke) createStrokeUiState(block, engine, palette) else null,
             )
         }

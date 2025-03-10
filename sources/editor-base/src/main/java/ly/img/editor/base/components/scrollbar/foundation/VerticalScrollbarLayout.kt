@@ -20,33 +20,30 @@ internal fun VerticalScrollbarLayout(
     settings: ScrollbarLayoutSettings,
     modifier: Modifier = Modifier,
 ) {
-    val state =
-        rememberScrollbarLayoutState(
-            thumbIsInAction = thumbIsInAction,
-            settings = settings,
-        )
+    val state = rememberScrollbarLayoutState(
+        thumbIsInAction = thumbIsInAction,
+        settings = settings,
+    )
 
     Layout(
         modifier = modifier,
         content = {
             Box(
-                modifier =
-                    Modifier
-                        .fillMaxHeight(thumbSizeNormalized)
-                        .padding(
-                            start = 0.dp,
-                            end = settings.scrollbarPadding,
-                        )
-                        .alpha(state.hideAlpha.value)
-                        .clip(settings.thumbShape)
-                        .width(settings.thumbThickness)
-                        .background(settings.thumbColor),
+                modifier = Modifier
+                    .fillMaxHeight(thumbSizeNormalized)
+                    .padding(
+                        start = 0.dp,
+                        end = settings.scrollbarPadding,
+                    )
+                    .alpha(state.hideAlpha.value)
+                    .clip(settings.thumbShape)
+                    .width(settings.thumbThickness)
+                    .background(settings.thumbColor),
             )
             Box(
-                modifier =
-                    Modifier
-                        .fillMaxHeight()
-                        .width(settings.scrollbarPadding * 2 + settings.thumbThickness),
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(settings.scrollbarPadding * 2 + settings.thumbThickness),
             )
         },
         measurePolicy = { measurables, constraints ->

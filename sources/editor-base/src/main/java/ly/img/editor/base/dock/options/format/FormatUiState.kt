@@ -44,62 +44,53 @@ internal fun createFormatUiState(
     return FormatUiState(
         libraryCategory = TypefaceLibraryCategory,
         fontFamily = typeface?.name ?: "Default",
-        canToggleBold =
-            typeface?.let {
-                engine.block.canToggleBoldFont(designBlock)
-            } ?: false,
-        canToggleItalic =
-            typeface?.let {
-                engine.block.canToggleItalicFont(designBlock)
-            } ?: false,
-        isBold =
-            typeface?.let {
-                engine.block.getTextFontWeights(designBlock).contains(FontWeight.BOLD)
-            } ?: false,
-        isItalic =
-            typeface?.let {
-                engine.block.getTextFontStyles(designBlock).contains(FontStyle.ITALIC)
-            } ?: false,
-        horizontalAlignment =
-            HorizontalAlignment.valueOf(
-                engine.block.getEnum(designBlock, "text/horizontalAlignment"),
-            ),
-        verticalAlignment =
-            VerticalAlignment.valueOf(
-                engine.block.getEnum(designBlock, "text/verticalAlignment"),
-            ),
+        canToggleBold = typeface?.let {
+            engine.block.canToggleBoldFont(designBlock)
+        } ?: false,
+        canToggleItalic = typeface?.let {
+            engine.block.canToggleItalicFont(designBlock)
+        } ?: false,
+        isBold = typeface?.let {
+            engine.block.getTextFontWeights(designBlock).contains(FontWeight.BOLD)
+        } ?: false,
+        isItalic = typeface?.let {
+            engine.block.getTextFontStyles(designBlock).contains(FontStyle.ITALIC)
+        } ?: false,
+        horizontalAlignment = HorizontalAlignment.valueOf(
+            engine.block.getEnum(designBlock, "text/horizontalAlignment"),
+        ),
+        verticalAlignment = VerticalAlignment.valueOf(
+            engine.block.getEnum(designBlock, "text/verticalAlignment"),
+        ),
         fontSize = engine.block.getFloat(designBlock, "text/fontSize"),
         letterSpacing = engine.block.getFloat(designBlock, "text/letterSpacing"),
         lineHeight = engine.block.getFloat(designBlock, "text/lineHeight"),
-        sizeModeRes =
-            when (sizeMode) {
-                SizeMode.ABSOLUTE -> SizeModeUi.ABSOLUTE
-                SizeMode.AUTO ->
-                    when (engine.block.getWidthMode(designBlock)) {
-                        SizeMode.AUTO -> SizeModeUi.AUTO_SIZE
-                        SizeMode.ABSOLUTE -> SizeModeUi.AUTO_HEIGHT
-                        SizeMode.PERCENT -> SizeModeUi.UNKNOWN
-                    }
+        sizeModeRes = when (sizeMode) {
+            SizeMode.ABSOLUTE -> SizeModeUi.ABSOLUTE
+            SizeMode.AUTO ->
+                when (engine.block.getWidthMode(designBlock)) {
+                    SizeMode.AUTO -> SizeModeUi.AUTO_SIZE
+                    SizeMode.ABSOLUTE -> SizeModeUi.AUTO_HEIGHT
+                    SizeMode.PERCENT -> SizeModeUi.UNKNOWN
+                }
 
-                SizeMode.PERCENT -> SizeModeUi.UNKNOWN
-            }.getText(),
+            SizeMode.PERCENT -> SizeModeUi.UNKNOWN
+        }.getText(),
         hasClippingOption = sizeMode == SizeMode.ABSOLUTE,
         isClipped = engine.block.getBoolean(designBlock, "text/clipLinesOutsideOfFrame"),
         isArrangeResizeAllowed = engine.block.isAllowedByScope(designBlock, Scope.LayerResize),
         casing = engine.block.getTextCases(designBlock).firstOrNull() ?: TextCase.NORMAL,
         paragraphSpacing = engine.block.getFloat(designBlock, "text/paragraphSpacing"),
         fontFamilyWeight = engine.block.getTextFontWeights(designBlock).firstOrNull() ?: FontWeight.NORMAL,
-        availableWeights =
-            typeface?.fonts?.sortedBy { it.weight.value + if (it.style == FontStyle.ITALIC) 1000 else 0 }?.map {
-                FontData(
-                    typeface = typeface,
-                    uri = it.uri,
-                    weight =
-                        androidx.compose.ui.text.font
-                            .FontWeight(it.weight.value),
-                    style = it.style,
-                )
-            } ?: emptyList(),
+        availableWeights = typeface?.fonts?.sortedBy { it.weight.value + if (it.style == FontStyle.ITALIC) 1000 else 0 }?.map {
+            FontData(
+                typeface = typeface,
+                uri = it.uri,
+                weight = androidx.compose.ui.text.font
+                    .FontWeight(it.weight.value),
+                style = it.style,
+            )
+        } ?: emptyList(),
         fontFamilyStyle = engine.block.getTextFontStyles(designBlock).firstOrNull() ?: FontStyle.NORMAL,
     )
 }

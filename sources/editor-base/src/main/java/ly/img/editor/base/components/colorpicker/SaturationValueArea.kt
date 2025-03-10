@@ -1,4 +1,4 @@
-package ly.img.editor.base.components.color_picker
+package ly.img.editor.base.components.colorpicker
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -29,48 +29,44 @@ internal fun SaturationValueArea(
     onSaturationValueChanged: (saturation: Float, value: Float) -> Unit,
     onSaturationValueChangeFinished: () -> Unit,
 ) {
-    val blackGradientBrush =
-        remember {
-            Brush.verticalGradient(listOf(Color(0xffffffff), Color(0xff000000)))
-        }
+    val blackGradientBrush = remember {
+        Brush.verticalGradient(listOf(Color(0xffffffff), Color(0xff000000)))
+    }
 
-    val currentColorGradientBrush =
-        remember(currentColor.hue) {
-            val hsvColor = HsvColor(hue = currentColor.hue, 1f, 1f, 1f)
-            Brush.horizontalGradient(
-                listOf(
-                    Color(0xffffffff),
-                    hsvColor.toComposeColor(),
-                ),
-            )
-        }
+    val currentColorGradientBrush = remember(currentColor.hue) {
+        val hsvColor = HsvColor(hue = currentColor.hue, 1f, 1f, 1f)
+        Brush.horizontalGradient(
+            listOf(
+                Color(0xffffffff),
+                hsvColor.toComposeColor(),
+            ),
+        )
+    }
 
     val outlineColor = MaterialTheme.colorScheme.outline
 
     Canvas(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .pointerInput(Unit) {
-                    forEachGesture {
-                        awaitPointerEventScope {
-                            val down = awaitFirstDown()
-                            val (s, v) = getSaturationPoint(down.position, size)
-                            onSaturationValueChanged(s, v)
-                            drag(down.id) { change ->
-                                if (change.positionChange() != Offset.Zero) change.consume()
-                                val (newSaturation, newValue) =
-                                    getSaturationPoint(
-                                        change.position,
-                                        size,
-                                    )
-                                onSaturationValueChanged(newSaturation, newValue)
-                            }
-                            onSaturationValueChangeFinished()
+        modifier = modifier
+            .fillMaxWidth()
+            .height(120.dp)
+            .pointerInput(Unit) {
+                forEachGesture {
+                    awaitPointerEventScope {
+                        val down = awaitFirstDown()
+                        val (s, v) = getSaturationPoint(down.position, size)
+                        onSaturationValueChanged(s, v)
+                        drag(down.id) { change ->
+                            if (change.positionChange() != Offset.Zero) change.consume()
+                            val (newSaturation, newValue) = getSaturationPoint(
+                                change.position,
+                                size,
+                            )
+                            onSaturationValueChanged(newSaturation, newValue)
                         }
+                        onSaturationValueChangeFinished()
                     }
-                },
+                }
+            },
     ) {
         val cornerRadiusPx = 12.dp.toPx()
         val cornerRadius = CornerRadius(cornerRadiusPx, cornerRadiusPx)
@@ -104,11 +100,10 @@ private fun getSaturationPoint(
     offset: Offset,
     size: IntSize,
 ): Pair<Float, Float> {
-    val (saturation, value) =
-        getSaturationValueFromPosition(
-            offset,
-            size.toSize(),
-        )
+    val (saturation, value) = getSaturationValueFromPosition(
+        offset,
+        size.toSize(),
+    )
     return saturation to value
 }
 

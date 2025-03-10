@@ -33,19 +33,18 @@ data class ScrollbarSettings(
     }
 
     companion object {
-        val Default =
-            ScrollbarSettings(
-                enabled = true,
-                alwaysShowScrollbar = false,
-                thumbThickness = 6.dp,
-                scrollbarPadding = 8.dp,
-                thumbMinLength = 0.1f,
-                thumbMaxLength = 1.0f,
-                thumbColor = Color(0xFF2A59B6),
-                thumbShape = CircleShape,
-                hideDelayMillis = 400,
-                hideEasingAnimation = FastOutSlowInEasing,
-                durationAnimationMillis = 500,
-            )
+        val Default = ScrollbarSettings(
+            enabled = true,
+            alwaysShowScrollbar = false,
+            thumbThickness = 6.dp,
+            scrollbarPadding = 8.dp,
+            thumbMinLength = 0.1f,
+            thumbMaxLength = 1.0f,
+            thumbColor = Color(0xFF2A59B6),
+            thumbShape = CircleShape,
+            hideDelayMillis = 400,
+            hideEasingAnimation = FastOutSlowInEasing,
+            durationAnimationMillis = 500,
+        )
     }
 }

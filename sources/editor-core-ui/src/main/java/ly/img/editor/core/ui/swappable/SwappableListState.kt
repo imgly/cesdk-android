@@ -35,21 +35,20 @@ fun rememberSwappableListState(
 
     val scope = rememberCoroutineScope()
     val onMoveState = rememberUpdatedState(onMove)
-    val state =
-        remember(
-            scope,
-            lazyListState,
-            scrollThreshold,
-            scrollSpeed,
-        ) {
-            SwappableListState(
-                state = lazyListState,
-                scope = scope,
-                onMoveState = onMoveState,
-                scrollThreshold = scrollThresholdPx,
-                scrollSpeed = scrollSpeed,
-            )
-        }
+    val state = remember(
+        scope,
+        lazyListState,
+        scrollThreshold,
+        scrollSpeed,
+    ) {
+        SwappableListState(
+            state = lazyListState,
+            scope = scope,
+            onMoveState = onMoveState,
+            scrollThreshold = scrollThresholdPx,
+            scrollSpeed = scrollSpeed,
+        )
+    }
     return state
 }
 
@@ -77,30 +76,27 @@ class SwappableListState internal constructor(
     private var predictedDraggingItemOffset: Int? = null
 
     internal val draggingItemOffset: Float
-        get() =
-            draggingItemLayoutInfo?.let { item ->
-                val offset =
-                    if (item.index == draggingItemTargetIndex) {
-                        predictedDraggingItemOffset = null
-                        item.offset
-                    } else {
-                        predictedDraggingItemOffset ?: item.offset
-                    }
-                draggingItemInitialOffset + draggingItemDraggedDelta - offset
-            } ?: 0f
+        get() = draggingItemLayoutInfo?.let { item ->
+            val offset = if (item.index == draggingItemTargetIndex) {
+                predictedDraggingItemOffset = null
+                item.offset
+            } else {
+                predictedDraggingItemOffset ?: item.offset
+            }
+            draggingItemInitialOffset + draggingItemDraggedDelta - offset
+        } ?: 0f
 
     // the offset of the handle center from the top or left of the dragging item when dragging starts
     private var draggingItemHandleOffset = 0f
 
     internal val swappableKeys = HashSet<Any?>()
 
-    private val scroller =
-        Scroller(
-            state,
-            scope,
-            scrollSpeed,
-            this::swapItems,
-        )
+    private val scroller = Scroller(
+        state,
+        scope,
+        scrollSpeed,
+        this::swapItems,
+    )
 
     internal var previousDraggingItemKey by mutableStateOf<Any?>(null)
         private set
@@ -162,10 +158,13 @@ class SwappableListState internal constructor(
         if (!scroller.isScrolling) {
             val endOffset = startOffset + draggingItem.size
             // find a target item to swap with
-            val targetItem =
-                state.layoutInfo.visibleItemsInfo.find { item ->
-                    item.offsetMiddle in startOffset..endOffset && draggingItem.index != item.index && item.key in swappableKeys && item.offset >= contentStartOffset && item.offset + item.size <= contentEndOffset
-                }
+            val targetItem = state.layoutInfo.visibleItemsInfo.find { item ->
+                item.offsetMiddle in startOffset..endOffset &&
+                    draggingItem.index != item.index &&
+                    item.key in swappableKeys &&
+                    item.offset >= contentStartOffset &&
+                    item.offset + item.size <= contentEndOffset
+            }
             if (targetItem != null) {
                 swapItems(draggingItem, targetItem)
             }
@@ -203,22 +202,20 @@ class SwappableListState internal constructor(
     ) {
         if (draggingItem.index == targetItem.index) return
 
-        predictedDraggingItemOffset =
-            if (targetItem.index > draggingItem.index) {
-                targetItem.size + targetItem.offset - draggingItem.size
-            } else {
-                targetItem.offset
-            }
+        predictedDraggingItemOffset = if (targetItem.index > draggingItem.index) {
+            targetItem.size + targetItem.offset - draggingItem.size
+        } else {
+            targetItem.offset
+        }
         draggingItemTargetIndex = targetItem.index
 
-        val scrollToIndex =
-            if (targetItem.index == state.firstVisibleItemIndex) {
-                draggingItem.index
-            } else if (draggingItem.index == state.firstVisibleItemIndex) {
-                targetItem.index
-            } else {
-                null
-            }
+        val scrollToIndex = if (targetItem.index == state.firstVisibleItemIndex) {
+            draggingItem.index
+        } else if (draggingItem.index == state.firstVisibleItemIndex) {
+            targetItem.index
+        } else {
+            null
+        }
         if (scrollToIndex != null) {
             scope.launch {
                 // this is needed to neutralize automatic keeping the first item first.
@@ -230,16 +227,12 @@ class SwappableListState internal constructor(
         }
     }
 
-    internal fun isAnItemDragging(): State<Boolean> {
-        return derivedStateOf {
-            draggingItemKey != null
-        }
+    internal fun isAnItemDragging(): State<Boolean> = derivedStateOf {
+        draggingItemKey != null
     }
 
-    internal fun isItemDragging(key: Any): State<Boolean> {
-        return derivedStateOf {
-            key == draggingItemKey
-        }
+    internal fun isItemDragging(key: Any): State<Boolean> = derivedStateOf {
+        key == draggingItemKey
     }
 
     private fun getScrollSpeedMultiplier(distance: Float): Float {

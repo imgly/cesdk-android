@@ -72,13 +72,12 @@ sealed interface LibraryContent {
         val showUpload: Boolean = sourceTypes.size == 1 && sourceTypes[0] is UploadAssetSourceType,
         val count: Int = 10,
         val assetType: AssetType,
-        val expandContent: LibraryContent? =
-            Grid(
-                titleRes = requireNotNull(titleRes),
-                sourceType = sourceTypes[0],
-                groups = groups,
-                assetType = assetType,
-            ),
+        val expandContent: LibraryContent? = Grid(
+            titleRes = requireNotNull(titleRes),
+            sourceType = sourceTypes[0],
+            groups = groups,
+            assetType = assetType,
+        ),
     ) {
         init {
             require(sourceTypes.isNotEmpty()) {
@@ -103,19 +102,18 @@ sealed interface LibraryContent {
         val Video by lazy {
             Sections(
                 titleRes = R.string.ly_img_editor_videos,
-                sections =
-                    listOf(
-                        Section(
-                            titleRes = R.string.ly_img_editor_videos,
-                            sourceTypes = listOf(AssetSourceType.Videos),
-                            assetType = AssetType.Video,
-                        ),
-                        Section(
-                            titleRes = R.string.ly_img_editor_video_uploads,
-                            sourceTypes = listOf(AssetSourceType.VideoUploads),
-                            assetType = AssetType.Video,
-                        ),
+                sections = listOf(
+                    Section(
+                        titleRes = R.string.ly_img_editor_videos,
+                        sourceTypes = listOf(AssetSourceType.Videos),
+                        assetType = AssetType.Video,
                     ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_video_uploads,
+                        sourceTypes = listOf(AssetSourceType.VideoUploads),
+                        assetType = AssetType.Video,
+                    ),
+                ),
             )
         }
 
@@ -125,21 +123,20 @@ sealed interface LibraryContent {
         val Audio by lazy {
             Sections(
                 titleRes = R.string.ly_img_editor_audio,
-                sections =
-                    listOf(
-                        Section(
-                            titleRes = R.string.ly_img_editor_audio,
-                            sourceTypes = listOf(AssetSourceType.Audio),
-                            count = 3,
-                            assetType = AssetType.Audio,
-                        ),
-                        Section(
-                            titleRes = R.string.ly_img_editor_audio_uploads,
-                            sourceTypes = listOf(AssetSourceType.AudioUploads),
-                            count = 3,
-                            assetType = AssetType.Audio,
-                        ),
+                sections = listOf(
+                    Section(
+                        titleRes = R.string.ly_img_editor_audio,
+                        sourceTypes = listOf(AssetSourceType.Audio),
+                        count = 3,
+                        assetType = AssetType.Audio,
                     ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_audio_uploads,
+                        sourceTypes = listOf(AssetSourceType.AudioUploads),
+                        count = 3,
+                        assetType = AssetType.Audio,
+                    ),
+                ),
             )
         }
 
@@ -149,19 +146,18 @@ sealed interface LibraryContent {
         val Images by lazy {
             Sections(
                 titleRes = R.string.ly_img_editor_images,
-                sections =
-                    listOf(
-                        Section(
-                            titleRes = R.string.ly_img_editor_images,
-                            sourceTypes = listOf(AssetSourceType.Images),
-                            assetType = AssetType.Image,
-                        ),
-                        Section(
-                            titleRes = R.string.ly_img_editor_gallery,
-                            sourceTypes = listOf(AssetSourceType.ImageUploads),
-                            assetType = AssetType.Image,
-                        ),
+                sections = listOf(
+                    Section(
+                        titleRes = R.string.ly_img_editor_images,
+                        sourceTypes = listOf(AssetSourceType.Images),
+                        assetType = AssetType.Image,
                     ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_gallery,
+                        sourceTypes = listOf(AssetSourceType.ImageUploads),
+                        assetType = AssetType.Image,
+                    ),
+                ),
             )
         }
 
@@ -171,15 +167,14 @@ sealed interface LibraryContent {
         val Text by lazy {
             Sections(
                 titleRes = R.string.ly_img_editor_text,
-                sections =
-                    listOf(
-                        Section(
-                            sourceTypes = listOf(AssetSourceType.Text),
-                            count = Int.MAX_VALUE,
-                            assetType = AssetType.Text,
-                            expandContent = null,
-                        ),
+                sections = listOf(
+                    Section(
+                        sourceTypes = listOf(AssetSourceType.Text),
+                        count = Int.MAX_VALUE,
+                        assetType = AssetType.Text,
+                        expandContent = null,
                     ),
+                ),
             )
         }
 
@@ -189,21 +184,20 @@ sealed interface LibraryContent {
         val Shapes by lazy {
             Sections(
                 titleRes = R.string.ly_img_editor_shapes,
-                sections =
-                    listOf(
-                        Section(
-                            titleRes = R.string.ly_img_editor_shapes_basic,
-                            sourceTypes = listOf(AssetSourceType.Shapes),
-                            groups = listOf("//ly.img.cesdk.vectorpaths/category/vectorpaths"),
-                            assetType = AssetType.Shape,
-                        ),
-                        Section(
-                            titleRes = R.string.ly_img_editor_shapes_abstract,
-                            sourceTypes = listOf(AssetSourceType.Shapes),
-                            groups = listOf("//ly.img.cesdk.vectorpaths.abstract/category/abstract"),
-                            assetType = AssetType.Shape,
-                        ),
+                sections = listOf(
+                    Section(
+                        titleRes = R.string.ly_img_editor_shapes_basic,
+                        sourceTypes = listOf(AssetSourceType.Shapes),
+                        groups = listOf("//ly.img.cesdk.vectorpaths/category/vectorpaths"),
+                        assetType = AssetType.Shape,
                     ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_shapes_abstract,
+                        sourceTypes = listOf(AssetSourceType.Shapes),
+                        groups = listOf("//ly.img.cesdk.vectorpaths.abstract/category/abstract"),
+                        assetType = AssetType.Shape,
+                    ),
+                ),
             )
         }
 
@@ -213,33 +207,32 @@ sealed interface LibraryContent {
         val Stickers by lazy {
             Sections(
                 titleRes = R.string.ly_img_editor_stickers,
-                sections =
-                    listOf(
-                        Section(
-                            titleRes = R.string.ly_img_editor_stickers_doodle,
-                            sourceTypes = listOf(AssetSourceType.Stickers),
-                            groups = listOf("//ly.img.cesdk.stickers.doodle/category/doodle"),
-                            assetType = AssetType.Sticker,
-                        ),
-                        Section(
-                            titleRes = R.string.ly_img_editor_stickers_emoji,
-                            sourceTypes = listOf(AssetSourceType.Stickers),
-                            groups = listOf("//ly.img.cesdk.stickers.emoji/category/emoji"),
-                            assetType = AssetType.Sticker,
-                        ),
-                        Section(
-                            titleRes = R.string.ly_img_editor_stickers_emoticons,
-                            sourceTypes = listOf(AssetSourceType.Stickers),
-                            groups = listOf("//ly.img.cesdk.stickers.emoticons/category/emoticons"),
-                            assetType = AssetType.Sticker,
-                        ),
-                        Section(
-                            titleRes = R.string.ly_img_editor_stickers_hands,
-                            sourceTypes = listOf(AssetSourceType.Stickers),
-                            groups = listOf("//ly.img.cesdk.stickers.hand/category/hand"),
-                            assetType = AssetType.Sticker,
-                        ),
+                sections = listOf(
+                    Section(
+                        titleRes = R.string.ly_img_editor_stickers_doodle,
+                        sourceTypes = listOf(AssetSourceType.Stickers),
+                        groups = listOf("//ly.img.cesdk.stickers.doodle/category/doodle"),
+                        assetType = AssetType.Sticker,
                     ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_stickers_emoji,
+                        sourceTypes = listOf(AssetSourceType.Stickers),
+                        groups = listOf("//ly.img.cesdk.stickers.emoji/category/emoji"),
+                        assetType = AssetType.Sticker,
+                    ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_stickers_emoticons,
+                        sourceTypes = listOf(AssetSourceType.Stickers),
+                        groups = listOf("//ly.img.cesdk.stickers.emoticons/category/emoticons"),
+                        assetType = AssetType.Sticker,
+                    ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_stickers_hands,
+                        sourceTypes = listOf(AssetSourceType.Stickers),
+                        groups = listOf("//ly.img.cesdk.stickers.hand/category/hand"),
+                        assetType = AssetType.Sticker,
+                    ),
+                ),
             )
         }
 
@@ -249,43 +242,40 @@ sealed interface LibraryContent {
         val Overlays by lazy {
             Sections(
                 titleRes = R.string.ly_img_editor_overlays,
-                sections =
-                    listOf(
-                        Section(
-                            titleRes = R.string.ly_img_editor_videos,
-                            sourceTypes = Video.sourceTypes,
-                            assetType = AssetType.Video,
-                            expandContent = Video,
-                        ),
-                        Section(
-                            titleRes = R.string.ly_img_editor_images,
-                            sourceTypes = Images.sourceTypes,
-                            assetType = AssetType.Image,
-                            expandContent = Images,
-                        ),
-                        Section(
+                sections = listOf(
+                    Section(
+                        titleRes = R.string.ly_img_editor_videos,
+                        sourceTypes = Video.sourceTypes,
+                        assetType = AssetType.Video,
+                        expandContent = Video,
+                    ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_images,
+                        sourceTypes = Images.sourceTypes,
+                        assetType = AssetType.Image,
+                        expandContent = Images,
+                    ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_gallery,
+                        sourceTypes = listOf(AssetSourceType.ImageUploads, AssetSourceType.VideoUploads),
+                        assetType = AssetType.Gallery,
+                        expandContent = Sections(
                             titleRes = R.string.ly_img_editor_gallery,
-                            sourceTypes = listOf(AssetSourceType.ImageUploads, AssetSourceType.VideoUploads),
-                            assetType = AssetType.Gallery,
-                            expandContent =
-                                Sections(
-                                    titleRes = R.string.ly_img_editor_gallery,
-                                    sections =
-                                        listOf(
-                                            Section(
-                                                titleRes = R.string.ly_img_editor_image_uploads,
-                                                sourceTypes = listOf(AssetSourceType.ImageUploads),
-                                                assetType = AssetType.Image,
-                                            ),
-                                            Section(
-                                                titleRes = R.string.ly_img_editor_video_uploads,
-                                                sourceTypes = listOf(AssetSourceType.VideoUploads),
-                                                assetType = AssetType.Video,
-                                            ),
-                                        ),
+                            sections = listOf(
+                                Section(
+                                    titleRes = R.string.ly_img_editor_image_uploads,
+                                    sourceTypes = listOf(AssetSourceType.ImageUploads),
+                                    assetType = AssetType.Image,
                                 ),
+                                Section(
+                                    titleRes = R.string.ly_img_editor_video_uploads,
+                                    sourceTypes = listOf(AssetSourceType.VideoUploads),
+                                    assetType = AssetType.Video,
+                                ),
+                            ),
                         ),
                     ),
+                ),
             )
         }
 

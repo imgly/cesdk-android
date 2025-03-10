@@ -149,34 +149,34 @@ import java.io.File
  *     }.collectAsState(initial = remember { Dock.Scope(parentScope = this) })
  *     Dock.rememberForDesign(
  *         scope = dockScope,
-*         listBuilder = Dock.ListBuilder.remember {
-*             add {
-*                 Dock.Button.remember(
-*                     vectorIcon = { listOf(IconPack.Music, IconPack.PlayBox).random() },
-*                     text = { "Custom1 $counter" },
-*                     onClick = {}
-*                 )
-*             }
-*             add {
-*                 Dock.Button.rememberElementsLibrary(
-*                     vectorIcon = { IconPack.Music }
-*                 )
-*             }
-*             add { Dock.Button.rememberSystemGallery() }
-*             add {
-*                 Dock.Button.remember(
-*                     vectorIcon = { IconPack.PlayBox },
-*                     text = { "Custom2" },
-*                     onClick = { counter++ }
-*                 )
-*             }
-*             add { Dock.Button.rememberImagesLibrary() }
-*             add {
-*                 Dock.Button.rememberStickersLibrary(
-*                     visible = { counter % 2 == 0 }
-*                 )
-*             }
-*             add { Dock.Button.rememberTextLibrary() }
+ *         listBuilder = Dock.ListBuilder.remember {
+ *             add {
+ *                 Dock.Button.remember(
+ *                     vectorIcon = { listOf(IconPack.Music, IconPack.PlayBox).random() },
+ *                     text = { "Custom1 $counter" },
+ *                     onClick = {}
+ *                 )
+ *             }
+ *             add {
+ *                 Dock.Button.rememberElementsLibrary(
+ *                     vectorIcon = { IconPack.Music }
+ *                 )
+ *             }
+ *             add { Dock.Button.rememberSystemGallery() }
+ *             add {
+ *                 Dock.Button.remember(
+ *                     vectorIcon = { IconPack.PlayBox },
+ *                     text = { "Custom2" },
+ *                     onClick = { counter++ }
+ *                 )
+ *             }
+ *             add { Dock.Button.rememberImagesLibrary() }
+ *             add {
+ *                 Dock.Button.rememberStickersLibrary(
+ *                     visible = { counter % 2 == 0 }
+ *                 )
+ *             }
+ *             add { Dock.Button.rememberTextLibrary() }
  *         }
  *     )
  * }
@@ -213,10 +213,9 @@ import java.io.File
 @UnstableEditorApi
 @Composable
 fun Dock.Companion.rememberForDesign(
-    scope: Scope =
-        LocalEditorScope.current.run {
-            remember(this) { Scope(parentScope = this) }
-        },
+    scope: Scope = LocalEditorScope.current.run {
+        remember(this) { Scope(parentScope = this) }
+    },
     visible: @Composable Scope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable Scope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable Scope.() -> ExitTransition = noneExitTransition,
@@ -225,18 +224,17 @@ fun Dock.Companion.rememberForDesign(
     horizontalArrangement: @Composable Scope.() -> Arrangement.Horizontal = { Arrangement.SpaceEvenly },
     itemDecoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = { it() },
     `_`: Nothing = nothing,
-): Dock =
-    remember(
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        listBuilder = listBuilder,
-        horizontalArrangement = horizontalArrangement,
-        itemDecoration = itemDecoration,
-        `_` = `_`,
-    )
+): Dock = remember(
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    listBuilder = listBuilder,
+    horizontalArrangement = horizontalArrangement,
+    itemDecoration = itemDecoration,
+    `_` = `_`,
+)
 
 /**
  * A composable helper function that creates and remembers a [EditorComponent.ListBuilder],
@@ -248,16 +246,14 @@ fun Dock.Companion.rememberForDesign(
  */
 @UnstableEditorApi
 @Composable
-fun Dock.ListBuilder.Companion.rememberForDesign(): ListBuilder<Item<*>> {
-    return ListBuilder.remember {
-        add { Button.rememberElementsLibrary() }
-        add { Button.rememberSystemGallery() }
-        add { Button.rememberSystemCamera() }
-        add { Button.rememberImagesLibrary() }
-        add { Button.rememberTextLibrary() }
-        add { Button.rememberShapesLibrary() }
-        add { Button.rememberStickersLibrary() }
-    }
+fun Dock.ListBuilder.Companion.rememberForDesign(): ListBuilder<Item<*>> = ListBuilder.remember {
+    add { Button.rememberElementsLibrary() }
+    add { Button.rememberSystemGallery() }
+    add { Button.rememberSystemCamera() }
+    add { Button.rememberImagesLibrary() }
+    add { Button.rememberTextLibrary() }
+    add { Button.rememberShapesLibrary() }
+    add { Button.rememberStickersLibrary() }
 }
 
 /**
@@ -305,10 +301,9 @@ fun Dock.ListBuilder.Companion.rememberForDesign(): ListBuilder<Item<*>> {
 @UnstableEditorApi
 @Composable
 fun Dock.Companion.rememberForPhoto(
-    scope: Scope =
-        LocalEditorScope.current.run {
-            remember(this) { Scope(parentScope = this) }
-        },
+    scope: Scope = LocalEditorScope.current.run {
+        remember(this) { Scope(parentScope = this) }
+    },
     visible: @Composable Scope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable Scope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable Scope.() -> ExitTransition = noneExitTransition,
@@ -317,18 +312,17 @@ fun Dock.Companion.rememberForPhoto(
     horizontalArrangement: @Composable Scope.() -> Arrangement.Horizontal = { Arrangement.SpaceEvenly },
     itemDecoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = { it() },
     `_`: Nothing = nothing,
-): Dock =
-    remember(
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        listBuilder = listBuilder,
-        horizontalArrangement = horizontalArrangement,
-        itemDecoration = itemDecoration,
-        `_` = `_`,
-    )
+): Dock = remember(
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    listBuilder = listBuilder,
+    horizontalArrangement = horizontalArrangement,
+    itemDecoration = itemDecoration,
+    `_` = `_`,
+)
 
 /**
  * A composable helper function that creates and remembers a [EditorComponent.ListBuilder],
@@ -340,17 +334,15 @@ fun Dock.Companion.rememberForPhoto(
  */
 @UnstableEditorApi
 @Composable
-fun Dock.ListBuilder.Companion.rememberForPhoto(): ListBuilder<Item<*>> {
-    return ListBuilder.remember {
-        add { Button.rememberAdjustments() }
-        add { Button.rememberFilter() }
-        add { Button.rememberEffect() }
-        add { Button.rememberBlur() }
-        add { Button.rememberCrop() }
-        add { Button.rememberTextLibrary() }
-        add { Button.rememberShapesLibrary() }
-        add { Button.rememberStickersLibrary() }
-    }
+fun Dock.ListBuilder.Companion.rememberForPhoto(): ListBuilder<Item<*>> = ListBuilder.remember {
+    add { Button.rememberAdjustments() }
+    add { Button.rememberFilter() }
+    add { Button.rememberEffect() }
+    add { Button.rememberBlur() }
+    add { Button.rememberCrop() }
+    add { Button.rememberTextLibrary() }
+    add { Button.rememberShapesLibrary() }
+    add { Button.rememberStickersLibrary() }
 }
 
 /**
@@ -401,35 +393,33 @@ fun Dock.ListBuilder.Companion.rememberForPhoto(): ListBuilder<Item<*>> {
 @UnstableEditorApi
 @Composable
 fun Dock.Companion.rememberForVideo(
-    scope: Scope =
-        LocalEditorScope.current.run {
-            val engine = editorContext.engine
+    scope: Scope = LocalEditorScope.current.run {
+        val engine = editorContext.engine
 
-            fun getBackgroundTrack(): DesignBlock? {
-                return engine.block.findByType(DesignBlockType.Track).firstOrNull {
-                    DesignBlockType.get(engine.block.getType(it)) == DesignBlockType.Track &&
-                        engine.block.isAlwaysOnBottom(it)
-                }
-            }
-            val reorderButtonVisible by remember(this) {
-                engine.event.subscribe(engine.scene.getPages())
-                    .map { getBackgroundTrack() }
-                    .onStart { emit(getBackgroundTrack()) }
-                    .distinctUntilChanged()
-                    .flatMapLatest { backgroundTrack ->
-                        if (backgroundTrack == null) {
-                            flowOf(false)
-                        } else {
-                            engine.event.subscribe(listOf(backgroundTrack))
-                                .map { engine.block.getChildren(backgroundTrack).size >= 2 }
-                                .onStart { emit(engine.block.getChildren(backgroundTrack).size >= 2) }
-                        }
+        fun getBackgroundTrack(): DesignBlock? = engine.block.findByType(DesignBlockType.Track).firstOrNull {
+            DesignBlockType.get(engine.block.getType(it)) == DesignBlockType.Track &&
+                engine.block.isAlwaysOnBottom(it)
+        }
+
+        val reorderButtonVisible by remember(this) {
+            engine.event.subscribe(engine.scene.getPages())
+                .map { getBackgroundTrack() }
+                .onStart { emit(getBackgroundTrack()) }
+                .distinctUntilChanged()
+                .flatMapLatest { backgroundTrack ->
+                    if (backgroundTrack == null) {
+                        flowOf(false)
+                    } else {
+                        engine.event.subscribe(listOf(backgroundTrack))
+                            .map { engine.block.getChildren(backgroundTrack).size >= 2 }
+                            .onStart { emit(engine.block.getChildren(backgroundTrack).size >= 2) }
                     }
-            }.collectAsState(
-                initial = remember { getBackgroundTrack()?.let { engine.block.getChildren(it).size >= 2 } ?: false },
-            )
-            remember(this, reorderButtonVisible) { Scope(parentScope = this) }
-        },
+                }
+        }.collectAsState(
+            initial = remember { getBackgroundTrack()?.let { engine.block.getChildren(it).size >= 2 } ?: false },
+        )
+        remember(this, reorderButtonVisible) { Scope(parentScope = this) }
+    },
     visible: @Composable Scope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable Scope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable Scope.() -> ExitTransition = noneExitTransition,
@@ -438,18 +428,17 @@ fun Dock.Companion.rememberForVideo(
     horizontalArrangement: @Composable Scope.() -> Arrangement.Horizontal = { Arrangement.SpaceEvenly },
     itemDecoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = { it() },
     `_`: Nothing = nothing,
-): Dock =
-    remember(
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        listBuilder = listBuilder,
-        horizontalArrangement = horizontalArrangement,
-        itemDecoration = itemDecoration,
-        `_` = `_`,
-    )
+): Dock = remember(
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    listBuilder = listBuilder,
+    horizontalArrangement = horizontalArrangement,
+    itemDecoration = itemDecoration,
+    `_` = `_`,
+)
 
 /**
  * A composable helper function that creates and remembers a [EditorComponent.ListBuilder],
@@ -461,31 +450,28 @@ fun Dock.Companion.rememberForVideo(
  */
 @UnstableEditorApi
 @Composable
-fun Dock.ListBuilder.Companion.rememberForVideo(): ListBuilder<Item<*>> {
-    return ListBuilder.remember {
-        add { Button.rememberSystemGallery() }
-        add {
-            /*
-            Make sure to add the gradle dependency of our camera library if you want to use the [rememberImglyCamera] button:
-            implementation "ly.img:camera:<same version as editor>".
-            If the dependency is missing, then [rememberSystemCamera] is used.
-             */
-            val isImglyCameraAvailable =
-                androidx.compose.runtime.remember {
-                    runCatching { CaptureVideo() }.isSuccess
-                }
-            if (isImglyCameraAvailable) {
-                Button.rememberImglyCamera()
-            } else {
-                Button.rememberSystemCamera()
-            }
+fun Dock.ListBuilder.Companion.rememberForVideo(): ListBuilder<Item<*>> = ListBuilder.remember {
+    add { Button.rememberSystemGallery() }
+    add {
+        /*
+        Make sure to add the gradle dependency of our camera library if you want to use the [rememberImglyCamera] button:
+        implementation "ly.img:camera:<same version as editor>".
+        If the dependency is missing, then [rememberSystemCamera] is used.
+         */
+        val isImglyCameraAvailable = androidx.compose.runtime.remember {
+            runCatching { CaptureVideo() }.isSuccess
         }
-        add { Button.rememberOverlaysLibrary() }
-        add { Button.rememberTextLibrary() }
-        add { Button.rememberStickersAndShapesLibrary() }
-        add { Button.rememberAudiosLibrary() }
-        add { Button.rememberReorder() }
+        if (isImglyCameraAvailable) {
+            Button.rememberImglyCamera()
+        } else {
+            Button.rememberSystemCamera()
+        }
     }
+    add { Button.rememberOverlaysLibrary() }
+    add { Button.rememberTextLibrary() }
+    add { Button.rememberStickersAndShapesLibrary() }
+    add { Button.rememberAudiosLibrary() }
+    add { Button.rememberReorder() }
 }
 
 /**
@@ -529,10 +515,9 @@ val Button.Id.Companion.elementsLibrary by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberElementsLibrary(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -544,29 +529,27 @@ fun Button.Companion.rememberElementsLibrary(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(
             EditorEvent.Sheet.Open(
-                type =
-                    SheetType.LibraryAdd(
-                        libraryCategory = editorContext.assetLibrary.elements(editorContext.engine.scene.getMode()),
-                    ),
+                type = SheetType.LibraryAdd(
+                    libraryCategory = editorContext.assetLibrary.elements(editorContext.engine.scene.getMode()),
+                ),
             ),
         )
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.elementsLibrary,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.elementsLibrary,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberOverlaysLibrary].
@@ -609,10 +592,9 @@ val Button.Id.Companion.overlaysLibrary by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberOverlaysLibrary(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -624,29 +606,27 @@ fun Button.Companion.rememberOverlaysLibrary(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(
             EditorEvent.Sheet.Open(
-                type =
-                    SheetType.LibraryAdd(
-                        libraryCategory = editorContext.assetLibrary.overlays(editorContext.engine.scene.getMode()),
-                    ),
+                type = SheetType.LibraryAdd(
+                    libraryCategory = editorContext.assetLibrary.overlays(editorContext.engine.scene.getMode()),
+                ),
             ),
         )
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.overlaysLibrary,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.overlaysLibrary,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberImagesLibrary].
@@ -689,10 +669,9 @@ val Button.Id.Companion.imagesLibrary by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberImagesLibrary(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -704,29 +683,27 @@ fun Button.Companion.rememberImagesLibrary(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(
             EditorEvent.Sheet.Open(
-                type =
-                    SheetType.LibraryAdd(
-                        libraryCategory = editorContext.assetLibrary.images(editorContext.engine.scene.getMode()),
-                    ),
+                type = SheetType.LibraryAdd(
+                    libraryCategory = editorContext.assetLibrary.images(editorContext.engine.scene.getMode()),
+                ),
             ),
         )
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.imagesLibrary,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.imagesLibrary,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberTextLibrary].
@@ -769,10 +746,9 @@ val Button.Id.Companion.textLibrary by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberTextLibrary(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -784,36 +760,33 @@ fun Button.Companion.rememberTextLibrary(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(
             EditorEvent.Sheet.Open(
-                type =
-                    SheetType.LibraryAdd(
-                        style =
-                            SheetStyle(
-                                isFloating = true,
-                                maxHeight = Height.Fraction(1F),
-                                isHalfExpandingEnabled = true,
-                                isHalfExpandedInitially = true,
-                            ),
-                        libraryCategory = editorContext.assetLibrary.text(editorContext.engine.scene.getMode()),
+                type = SheetType.LibraryAdd(
+                    style = SheetStyle(
+                        isFloating = true,
+                        maxHeight = Height.Fraction(1F),
+                        isHalfExpandingEnabled = true,
+                        isHalfExpandedInitially = true,
                     ),
+                    libraryCategory = editorContext.assetLibrary.text(editorContext.engine.scene.getMode()),
+                ),
             ),
         )
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.textLibrary,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.textLibrary,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberShapesLibrary].
@@ -856,10 +829,9 @@ val Button.Id.Companion.shapesLibrary by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberShapesLibrary(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -871,29 +843,27 @@ fun Button.Companion.rememberShapesLibrary(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(
             EditorEvent.Sheet.Open(
-                type =
-                    SheetType.LibraryAdd(
-                        libraryCategory = editorContext.assetLibrary.shapes(editorContext.engine.scene.getMode()),
-                    ),
+                type = SheetType.LibraryAdd(
+                    libraryCategory = editorContext.assetLibrary.shapes(editorContext.engine.scene.getMode()),
+                ),
             ),
         )
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.shapesLibrary,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.shapesLibrary,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberStickersLibrary].
@@ -936,10 +906,9 @@ val Button.Id.Companion.stickersLibrary by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberStickersLibrary(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -951,29 +920,27 @@ fun Button.Companion.rememberStickersLibrary(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(
             EditorEvent.Sheet.Open(
-                type =
-                    SheetType.LibraryAdd(
-                        libraryCategory = editorContext.assetLibrary.stickers(editorContext.engine.scene.getMode()),
-                    ),
+                type = SheetType.LibraryAdd(
+                    libraryCategory = editorContext.assetLibrary.stickers(editorContext.engine.scene.getMode()),
+                ),
             ),
         )
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.stickersLibrary,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.stickersLibrary,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberStickersAndShapesLibrary].
@@ -1016,10 +983,9 @@ val Button.Id.Companion.stickersAndShapesLibrary by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberStickersAndShapesLibrary(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -1031,29 +997,27 @@ fun Button.Companion.rememberStickersAndShapesLibrary(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(
             EditorEvent.Sheet.Open(
-                type =
-                    SheetType.LibraryAdd(
-                        libraryCategory = editorContext.assetLibrary.stickersAndShapes(editorContext.engine.scene.getMode()),
-                    ),
+                type = SheetType.LibraryAdd(
+                    libraryCategory = editorContext.assetLibrary.stickersAndShapes(editorContext.engine.scene.getMode()),
+                ),
             ),
         )
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.stickersAndShapesLibrary,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.stickersAndShapesLibrary,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberAudiosLibrary].
@@ -1096,10 +1060,9 @@ val Button.Id.Companion.audiosLibrary by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberAudiosLibrary(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -1111,29 +1074,27 @@ fun Button.Companion.rememberAudiosLibrary(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(
             EditorEvent.Sheet.Open(
-                type =
-                    SheetType.LibraryAdd(
-                        libraryCategory = editorContext.assetLibrary.audios(editorContext.engine.scene.getMode()),
-                    ),
+                type = SheetType.LibraryAdd(
+                    libraryCategory = editorContext.assetLibrary.audios(editorContext.engine.scene.getMode()),
+                ),
             ),
         )
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.audiosLibrary,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.audiosLibrary,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberSystemGallery].
@@ -1175,10 +1136,9 @@ val Button.Id.Companion.systemGallery by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberSystemGallery(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -1194,45 +1154,41 @@ fun Button.Companion.rememberSystemGallery(
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
-        val mediaType =
-            if (editorContext.engine.scene.getMode() == SceneMode.VIDEO) {
-                ActivityResultContracts.PickVisualMedia.ImageAndVideo
-            } else {
-                ActivityResultContracts.PickVisualMedia.ImageOnly
-            }
+        val mediaType = if (editorContext.engine.scene.getMode() == SceneMode.VIDEO) {
+            ActivityResultContracts.PickVisualMedia.ImageAndVideo
+        } else {
+            ActivityResultContracts.PickVisualMedia.ImageOnly
+        }
         val request = PickVisualMediaRequest(mediaType)
-        val event =
-            EditorEvent.LaunchContract(ActivityResultContracts.PickVisualMedia(), request) {
-                it?.let {
-                    val uploadAssetSourceType =
-                        if (editorContext.activity.contentResolver.getType(it)?.startsWith("video") == true) {
-                            AssetSourceType.VideoUploads
-                        } else {
-                            AssetSourceType.ImageUploads
-                        }
-                    editorContext.eventHandler.send(
-                        EditorEvent.AddUriToScene(uploadAssetSourceType, it),
-                    )
+        val event = EditorEvent.LaunchContract(ActivityResultContracts.PickVisualMedia(), request) {
+            it?.let {
+                val uploadAssetSourceType = if (editorContext.activity.contentResolver.getType(it)?.startsWith("video") == true) {
+                    AssetSourceType.VideoUploads
+                } else {
+                    AssetSourceType.ImageUploads
                 }
+                editorContext.eventHandler.send(
+                    EditorEvent.AddUriToScene(uploadAssetSourceType, it),
+                )
             }
+        }
         editorContext.eventHandler.send(event)
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.systemGallery,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.systemGallery,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberSystemCamera].
@@ -1277,10 +1233,9 @@ val Button.Id.Companion.systemCamera by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberSystemCamera(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -1297,47 +1252,42 @@ fun Button.Companion.rememberSystemCamera(
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
         val context = editorContext.activity
-        val uri =
-            File.createTempFile("imgly_", null, context.filesDir).let {
-                FileProvider.getUriForFile(context, "${context.packageName}.ly.img.editor.fileprovider", it)
-            }
+        val uri = File.createTempFile("imgly_", null, context.filesDir).let {
+            FileProvider.getUriForFile(context, "${context.packageName}.ly.img.editor.fileprovider", it)
+        }
         val isVideoScene = editorContext.engine.scene.getMode() == SceneMode.VIDEO
-        val launchContract =
-            if (isVideoScene) {
-                ActivityResultContracts.CaptureVideo()
-            } else {
-                ActivityResultContracts.TakePicture()
-            }
-        val event =
-            EditorEvent.LaunchContract(launchContract, uri) {
-                if (it) {
-                    val assetSourceType =
-                        if (isVideoScene) {
-                            AssetSourceType.VideoUploads
-                        } else {
-                            AssetSourceType.ImageUploads
-                        }
-                    editorContext.eventHandler.send(EditorEvent.AddUriToScene(assetSourceType, uri))
+        val launchContract = if (isVideoScene) {
+            ActivityResultContracts.CaptureVideo()
+        } else {
+            ActivityResultContracts.TakePicture()
+        }
+        val event = EditorEvent.LaunchContract(launchContract, uri) {
+            if (it) {
+                val assetSourceType = if (isVideoScene) {
+                    AssetSourceType.VideoUploads
+                } else {
+                    AssetSourceType.ImageUploads
                 }
+                editorContext.eventHandler.send(EditorEvent.AddUriToScene(assetSourceType, uri))
             }
+        }
         editorContext.eventHandler.send(event)
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.systemCamera,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.systemCamera,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberImglyCamera].
@@ -1380,10 +1330,9 @@ val Button.Id.Companion.imglyCamera by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberImglyCamera(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -1395,14 +1344,12 @@ fun Button.Companion.rememberImglyCamera(
     onClick: ButtonScope.() -> Unit = {
         EditorEvent.LaunchContract(
             contract = CaptureVideo(),
-            input =
-                CaptureVideo.Input(
-                    engineConfiguration =
-                        EngineConfiguration(
-                            license = editorContext.engine.editor.getActiveLicense(),
-                            userId = editorContext.userId,
-                        ),
+            input = CaptureVideo.Input(
+                engineConfiguration = EngineConfiguration(
+                    license = editorContext.engine.editor.getActiveLicense(),
+                    userId = editorContext.userId,
                 ),
+            ),
             onOutput = {
                 (it as? CameraResult.Record)
                     ?.recordings
@@ -1420,21 +1367,20 @@ fun Button.Companion.rememberImglyCamera(
         ).let { editorContext.eventHandler.send(it) }
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.imglyCamera,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.imglyCamera,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberReorder].
@@ -1477,17 +1423,15 @@ val Button.Id.Companion.reorder by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberReorder(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
-            val backgroundTrack =
-                editorContext.engine.block.findByType(DesignBlockType.Track).firstOrNull {
-                    DesignBlockType.get(editorContext.engine.block.getType(it)) == DesignBlockType.Track &&
-                        editorContext.engine.block.isAlwaysOnBottom(it)
-                }
+            val backgroundTrack = editorContext.engine.block.findByType(DesignBlockType.Track).firstOrNull {
+                DesignBlockType.get(editorContext.engine.block.getType(it)) == DesignBlockType.Track &&
+                    editorContext.engine.block.isAlwaysOnBottom(it)
+            }
             backgroundTrack?.let { editorContext.engine.block.getChildren(it).size >= 2 } ?: false
         }
     },
@@ -1502,21 +1446,20 @@ fun Button.Companion.rememberReorder(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Reorder()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.reorder,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.reorder,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberAdjustments].
@@ -1558,10 +1501,9 @@ val Button.Id.Companion.adjustments by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberAdjustments(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             val designBlock = editorContext.engine.scene.getCurrentPage() ?: editorContext.engine.scene.getPages()[0]
@@ -1579,21 +1521,20 @@ fun Button.Companion.rememberAdjustments(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Adjustments()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.adjustments,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.adjustments,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberFilter].
@@ -1635,10 +1576,9 @@ val Button.Id.Companion.filter by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberFilter(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             val designBlock = editorContext.engine.scene.getCurrentPage() ?: editorContext.engine.scene.getPages()[0]
@@ -1656,21 +1596,20 @@ fun Button.Companion.rememberFilter(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Filter()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.filter,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.filter,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberEffect].
@@ -1712,10 +1651,9 @@ val Button.Id.Companion.effect by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberEffect(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             val designBlock = editorContext.engine.scene.getCurrentPage() ?: editorContext.engine.scene.getPages()[0]
@@ -1733,21 +1671,20 @@ fun Button.Companion.rememberEffect(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Effect()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.effect,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.effect,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberBlur].
@@ -1789,10 +1726,9 @@ val Button.Id.Companion.blur by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberBlur(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             val designBlock = editorContext.engine.scene.getCurrentPage() ?: editorContext.engine.scene.getPages()[0]
@@ -1810,21 +1746,20 @@ fun Button.Companion.rememberBlur(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Blur()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.blur,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.blur,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the dock button returned by [Dock.Button.Companion.rememberCrop].
@@ -1867,10 +1802,9 @@ val Button.Id.Companion.crop by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberCrop(
-    scope: ButtonScope =
-        LocalEditorScope.current.run {
-            remember(this) { ButtonScope(parentScope = this) }
-        },
+    scope: ButtonScope = LocalEditorScope.current.run {
+        remember(this) { ButtonScope(parentScope = this) }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             val designBlock = editorContext.engine.scene.getCurrentPage() ?: editorContext.engine.scene.getPages()[0]
@@ -1889,18 +1823,17 @@ fun Button.Companion.rememberCrop(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Crop()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.crop,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.crop,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)

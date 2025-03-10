@@ -29,18 +29,16 @@ fun GradientCard(
         modifier = modifier,
         shape = RoundedCornerShape(cornerRadius),
     ) {
-        val gradient =
-            remember { Brush.linearGradient(listOf(Color(0x14FEFBFF), Color(0x141B1B1F))) }
+        val gradient = remember { Brush.linearGradient(listOf(Color(0x14FEFBFF), Color(0x141B1B1F))) }
         Box(
-            modifier =
-                Modifier
-                    .background(Color(0x29ACAAAF))
-                    .ifTrue(onClick != null) {
-                        combinedClickable(
-                            onClick = onClick ?: { },
-                            onLongClick = onLongClick,
-                        )
-                    },
+            modifier = Modifier
+                .background(Color(0x29ACAAAF))
+                .ifTrue(onClick != null) {
+                    combinedClickable(
+                        onClick = onClick ?: { },
+                        onLongClick = onLongClick,
+                    )
+                },
         ) {
             Box(modifier = Modifier.background(gradient)) {
                 content?.invoke(this) ?: Spacer(modifier = Modifier.fillMaxSize())

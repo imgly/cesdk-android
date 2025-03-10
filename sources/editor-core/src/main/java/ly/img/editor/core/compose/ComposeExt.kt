@@ -23,15 +23,14 @@ class RememberLastScope<T : Any?> {
      * an exception if calculation block has not returned any value before.
      */
     val lastValue: T
-        get() =
-            if (isValueSet.not()) {
-                error(
-                    "lastValue is accessed before returning a value in rememberLastValue block. " +
-                        "Make sure to provide at least one value before accessing lastValue.",
-                )
-            } else {
-                internalLastValue as T
-            }
+        get() = if (isValueSet.not()) {
+            error(
+                "lastValue is accessed before returning a value in rememberLastValue block. " +
+                    "Make sure to provide at least one value before accessing lastValue.",
+            )
+        } else {
+            internalLastValue as T
+        }
 }
 
 /**

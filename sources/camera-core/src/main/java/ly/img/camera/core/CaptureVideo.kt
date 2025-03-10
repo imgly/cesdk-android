@@ -19,10 +19,8 @@ open class CaptureVideo : ActivityResultContract<Input, CameraResult?>() {
     override fun createIntent(
         context: Context,
         input: Input,
-    ): Intent {
-        return Intent(context, Class.forName(ACTIVITY_CLASS_NAME)).apply {
-            putExtra(INTENT_KEY_CAMERA_INPUT, input)
-        }
+    ): Intent = Intent(context, Class.forName(ACTIVITY_CLASS_NAME)).apply {
+        putExtra(INTENT_KEY_CAMERA_INPUT, input)
     }
 
     final override fun getSynchronousResult(
@@ -33,9 +31,7 @@ open class CaptureVideo : ActivityResultContract<Input, CameraResult?>() {
     override fun parseResult(
         resultCode: Int,
         intent: Intent?,
-    ): CameraResult? {
-        return intent.takeIf { resultCode == Activity.RESULT_OK }?.getParcelableExtra(INTENT_KEY_CAMERA_RESULT)
-    }
+    ): CameraResult? = intent.takeIf { resultCode == Activity.RESULT_OK }?.getParcelableExtra(INTENT_KEY_CAMERA_RESULT)
 
     companion object {
         private const val ACTIVITY_CLASS_NAME = "ly.img.camera.CameraActivity"
@@ -69,18 +65,12 @@ open class CaptureVideo : ActivityResultContract<Input, CameraResult?>() {
             parcel.writeParcelable(cameraMode, flags)
         }
 
-        override fun describeContents(): Int {
-            return 0
-        }
+        override fun describeContents(): Int = 0
 
         companion object CREATOR : Parcelable.Creator<Input> {
-            override fun createFromParcel(parcel: Parcel): Input {
-                return Input(parcel)
-            }
+            override fun createFromParcel(parcel: Parcel): Input = Input(parcel)
 
-            override fun newArray(size: Int): Array<Input?> {
-                return arrayOfNulls(size)
-            }
+            override fun newArray(size: Int): Array<Input?> = arrayOfNulls(size)
         }
     }
 }

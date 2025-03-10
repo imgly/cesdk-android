@@ -1,4 +1,4 @@
-package ly.img.editor.postcard.bottomsheet.message_color
+package ly.img.editor.postcard.bottomsheet.color
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
@@ -62,15 +62,14 @@ fun MessageColorSheet(
                             onColorPickerActiveChanged(true)
                             screenState = ScreenState.ColorPicker
                         },
-                        colors =
-                            listOf(
-                                Color(0xFF263BAA),
-                                Color(0xFF002094),
-                                Color(0xFF001346),
-                                Color(0xFF000000),
-                                Color(0xFF696969),
-                                Color(0xFF999999),
-                            ),
+                        colors = listOf(
+                            Color(0xFF263BAA),
+                            Color(0xFF002094),
+                            Color(0xFF001346),
+                            Color(0xFF000000),
+                            Color(0xFF696969),
+                            Color(0xFF999999),
+                        ),
                     )
                 }
             }

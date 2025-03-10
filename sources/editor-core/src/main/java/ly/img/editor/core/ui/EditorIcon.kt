@@ -129,57 +129,55 @@ internal fun FillButton(
     val noStroke = fill == null
     val colorFill = if (fill is SolidFill) fill.mainColor else null
     val fillSize = buttonSize.toPx()
-    val brush: Brush? =
-        when (fill) {
-            is SolidFill -> null
-            is LinearGradientFill ->
-                remember(fill) {
-                    ShaderBrush(
-                        LinearGradientShader(
-                            from = Offset(0f, 0f),
-                            to = Offset(fillSize, fillSize),
-                            colors = fill.colorStops.map { (it.color as? RGBAColor)?.toComposeColor() ?: Color.Transparent },
-                            colorStops = fill.colorStops.map { it.stop },
-                            tileMode = TileMode.Clamp,
-                        ),
-                    )
-                }
-            is RadialGradientFill ->
-                remember(fill) {
-                    ShaderBrush(
-                        RadialGradientShader(
-                            center = Offset(fillSize / 2f, fillSize / 2f),
-                            radius = fillSize / 2f,
-                            colors = fill.colorStops.map { (it.color as? RGBAColor)?.toComposeColor() ?: Color.Transparent },
-                            colorStops = fill.colorStops.map { it.stop },
-                            tileMode = TileMode.Clamp,
-                        ),
-                    )
-                }
-            /* Hide for now. No ConicalGradientFill implementation in Compose.
-            is ConicalGradientFill ->
-                remember(fill) {
-
-                    TODO(
-                        """
-                        ConicalGradientFill is not supported yet.
-                        There is not ConicalGradientShader implementation in Compose.
-                        """.trimIndent(),
-                    )
-                }*/
-            else -> {
-                val image = ImageBitmap.imageResource(R.drawable.checkerboard_pattern)
-                remember(
-                    image,
-                ) { ShaderBrush(ImageShader(image, TileMode.Repeated, TileMode.Repeated)) }
+    val brush: Brush? = when (fill) {
+        is SolidFill -> null
+        is LinearGradientFill ->
+            remember(fill) {
+                ShaderBrush(
+                    LinearGradientShader(
+                        from = Offset(0f, 0f),
+                        to = Offset(fillSize, fillSize),
+                        colors = fill.colorStops.map { (it.color as? RGBAColor)?.toComposeColor() ?: Color.Transparent },
+                        colorStops = fill.colorStops.map { it.stop },
+                        tileMode = TileMode.Clamp,
+                    ),
+                )
             }
+        is RadialGradientFill ->
+            remember(fill) {
+                ShaderBrush(
+                    RadialGradientShader(
+                        center = Offset(fillSize / 2f, fillSize / 2f),
+                        radius = fillSize / 2f,
+                        colors = fill.colorStops.map { (it.color as? RGBAColor)?.toComposeColor() ?: Color.Transparent },
+                        colorStops = fill.colorStops.map { it.stop },
+                        tileMode = TileMode.Clamp,
+                    ),
+                )
+            }
+        /* Hide for now. No ConicalGradientFill implementation in Compose.
+        is ConicalGradientFill ->
+            remember(fill) {
+
+                TODO(
+                    """
+                    ConicalGradientFill is not supported yet.
+                    There is not ConicalGradientShader implementation in Compose.
+                    """.trimIndent(),
+                )
+            }*/
+        else -> {
+            val image = ImageBitmap.imageResource(R.drawable.checkerboard_pattern)
+            remember(
+                image,
+            ) { ShaderBrush(ImageShader(image, TileMode.Repeated, TileMode.Repeated)) }
         }
+    }
     Canvas(
-        modifier =
-            modifier
-                .size(buttonSize)
-                .ifTrue(onClick != null) { clip(if (noStroke) RoundedCornerShape(30) else CircleShape) }
-                .ifTrue(onClick != null) { clickable { onClick?.invoke() } },
+        modifier = modifier
+            .size(buttonSize)
+            .ifTrue(onClick != null) { clip(if (noStroke) RoundedCornerShape(30) else CircleShape) }
+            .ifTrue(onClick != null) { clickable { onClick?.invoke() } },
         onDraw = {
             val contrastStrokeWidthPx = 1.dp.toPx()
             val selectionStrokeWidthPx = selectionStrokeWidth.toPx()

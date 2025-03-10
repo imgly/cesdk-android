@@ -47,34 +47,31 @@ internal fun SideMenuItem(
 ) {
     // The usual Button has a min width which cannot be overriden so we need this custom button
     Box(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .minimumInteractiveComponentSize()
-                .clip(CircleShape)
-                .background(Color.Transparent)
-                .ifTrue(enabled) {
-                    clickable(
-                        onClick = onClick,
-                        role = Role.Button,
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication =
-                            rememberRipple(
-                                bounded = false,
-                            ),
-                    )
-                }
-                .ifTrue(!enabled) {
-                    alpha(0.5f)
-                },
+        modifier = Modifier
+            .fillMaxWidth()
+            .minimumInteractiveComponentSize()
+            .clip(CircleShape)
+            .background(Color.Transparent)
+            .ifTrue(enabled) {
+                clickable(
+                    onClick = onClick,
+                    role = Role.Button,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(
+                        bounded = false,
+                    ),
+                )
+            }
+            .ifTrue(!enabled) {
+                alpha(0.5f)
+            },
         contentAlignment = Alignment.Center,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 4.dp),
         ) {
             CheckedIcon(
                 imageVector = imageVector,
@@ -108,11 +105,10 @@ private fun CheckedIcon(
 ) {
     Shadowed(enabled = !checked) {
         Box(
-            modifier =
-                Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(if (checked) LocalExtendedColorScheme.current.white else Color.Transparent),
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(if (checked) LocalExtendedColorScheme.current.white else Color.Transparent),
         ) {
             Icon(
                 modifier = Modifier.align(Alignment.Center),

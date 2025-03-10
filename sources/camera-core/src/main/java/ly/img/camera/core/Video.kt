@@ -29,17 +29,11 @@ data class Video(
         parcel.writeParcelable(rect, flags)
     }
 
-    override fun describeContents(): Int {
-        return 0
-    }
+    override fun describeContents(): Int = 0
 
     companion object CREATOR : Parcelable.Creator<Video> {
-        override fun createFromParcel(parcel: Parcel): Video {
-            return Video(parcel)
-        }
+        override fun createFromParcel(parcel: Parcel): Video = Video(parcel)
 
-        override fun newArray(size: Int): Array<Video?> {
-            return arrayOfNulls(size)
-        }
+        override fun newArray(size: Int): Array<Video?> = arrayOfNulls(size)
     }
 }

@@ -13,14 +13,12 @@ data class AdjustmentUiState(
         fun create(
             block: Block,
             engine: Engine,
-        ): AdjustmentUiState {
-            return AdjustmentUiState(
-                EffectAndBlurOptions.getEffectAdjustments(
-                    engine = engine,
-                    designBlock = block.designBlock,
-                    effectType = EffectType.Adjustments,
-                ),
-            )
-        }
+        ): AdjustmentUiState = AdjustmentUiState(
+            EffectAndBlurOptions.getEffectAdjustments(
+                engine = engine,
+                designBlock = block.designBlock,
+                effectType = EffectType.Adjustments,
+            ),
+        )
     }
 }

@@ -1,4 +1,4 @@
-package ly.img.editor.postcard.bottomsheet.template_colors
+package ly.img.editor.postcard.bottomsheet.template
 
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.postcard.util.NamedColor

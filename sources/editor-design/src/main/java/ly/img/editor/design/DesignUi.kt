@@ -48,24 +48,22 @@ fun DesignUi(
         mutableStateOf(Unit)
     }
 
-    val libraryViewModel =
-        viewModel {
-            LibraryViewModel(
-                editorScope = editorScope,
-                onUpload = onUpload,
-            )
-        }
-    val viewModel =
-        viewModel {
-            DesignUiViewModel(
-                editorScope = editorScope,
-                onCreate = onCreate,
-                onExport = onExport,
-                onClose = onClose,
-                onError = onError,
-                libraryViewModel = libraryViewModel,
-            )
-        }
+    val libraryViewModel = viewModel {
+        LibraryViewModel(
+            editorScope = editorScope,
+            onUpload = onUpload,
+        )
+    }
+    val viewModel = viewModel {
+        DesignUiViewModel(
+            editorScope = editorScope,
+            onCreate = onCreate,
+            onExport = onExport,
+            onClose = onClose,
+            onError = onError,
+            libraryViewModel = libraryViewModel,
+        )
+    }
 
     val uiState by viewModel.uiState.collectAsState()
     val editorContext = editorScope.run { editorContext }
@@ -98,20 +96,18 @@ fun DesignUi(
         },
         pagesOverlay = {
             EditorPagesUi(
-                modifier =
-                    Modifier
-                        .statusBarsPadding()
-                        .padding(top = it.calculateTopPadding(), bottom = it.calculateBottomPadding() + 84.dp)
-                        .fillMaxSize(),
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(top = it.calculateTopPadding(), bottom = it.calculateBottomPadding() + 84.dp)
+                    .fillMaxSize(),
                 state = uiState.pagesState,
                 onEvent = viewModel::send,
             )
             EditorPagesDock(
-                modifier =
-                    Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(bottom = it.calculateBottomPadding())
-                        .height(84.dp),
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(bottom = it.calculateBottomPadding())
+                    .height(84.dp),
                 state = uiState.pagesState,
                 onEvent = viewModel::send,
             )

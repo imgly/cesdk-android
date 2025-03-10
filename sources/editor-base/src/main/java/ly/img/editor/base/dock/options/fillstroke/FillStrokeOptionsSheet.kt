@@ -215,36 +215,40 @@ fun FillStrokeOptionsSheet(
 
             else -> {
                 ColorPickerSheet(
-                    color =
-                        when (screenState) {
-                            ScreenState.StrokeColorPicker -> {
-                                checkNotNull(uiState.strokeUiState).strokeColor
-                            }
+                    color = when (screenState) {
+                        ScreenState.StrokeColorPicker -> {
+                            checkNotNull(uiState.strokeUiState).strokeColor
+                        }
 
-                            ScreenState.FirstGradientColorPicker -> {
-                                checkNotNull(
-                                    (uiState.fillUiState?.fillState as? GradientFill)?.colorStops?.getOrNull(
-                                        0,
-                                    )?.color as? RGBAColor,
-                                ).toComposeColor()
-                            }
+                        ScreenState.FirstGradientColorPicker -> {
+                            checkNotNull(
+                                (uiState.fillUiState?.fillState as? GradientFill)?.colorStops?.getOrNull(
+                                    0,
+                                )?.color as? RGBAColor,
+                            ).toComposeColor()
+                        }
 
-                            ScreenState.SecondGradientColorPicker -> {
-                                checkNotNull(
-                                    (uiState.fillUiState?.fillState as? GradientFill)?.colorStops?.getOrNull(
-                                        1,
-                                    )?.color as? RGBAColor,
-                                ).toComposeColor()
-                            }
+                        ScreenState.SecondGradientColorPicker -> {
+                            checkNotNull(
+                                (uiState.fillUiState?.fillState as? GradientFill)?.colorStops?.getOrNull(
+                                    1,
+                                )?.color as? RGBAColor,
+                            ).toComposeColor()
+                        }
 
-                            else -> {
-                                checkNotNull(uiState.fillUiState?.fillState?.mainColor)
-                            }
+                        else -> {
+                            checkNotNull(uiState.fillUiState?.fillState?.mainColor)
+                        }
+                    },
+                    title = stringResource(
+                        id = if (screenState ==
+                            ScreenState.StrokeColorPicker
+                        ) {
+                            R.string.ly_img_editor_stroke_color
+                        } else {
+                            R.string.ly_img_editor_fill_color
                         },
-                    title =
-                        stringResource(
-                            id = if (screenState == ScreenState.StrokeColorPicker) R.string.ly_img_editor_stroke_color else R.string.ly_img_editor_fill_color,
-                        ),
+                    ),
                     onBack = {
                         onColorPickerActiveChanged(false)
                         screenState = ScreenState.Main

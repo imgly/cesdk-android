@@ -1,4 +1,4 @@
-package ly.img.editor.base.components.color_picker
+package ly.img.editor.base.components.colorpicker
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,10 +32,9 @@ internal fun OpacitySlider(
     onValueChangeFinished: () -> Unit,
 ) {
     var sliderValue by remember(color) { mutableStateOf(color.alpha) }
-    val colors =
-        SliderDefaults.colors(
-            thumbColor = Color.White,
-        )
+    val colors = SliderDefaults.colors(
+        thumbColor = Color.White,
+    )
 
     Slider(
         value = sliderValue,
@@ -59,17 +58,15 @@ private fun Track(
 ) {
     val trackHeight = 4.dp
     val image = ImageBitmap.imageResource(R.drawable.checkerboard_pattern)
-    val opacityBrush =
-        remember(image) { ShaderBrush(ImageShader(image, TileMode.Repeated, TileMode.Repeated)) }
-    val gradientBrush =
-        remember(color) {
-            Brush.linearGradient(
-                listOf(
-                    color.copy(alpha = 0f),
-                    color.copy(alpha = 1f),
-                ),
-            )
-        }
+    val opacityBrush = remember(image) { ShaderBrush(ImageShader(image, TileMode.Repeated, TileMode.Repeated)) }
+    val gradientBrush = remember(color) {
+        Brush.linearGradient(
+            listOf(
+                color.copy(alpha = 0f),
+                color.copy(alpha = 1f),
+            ),
+        )
+    }
     Canvas(
         modifier
             .fillMaxWidth()

@@ -25,22 +25,26 @@ internal fun SelectableAssetWrapper(
     content: @Composable BoxScope.() -> Unit,
 ) {
     Box(
-        Modifier.ifTrue(isSelected) {
-            border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.large)
-        }.padding(4.dp).clip(MaterialTheme.shapes.medium),
+        Modifier
+            .ifTrue(isSelected) {
+                border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.large)
+            }
+            .padding(4.dp)
+            .clip(MaterialTheme.shapes.medium),
     ) {
         content()
         if (isSelected && selectedIcon != null) {
             Box(
-                Modifier.matchParentSize().background(color = Color(0x66000000)),
+                Modifier
+                    .matchParentSize()
+                    .background(color = Color(0x66000000)),
             ) { /* EMPTY BOX AS OVERLAY */ }
             Icon(
                 selectedIcon,
                 contentDescription = null,
-                modifier =
-                    Modifier
-                        .size(32.dp)
-                        .align(Alignment.Center),
+                modifier = Modifier
+                    .size(32.dp)
+                    .align(Alignment.Center),
                 tint = selectedIconTint,
             )
         }

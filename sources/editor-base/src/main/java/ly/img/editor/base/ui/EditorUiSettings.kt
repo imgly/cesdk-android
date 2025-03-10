@@ -14,24 +14,23 @@ internal fun setSettingsForEditorUi(
     engine: Engine,
     baseUri: Uri,
 ) {
-    val scopes =
-        arrayOf(
-            Scope.TextCharacter,
-            Scope.StrokeChange,
-            Scope.LayerOpacity,
-            Scope.LayerBlendMode,
-            Scope.LayerVisibility,
-            Scope.LayerClipping,
-            Scope.LayerMove,
-            Scope.LayerResize,
-            Scope.LayerRotate,
-            Scope.LayerFlip,
-            Scope.TextEdit,
-            Scope.FillChange,
-            Scope.LifecycleDestroy,
-            Scope.LifecycleDuplicate,
-            Scope.EditorSelect,
-        )
+    val scopes = arrayOf(
+        Scope.TextCharacter,
+        Scope.StrokeChange,
+        Scope.LayerOpacity,
+        Scope.LayerBlendMode,
+        Scope.LayerVisibility,
+        Scope.LayerClipping,
+        Scope.LayerMove,
+        Scope.LayerResize,
+        Scope.LayerRotate,
+        Scope.LayerFlip,
+        Scope.TextEdit,
+        Scope.FillChange,
+        Scope.LifecycleDestroy,
+        Scope.LifecycleDuplicate,
+        Scope.EditorSelect,
+    )
 
     with(engine.editor) {
         // Set role first as it affects other settings

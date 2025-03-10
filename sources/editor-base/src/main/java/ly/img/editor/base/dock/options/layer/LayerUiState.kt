@@ -23,26 +23,22 @@ data class LayerUiState(
 internal fun createLayerUiState(
     designBlock: DesignBlock,
     engine: Engine,
-): LayerUiState {
-    return LayerUiState(
-        opacity =
-            if (engine.block.isAllowedByScope(designBlock, Scope.LayerOpacity) && engine.block.supportsOpacity(designBlock)) {
-                engine.block.getOpacity(designBlock)
-            } else {
-                null
-            },
-        blendMode =
-            if (engine.block.isAllowedByScope(designBlock, Scope.LayerBlendMode) &&
-                engine.block.supportsBlendMode(designBlock)
-            ) {
-                getBlendModeStringResource(engine.block.getBlendMode(designBlock))
-            } else {
-                null
-            },
-        isMoveAllowed = engine.isMoveAllowed(designBlock),
-        isDuplicateAllowed = engine.isDuplicateAllowed(designBlock),
-        isDeleteAllowed = engine.isDeleteAllowed(designBlock),
-        canBringForward = engine.canBringForward(designBlock),
-        canSendBackward = engine.canSendBackward(designBlock),
-    )
-}
+): LayerUiState = LayerUiState(
+    opacity = if (engine.block.isAllowedByScope(designBlock, Scope.LayerOpacity) && engine.block.supportsOpacity(designBlock)) {
+        engine.block.getOpacity(designBlock)
+    } else {
+        null
+    },
+    blendMode = if (engine.block.isAllowedByScope(designBlock, Scope.LayerBlendMode) &&
+        engine.block.supportsBlendMode(designBlock)
+    ) {
+        getBlendModeStringResource(engine.block.getBlendMode(designBlock))
+    } else {
+        null
+    },
+    isMoveAllowed = engine.isMoveAllowed(designBlock),
+    isDuplicateAllowed = engine.isDuplicateAllowed(designBlock),
+    isDeleteAllowed = engine.isDeleteAllowed(designBlock),
+    canBringForward = engine.canBringForward(designBlock),
+    canSendBackward = engine.canSendBackward(designBlock),
+)

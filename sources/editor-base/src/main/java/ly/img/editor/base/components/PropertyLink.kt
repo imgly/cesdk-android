@@ -27,11 +27,10 @@ fun PropertyLink(
     onClick: () -> Unit,
 ) {
     Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clickable { onClick() }
-                .padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -50,7 +49,12 @@ fun PropertyLink(
     value: String? = null,
     onClick: () -> Unit,
 ) {
-    PropertyLink(modifier.clickable { onClick() }.fillMaxHeight(), value = value)
+    PropertyLink(
+        modifier
+            .clickable { onClick() }
+            .fillMaxHeight(),
+        value = value,
+    )
 }
 
 @Composable

@@ -107,11 +107,10 @@ private fun Engine.getReorderableChildren(
     return children.filter { childToCompare ->
         val matchingIsAlwaysOnTop = childIsAlwaysOnTop == block.isAlwaysOnTop(childToCompare)
         val matchingIsAlwaysOnBottom = childIsAlwaysOnBottom == block.isAlwaysOnBottom(childToCompare)
-        val matchingType =
-            when (childType) {
-                DesignBlockType.Audio.key -> block.getType(childToCompare) == DesignBlockType.Audio.key
-                else -> block.getType(childToCompare) != DesignBlockType.Audio.key
-            }
+        val matchingType = when (childType) {
+            DesignBlockType.Audio.key -> block.getType(childToCompare) == DesignBlockType.Audio.key
+            else -> block.getType(childToCompare) != DesignBlockType.Audio.key
+        }
         matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom && matchingType
     }
 }
@@ -152,11 +151,9 @@ fun Engine.delete(designBlock: DesignBlock) {
  *
  * @return true if the [designBlock] can be moved, false otherwise.
  */
-fun Engine.isMoveAllowed(designBlock: DesignBlock): Boolean {
-    return block.isAllowedByScope(designBlock, Scope.EditorAdd) &&
-        !isGrouped(designBlock) &&
-        !block.isParentBackgroundTrack(designBlock)
-}
+fun Engine.isMoveAllowed(designBlock: DesignBlock): Boolean = block.isAllowedByScope(designBlock, Scope.EditorAdd) &&
+    !isGrouped(designBlock) &&
+    !block.isParentBackgroundTrack(designBlock)
 
 /**
  * An extension function for checking whether the [designBlock] can be duplicated.
@@ -164,9 +161,8 @@ fun Engine.isMoveAllowed(designBlock: DesignBlock): Boolean {
  *
  * @return true if the [designBlock] can be duplicated, false otherwise.
  */
-fun Engine.isDuplicateAllowed(designBlock: DesignBlock): Boolean {
-    return block.isAllowedByScope(designBlock, Scope.LifecycleDuplicate) && !isGrouped(designBlock)
-}
+fun Engine.isDuplicateAllowed(designBlock: DesignBlock): Boolean =
+    block.isAllowedByScope(designBlock, Scope.LifecycleDuplicate) && !isGrouped(designBlock)
 
 /**
  * An extension function for checking whether the [designBlock] can be deleted.
@@ -174,9 +170,8 @@ fun Engine.isDuplicateAllowed(designBlock: DesignBlock): Boolean {
  *
  * @return true if the [designBlock] can be deleted, false otherwise.
  */
-fun Engine.isDeleteAllowed(designBlock: DesignBlock): Boolean {
-    return block.isAllowedByScope(designBlock, Scope.LifecycleDestroy) && !isGrouped(designBlock)
-}
+fun Engine.isDeleteAllowed(designBlock: DesignBlock): Boolean =
+    block.isAllowedByScope(designBlock, Scope.LifecycleDestroy) && !isGrouped(designBlock)
 
 /**
  * An extension function for checking whether the [designBlock] is part of a group.

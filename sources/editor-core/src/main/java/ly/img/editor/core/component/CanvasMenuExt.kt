@@ -61,12 +61,11 @@ val Button.Id.Companion.bringForward by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberBringForward(
-    scope: ButtonScope =
-        (LocalEditorScope.current as CanvasMenu.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as CanvasMenu.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = { editorContext.canSelectionMove },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -84,21 +83,20 @@ fun Button.Companion.rememberBringForward(
         editorContext.eventHandler.send(EditorEvent.Selection.BringForward())
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.bringForward,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.bringForward,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the canvas menu button returned by [CanvasMenu.Button.Companion. rememberSendBackward].
@@ -137,12 +135,11 @@ val Button.Id.Companion.sendBackward by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberSendBackward(
-    scope: ButtonScope =
-        (LocalEditorScope.current as CanvasMenu.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as CanvasMenu.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = { editorContext.canSelectionMove },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -160,21 +157,20 @@ fun Button.Companion.rememberSendBackward(
         editorContext.eventHandler.send(EditorEvent.Selection.SendBackward())
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.sendBackward,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.sendBackward,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the canvas menu button returned by [CanvasMenu.Button.Companion.rememberDuplicate].
@@ -214,12 +210,11 @@ val Button.Id.Companion.duplicate by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberDuplicate(
-    scope: ButtonScope =
-        (LocalEditorScope.current as CanvasMenu.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as CanvasMenu.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         editorContext.isSelectionInGroup.not() &&
             editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/duplicate")
@@ -235,21 +230,20 @@ fun Button.Companion.rememberDuplicate(
         editorContext.eventHandler.send(EditorEvent.Selection.Duplicate())
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.duplicate,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.duplicate,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the canvas menu button returned by [CanvasMenu.Button.Companion.rememberDelete].
@@ -289,12 +283,11 @@ val Button.Id.Companion.delete by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberDelete(
-    scope: ButtonScope =
-        (LocalEditorScope.current as CanvasMenu.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as CanvasMenu.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         editorContext.isSelectionInGroup.not() &&
             editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/destroy")
@@ -310,18 +303,17 @@ fun Button.Companion.rememberDelete(
         editorContext.eventHandler.send(EditorEvent.Selection.Delete())
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.delete,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.delete,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)

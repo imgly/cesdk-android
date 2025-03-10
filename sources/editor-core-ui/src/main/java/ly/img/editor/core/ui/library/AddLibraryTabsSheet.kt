@@ -27,7 +27,9 @@ import ly.img.editor.core.ui.library.util.LibraryEvent
 import ly.img.engine.DesignBlock
 import kotlin.math.roundToInt
 
-internal class OffsetWrapper(var offset: Float = 0f)
+internal class OffsetWrapper(
+    var offset: Float = 0f,
+)
 
 @Composable
 fun AddLibraryTabsSheet(
@@ -81,25 +83,18 @@ fun AddLibraryTabsSheet(
 
         LibraryNavigationBar(
             items = tabItems,
-            modifier =
-                Modifier
-                    .testTag(tag = "LibraryNavigationBar")
-                    .onGloballyPositioned {
-                        bottomNavBarHeight = it.size.height
-                    }
-                    .absoluteOffset {
-                        IntOffset(
-                            x = 0,
-                            // 8.dp is for the top padding that is added to the bottom sheet
-                            y =
-                                (
-                                    offsetWrapper.offset - (
-                                        swipeableState.offset
-                                            ?: 0f
-                                    ) - bottomNavBarHeight - 8.dp.toPx()
-                                ).roundToInt(),
-                        )
-                    },
+            modifier = Modifier
+                .testTag(tag = "LibraryNavigationBar")
+                .onGloballyPositioned {
+                    bottomNavBarHeight = it.size.height
+                }
+                .absoluteOffset {
+                    IntOffset(
+                        x = 0,
+                        // 8.dp is for the top padding that is added to the bottom sheet
+                        y = (offsetWrapper.offset - (swipeableState.offset ?: 0f) - bottomNavBarHeight - 8.dp.toPx()).roundToInt(),
+                    )
+                },
             selectedItemIndex = selectedItemIndex,
             onSelectionChange = { index ->
                 selectedItemIndex = index

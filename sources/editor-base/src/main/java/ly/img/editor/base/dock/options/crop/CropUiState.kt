@@ -14,10 +14,8 @@ internal fun createCropUiState(
     designBlock: DesignBlock,
     engine: Engine,
     cropScaleRatio: Float? = null,
-): CropUiState {
-    return CropUiState(
-        straightenAngle = getStraightenDegrees(engine, designBlock),
-        cropScaleRatio = cropScaleRatio ?: engine.block.getCropScaleRatio(designBlock),
-        canResetCrop = engine.canResetCrop(designBlock),
-    )
-}
+): CropUiState = CropUiState(
+    straightenAngle = getStraightenDegrees(engine, designBlock),
+    cropScaleRatio = cropScaleRatio ?: engine.block.getCropScaleRatio(designBlock),
+    canResetCrop = engine.canResetCrop(designBlock),
+)

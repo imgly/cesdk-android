@@ -11,11 +11,10 @@ internal class LayoutState(
     var rect2: RectF? = null
 
     val cameraRect: RectF
-        get() =
-            when (cameraMode) {
-                is CameraMode.Reaction -> rect2!!
-                is CameraMode.Standard -> rect1
-            }
+        get() = when (cameraMode) {
+            is CameraMode.Reaction -> rect2!!
+            is CameraMode.Standard -> rect1
+        }
 
     var swapPositions = (cameraMode as? CameraMode.Reaction)?.positionsSwapped ?: false
         private set

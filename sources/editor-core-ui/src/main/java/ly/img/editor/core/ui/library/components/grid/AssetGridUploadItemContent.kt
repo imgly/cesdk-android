@@ -33,12 +33,11 @@ internal fun AssetGridUploadItemContent(
     assetType: AssetType,
     onUriPick: (UploadAssetSourceType, Uri) -> Unit,
 ) {
-    val launcher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetContent(),
-        ) { uri: Uri? ->
-            uri?.let { onUriPick(uploadAssetSource, it) }
-        }
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { uri: Uri? ->
+        uri?.let { onUriPick(uploadAssetSource, it) }
+    }
     if (assetType == AssetType.Audio) {
         ListItem(
             headlineContent = { Text(stringResource(R.string.ly_img_editor_add)) },
@@ -53,10 +52,9 @@ internal fun AssetGridUploadItemContent(
                     }
                 }
             },
-            modifier =
-                Modifier.clickable {
-                    launcher.launch(uploadAssetSource.mimeTypeFilter)
-                },
+            modifier = Modifier.clickable {
+                launcher.launch(uploadAssetSource.mimeTypeFilter)
+            },
         )
     } else {
         GradientCard(

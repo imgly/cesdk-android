@@ -50,19 +50,17 @@ internal fun AssetsIntermediateStateContent(
     ) {
         if (assetType == AssetType.Audio) {
             Column(
-                modifier =
-                    Modifier.ifTrue(!isLoading) {
-                        drawMask()
-                    },
+                modifier = Modifier.ifTrue(!isLoading) {
+                    drawMask()
+                },
             ) {
                 repeat(3) {
                     ListItem(
                         headlineContent = {
                             GradientCard(
-                                modifier =
-                                    Modifier
-                                        .height(24.dp)
-                                        .width(120.dp),
+                                modifier = Modifier
+                                    .height(24.dp)
+                                    .width(120.dp),
                             )
                         },
                         leadingContent = {
@@ -73,20 +71,18 @@ internal fun AssetsIntermediateStateContent(
             }
         } else if (assetType == AssetType.Text) {
             Column(
-                modifier =
-                    Modifier.ifTrue(!isLoading) {
-                        drawMask()
-                    },
+                modifier = Modifier.ifTrue(!isLoading) {
+                    drawMask()
+                },
             ) {
                 repeat(3) {
                     ListItem(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         headlineContent = {
                             GradientCard(
-                                modifier =
-                                    Modifier
-                                        .height(24.dp)
-                                        .width(160.dp),
+                                modifier = Modifier
+                                    .height(24.dp)
+                                    .width(160.dp),
                             )
                         },
                     )
@@ -99,10 +95,9 @@ internal fun AssetsIntermediateStateContent(
                     verticalArrangement = AssetLibraryUiConfig.assetGridVerticalArrangement(assetType),
                     horizontalArrangement = AssetLibraryUiConfig.assetGridHorizontalArrangement(assetType),
                     contentPadding = PaddingValues(4.dp),
-                    modifier =
-                        Modifier.ifTrue(!isLoading) {
-                            drawMask()
-                        },
+                    modifier = Modifier.ifTrue(!isLoading) {
+                        drawMask()
+                    },
                 ) {
                     items(AssetLibraryUiConfig.assetGridColumns(assetType)) {
                         GradientCard(modifier = Modifier.aspectRatio(1f))
@@ -110,12 +105,11 @@ internal fun AssetsIntermediateStateContent(
                 }
             } else {
                 LazyRow(
-                    modifier =
-                        Modifier
-                            .height(AssetLibraryUiConfig.contentRowHeight(assetType))
-                            .ifTrue(!isLoading) {
-                                drawMask()
-                            },
+                    modifier = Modifier
+                        .height(AssetLibraryUiConfig.contentRowHeight(assetType))
+                        .ifTrue(!isLoading) {
+                            drawMask()
+                        },
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     userScrollEnabled = false,
@@ -143,19 +137,17 @@ internal enum class IntermediateState {
     Empty,
 }
 
-private fun Modifier.drawMask() =
-    then(
-        // Workaround to enable alpha compositing
-        // TODO: Use https://developer.android.com/jetpack/compose/graphics/draw/modifiers#compositing-strategy when available
-        graphicsLayer { alpha = 0.99F }.drawWithContent {
-            drawContent()
-            drawRect(
-                brush =
-                    Brush.linearGradient(
-                        0f to Color.Black,
-                        1f to Color.Transparent,
-                    ),
-                blendMode = BlendMode.DstIn,
-            )
-        },
-    )
+private fun Modifier.drawMask() = then(
+    // Workaround to enable alpha compositing
+    // TODO: Use https://developer.android.com/jetpack/compose/graphics/draw/modifiers#compositing-strategy when available
+    graphicsLayer { alpha = 0.99F }.drawWithContent {
+        drawContent()
+        drawRect(
+            brush = Brush.linearGradient(
+                0f to Color.Black,
+                1f to Color.Transparent,
+            ),
+            blendMode = BlendMode.DstIn,
+        )
+    },
+)

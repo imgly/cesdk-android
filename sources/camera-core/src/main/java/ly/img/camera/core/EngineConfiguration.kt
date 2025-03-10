@@ -27,17 +27,11 @@ data class EngineConfiguration(
         parcel.writeString(userId)
     }
 
-    override fun describeContents(): Int {
-        return 0
-    }
+    override fun describeContents(): Int = 0
 
     companion object CREATOR : Parcelable.Creator<EngineConfiguration> {
-        override fun createFromParcel(parcel: Parcel): EngineConfiguration {
-            return EngineConfiguration(parcel)
-        }
+        override fun createFromParcel(parcel: Parcel): EngineConfiguration = EngineConfiguration(parcel)
 
-        override fun newArray(size: Int): Array<EngineConfiguration?> {
-            return arrayOfNulls(size)
-        }
+        override fun newArray(size: Int): Array<EngineConfiguration?> = arrayOfNulls(size)
     }
 }

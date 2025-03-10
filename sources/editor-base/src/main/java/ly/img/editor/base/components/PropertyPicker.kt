@@ -43,14 +43,13 @@ fun PropertyPicker(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface1)
-                .ifTrue(enabled) {
-                    clickable { showMenu = true }
-                }
-                .padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface1)
+            .ifTrue(enabled) {
+                clickable { showMenu = true }
+            }
+            .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -109,16 +108,14 @@ private fun PropertyItem(
 ) {
     val contentColor = if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
     DropdownMenuItem(
-        modifier =
-            Modifier.ifTrue(checked) {
-                background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-            },
-        colors =
-            MenuDefaults.itemColors(
-                textColor = contentColor,
-                leadingIconColor = contentColor,
-                trailingIconColor = contentColor,
-            ),
+        modifier = Modifier.ifTrue(checked) {
+            background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+        },
+        colors = MenuDefaults.itemColors(
+            textColor = contentColor,
+            leadingIconColor = contentColor,
+            trailingIconColor = contentColor,
+        ),
         text = { Text(stringResource(textRes)) },
         onClick = onClick,
         leadingIcon = {

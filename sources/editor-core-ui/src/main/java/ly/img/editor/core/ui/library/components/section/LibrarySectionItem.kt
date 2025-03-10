@@ -6,7 +6,9 @@ import ly.img.editor.core.library.LibraryContent
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.library.state.WrappedAsset
 
-sealed class LibrarySectionItem(val id: String) {
+sealed class LibrarySectionItem(
+    val id: String,
+) {
     data class Header(
         val stackIndex: Int,
         val sectionIndex: Int,

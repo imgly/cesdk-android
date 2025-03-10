@@ -16,13 +16,12 @@ fun BlockApi.setFillType(
     designBlock: DesignBlock,
     fillType: FillType,
 ): DesignBlock {
-    val oldFill =
-        if (this.supportsFill(designBlock)) {
-            this.getType(block = designBlock)
-            this.getFill(designBlock).takeIf { it != NoneDesignBlock }
-        } else {
-            null
-        }
+    val oldFill = if (this.supportsFill(designBlock)) {
+        this.getType(block = designBlock)
+        this.getFill(designBlock).takeIf { it != NoneDesignBlock }
+    } else {
+        null
+    }
 
     return if (oldFill != null && this.getFillType(designBlock) == fillType) {
         oldFill
@@ -40,12 +39,11 @@ fun BlockApi.setBlurType(
     designBlock: DesignBlock,
     type: BlurType?,
 ): DesignBlock? {
-    val oldBlur =
-        if (this.supportsBlur(designBlock)) {
-            this.getBlur(designBlock).takeIf { it != NoneDesignBlock }
-        } else {
-            null
-        }
+    val oldBlur = if (this.supportsBlur(designBlock)) {
+        this.getBlur(designBlock).takeIf { it != NoneDesignBlock }
+    } else {
+        null
+    }
 
     if (type == null) {
         this.setBlurEnabled(designBlock, false)
@@ -136,10 +134,9 @@ fun BlockApi.removeEffectByType(
     block: DesignBlock,
     type: EffectType,
 ) {
-    val filterId =
-        this.getEffects(block).indexOfFirst { effect ->
-            this.getType(effect).endsWith(type.key, ignoreCase = true)
-        }
+    val filterId = this.getEffects(block).indexOfFirst { effect ->
+        this.getType(effect).endsWith(type.key, ignoreCase = true)
+    }
     if (filterId != -1) {
         this.removeEffect(block, filterId)
     }

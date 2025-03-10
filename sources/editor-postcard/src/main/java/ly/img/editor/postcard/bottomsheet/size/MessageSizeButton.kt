@@ -1,4 +1,4 @@
-package ly.img.editor.postcard.bottomsheet.message_size
+package ly.img.editor.postcard.bottomsheet.size
 
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable

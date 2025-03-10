@@ -19,24 +19,23 @@ internal fun createBlock(
     engine: Engine,
 ): Block {
     val type = DesignBlockType.getOrNull(engine.block.getType(designBlock))
-    val blockType =
-        when (type) {
-            DesignBlockType.Text -> BlockType.Text
-            DesignBlockType.Group -> BlockType.Group
-            DesignBlockType.Page -> BlockType.Page
-            DesignBlockType.Audio -> BlockType.Audio
-            DesignBlockType.Graphic -> {
-                when (engine.block.getFillType(designBlock)) {
-                    FillType.Image -> {
-                        val kind = engine.block.getKindEnum(designBlock)
-                        if (kind == BlockKind.Sticker) BlockType.Sticker else BlockType.Image
-                    }
-                    FillType.Video -> BlockType.Video
-                    else -> BlockType.Shape
+    val blockType = when (type) {
+        DesignBlockType.Text -> BlockType.Text
+        DesignBlockType.Group -> BlockType.Group
+        DesignBlockType.Page -> BlockType.Page
+        DesignBlockType.Audio -> BlockType.Audio
+        DesignBlockType.Graphic -> {
+            when (engine.block.getFillType(designBlock)) {
+                FillType.Image -> {
+                    val kind = engine.block.getKindEnum(designBlock)
+                    if (kind == BlockKind.Sticker) BlockType.Sticker else BlockType.Image
                 }
+                FillType.Video -> BlockType.Video
+                else -> BlockType.Shape
             }
-            else -> throw UnsupportedOperationException()
         }
+        else -> throw UnsupportedOperationException()
+    }
     return Block(
         designBlock = designBlock,
         type = blockType,

@@ -178,15 +178,14 @@ object EditorDefaults {
     suspend fun writeToTempFile(
         byteBuffer: ByteBuffer,
         mimeType: MimeType = MimeType.PDF,
-    ): File =
-        withContext(Dispatchers.IO) {
-            val extension = mimeType.key.split("/").last()
-            File
-                .createTempFile(UUID.randomUUID().toString(), ".$extension")
-                .apply {
-                    outputStream().channel.write(byteBuffer)
-                }
-        }
+    ): File = withContext(Dispatchers.IO) {
+        val extension = mimeType.key.split("/").last()
+        File
+            .createTempFile(UUID.randomUUID().toString(), ".$extension")
+            .apply {
+                outputStream().channel.write(byteBuffer)
+            }
+    }
 
     /**
      * A helper function that opens a system dialog to share the [file].
@@ -216,12 +215,11 @@ object EditorDefaults {
         uri: Uri,
         mimeType: String,
     ) {
-        val shareIntent =
-            Intent().apply {
-                action = Intent.ACTION_SEND
-                type = mimeType
-                putExtra(Intent.EXTRA_STREAM, uri)
-            }
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            type = mimeType
+            putExtra(Intent.EXTRA_STREAM, uri)
+        }
         activity.startActivity(Intent.createChooser(shareIntent, null))
     }
 
@@ -242,18 +240,17 @@ object EditorDefaults {
                 val page = engine.scene.getCurrentPage() ?: engine.scene.getPages()[0]
                 eventHandler.send(ShowVideoExportProgressEvent(0f))
                 runCatching {
-                    val buffer =
-                        engine.block.exportVideo(
-                            block = page,
-                            timeOffset = 0.0,
-                            duration = engine.block.getDuration(page),
-                            mimeType = mimeType,
-                            progressCallback = { progress ->
-                                eventHandler.send(
-                                    ShowVideoExportProgressEvent(progress.encodedFrames.toFloat() / progress.totalFrames),
-                                )
-                            },
-                        )
+                    val buffer = engine.block.exportVideo(
+                        block = page,
+                        timeOffset = 0.0,
+                        duration = engine.block.getDuration(page),
+                        mimeType = mimeType,
+                        progressCallback = { progress ->
+                            eventHandler.send(
+                                ShowVideoExportProgressEvent(progress.encodedFrames.toFloat() / progress.totalFrames),
+                            )
+                        },
+                    )
                     writeToTempFile(buffer, mimeType)
                 }.onSuccess { file ->
                     eventHandler.send(ShowVideoExportSuccessEvent(file, mimeType.key))
@@ -266,16 +263,15 @@ object EditorDefaults {
                 }
             } else {
                 eventHandler.send(ShowLoading)
-                val buffer =
-                    engine.block.export(
-                        block = requireNotNull(engine.scene.get()),
-                        mimeType = mimeType,
-                    ) {
-                        scene.getPages().forEach {
-                            block.setScopeEnabled(it, key = "layer/visibility", enabled = true)
-                            block.setVisible(it, visible = true)
-                        }
+                val buffer = engine.block.export(
+                    block = requireNotNull(engine.scene.get()),
+                    mimeType = mimeType,
+                ) {
+                    scene.getPages().forEach {
+                        block.setScopeEnabled(it, key = "layer/visibility", enabled = true)
+                        block.setVisible(it, visible = true)
                     }
+                }
                 eventHandler.send(HideLoading)
                 eventHandler.send(ShareFileEvent(writeToTempFile(buffer, mimeType), mimeType.key))
             }
@@ -294,56 +290,54 @@ object EditorDefaults {
         activity: Activity,
         state: EditorUiState,
         event: EditorEvent,
-    ): EditorUiState {
-        return when (event) {
-            is ShowLoading -> {
-                state.copy(showLoading = true)
-            }
-            is HideLoading -> {
-                state.copy(showLoading = false)
-            }
-            is OnSceneLoaded -> {
-                state.copy(sceneIsLoaded = true)
-            }
-            is ShowErrorDialogEvent -> {
-                state.copy(error = event.error)
-            }
-
-            is ShowCloseConfirmationDialogEvent -> {
-                state.copy(showCloseConfirmationDialog = true)
-            }
-
-            is DismissCloseConfirmationDialogEvent -> {
-                state.copy(showCloseConfirmationDialog = false)
-            }
-
-            is ShareFileEvent -> {
-                shareFile(
-                    activity = activity,
-                    file = event.file,
-                    mimeType = event.mimeType,
-                )
-                state.copy(videoExportStatus = VideoExportStatus.Idle)
-            }
-
-            is ShowVideoExportProgressEvent -> {
-                state.copy(videoExportStatus = VideoExportStatus.Loading(event.progress))
-            }
-
-            is ShowVideoExportErrorEvent -> {
-                state.copy(videoExportStatus = VideoExportStatus.Error)
-            }
-
-            is ShowVideoExportSuccessEvent -> {
-                state.copy(videoExportStatus = VideoExportStatus.Success(event.file, event.mimeType))
-            }
-
-            is DismissVideoExportEvent -> {
-                state.copy(videoExportStatus = VideoExportStatus.Idle)
-            }
-
-            else -> state
+    ): EditorUiState = when (event) {
+        is ShowLoading -> {
+            state.copy(showLoading = true)
         }
+        is HideLoading -> {
+            state.copy(showLoading = false)
+        }
+        is OnSceneLoaded -> {
+            state.copy(sceneIsLoaded = true)
+        }
+        is ShowErrorDialogEvent -> {
+            state.copy(error = event.error)
+        }
+
+        is ShowCloseConfirmationDialogEvent -> {
+            state.copy(showCloseConfirmationDialog = true)
+        }
+
+        is DismissCloseConfirmationDialogEvent -> {
+            state.copy(showCloseConfirmationDialog = false)
+        }
+
+        is ShareFileEvent -> {
+            shareFile(
+                activity = activity,
+                file = event.file,
+                mimeType = event.mimeType,
+            )
+            state.copy(videoExportStatus = VideoExportStatus.Idle)
+        }
+
+        is ShowVideoExportProgressEvent -> {
+            state.copy(videoExportStatus = VideoExportStatus.Loading(event.progress))
+        }
+
+        is ShowVideoExportErrorEvent -> {
+            state.copy(videoExportStatus = VideoExportStatus.Error)
+        }
+
+        is ShowVideoExportSuccessEvent -> {
+            state.copy(videoExportStatus = VideoExportStatus.Success(event.file, event.mimeType))
+        }
+
+        is DismissVideoExportEvent -> {
+            state.copy(videoExportStatus = VideoExportStatus.Idle)
+        }
+
+        else -> state
     }
 
     /**
@@ -506,28 +500,25 @@ object EditorDefaults {
         eventHandler: EditorEventHandler,
     ) {
         Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f))
-                    .pointerInput(Unit) {
-                        detectTapGestures {
-                            // do nothing
-                        }
-                    },
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f))
+                .pointerInput(Unit) {
+                    detectTapGestures {
+                        // do nothing
+                    }
+                },
         ) {
             Surface(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomStart),
-                shape =
-                    RoundedCornerShape(
-                        topStart = 28.0.dp,
-                        topEnd = 28.0.dp,
-                        bottomEnd = 0.0.dp,
-                        bottomStart = 0.0.dp,
-                    ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomStart),
+                shape = RoundedCornerShape(
+                    topStart = 28.0.dp,
+                    topEnd = 28.0.dp,
+                    bottomEnd = 0.0.dp,
+                    bottomStart = 0.0.dp,
+                ),
                 shadowElevation = 16.dp,
             ) {
                 Box(
@@ -589,11 +580,10 @@ object EditorDefaults {
                                                     showCancelDialog = false
                                                     eventHandler.send(EditorEvent.CancelExport())
                                                 },
-                                                colors =
-                                                    ButtonDefaults.textButtonColors(
-                                                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                                                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                                                    ),
+                                                colors = ButtonDefaults.textButtonColors(
+                                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                                                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                                ),
                                             ) {
                                                 Text(stringResource(R.string.ly_img_editor_export_cancel_dialog_confirm_text))
                                             }
@@ -686,10 +676,9 @@ object EditorDefaults {
         Spacer(modifier = Modifier.height(24.dp))
         TextButton(
             onClick = onClick,
-            colors =
-                ButtonDefaults.textButtonColors(
-                    contentColor = buttonColor,
-                ),
+            colors = ButtonDefaults.textButtonColors(
+                contentColor = buttonColor,
+            ),
         ) {
             Text(stringResource(buttonText))
         }

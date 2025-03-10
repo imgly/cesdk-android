@@ -3,7 +3,7 @@ package ly.img.editor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import ly.img.editor.base.components.color_picker.fillAndStrokeColors
+import ly.img.editor.base.components.colorpicker.fillAndStrokeColors
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.component.CanvasMenu
@@ -78,20 +78,19 @@ fun EditorConfiguration.Companion.rememberForDesign(
     inspectorBar: (@Composable EditorScope.() -> InspectorBar)? = { InspectorBar.remember() },
     canvasMenu: (@Composable EditorScope.() -> CanvasMenu)? = { CanvasMenu.remember() },
     `_`: Nothing = nothing,
-): EditorConfiguration<EditorUiState> =
-    remember(
-        initialState = EditorUiState(),
-        uiMode = uiMode,
-        navigationIcon = navigationIcon,
-        assetLibrary = assetLibrary,
-        colorPalette = colorPalette,
-        onEvent = onEvent,
-        overlay = overlay,
-        dock = dock,
-        inspectorBar = inspectorBar,
-        canvasMenu = canvasMenu,
-        `_` = `_`,
-    )
+): EditorConfiguration<EditorUiState> = remember(
+    initialState = EditorUiState(),
+    uiMode = uiMode,
+    navigationIcon = navigationIcon,
+    assetLibrary = assetLibrary,
+    colorPalette = colorPalette,
+    onEvent = onEvent,
+    overlay = overlay,
+    dock = dock,
+    inspectorBar = inspectorBar,
+    canvasMenu = canvasMenu,
+    `_` = `_`,
+)
 
 /**
  * A composable helper function that creates and remembers an [EngineConfiguration] instance when launching [PhotoEditor].
@@ -152,20 +151,19 @@ fun EditorConfiguration.Companion.rememberForPhoto(
     inspectorBar: (@Composable EditorScope.() -> InspectorBar)? = { InspectorBar.remember() },
     canvasMenu: (@Composable EditorScope.() -> CanvasMenu)? = { CanvasMenu.remember() },
     `_`: Nothing = nothing,
-): EditorConfiguration<EditorUiState> =
-    remember(
-        initialState = EditorUiState(),
-        uiMode = uiMode,
-        navigationIcon = navigationIcon,
-        assetLibrary = assetLibrary,
-        colorPalette = colorPalette,
-        onEvent = onEvent,
-        overlay = overlay,
-        dock = dock,
-        inspectorBar = inspectorBar,
-        canvasMenu = canvasMenu,
-        `_` = `_`,
-    )
+): EditorConfiguration<EditorUiState> = remember(
+    initialState = EditorUiState(),
+    uiMode = uiMode,
+    navigationIcon = navigationIcon,
+    assetLibrary = assetLibrary,
+    colorPalette = colorPalette,
+    onEvent = onEvent,
+    overlay = overlay,
+    dock = dock,
+    inspectorBar = inspectorBar,
+    canvasMenu = canvasMenu,
+    `_` = `_`,
+)
 
 /**
  * A composable helper function that creates and remembers an [EngineConfiguration] instance when launching [ApparelEditor].
@@ -222,19 +220,18 @@ fun EditorConfiguration.Companion.rememberForApparel(
     inspectorBar: (@Composable EditorScope.() -> InspectorBar)? = { InspectorBar.remember() },
     canvasMenu: (@Composable EditorScope.() -> CanvasMenu)? = { CanvasMenu.remember() },
     `_`: Nothing = nothing,
-): EditorConfiguration<EditorUiState> =
-    remember(
-        initialState = EditorUiState(),
-        uiMode = uiMode,
-        navigationIcon = navigationIcon,
-        assetLibrary = assetLibrary,
-        colorPalette = colorPalette,
-        onEvent = onEvent,
-        overlay = overlay,
-        inspectorBar = inspectorBar,
-        canvasMenu = canvasMenu,
-        `_` = `_`,
-    )
+): EditorConfiguration<EditorUiState> = remember(
+    initialState = EditorUiState(),
+    uiMode = uiMode,
+    navigationIcon = navigationIcon,
+    assetLibrary = assetLibrary,
+    colorPalette = colorPalette,
+    onEvent = onEvent,
+    overlay = overlay,
+    inspectorBar = inspectorBar,
+    canvasMenu = canvasMenu,
+    `_` = `_`,
+)
 
 /**
  * A composable helper function that creates and remembers an [EngineConfiguration] instance when launching [PostcardEditor].
@@ -291,19 +288,18 @@ fun EditorConfiguration.Companion.rememberForPostcard(
     inspectorBar: (@Composable EditorScope.() -> InspectorBar)? = { InspectorBar.remember() },
     canvasMenu: (@Composable EditorScope.() -> CanvasMenu)? = { CanvasMenu.remember() },
     `_`: Nothing = nothing,
-): EditorConfiguration<EditorUiState> =
-    remember(
-        initialState = EditorUiState(),
-        uiMode = uiMode,
-        navigationIcon = navigationIcon,
-        assetLibrary = assetLibrary,
-        colorPalette = colorPalette,
-        onEvent = onEvent,
-        overlay = overlay,
-        inspectorBar = inspectorBar,
-        canvasMenu = canvasMenu,
-        `_` = `_`,
-    )
+): EditorConfiguration<EditorUiState> = remember(
+    initialState = EditorUiState(),
+    uiMode = uiMode,
+    navigationIcon = navigationIcon,
+    assetLibrary = assetLibrary,
+    colorPalette = colorPalette,
+    onEvent = onEvent,
+    overlay = overlay,
+    inspectorBar = inspectorBar,
+    canvasMenu = canvasMenu,
+    `_` = `_`,
+)
 
 /**
  * A composable helper function that creates and remembers an [EngineConfiguration] instance when launching [VideoEditor].
@@ -363,17 +359,16 @@ fun EditorConfiguration.Companion.rememberForVideo(
     inspectorBar: (@Composable EditorScope.() -> InspectorBar)? = { InspectorBar.remember() },
     canvasMenu: (@Composable EditorScope.() -> CanvasMenu)? = { CanvasMenu.remember() },
     `_`: Nothing = nothing,
-): EditorConfiguration<EditorUiState> =
-    remember(
-        initialState = EditorUiState(),
-        uiMode = uiMode,
-        navigationIcon = navigationIcon,
-        assetLibrary = assetLibrary,
-        colorPalette = colorPalette,
-        onEvent = onEvent,
-        overlay = overlay,
-        dock = dock,
-        inspectorBar = inspectorBar,
-        canvasMenu = canvasMenu,
-        `_` = `_`,
-    )
+): EditorConfiguration<EditorUiState> = remember(
+    initialState = EditorUiState(),
+    uiMode = uiMode,
+    navigationIcon = navigationIcon,
+    assetLibrary = assetLibrary,
+    colorPalette = colorPalette,
+    onEvent = onEvent,
+    overlay = overlay,
+    dock = dock,
+    inspectorBar = inspectorBar,
+    canvasMenu = canvasMenu,
+    `_` = `_`,
+)

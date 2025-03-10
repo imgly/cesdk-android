@@ -1,7 +1,12 @@
 package ly.img.editor.base.ui.handler
 
 import ly.img.editor.base.engine.toEngineColor
-import ly.img.editor.base.ui.BlockEvent.*
+import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeColor
+import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeJoin
+import ly.img.editor.base.ui.BlockEvent.OnChangeStrokePosition
+import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeStyle
+import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeWidth
+import ly.img.editor.base.ui.BlockEvent.OnDisableStroke
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register

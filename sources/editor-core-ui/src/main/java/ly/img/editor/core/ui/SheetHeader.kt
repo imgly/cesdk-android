@@ -47,10 +47,9 @@ fun SheetHeader(
         )
         IconButton(
             onClick = onClose,
-            modifier =
-                Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(horizontal = 4.dp),
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(horizontal = 4.dp),
         ) {
             Icon(icon, contentDescription = stringResource(R.string.ly_img_editor_close))
         }

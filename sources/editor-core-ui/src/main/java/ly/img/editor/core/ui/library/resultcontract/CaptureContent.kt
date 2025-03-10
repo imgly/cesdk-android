@@ -7,14 +7,14 @@ import android.net.Uri
 import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContract
 
-internal class CaptureContent(private val action: String) : ActivityResultContract<Uri, Uri?>() {
+internal class CaptureContent(
+    private val action: String,
+) : ActivityResultContract<Uri, Uri?>() {
     override fun createIntent(
         context: Context,
         input: Uri,
-    ): Intent {
-        return Intent(action)
-            .putExtra(MediaStore.EXTRA_OUTPUT, input)
-    }
+    ): Intent = Intent(action)
+        .putExtra(MediaStore.EXTRA_OUTPUT, input)
 
     override fun getSynchronousResult(
         context: Context,
@@ -24,11 +24,9 @@ internal class CaptureContent(private val action: String) : ActivityResultContra
     override fun parseResult(
         resultCode: Int,
         intent: Intent?,
-    ): Uri? {
-        return if (resultCode == Activity.RESULT_OK) {
-            intent?.data
-        } else {
-            null
-        }
+    ): Uri? = if (resultCode == Activity.RESULT_OK) {
+        intent?.data
+    } else {
+        null
     }
 }

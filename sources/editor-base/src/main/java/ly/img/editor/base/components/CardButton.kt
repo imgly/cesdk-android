@@ -29,10 +29,9 @@ fun CardButton(
         colors = UiDefaults.cardColorsExperimental,
     ) {
         Column(
-            modifier =
-                Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(8.dp),
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Icon(imageVector = icon, contentDescription = null)

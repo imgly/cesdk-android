@@ -6,11 +6,10 @@ import ly.img.editor.core.sheet.SheetStyle
 import ly.img.editor.core.sheet.SheetType
 
 class LibraryAddToBackgroundTrackSheetType(
-    override val style: SheetStyle =
-        SheetStyle(
-            isFloating = true,
-            maxHeight = Height.Fraction(1F),
-            isHalfExpandingEnabled = true,
-        ),
+    override val style: SheetStyle = SheetStyle(
+        isFloating = true,
+        maxHeight = Height.Fraction(1F),
+        isHalfExpandingEnabled = true,
+    ),
     val libraryCategory: LibraryCategory,
 ) : SheetType

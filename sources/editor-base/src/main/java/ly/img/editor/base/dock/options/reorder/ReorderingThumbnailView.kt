@@ -38,10 +38,9 @@ fun ReorderingThumbnailsView(
             )
             DurationText(
                 duration = clip.duration,
-                modifier =
-                    Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(4.dp),
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(4.dp),
             )
         }
     }

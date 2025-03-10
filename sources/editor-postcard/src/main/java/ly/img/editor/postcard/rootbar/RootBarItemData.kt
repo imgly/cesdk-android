@@ -10,7 +10,7 @@ import ly.img.editor.core.iconpack.Typeface
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.postcard.R
 import ly.img.editor.postcard.bottomsheet.PostcardSheetType
-import ly.img.editor.postcard.bottomsheet.message_size.MessageSize
+import ly.img.editor.postcard.bottomsheet.size.MessageSize
 import ly.img.editor.postcard.util.SelectionColors
 import ly.img.editor.postcard.util.getPinnedBlock
 import ly.img.engine.Engine
@@ -27,11 +27,10 @@ internal fun rootBarItems(
     pageSelectionColors: SelectionColors?,
 ): List<RootBarItemData> {
     // Initially, when the scene is not loaded, we are unable to find the block.
-    val block =
-        when (engine.isEngineRunning()) {
-            true -> engine.getPinnedBlock() ?: return listOf()
-            false -> return listOf()
-        }
+    val block = when (engine.isEngineRunning()) {
+        true -> engine.getPinnedBlock() ?: return listOf()
+        false -> return listOf()
+    }
     return if (pageIndex == 0) {
         if (pageSelectionColors == null) {
             listOf()
@@ -40,10 +39,9 @@ internal fun rootBarItems(
                 RootBarItemData(
                     sheetType = PostcardSheetType.TemplateColors(),
                     labelStringRes = R.string.ly_img_editor_colors,
-                    icon =
-                        EditorIcon.Colors(
-                            pageSelectionColors.getColors().map { it.color.toComposeColor() },
-                        ),
+                    icon = EditorIcon.Colors(
+                        pageSelectionColors.getColors().map { it.color.toComposeColor() },
+                    ),
                 ),
             )
         }

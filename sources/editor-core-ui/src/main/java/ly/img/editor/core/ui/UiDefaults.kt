@@ -26,24 +26,21 @@ object UiDefaults {
         @Composable
         get() = ly.img.editor.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface1)
 
-    val CornerLargeTop =
-        RoundedCornerShape(
-            topStart = 16.0.dp,
-            topEnd = 16.0.dp,
-            bottomEnd = 0.0.dp,
-            bottomStart = 0.0.dp,
-        )
+    val CornerLargeTop = RoundedCornerShape(
+        topStart = 16.0.dp,
+        topEnd = 16.0.dp,
+        bottomEnd = 0.0.dp,
+        bottomStart = 0.0.dp,
+    )
 }
 
-fun Modifier.sheetCardContentModifier(top: Dp = 8.dp) =
-    this
-        .padding(top = top, bottom = 0.dp, start = 16.dp, end = 16.dp)
-        .navigationBarsPadding()
+fun Modifier.sheetCardContentModifier(top: Dp = 8.dp) = this
+    .padding(top = top, bottom = 0.dp, start = 16.dp, end = 16.dp)
+    .navigationBarsPadding()
 
-fun Modifier.sheetScrollableContentModifier(top: Dp = 8.dp) =
-    composed {
-        this
-            .verticalScroll(rememberScrollState())
-            .padding(top = top, bottom = 16.dp, start = 16.dp, end = 16.dp)
-            .navigationBarsPadding()
-    }
+fun Modifier.sheetScrollableContentModifier(top: Dp = 8.dp) = composed {
+    this
+        .verticalScroll(rememberScrollState())
+        .padding(top = top, bottom = 16.dp, start = 16.dp, end = 16.dp)
+        .navigationBarsPadding()
+}

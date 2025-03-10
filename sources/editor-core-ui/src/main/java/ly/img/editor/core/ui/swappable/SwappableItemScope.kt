@@ -27,58 +27,56 @@ internal class SwappableItemScopeImpl(
         enabled: Boolean,
         onDragStarted: (key: Any) -> Unit,
         onDragStopped: () -> Unit,
-    ): Modifier =
-        composed {
-            var handleOffset = remember { 0f }
-            var handleSize = remember { 0 }
+    ): Modifier = composed {
+        var handleOffset = remember { 0f }
+        var handleSize = remember { 0 }
 
-            val coroutineScope = rememberCoroutineScope()
+        val coroutineScope = rememberCoroutineScope()
 
-            var dragStarted = remember { false }
+        var dragStarted = remember { false }
 
-            val draggingEnabled =
-                enabled && (swappableListState.isItemDragging(key).value || !swappableListState.isAnItemDragging().value)
+        val draggingEnabled = enabled && (swappableListState.isItemDragging(key).value || !swappableListState.isAnItemDragging().value)
 
-            onGloballyPositioned {
-                handleOffset = it.positionInRoot().x
-                handleSize = it.size.width
-            }.pointerInput(draggingEnabled) {
-                if (draggingEnabled) {
-                    detectDragGesturesAfterLongPress(
-                        onDragStart = {
-                            dragStarted = true
+        onGloballyPositioned {
+            handleOffset = it.positionInRoot().x
+            handleSize = it.size.width
+        }.pointerInput(draggingEnabled) {
+            if (draggingEnabled) {
+                detectDragGesturesAfterLongPress(
+                    onDragStart = {
+                        dragStarted = true
 
-                            coroutineScope.launch {
-                                val handleOffsetRelativeToItem = handleOffset - itemPositionProvider()
-                                val handleCenter = handleOffsetRelativeToItem + handleSize / 2f
-                                swappableListState.onDragStart(key, handleCenter)
-                            }
+                        coroutineScope.launch {
+                            val handleOffsetRelativeToItem = handleOffset - itemPositionProvider()
+                            val handleCenter = handleOffsetRelativeToItem + handleSize / 2f
+                            swappableListState.onDragStart(key, handleCenter)
+                        }
 
-                            onDragStarted(key)
-                        },
-                        onDragEnd = {
-                            if (dragStarted) {
-                                swappableListState.onDragStop()
-                                onDragStopped()
-                            }
+                        onDragStarted(key)
+                    },
+                    onDragEnd = {
+                        if (dragStarted) {
+                            swappableListState.onDragStop()
+                            onDragStopped()
+                        }
 
-                            dragStarted = false
-                        },
-                        onDragCancel = {
-                            if (dragStarted) {
-                                swappableListState.onDragStop()
-                                onDragStopped()
-                            }
+                        dragStarted = false
+                    },
+                    onDragCancel = {
+                        if (dragStarted) {
+                            swappableListState.onDragStop()
+                            onDragStopped()
+                        }
 
-                            dragStarted = false
-                        },
-                        onDrag = { _, dragAmount ->
-                            swappableListState.onDrag(
-                                offset = dragAmount.x,
-                            )
-                        },
-                    )
-                }
+                        dragStarted = false
+                    },
+                    onDrag = { _, dragAmount ->
+                        swappableListState.onDrag(
+                            offset = dragAmount.x,
+                        )
+                    },
+                )
             }
         }
+    }
 }

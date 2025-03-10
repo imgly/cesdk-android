@@ -11,21 +11,19 @@ import ly.img.editor.core.ui.scope.EditorContextImpl
 internal fun rememberEditorScope(
     engineConfiguration: EngineConfiguration,
     editorConfiguration: EditorConfiguration<*>,
-): EditorScope =
-    remember(engineConfiguration, editorConfiguration) {
-        object : EditorScope() {
-            override val impl: EditorContext =
-                EditorContextImpl(
-                    license = engineConfiguration.license,
-                    userId = engineConfiguration.userId,
-                    baseUri = engineConfiguration.baseUri,
-                    navigationIcon = editorConfiguration.navigationIcon,
-                    colorPalette = editorConfiguration.colorPalette,
-                    assetLibrary = editorConfiguration.assetLibrary,
-                    dock = editorConfiguration.dock,
-                    inspectorBar = editorConfiguration.inspectorBar,
-                    canvasMenu = editorConfiguration.canvasMenu,
-                    overlay = (editorConfiguration as EditorConfiguration<Parcelable>).overlay,
-                )
-        }
+): EditorScope = remember(engineConfiguration, editorConfiguration) {
+    object : EditorScope() {
+        override val impl: EditorContext = EditorContextImpl(
+            license = engineConfiguration.license,
+            userId = engineConfiguration.userId,
+            baseUri = engineConfiguration.baseUri,
+            navigationIcon = editorConfiguration.navigationIcon,
+            colorPalette = editorConfiguration.colorPalette,
+            assetLibrary = editorConfiguration.assetLibrary,
+            dock = editorConfiguration.dock,
+            inspectorBar = editorConfiguration.inspectorBar,
+            canvasMenu = editorConfiguration.canvasMenu,
+            overlay = (editorConfiguration as EditorConfiguration<Parcelable>).overlay,
+        )
     }
+}

@@ -13,13 +13,12 @@ fun LazyColumnScrollbar(
     modifier: Modifier = Modifier,
     settings: ScrollbarSettings = ScrollbarSettings.Default,
 ) {
-    val controller =
-        rememberLazyListStateController(
-            state = state,
-            thumbMinLength = settings.thumbMinLength,
-            thumbMaxLength = settings.thumbMaxLength,
-            alwaysShowScrollBar = settings.alwaysShowScrollbar,
-        )
+    val controller = rememberLazyListStateController(
+        state = state,
+        thumbMinLength = settings.thumbMinLength,
+        thumbMaxLength = settings.thumbMaxLength,
+        alwaysShowScrollBar = settings.alwaysShowScrollbar,
+    )
 
     ElementScrollbar(
         orientation = Orientation.Vertical,

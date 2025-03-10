@@ -93,14 +93,13 @@ class CanvasMenu private constructor(
              * @return a new [ListBuilder] instance.
              */
             @Composable
-            fun remember(): EditorComponent.ListBuilder<Item<*>> =
-                EditorComponent.ListBuilder.remember {
-                    add { Button.rememberBringForward() }
-                    add { Button.rememberSendBackward() }
-                    add { Divider.remember(visible = { editorContext.canSelectionMove }) }
-                    add { Button.rememberDuplicate() }
-                    add { Button.rememberDelete() }
-                }
+            fun remember(): EditorComponent.ListBuilder<Item<*>> = EditorComponent.ListBuilder.remember {
+                add { Button.rememberBringForward() }
+                add { Button.rememberSendBackward() }
+                add { Divider.remember(visible = { editorContext.canSelectionMove }) }
+                add { Button.rememberDuplicate() }
+                add { Button.rememberDelete() }
+            }
 
             /**
              * A composable function that creates and remembers a [ListBuilder] instance.
@@ -155,11 +154,9 @@ class CanvasMenu private constructor(
             // contains at least internalSelection.designBlock
             children.filter { childToCompare ->
                 val matchingIsAlwaysOnTop = childIsAlwaysOnTop == editorContext.engine.block.isAlwaysOnTop(childToCompare)
-                val matchingIsAlwaysOnBottom =
-                    childIsAlwaysOnBottom ==
-                        editorContext.engine.block.isAlwaysOnBottom(
-                            childToCompare,
-                        )
+                val matchingIsAlwaysOnBottom = childIsAlwaysOnBottom == editorContext.engine.block.isAlwaysOnBottom(
+                    childToCompare,
+                )
                 matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom
             }
         }
@@ -178,7 +175,8 @@ class CanvasMenu private constructor(
                         DesignBlockType.get(editorContext.engine.block.getType(it)) == DesignBlockType.Track &&
                             editorContext.engine.block.isAlwaysOnBottom(it)
                     } ?: false
-                }.not() && _selectionSiblings.size > 1
+                }.not() &&
+                _selectionSiblings.size > 1
         }
 
         /**
@@ -220,9 +218,7 @@ class CanvasMenu private constructor(
             get() = this@Scope._isScenePlaying
     }
 
-    override fun toString(): String {
-        return "$`_`CanvasMenu(id=$id)"
-    }
+    override fun toString(): String = "$`_`CanvasMenu(id=$id)"
 
     /**
      * The scope of the [Item] component.
@@ -237,10 +233,9 @@ class CanvasMenu private constructor(
          * Current selection of the editor.
          */
         val EditorContext.safeSelection: Selection?
-            get() =
-                (parentScope as Scope).run {
-                    editorContext.safeSelection
-                }
+            get() = (parentScope as Scope).run {
+                editorContext.safeSelection
+            }
 
         /**
          * Current selection of the editor.
@@ -253,29 +248,26 @@ class CanvasMenu private constructor(
          * Returns true if the design block in [selection] is in a [DesignBlockType.Group].
          */
         val EditorContext.isSelectionInGroup: Boolean
-            get() =
-                (parentScope as Scope).run {
-                    editorContext.isSelectionInGroup
-                }
+            get() = (parentScope as Scope).run {
+                editorContext.isSelectionInGroup
+            }
 
         /**
          * Returns true if the selection can be moved: forward or backward.
          */
         val EditorContext.canSelectionMove: Boolean
-            get() =
-                (parentScope as Scope).run {
-                    editorContext.canSelectionMove
-                }
+            get() = (parentScope as Scope).run {
+                editorContext.canSelectionMove
+            }
 
         /**
          * Returns the list of siblings of the design block in [selection] that can be used to reorder.
          * Note that the list contains [Selection.designBlock] as well.
          */
         val EditorContext.selectionSiblings: List<DesignBlock>
-            get() =
-                (parentScope as Scope).run {
-                    editorContext.selectionSiblings
-                }
+            get() = (parentScope as Scope).run {
+                editorContext.selectionSiblings
+            }
     }
 
     /**
@@ -326,9 +318,7 @@ class CanvasMenu private constructor(
             content()
         }
 
-        override fun toString(): String {
-            return "CanvasMenu.Custom(id=$id)"
-        }
+        override fun toString(): String = "CanvasMenu.Custom(id=$id)"
 
         companion object {
             /**
@@ -421,9 +411,7 @@ class CanvasMenu private constructor(
             )
         }
 
-        override fun toString(): String {
-            return "$`_`CanvasMenu.Button(id=$id)"
-        }
+        override fun toString(): String = "$`_`CanvasMenu.Button(id=$id)"
 
         class Id {
             companion object
@@ -464,10 +452,9 @@ class CanvasMenu private constructor(
             @Composable
             fun remember(
                 id: EditorComponentId,
-                scope: ButtonScope =
-                    LocalEditorScope.current.run {
-                        remember(this) { ButtonScope(parentScope = this) }
-                    },
+                scope: ButtonScope = LocalEditorScope.current.run {
+                    remember(this) { ButtonScope(parentScope = this) }
+                },
                 visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
                 enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
                 exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -477,22 +464,20 @@ class CanvasMenu private constructor(
                 text: (@Composable ButtonScope.() -> Unit)? = null,
                 enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
                 `_`: Nothing = nothing,
-            ): Button {
-                return remember(scope, visible, enterTransition, exitTransition, onClick, icon, text, enabled) {
-                    Button(
-                        id = id,
-                        scope = scope,
-                        visible = visible,
-                        enterTransition = enterTransition,
-                        exitTransition = exitTransition,
-                        decoration = decoration,
-                        onClick = onClick,
-                        icon = icon,
-                        text = text,
-                        enabled = enabled,
-                        `_` = `_`,
-                    )
-                }
+            ): Button = remember(scope, visible, enterTransition, exitTransition, onClick, icon, text, enabled) {
+                Button(
+                    id = id,
+                    scope = scope,
+                    visible = visible,
+                    enterTransition = enterTransition,
+                    exitTransition = exitTransition,
+                    decoration = decoration,
+                    onClick = onClick,
+                    icon = icon,
+                    text = text,
+                    enabled = enabled,
+                    `_` = `_`,
+                )
             }
 
             /**
@@ -527,10 +512,9 @@ class CanvasMenu private constructor(
             @Composable
             fun remember(
                 id: EditorComponentId,
-                scope: ButtonScope =
-                    LocalEditorScope.current.run {
-                        remember(this) { ButtonScope(parentScope = this) }
-                    },
+                scope: ButtonScope = LocalEditorScope.current.run {
+                    remember(this) { ButtonScope(parentScope = this) }
+                },
                 visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
                 enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
                 exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -541,39 +525,36 @@ class CanvasMenu private constructor(
                 tint: (@Composable ButtonScope.() -> Color)? = null,
                 enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
                 `_`: Nothing = nothing,
-            ): Button =
-                remember(
-                    id = id,
-                    scope = scope,
-                    visible = visible,
-                    enterTransition = enterTransition,
-                    exitTransition = exitTransition,
-                    decoration = decoration,
-                    onClick = onClick,
-                    icon =
-                        vectorIcon?.let {
-                            {
-                                Icon(
-                                    imageVector = vectorIcon(this),
-                                    contentDescription = null,
-                                    tint = tint?.invoke(this) ?: LocalContentColor.current,
-                                )
-                            }
-                        },
-                    text =
-                        text?.let {
-                            {
-                                Text(
-                                    text = text(this),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = tint?.invoke(this) ?: Color.Unspecified,
-                                    modifier = Modifier.padding(top = 4.dp),
-                                )
-                            }
-                        },
-                    enabled = enabled,
-                    `_` = `_`,
-                )
+            ): Button = remember(
+                id = id,
+                scope = scope,
+                visible = visible,
+                enterTransition = enterTransition,
+                exitTransition = exitTransition,
+                decoration = decoration,
+                onClick = onClick,
+                icon = vectorIcon?.let {
+                    {
+                        Icon(
+                            imageVector = vectorIcon(this),
+                            contentDescription = null,
+                            tint = tint?.invoke(this) ?: LocalContentColor.current,
+                        )
+                    }
+                },
+                text = text?.let {
+                    {
+                        Text(
+                            text = text(this),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = tint?.invoke(this) ?: Color.Unspecified,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+                },
+                enabled = enabled,
+                `_` = `_`,
+            )
         }
     }
 
@@ -623,9 +604,7 @@ class CanvasMenu private constructor(
             )
         }
 
-        override fun toString(): String {
-            return "$`_`CanvasMenu.Divider(id=$id)"
-        }
+        override fun toString(): String = "$`_`CanvasMenu.Divider(id=$id)"
 
         class Id {
             companion object
@@ -655,10 +634,9 @@ class CanvasMenu private constructor(
              */
             @Composable
             fun remember(
-                scope: DividerScope =
-                    LocalEditorScope.current.run {
-                        remember(this) { DividerScope(parentScope = this) }
-                    },
+                scope: DividerScope = LocalEditorScope.current.run {
+                    remember(this) { DividerScope(parentScope = this) }
+                },
                 visible: @Composable DividerScope.() -> Boolean = alwaysVisible,
                 enterTransition: @Composable DividerScope.() -> EnterTransition = noneEnterTransition,
                 exitTransition: @Composable DividerScope.() -> ExitTransition = noneExitTransition,
@@ -672,19 +650,17 @@ class CanvasMenu private constructor(
                 },
                 color: @Composable DividerScope.() -> Color = { DividerDefaults.color },
                 `_`: Nothing = nothing,
-            ): Divider {
-                return remember(scope, visible, enterTransition, exitTransition, modifier, color) {
-                    Divider(
-                        scope = scope,
-                        visible = visible,
-                        enterTransition = enterTransition,
-                        exitTransition = exitTransition,
-                        decoration = decoration,
-                        modifier = modifier,
-                        color = color,
-                        `_` = `_`,
-                    )
-                }
+            ): Divider = remember(scope, visible, enterTransition, exitTransition, modifier, color) {
+                Divider(
+                    scope = scope,
+                    visible = visible,
+                    enterTransition = enterTransition,
+                    exitTransition = exitTransition,
+                    decoration = decoration,
+                    modifier = modifier,
+                    color = color,
+                    `_` = `_`,
+                )
             }
         }
     }
@@ -696,50 +672,47 @@ class CanvasMenu private constructor(
         @OptIn(ExperimentalCoroutinesApi::class)
         val defaultScope: Scope
             @Composable
-            get() =
-                LocalEditorScope.current.run {
-                    fun getSelectedDesignBlock(): DesignBlock? {
-                        return editorContext.engine.block.findAllSelected().firstOrNull()
-                    }
-                    val initial = remember { getSelectedDesignBlock()?.let { Selection.getDefault(editorContext.engine, it) } }
-                    val camera = editorContext.engine.block.findByType(DesignBlockType.Camera).first()
-                    val selection by remember(this) {
-                        editorContext.engine.block.onSelectionChanged()
-                            .flatMapLatest {
-                                val selectedDesignBlock = getSelectedDesignBlock() ?: return@flatMapLatest flowOf(null)
-                                val parentDesignBlock = editorContext.engine.block.getParent(selectedDesignBlock)
-                                val observableDesignBlocks =
-                                    parentDesignBlock
-                                        ?.let { listOf(it, selectedDesignBlock) } ?: listOf(selectedDesignBlock)
-                                merge(
-                                    editorContext.engine.event.subscribe(observableDesignBlocks),
-                                    editorContext.engine.event.subscribe(listOf(camera)),
-                                    editorContext.engine.editor.onStateChanged()
-                                        .map { editorContext.engine.editor.getEditMode() }
-                                        .distinctUntilChanged(),
-                                )
-                                    .filter {
-                                        // When the design block is unselected/deleted, this lambda is entered before onSelectionChanged is emitted.
-                                        // We need to make sure that this flow does not emit previous selection in such scenario.
-                                        selectedDesignBlock == getSelectedDesignBlock()
-                                    }
-                                    .map { Selection.getDefault(editorContext.engine, selectedDesignBlock) }
-                                    .onStart { emit(Selection.getDefault(editorContext.engine, selectedDesignBlock)) }
-                            }
-                    }.collectAsState(initial = initial)
+            get() = LocalEditorScope.current.run {
+                fun getSelectedDesignBlock(): DesignBlock? = editorContext.engine.block.findAllSelected().firstOrNull()
 
-                    var isScenePlayingTrigger by remember { mutableStateOf(false) }
-                    LaunchedEffect(this) {
-                        val page = editorContext.engine.scene.getCurrentPage() ?: editorContext.engine.scene.getPages()[0]
-                        editorContext.engine.event.subscribe(listOf(page))
-                            .onEach { isScenePlayingTrigger = isScenePlayingTrigger.not() }
-                            .collect()
-                    }
+                val initial = remember { getSelectedDesignBlock()?.let { Selection.getDefault(editorContext.engine, it) } }
+                val camera = editorContext.engine.block.findByType(DesignBlockType.Camera).first()
+                val selection by remember(this) {
+                    editorContext.engine.block.onSelectionChanged()
+                        .flatMapLatest {
+                            val selectedDesignBlock = getSelectedDesignBlock() ?: return@flatMapLatest flowOf(null)
+                            val parentDesignBlock = editorContext.engine.block.getParent(selectedDesignBlock)
+                            val observableDesignBlocks = parentDesignBlock
+                                ?.let { listOf(it, selectedDesignBlock) } ?: listOf(selectedDesignBlock)
+                            merge(
+                                editorContext.engine.event.subscribe(observableDesignBlocks),
+                                editorContext.engine.event.subscribe(listOf(camera)),
+                                editorContext.engine.editor.onStateChanged()
+                                    .map { editorContext.engine.editor.getEditMode() }
+                                    .distinctUntilChanged(),
+                            )
+                                .filter {
+                                    // When the design block is unselected/deleted, this lambda is entered before onSelectionChanged is emitted.
+                                    // We need to make sure that this flow does not emit previous selection in such scenario.
+                                    selectedDesignBlock == getSelectedDesignBlock()
+                                }
+                                .map { Selection.getDefault(editorContext.engine, selectedDesignBlock) }
+                                .onStart { emit(Selection.getDefault(editorContext.engine, selectedDesignBlock)) }
+                        }
+                }.collectAsState(initial = initial)
 
-                    remember(this, selection, isScenePlayingTrigger) {
-                        Scope(parentScope = this, selection = selection)
-                    }
+                var isScenePlayingTrigger by remember { mutableStateOf(false) }
+                LaunchedEffect(this) {
+                    val page = editorContext.engine.scene.getCurrentPage() ?: editorContext.engine.scene.getPages()[0]
+                    editorContext.engine.event.subscribe(listOf(page))
+                        .onEach { isScenePlayingTrigger = isScenePlayingTrigger.not() }
+                        .collect()
                 }
+
+                remember(this, selection, isScenePlayingTrigger) {
+                    Scope(parentScope = this, selection = selection)
+                }
+            }
 
         /**
          * The default decoration of the canvas menu.
@@ -768,63 +741,60 @@ class CanvasMenu private constructor(
             val selectedBlockRect = editorContext.selection.screenSpaceBoundingBoxRect
             if (selectedBlockRect.width().isNaN().not() && selectedBlockRect.height().isNaN().not()) {
                 val rotateHandleSizePx = rotateHandleSize.toPx()
-                val dy =
-                    remember(editorState, editorContext.selection, rotateHandleSize) {
-                        val isGizmoPresent =
-                            editorContext.engine.editor.getSettingBoolean("controlGizmo/showRotateHandles") ||
-                                editorContext.engine.editor.getSettingBoolean("controlGizmo/showMoveHandles")
-                        if (isGizmoPresent) {
-                            val rotation = editorContext.engine.block.getRotation(editorContext.selection.designBlock)
-                            (cos(rotation) * rotateHandleSizePx).roundToInt()
-                        } else {
-                            0
-                        }
+                val dy = remember(editorState, editorContext.selection, rotateHandleSize) {
+                    val isGizmoPresent = editorContext.engine.editor.getSettingBoolean("controlGizmo/showRotateHandles") ||
+                        editorContext.engine.editor.getSettingBoolean("controlGizmo/showMoveHandles")
+                    if (isGizmoPresent) {
+                        val rotation = editorContext.engine.block.getRotation(editorContext.selection.designBlock)
+                        (cos(rotation) * rotateHandleSizePx).roundToInt()
+                    } else {
+                        0
                     }
+                }
                 Surface(
                     shape = shape,
                     contentColor = contentColor,
                     shadowElevation = shadowElevation,
-                    modifier =
-                        Modifier.layout { measurable, constraints ->
-                            val placeable = measurable.measure(constraints)
-                            val width = placeable.width
-                            val height = placeable.height
-                            layout(width, height) nestedLayout@{
-                                // In certain scenarios (eg. changing theme while the Canvas Menu is visible),
-                                // it was observed that minWidth = maxWidth = 0. Not sure why this happens, for now, we just return here.
-                                if (constraints.isZero) return@nestedLayout
-                                val verticalPaddingPx = verticalPadding.roundToPx()
-                                val horizontalPaddingPx = horizontalPadding.roundToPx()
-                                val x = selectedBlockRect.centerX().dp.roundToPx() - width / 2
-                                val minX = constraints.minWidth + horizontalPaddingPx
-                                val maxX = constraints.maxWidth - width - horizontalPaddingPx
-                                // minX > maxX if the allocated horizontal size of the canvas menu is larger than the screen size
-                                val constrainedX = if (minX > maxX) horizontalPaddingPx else x.coerceIn(minX, maxX)
+                    modifier = Modifier.layout { measurable, constraints ->
+                        val placeable = measurable.measure(constraints)
+                        val width = placeable.width
+                        val height = placeable.height
+                        layout(width, height) nestedLayout@{
+                            // In certain scenarios (eg. changing theme while the Canvas Menu is visible),
+                            // it was observed that minWidth = maxWidth = 0. Not sure why this happens, for now, we just return here.
+                            if (constraints.isZero) return@nestedLayout
+                            val verticalPaddingPx = verticalPadding.roundToPx()
+                            val horizontalPaddingPx = horizontalPadding.roundToPx()
+                            val x = selectedBlockRect.centerX().dp.roundToPx() - width / 2
+                            val minX = constraints.minWidth + horizontalPaddingPx
+                            val maxX = constraints.maxWidth - width - horizontalPaddingPx
+                            // minX > maxX if the allocated horizontal size of the canvas menu is larger than the screen size
+                            val constrainedX = if (minX > maxX) horizontalPaddingPx else x.coerceIn(minX, maxX)
 
-                                // Preference order -
-                                // 1. Top
-                                // 2. Bottom
-                                // 3. Below top handle
-                                val constrainedY =
-                                    run {
-                                        val blockCenterY = selectedBlockRect.centerY()
-                                        val blockHeight = selectedBlockRect.height()
-                                        val canvasInsets = editorState.canvasInsets
-                                        val minY = constraints.minHeight + canvasInsets.top.dp.roundToPx()
-                                        val topY = (blockCenterY - blockHeight / 2).dp.roundToPx() - height - verticalPaddingPx + if (dy < 0) dy else 0
-                                        if (topY > minY) {
-                                            return@run topY
-                                        }
-                                        val bottomY = (blockCenterY + blockHeight / 2).dp.roundToPx() + verticalPaddingPx + if (dy > 0) dy else 0
-                                        val bottomCutOff = constraints.maxHeight - canvasInsets.bottom.dp.roundToPx()
-                                        if (bottomY + height + horizontalPaddingPx <= bottomCutOff) {
-                                            return@run bottomY
-                                        }
-                                        (blockCenterY - blockHeight / 2).dp.roundToPx() + horizontalPaddingPx + if (dy < 0) dy else 0
-                                    }
-                                placeable.place(constrainedX, constrainedY)
+                            // Preference order -
+                            // 1. Top
+                            // 2. Bottom
+                            // 3. Below top handle
+                            val constrainedY = run {
+                                val blockCenterY = selectedBlockRect.centerY()
+                                val blockHeight = selectedBlockRect.height()
+                                val canvasInsets = editorState.canvasInsets
+                                val minY = constraints.minHeight + canvasInsets.top.dp.roundToPx()
+                                val topY =
+                                    (blockCenterY - blockHeight / 2).dp.roundToPx() - height - verticalPaddingPx + if (dy < 0) dy else 0
+                                if (topY > minY) {
+                                    return@run topY
+                                }
+                                val bottomY = (blockCenterY + blockHeight / 2).dp.roundToPx() + verticalPaddingPx + if (dy > 0) dy else 0
+                                val bottomCutOff = constraints.maxHeight - canvasInsets.bottom.dp.roundToPx()
+                                if (bottomY + height + horizontalPaddingPx <= bottomCutOff) {
+                                    return@run bottomY
+                                }
+                                (blockCenterY - blockHeight / 2).dp.roundToPx() + horizontalPaddingPx + if (dy < 0) dy else 0
                             }
-                        },
+                            placeable.place(constrainedX, constrainedY)
+                        }
+                    },
                 ) { content() }
             }
         }
@@ -982,27 +952,25 @@ class CanvasMenu private constructor(
             listBuilder: EditorComponent.ListBuilder<Item<*>> = ListBuilder.remember(),
             itemDecoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = { it() },
             `_`: Nothing = nothing,
-        ): CanvasMenu {
-            return remember(
-                scope,
-                visible,
-                enterTransition,
-                exitTransition,
-                decoration,
-                listBuilder,
-                itemDecoration,
-            ) {
-                CanvasMenu(
-                    scope = scope,
-                    visible = visible,
-                    enterTransition = enterTransition,
-                    exitTransition = exitTransition,
-                    decoration = decoration,
-                    listBuilder = listBuilder,
-                    itemDecoration = itemDecoration,
-                    `_` = `_`,
-                )
-            }
+        ): CanvasMenu = remember(
+            scope,
+            visible,
+            enterTransition,
+            exitTransition,
+            decoration,
+            listBuilder,
+            itemDecoration,
+        ) {
+            CanvasMenu(
+                scope = scope,
+                visible = visible,
+                enterTransition = enterTransition,
+                exitTransition = exitTransition,
+                decoration = decoration,
+                listBuilder = listBuilder,
+                itemDecoration = itemDecoration,
+                `_` = `_`,
+            )
         }
     }
 }

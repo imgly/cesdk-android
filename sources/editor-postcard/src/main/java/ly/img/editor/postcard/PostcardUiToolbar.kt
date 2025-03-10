@@ -58,9 +58,11 @@ internal fun PostcardUiToolbar(
                 Spacer(modifier = Modifier.width(4.dp))
                 if (!isInPreviewMode) {
                     if (postcardMode == PostcardMode.Design) {
-                        IconButton(onClick = {
-                            onEvent(Event.OnBack)
-                        }) {
+                        IconButton(
+                            onClick = {
+                                onEvent(Event.OnBack)
+                            },
+                        ) {
                             Icon(
                                 navigationIcon,
                                 contentDescription = stringResource(coreR.string.ly_img_editor_back),
@@ -69,10 +71,9 @@ internal fun PostcardUiToolbar(
                         }
                     } else {
                         TextButton(
-                            colors =
-                                ButtonDefaults.textButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.onSurface,
-                                ),
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurface,
+                            ),
                             onClick = {
                                 onEvent(Event.OnPreviousPage)
                             },
@@ -143,10 +144,9 @@ internal fun PostcardUiToolbar(
                     }
                 } else {
                     TextButton(
-                        colors =
-                            ButtonDefaults.textButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onSurface,
-                            ),
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                        ),
                         onClick = {
                             onEvent(Event.OnNextPage)
                         },

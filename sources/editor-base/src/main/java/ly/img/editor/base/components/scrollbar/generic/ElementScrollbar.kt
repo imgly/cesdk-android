@@ -16,18 +16,17 @@ internal fun ElementScrollbar(
     modifier: Modifier,
     settings: ScrollbarSettings,
 ) {
-    val layoutSettings =
-        remember(settings) {
-            ScrollbarLayoutSettings(
-                scrollbarPadding = settings.scrollbarPadding,
-                thumbShape = settings.thumbShape,
-                thumbThickness = settings.thumbThickness,
-                thumbColor = settings.thumbColor,
-                hideEasingAnimation = settings.hideEasingAnimation,
-                hideDelayMillis = settings.hideDelayMillis,
-                durationAnimationMillis = settings.durationAnimationMillis,
-            )
-        }
+    val layoutSettings = remember(settings) {
+        ScrollbarLayoutSettings(
+            scrollbarPadding = settings.scrollbarPadding,
+            thumbShape = settings.thumbShape,
+            thumbThickness = settings.thumbThickness,
+            thumbColor = settings.thumbColor,
+            hideEasingAnimation = settings.hideEasingAnimation,
+            hideDelayMillis = settings.hideDelayMillis,
+            durationAnimationMillis = settings.durationAnimationMillis,
+        )
+    }
 
     Box(modifier) {
         ScrollbarLayout(

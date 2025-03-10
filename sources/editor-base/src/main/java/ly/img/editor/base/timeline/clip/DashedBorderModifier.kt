@@ -34,16 +34,14 @@ fun Modifier.dashedBorder(
     val path = Path()
     path.addOutline(outline)
 
-    val stroke =
-        Stroke(
-            cap = cap,
-            width = strokeWidth.toPx(),
-            pathEffect =
-                PathEffect.dashPathEffect(
-                    intervals = floatArrayOf(dashWidth.toPx(), gapWidth.toPx()),
-                    phase = 0f,
-                ),
-        )
+    val stroke = Stroke(
+        cap = cap,
+        width = strokeWidth.toPx(),
+        pathEffect = PathEffect.dashPathEffect(
+            intervals = floatArrayOf(dashWidth.toPx(), gapWidth.toPx()),
+            phase = 0f,
+        ),
+    )
 
     this.drawContent()
 
@@ -68,11 +66,10 @@ fun Modifier.animatedDashedBorder(
     val phase by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = dashWidth.toPx() + gapWidth.toPx(),
-        animationSpec =
-            infiniteRepeatable(
-                animation = tween(animationDuration, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart,
-            ),
+        animationSpec = infiniteRepeatable(
+            animation = tween(animationDuration, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
         label = "Dash Phase Animation",
     )
 
@@ -82,16 +79,14 @@ fun Modifier.animatedDashedBorder(
         val path = Path()
         path.addOutline(outline)
 
-        val stroke =
-            Stroke(
-                cap = cap,
-                width = strokeWidth.toPx(),
-                pathEffect =
-                    PathEffect.dashPathEffect(
-                        intervals = floatArrayOf(dashWidth.toPx(), gapWidth.toPx()),
-                        phase = phase,
-                    ),
-            )
+        val stroke = Stroke(
+            cap = cap,
+            width = strokeWidth.toPx(),
+            pathEffect = PathEffect.dashPathEffect(
+                intervals = floatArrayOf(dashWidth.toPx(), gapWidth.toPx()),
+                phase = phase,
+            ),
+        )
 
         this.drawContent()
 

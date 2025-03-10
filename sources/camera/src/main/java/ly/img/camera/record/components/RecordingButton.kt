@@ -69,13 +69,12 @@ internal fun RecordingButton(
     onLongPress: () -> Unit,
     onLongPressRelease: () -> Unit,
 ) {
-    val state =
-        when {
-            !enabled -> RecordingButtonState.Disabled
-            isTimerRunning -> RecordingButtonState.TimerRunning
-            hasStartedRecording -> RecordingButtonState.Recording
-            else -> RecordingButtonState.Ready
-        }
+    val state = when {
+        !enabled -> RecordingButtonState.Disabled
+        isTimerRunning -> RecordingButtonState.TimerRunning
+        hasStartedRecording -> RecordingButtonState.Recording
+        else -> RecordingButtonState.Ready
+    }
     val transition = updateTransition(targetState = state, label = "RecordingButtonTransition")
 
     val paddingAnimation by transition.animateDp(
@@ -219,65 +218,61 @@ internal fun RecordingButton(
     val longPressAlpha by animateFloatAsState(
         targetValue = if (isPressed) 0.88f else 0f,
         label = "LongPressAlpha",
-        animationSpec =
-            tween(
-                durationMillis = if (isPressed) longPressTimeout else 200,
-                easing = EaseInOut,
-            ),
+        animationSpec = tween(
+            durationMillis = if (isPressed) longPressTimeout else 200,
+            easing = EaseInOut,
+        ),
     )
     val longPressScale by animateFloatAsState(
         targetValue = if (isPressed) (longPressToRecordCircleSize / canvasSize) else 0f,
         label = "LongPressScale",
-        animationSpec =
-            tween(
-                durationMillis = if (isPressed) longPressTimeout else 200,
-                easing = EaseInOut,
-            ),
+        animationSpec = tween(
+            durationMillis = if (isPressed) longPressTimeout else 200,
+            easing = EaseInOut,
+        ),
     )
 
     val localView = LocalView.current
 
     Box(modifier.size(longPressToRecordCircleSize)) {
         Canvas(
-            modifier =
-                Modifier
-                    .align(Alignment.Center)
-                    .size(canvasSize)
-                    .padding(paddingAnimation)
-                    .pointerInput(enabled) {
-                        if (!enabled) return@pointerInput
+            modifier = Modifier
+                .align(Alignment.Center)
+                .size(canvasSize)
+                .padding(paddingAnimation)
+                .pointerInput(enabled) {
+                    if (!enabled) return@pointerInput
 
-                        var isLongPress: Boolean
-                        detectTapGestures(
-                            onPress = {
-                                isLongPress = false
-                                isPressed = true
-                                val job =
-                                    scope.launch {
-                                        delay(longPressTimeout.toLong()) // Delay for long press
-                                        if (isActive) {
-                                            isLongPress = true
-                                            isPressed = false
-                                            localView.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-                                            onLongPress()
-                                        }
-                                    }
-
-                                try {
-                                    awaitRelease()
-                                } finally {
-                                    job.cancel()
+                    var isLongPress: Boolean
+                    detectTapGestures(
+                        onPress = {
+                            isLongPress = false
+                            isPressed = true
+                            val job = scope.launch {
+                                delay(longPressTimeout.toLong()) // Delay for long press
+                                if (isActive) {
+                                    isLongPress = true
                                     isPressed = false
                                     localView.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-                                    if (isLongPress) {
-                                        onLongPressRelease()
-                                    } else {
-                                        onShortPress()
-                                    }
+                                    onLongPress()
                                 }
-                            },
-                        )
-                    },
+                            }
+
+                            try {
+                                awaitRelease()
+                            } finally {
+                                job.cancel()
+                                isPressed = false
+                                localView.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+                                if (isLongPress) {
+                                    onLongPressRelease()
+                                } else {
+                                    onShortPress()
+                                }
+                            }
+                        },
+                    )
+                },
         ) {
             val canvasSize = size.minDimension
 

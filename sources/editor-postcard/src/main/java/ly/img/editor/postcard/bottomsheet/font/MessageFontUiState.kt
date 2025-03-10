@@ -1,4 +1,4 @@
-package ly.img.editor.postcard.bottomsheet.message_font
+package ly.img.editor.postcard.bottomsheet.font
 
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.ui.library.TypefaceLibraryCategory
@@ -19,14 +19,13 @@ internal fun createMessageFontUiState(
     return MessageFontUiState(
         libraryCategory = TypefaceLibraryCategory,
         fontFamily = typeface?.name ?: "Default",
-        filter =
-            listOf(
-                "//ly.img.typeface/caveat",
-                "//ly.img.typeface/amaticsc",
-                "//ly.img.typeface/courier_prime",
-                "//ly.img.typeface/archivo",
-                "//ly.img.typeface/roboto",
-                "//ly.img.typeface/parisienne",
-            ),
+        filter = listOf(
+            "//ly.img.typeface/caveat",
+            "//ly.img.typeface/amaticsc",
+            "//ly.img.typeface/courier_prime",
+            "//ly.img.typeface/archivo",
+            "//ly.img.typeface/roboto",
+            "//ly.img.typeface/parisienne",
+        ),
     )
 }

@@ -34,8 +34,6 @@ class VideoThumbnailResultFetcher(
             data: VideoThumbnailResult,
             options: Options,
             imageLoader: ImageLoader,
-        ): Fetcher {
-            return VideoThumbnailResultFetcher(data, options)
-        }
+        ): Fetcher = VideoThumbnailResultFetcher(data, options)
     }
 }

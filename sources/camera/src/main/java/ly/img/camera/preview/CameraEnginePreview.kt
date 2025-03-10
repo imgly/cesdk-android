@@ -42,10 +42,9 @@ internal fun CameraEnginePreview(
     }
 
     BoxWithConstraints(
-        modifier =
-            modifier.pointerInput(Unit) {
-                detectZoomGestures(onZoom = { zoom -> cameraState.setZoomRatio(zoom) }, onZoomEnd = {})
-            },
+        modifier = modifier.pointerInput(Unit) {
+            detectZoomGestures(onZoom = { zoom -> cameraState.setZoomRatio(zoom) }, onZoomEnd = {})
+        },
     ) {
         AndroidView(
             factory = { previewView },
@@ -59,23 +58,22 @@ internal fun CameraEnginePreview(
         }
 
         DisposableEffect(engine) {
-            val observer =
-                LifecycleEventObserver { _, event ->
-                    if (engine.isEngineRunning().not()) return@LifecycleEventObserver
-                    when (event) {
-                        Lifecycle.Event.ON_PAUSE -> {
-                            engine.editor.setAppIsPaused(true)
-                            engine.pause()
-                        }
-                        Lifecycle.Event.ON_RESUME -> {
-                            engine.unpause()
-                            bind()
-                            engine.editor.setAppIsPaused(false)
-                        }
-                        else -> {
-                        }
+            val observer = LifecycleEventObserver { _, event ->
+                if (engine.isEngineRunning().not()) return@LifecycleEventObserver
+                when (event) {
+                    Lifecycle.Event.ON_PAUSE -> {
+                        engine.editor.setAppIsPaused(true)
+                        engine.pause()
+                    }
+                    Lifecycle.Event.ON_RESUME -> {
+                        engine.unpause()
+                        bind()
+                        engine.editor.setAppIsPaused(false)
+                    }
+                    else -> {
                     }
                 }
+            }
 
             lifecycleOwner.lifecycle.addObserver(observer)
             onDispose {

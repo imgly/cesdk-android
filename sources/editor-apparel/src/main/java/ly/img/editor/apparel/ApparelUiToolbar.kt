@@ -33,9 +33,11 @@ internal fun ApparelUiToolbar(
         },
         navigationIcon = {
             if (!isInPreviewMode) {
-                IconButton(onClick = {
-                    onEvent(Event.OnBack)
-                }) {
+                IconButton(
+                    onClick = {
+                        onEvent(Event.OnBack)
+                    },
+                ) {
                     Icon(
                         navigationIcon,
                         contentDescription = stringResource(coreR.string.ly_img_editor_back),
@@ -43,11 +45,10 @@ internal fun ApparelUiToolbar(
                 }
             }
         },
-        colors =
-            TopAppBarDefaults.smallTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            ),
+        colors = TopAppBarDefaults.smallTopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        ),
         actions = {
             if (!isInPreviewMode) {
                 IconButton(

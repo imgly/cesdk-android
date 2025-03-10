@@ -27,13 +27,13 @@ import ly.img.editor.core.ui.engine.overrideAndRestore
 import ly.img.editor.core.ui.library.LibraryViewModel
 import ly.img.editor.core.ui.register
 import ly.img.editor.postcard.bottomsheet.PostcardSheetType
-import ly.img.editor.postcard.bottomsheet.message_color.MessageColorBottomSheetContent
-import ly.img.editor.postcard.bottomsheet.message_font.MessageFontBottomSheetContent
-import ly.img.editor.postcard.bottomsheet.message_font.createMessageFontUiState
-import ly.img.editor.postcard.bottomsheet.message_size.MessageSize
-import ly.img.editor.postcard.bottomsheet.message_size.MessageSizeBottomSheetContent
-import ly.img.editor.postcard.bottomsheet.template_colors.TemplateColorsBottomSheetContent
-import ly.img.editor.postcard.bottomsheet.template_colors.TemplateColorsUiState
+import ly.img.editor.postcard.bottomsheet.color.MessageColorBottomSheetContent
+import ly.img.editor.postcard.bottomsheet.font.MessageFontBottomSheetContent
+import ly.img.editor.postcard.bottomsheet.font.createMessageFontUiState
+import ly.img.editor.postcard.bottomsheet.size.MessageSize
+import ly.img.editor.postcard.bottomsheet.size.MessageSizeBottomSheetContent
+import ly.img.editor.postcard.bottomsheet.template.TemplateColorsBottomSheetContent
+import ly.img.editor.postcard.bottomsheet.template.TemplateColorsUiState
 import ly.img.editor.postcard.rootbar.rootBarItems
 import ly.img.editor.postcard.util.ColorType
 import ly.img.editor.postcard.util.SelectionColors
@@ -61,19 +61,18 @@ class PostcardUiViewModel(
     private var pageSelectionColors: SelectionColors? = null
     private var hasUnsavedChanges = false
 
-    val uiState =
-        merge(baseUiState, pageIndex, historyChangeTrigger).map {
-            updatePageSelectionColors()
-            PostcardUiViewState(
-                editorUiViewState = baseUiState.value,
-                postcardMode = if (pageIndex.value == 0) PostcardMode.Design else PostcardMode.Write,
-                rootBarItems = rootBarItems(engine, pageIndex.value, pageSelectionColors),
-            )
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = PostcardUiViewState(baseUiState.value),
+    val uiState = merge(baseUiState, pageIndex, historyChangeTrigger).map {
+        updatePageSelectionColors()
+        PostcardUiViewState(
+            editorUiViewState = baseUiState.value,
+            postcardMode = if (pageIndex.value == 0) PostcardMode.Design else PostcardMode.Write,
+            rootBarItems = rootBarItems(engine, pageIndex.value, pageSelectionColors),
         )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = PostcardUiViewState(baseUiState.value),
+    )
 
     override fun EventsHandler.extraEvents() {
         register<PostcardEvent.OnChangeMessageSize> { onChangeMessageSize(it.messageSize) }
@@ -83,12 +82,10 @@ class PostcardUiViewModel(
         register<PostcardEvent.OnChangeTemplateColor> { onChangeTemplateColor(it.name, it.color) }
     }
 
-    override fun getBlockForEvents(): Block {
-        return super.getBlockForEvents() ?: Block(
-            designBlock = engine.requirePinnedBlock(),
-            type = BlockType.Text,
-        )
-    }
+    override fun getBlockForEvents(): Block = super.getBlockForEvents() ?: Block(
+        designBlock = engine.requirePinnedBlock(),
+        type = BlockType.Text,
+    )
 
     override fun onPreCreate() {
         super.onPreCreate()
@@ -140,11 +137,10 @@ class PostcardUiViewModel(
                         setBottomSheetContent {
                             TemplateColorsBottomSheetContent(
                                 type = type,
-                                uiState =
-                                    TemplateColorsUiState(
-                                        editor.colorPalette,
-                                        checkNotNull(pageSelectionColors).getColors(),
-                                    ),
+                                uiState = TemplateColorsUiState(
+                                    editor.colorPalette,
+                                    checkNotNull(pageSelectionColors).getColors(),
+                                ),
                             )
                         }
                     }
@@ -203,11 +199,10 @@ class PostcardUiViewModel(
                     updatePageSelectionColors()
                     TemplateColorsBottomSheetContent(
                         type = it.type,
-                        uiState =
-                            TemplateColorsUiState(
-                                editor.colorPalette,
-                                checkNotNull(pageSelectionColors).getColors(),
-                            ),
+                        uiState = TemplateColorsUiState(
+                            editor.colorPalette,
+                            checkNotNull(pageSelectionColors).getColors(),
+                        ),
                     )
                 }
 
@@ -222,11 +217,10 @@ class PostcardUiViewModel(
         bottomSheetOffset: Float,
         bottomSheetMaxOffset: Float,
     ): Boolean {
-        val handled =
-            super.handleBackPress(
-                bottomSheetOffset = bottomSheetOffset,
-                bottomSheetMaxOffset = bottomSheetMaxOffset,
-            )
+        val handled = super.handleBackPress(
+            bottomSheetOffset = bottomSheetOffset,
+            bottomSheetMaxOffset = bottomSheetMaxOffset,
+        )
         return if (handled.not()) {
             val page = pageIndex.value
             if (page > 0) {
@@ -240,19 +234,16 @@ class PostcardUiViewModel(
         }
     }
 
-    override fun hasUnsavedChanges(): Boolean {
-        return super.hasUnsavedChanges() || hasUnsavedChanges
-    }
+    override fun hasUnsavedChanges(): Boolean = super.hasUnsavedChanges() || hasUnsavedChanges
 
     private fun updatePageSelectionColors() {
         if (isSceneLoaded.value && pageIndex.value == 0) {
-            pageSelectionColors =
-                engine.getPageSelectionColors(
-                    forPage = 0,
-                    includeDisabled = true,
-                    setDisabled = true,
-                    ignoreScope = true,
-                )
+            pageSelectionColors = engine.getPageSelectionColors(
+                forPage = 0,
+                includeDisabled = true,
+                setDisabled = true,
+                ignoreScope = true,
+            )
         }
     }
 

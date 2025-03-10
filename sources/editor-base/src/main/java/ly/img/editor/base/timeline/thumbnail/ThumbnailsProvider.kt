@@ -21,9 +21,9 @@ class ThumbnailsProvider(
     private val engine: Engine,
     private val scope: CoroutineScope,
 ) {
-    private var _thumbs = mutableStateOf(emptyList<VideoThumbnailResult>())
+    private var _thumbnails = mutableStateOf(emptyList<VideoThumbnailResult>())
     val thumbnails: List<VideoThumbnailResult>
-        get() = _thumbs.value
+        get() = _thumbnails.value
 
     private var thumbHeight = TimelineConfiguration.clipHeight
 
@@ -38,22 +38,21 @@ class ThumbnailsProvider(
         val numberOfFrames = ceil(width / thumbWidth).toInt()
 
         job?.cancel()
-        job =
-            scope.launch {
-                try {
-                    engine.block.generateVideoThumbnailSequence(
-                        block = clip.id,
-                        thumbnailHeight = (thumbHeight.value * Resources.getSystem().displayMetrics.density).roundToInt(),
-                        timeBegin = 0.0,
-                        timeEnd = clip.duration.toDouble(DurationUnit.SECONDS),
-                        numberOfFrames = numberOfFrames,
-                    ).toList().let {
-                        _thumbs.value = it
-                    }
-                } catch (_: EngineException) {
-                    // do nothing, can happen in case the block is deleted while thumbs were being generated
+        job = scope.launch {
+            try {
+                engine.block.generateVideoThumbnailSequence(
+                    block = clip.id,
+                    thumbnailHeight = (thumbHeight.value * Resources.getSystem().displayMetrics.density).roundToInt(),
+                    timeBegin = 0.0,
+                    timeEnd = clip.duration.toDouble(DurationUnit.SECONDS),
+                    numberOfFrames = numberOfFrames,
+                ).toList().let {
+                    _thumbnails.value = it
                 }
+            } catch (_: EngineException) {
+                // do nothing, can happen in case the block is deleted while thumbs were being generated
             }
+        }
     }
 
     fun cancel() {

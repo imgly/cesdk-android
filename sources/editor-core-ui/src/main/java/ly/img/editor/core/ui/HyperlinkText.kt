@@ -21,30 +21,28 @@ fun HyperlinkText(
     textColor: Color = MaterialTheme.colorScheme.onSurface,
     linkTextDecoration: TextDecoration = TextDecoration.Underline,
 ) {
-    val annotatedString =
-        buildAnnotatedString {
-            append(fullText)
+    val annotatedString = buildAnnotatedString {
+        append(fullText)
 
-            for ((key, value) in hyperLinks) {
-                if (key == null || value == null) continue
-                val startIndex = fullText.indexOf(key)
-                val endIndex = startIndex + key.length
-                addStyle(
-                    style =
-                        SpanStyle(
-                            textDecoration = linkTextDecoration,
-                        ),
-                    start = startIndex,
-                    end = endIndex,
-                )
-                addStringAnnotation(
-                    tag = "URL",
-                    annotation = value,
-                    start = startIndex,
-                    end = endIndex,
-                )
-            }
+        for ((key, value) in hyperLinks) {
+            if (key == null || value == null) continue
+            val startIndex = fullText.indexOf(key)
+            val endIndex = startIndex + key.length
+            addStyle(
+                style = SpanStyle(
+                    textDecoration = linkTextDecoration,
+                ),
+                start = startIndex,
+                end = endIndex,
+            )
+            addStringAnnotation(
+                tag = "URL",
+                annotation = value,
+                start = startIndex,
+                end = endIndex,
+            )
         }
+    }
 
     val uriHandler = LocalUriHandler.current
 

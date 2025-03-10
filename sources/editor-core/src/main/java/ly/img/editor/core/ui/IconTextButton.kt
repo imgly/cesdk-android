@@ -46,13 +46,12 @@ fun IconTextButton(
     } else {
         Button(
             modifier = modifier,
-            colors =
-                ButtonDefaults.textButtonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledContainerColor = Color.Transparent,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5F),
-                ),
+            colors = ButtonDefaults.textButtonColors(
+                containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledContainerColor = Color.Transparent,
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5F),
+            ),
             onClick = onClick,
             enabled = enabled,
             contentPadding = contentPadding,
@@ -92,21 +91,19 @@ fun IconTextButton(
 ) {
     IconTextButton(
         modifier = modifier,
-        icon =
-            editorIcon?.let {
-                { EditorIcon(it) }
-            },
-        text =
-            text?.let {
-                {
-                    Text(
-                        text = text,
-                        color = textColor,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
-                }
-            },
+        icon = editorIcon?.let {
+            { EditorIcon(it) }
+        },
+        text = text?.let {
+            {
+                Text(
+                    text = text,
+                    color = textColor,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+        },
         enabled = enabled,
         onClick = onClick,
         contentPadding = contentPadding,

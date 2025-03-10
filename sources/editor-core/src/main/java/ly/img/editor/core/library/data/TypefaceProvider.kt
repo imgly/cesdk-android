@@ -17,14 +17,8 @@ class TypefaceProvider {
     suspend fun provideTypeface(
         engine: Engine,
         name: String,
-    ): Typeface? {
-        return engine.asset.findAssets(
-            sourceId = AssetSourceType.Typeface.sourceId,
-            query = FindAssetsQuery(perPage = 1, page = 0, query = name),
-        )
-            .assets
-            .firstOrNull()
-            ?.payload
-            ?.typeface
-    }
+    ): Typeface? = engine.asset.findAssets(
+        sourceId = AssetSourceType.Typeface.sourceId,
+        query = FindAssetsQuery(perPage = 1, page = 0, query = name),
+    ).assets.firstOrNull()?.payload?.typeface
 }

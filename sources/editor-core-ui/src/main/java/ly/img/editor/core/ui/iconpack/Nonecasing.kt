@@ -13,37 +13,36 @@ import androidx.compose.ui.unit.dp
 
 public val IconPack.Nonecasing: ImageVector
     get() {
-        if (_nonecasing != null) {
-            return _nonecasing!!
+        if (nonecasing != null) {
+            return nonecasing!!
         }
-        _nonecasing =
-            Builder(
-                name = "Nonecasing",
-                defaultWidth = 24.0.dp,
-                defaultHeight = 25.0.dp,
-                viewportWidth = 24.0f,
-                viewportHeight = 25.0f,
-            ).apply {
-                path(
-                    fill = SolidColor(Color(0xFFffffff)),
-                    stroke = null,
-                    strokeLineWidth = 0.0f,
-                    strokeLineCap = Butt,
-                    strokeLineJoin = Miter,
-                    strokeLineMiter = 4.0f,
-                    pathFillType = NonZero,
-                ) {
-                    moveTo(7.0f, 11.5f)
-                    horizontalLineToRelative(10.0f)
-                    verticalLineToRelative(2.0f)
-                    horizontalLineToRelative(-10.0f)
-                    close()
-                }
-            }.build()
-        return _nonecasing!!
+        nonecasing = Builder(
+            name = "Nonecasing",
+            defaultWidth = 24.0.dp,
+            defaultHeight = 25.0.dp,
+            viewportWidth = 24.0f,
+            viewportHeight = 25.0f,
+        ).apply {
+            path(
+                fill = SolidColor(Color(0xFFffffff)),
+                stroke = null,
+                strokeLineWidth = 0.0f,
+                strokeLineCap = Butt,
+                strokeLineJoin = Miter,
+                strokeLineMiter = 4.0f,
+                pathFillType = NonZero,
+            ) {
+                moveTo(7.0f, 11.5f)
+                horizontalLineToRelative(10.0f)
+                verticalLineToRelative(2.0f)
+                horizontalLineToRelative(-10.0f)
+                close()
+            }
+        }.build()
+        return nonecasing!!
     }
 
-private var _nonecasing: ImageVector? = null
+private var nonecasing: ImageVector? = null
 
 @Composable
 private fun Preview() = IconPack.Nonecasing.IconPreview()

@@ -45,24 +45,20 @@ fun EditorPagesDock(
     AnimatedVisibility(
         modifier = modifier,
         visible = state != null,
-        enter =
-            slideInVertically(
-                animationSpec =
-                    tween(
-                        durationMillis = 400,
-                        easing = Easing.EmphasizedDecelerate,
-                    ),
-                initialOffsetY = { it },
+        enter = slideInVertically(
+            animationSpec = tween(
+                durationMillis = 400,
+                easing = Easing.EmphasizedDecelerate,
             ),
-        exit =
-            slideOutVertically(
-                animationSpec =
-                    tween(
-                        durationMillis = 150,
-                        easing = Easing.EmphasizedAccelerate,
-                    ),
-                targetOffsetY = { it },
+            initialOffsetY = { it },
+        ),
+        exit = slideOutVertically(
+            animationSpec = tween(
+                durationMillis = 150,
+                easing = Easing.EmphasizedAccelerate,
             ),
+            targetOffsetY = { it },
+        ),
     ) {
         cachedState?.let { cachedState ->
             Surface(
@@ -70,10 +66,9 @@ fun EditorPagesDock(
                 color = MaterialTheme.colorScheme.surface2,
             ) {
                 Row(
-                    modifier =
-                        Modifier
-                            .padding(vertical = 10.dp)
-                            .horizontalScroll(rememberScrollState()),
+                    modifier = Modifier
+                        .padding(vertical = 10.dp)
+                        .horizontalScroll(rememberScrollState()),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
                 ) {

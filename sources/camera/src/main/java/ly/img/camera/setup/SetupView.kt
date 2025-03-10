@@ -22,9 +22,8 @@ internal fun SetupView(
     onAllPermissionsGranted: () -> Unit,
 ) {
     Column(
-        modifier =
-            modifier
-                .requiredWidth(264.dp),
+        modifier = modifier
+            .requiredWidth(264.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

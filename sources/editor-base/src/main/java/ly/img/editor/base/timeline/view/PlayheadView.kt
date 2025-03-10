@@ -20,10 +20,9 @@ fun PlayheadView(
     cornerRadius: CornerRadius = CornerRadius(4.dp.toPx()),
 ) {
     Canvas(
-        modifier =
-            modifier
-                .fillMaxHeight()
-                .width(3.dp),
+        modifier = modifier
+            .fillMaxHeight()
+            .width(3.dp),
     ) {
         drawRoundRect(color = outlineColor, cornerRadius = cornerRadius, alpha = 0.24f)
         inset(1.dp.roundToPx().toFloat()) {

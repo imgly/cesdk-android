@@ -31,16 +31,14 @@ fun TimelineButton(
 ) {
     OutlinedButton(
         modifier = modifier.height(TimelineConfiguration.clipHeight),
-        colors =
-            ButtonDefaults.outlinedButtonColors(
-                containerColor = containerColor,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-            ),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = containerColor,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ),
         contentPadding = ButtonDefaults.TextButtonWithIconContentPadding,
-        border =
-            ButtonDefaults.outlinedButtonBorder.copy(
-                brush = SolidColor(MaterialTheme.colorScheme.outlineVariant),
-            ),
+        border = ButtonDefaults.outlinedButtonBorder.copy(
+            brush = SolidColor(MaterialTheme.colorScheme.outlineVariant),
+        ),
         shape = MaterialTheme.shapes.small,
         onClick = onClick,
     ) {

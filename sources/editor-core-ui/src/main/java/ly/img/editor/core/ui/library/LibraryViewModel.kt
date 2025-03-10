@@ -103,66 +103,62 @@ class LibraryViewModel(
         hashMapOf<LibraryCategory, LibraryCategoryStackData>()
     }
 
-    private val eventHandler =
-        EventsHandler {
-            register<OnDispose> {
-                onDispose()
-            }
-            register<OnDrillDown> {
-                onDrillDown(it.libraryCategory, it.expandContent)
-            }
-            register<OnEnterSearchMode> {
-                onEnterSearchMode(it.enter, it.libraryCategory)
-            }
-            register<OnFetch> {
-                onFetch(it.libraryCategory)
-            }
-            register<OnPopStack> {
-                onPopStack(it.libraryCategory)
-            }
-            register<OnSearchTextChange> {
-                onSearchTextChange(it.value, it.libraryCategory, it.debounce)
-            }
-            register<OnReplaceAsset> {
-                onReplaceAsset(it.wrappedAsset.assetSourceType, it.wrappedAsset.asset, it.designBlock, it.wrappedAsset.assetType)
-            }
-            register<OnReplaceUri> {
-                onReplaceUri(it.assetSource, it.uri, it.designBlock)
-            }
-            register<OnAddAsset> {
-                onAddAsset(it.wrappedAsset.assetSourceType, it.wrappedAsset.asset, it.addToBackgroundTrack)
-            }
-            register<OnAddUri> {
-                onAddUri(it.assetSource, it.uri, it.addToBackgroundTrack)
-            }
-            register<OnAddCameraRecordings> {
-                onAddCameraRecordings(it.assetSource, it.recordings)
-            }
-            register<OnAssetLongClick> {
-                onAssetLongClick(it.wrappedAsset)
-            }
+    private val eventHandler = EventsHandler {
+        register<OnDispose> {
+            onDispose()
         }
+        register<OnDrillDown> {
+            onDrillDown(it.libraryCategory, it.expandContent)
+        }
+        register<OnEnterSearchMode> {
+            onEnterSearchMode(it.enter, it.libraryCategory)
+        }
+        register<OnFetch> {
+            onFetch(it.libraryCategory)
+        }
+        register<OnPopStack> {
+            onPopStack(it.libraryCategory)
+        }
+        register<OnSearchTextChange> {
+            onSearchTextChange(it.value, it.libraryCategory, it.debounce)
+        }
+        register<OnReplaceAsset> {
+            onReplaceAsset(it.wrappedAsset.assetSourceType, it.wrappedAsset.asset, it.designBlock, it.wrappedAsset.assetType)
+        }
+        register<OnReplaceUri> {
+            onReplaceUri(it.assetSource, it.uri, it.designBlock)
+        }
+        register<OnAddAsset> {
+            onAddAsset(it.wrappedAsset.assetSourceType, it.wrappedAsset.asset, it.addToBackgroundTrack)
+        }
+        register<OnAddUri> {
+            onAddUri(it.assetSource, it.uri, it.addToBackgroundTrack)
+        }
+        register<OnAddCameraRecordings> {
+            onAddCameraRecordings(it.assetSource, it.recordings)
+        }
+        register<OnAssetLongClick> {
+            onAssetLongClick(it.wrappedAsset)
+        }
+    }
 
     fun onEvent(event: LibraryEvent) = eventHandler.handleEvent(event)
 
-    fun getAssetLibraryUiState(libraryCategory: LibraryCategory): StateFlow<AssetLibraryUiState> {
-        return getLibraryCategoryData(libraryCategory).uiStateFlow
-    }
+    fun getAssetLibraryUiState(libraryCategory: LibraryCategory): StateFlow<AssetLibraryUiState> =
+        getLibraryCategoryData(libraryCategory).uiStateFlow
 
-    private fun getLibraryCategoryData(libraryCategory: LibraryCategory): LibraryCategoryStackData {
-        return libraryStackDataMapping.getOrPut(libraryCategory) {
+    private fun getLibraryCategoryData(libraryCategory: LibraryCategory): LibraryCategoryStackData =
+        libraryStackDataMapping.getOrPut(libraryCategory) {
             LibraryCategoryStackData(
-                uiStateFlow =
-                    MutableStateFlow(
-                        AssetLibraryUiState(
-                            libraryCategory = libraryCategory,
-                            titleRes = libraryCategory.tabTitleRes,
-                        ),
+                uiStateFlow = MutableStateFlow(
+                    AssetLibraryUiState(
+                        libraryCategory = libraryCategory,
+                        titleRes = libraryCategory.tabTitleRes,
                     ),
+                ),
                 dataStack = Stack<LibraryContent>().apply { push(libraryCategory.content) },
             )
         }
-    }
 
     private fun onAssetLongClick(wrappedAsset: WrappedAsset) {
         val assetSourceType = wrappedAsset.assetSourceType
@@ -293,12 +289,11 @@ class LibraryViewModel(
                 asset.getDuration()?.let { duration ->
                     engine.block.setDuration(designBlock, min(duration, oldDuration))
                 }
-                val fillBlock =
-                    if (engine.block.supportsFill(designBlock)) {
-                        engine.block.getFill(designBlock)
-                    } else {
-                        designBlock
-                    }
+                val fillBlock = if (engine.block.supportsFill(designBlock)) {
+                    engine.block.getFill(designBlock)
+                } else {
+                    designBlock
+                }
                 refreshDuration(designBlock, fillBlock, oldDuration)
             }
         }
@@ -344,12 +339,11 @@ class LibraryViewModel(
             val totalDuration = engine.block.getDuration(page)
 
             // Prevent inserting at the very end of the timeline, always insert audio at the beginning
-            val clampedOffset =
-                if (DesignBlockType.get(engine.block.getType(designBlock)) == DesignBlockType.Audio) {
-                    0.0
-                } else {
-                    max(0.0, min(playbackTime, totalDuration - minClipDuration))
-                }
+            val clampedOffset = if (DesignBlockType.get(engine.block.getType(designBlock)) == DesignBlockType.Audio) {
+                0.0
+            } else {
+                max(0.0, min(playbackTime, totalDuration - minClipDuration))
+            }
 
             val maxClipDuration = totalDuration - clampedOffset
             val assetDuration = asset.getDuration() ?: max(defaultClipDuration, maxClipDuration)
@@ -363,16 +357,15 @@ class LibraryViewModel(
 
         engine.block.setDuration(designBlock, duration = resolvedClipDuration)
 
-        val fillBlock =
-            if (DesignBlockType.get(engine.block.getType(designBlock)) == DesignBlockType.Audio) {
-                // Prevent audio blocks from being considered in the z-index reordering
-                engine.block.setAlwaysOnTop(designBlock, true)
-                designBlock
-            } else if (engine.block.isVideoBlock(designBlock)) {
-                engine.block.getFill(designBlock)
-            } else {
-                null
-            }
+        val fillBlock = if (DesignBlockType.get(engine.block.getType(designBlock)) == DesignBlockType.Audio) {
+            // Prevent audio blocks from being considered in the z-index reordering
+            engine.block.setAlwaysOnTop(designBlock, true)
+            designBlock
+        } else if (engine.block.isVideoBlock(designBlock)) {
+            engine.block.getFill(designBlock)
+        } else {
+            null
+        }
 
         fillBlock?.let { fill ->
             engine.block.setLooping(fill, false)
@@ -506,11 +499,10 @@ class LibraryViewModel(
         val categoryData = getLibraryCategoryData(libraryCategory)
         val content = categoryData.dataStack.last()
 
-        categoryData.fetchJob =
-            when (content) {
-                is LibraryContent.Sections -> loadContent(categoryData, content)
-                is LibraryContent.Grid -> loadContent(categoryData, content)
-            }
+        categoryData.fetchJob = when (content) {
+            is LibraryContent.Sections -> loadContent(categoryData, content)
+            is LibraryContent.Grid -> loadContent(categoryData, content)
+        }
     }
 
     private fun loadContent(
@@ -520,51 +512,46 @@ class LibraryViewModel(
         val uiStateFlow = categoryData.uiStateFlow
         val assetsData = uiStateFlow.value.assetsData
         val canLoadMore = (assetsData.page == 0 && assetsData.assets.isEmpty()) || assetsData.canPaginate
-        val isLoading =
-            assetsData.assetsLoadState == AssetsLoadState.Loading || assetsData.assetsLoadState == AssetsLoadState.Paginating
+        val isLoading = assetsData.assetsLoadState == AssetsLoadState.Loading || assetsData.assetsLoadState == AssetsLoadState.Paginating
         if (canLoadMore.not() || isLoading) return@launch
         categoryData.dirty = false
         uiStateFlow.update {
             it.copy(
                 titleRes = content.titleRes,
                 isRoot = categoryData.dataStack.size == 1,
-                assetsData =
-                    it.assetsData.copy(
-                        assetType = content.assetType,
-                        assetSourceType = content.sourceType,
-                        assetsLoadState = if (assetsData.page == 0) AssetsLoadState.Loading else AssetsLoadState.Paginating,
-                    ),
+                assetsData = it.assetsData.copy(
+                    assetType = content.assetType,
+                    assetSourceType = content.sourceType,
+                    assetsLoadState = if (assetsData.page == 0) AssetsLoadState.Loading else AssetsLoadState.Paginating,
+                ),
                 loadState = CategoryLoadState.LoadingAssets,
             )
         }
         runCatching {
-            val findAssetsResult =
-                findAssets(
-                    sourceId = content.sourceType.sourceId,
-                    query = uiStateFlow.value.searchText,
-                    groups = content.groups,
-                    page = assetsData.page,
-                    perPage = content.perPage,
-                )
+            val findAssetsResult = findAssets(
+                sourceId = content.sourceType.sourceId,
+                query = uiStateFlow.value.searchText,
+                groups = content.groups,
+                page = assetsData.page,
+                perPage = content.perPage,
+            )
             val canPaginate = findAssetsResult.nextPage > 0
-            val resultAssets =
-                findAssetsResult.assets.map {
-                    createWrappedAsset(
-                        asset = it,
-                        assetSourceType = content.sourceType,
-                        assetType = content.assetType,
-                    )
-                }
+            val resultAssets = findAssetsResult.assets.map {
+                createWrappedAsset(
+                    asset = it,
+                    assetSourceType = content.sourceType,
+                    assetType = content.assetType,
+                )
+            }
             val assets = if (assetsData.page == 0) resultAssets else assetsData.assets + resultAssets
             uiStateFlow.update {
                 it.copy(
-                    assetsData =
-                        it.assetsData.copy(
-                            canPaginate = canPaginate,
-                            page = if (canPaginate) assetsData.page + 1 else assetsData.page,
-                            assets = assets,
-                            assetsLoadState = if (assets.isEmpty()) AssetsLoadState.EmptyResult else AssetsLoadState.Idle,
-                        ),
+                    assetsData = it.assetsData.copy(
+                        canPaginate = canPaginate,
+                        page = if (canPaginate) assetsData.page + 1 else assetsData.page,
+                        assets = assets,
+                        assetsLoadState = if (assets.isEmpty()) AssetsLoadState.EmptyResult else AssetsLoadState.Idle,
+                    ),
                 )
             }
         }.onFailure {
@@ -573,10 +560,9 @@ class LibraryViewModel(
             }
             uiStateFlow.update {
                 it.copy(
-                    assetsData =
-                        assetsData.copy(
-                            assetsLoadState = if (assetsData.page == 0) AssetsLoadState.Error else AssetsLoadState.PaginationError,
-                        ),
+                    assetsData = assetsData.copy(
+                        assetsLoadState = if (assetsData.page == 0) AssetsLoadState.Error else AssetsLoadState.PaginationError,
+                    ),
                 )
             }
         }
@@ -606,12 +592,11 @@ class LibraryViewModel(
                     stackIndex = stackIndex,
                     sectionIndex = sectionIndex,
                     titleRes = sectionTitleRes,
-                    uploadAssetSourceType =
-                        if (section.showUpload) {
-                            section.sourceTypes.singleOrNull() as? UploadAssetSourceType
-                        } else {
-                            null
-                        },
+                    uploadAssetSourceType = if (section.showUpload) {
+                        section.sourceTypes.singleOrNull() as? UploadAssetSourceType
+                    } else {
+                        null
+                    },
                     expandContent = section.expandContent,
                 ).let(loadingSectionItemsList::add)
             }
@@ -622,11 +607,10 @@ class LibraryViewModel(
                         stackIndex = stackIndex,
                         sectionIndex = sectionIndex,
                         subSectionIndex = groupIndex,
-                        section =
-                            section.copy(
-                                groups = listOf(group),
-                                addGroupedSubSections = false,
-                            ),
+                        section = section.copy(
+                            groups = listOf(group),
+                            addGroupedSubSections = false,
+                        ),
                     ).let(loadingSectionItemsList::add)
                 }
             } else {
@@ -651,63 +635,61 @@ class LibraryViewModel(
                     val section = content.section
                     async {
                         var total = 0
-                        val updatedContent =
-                            section.sourceTypes.map { source ->
-                                async {
-                                    runCatching {
-                                        source to
-                                            findAssets(
-                                                sourceId = source.sourceId,
-                                                query = uiStateFlow.value.searchText,
-                                                groups = section.groups,
-                                                perPage = section.count,
-                                            )
-                                    }
+                        val updatedContent = section.sourceTypes.map { source ->
+                            async {
+                                runCatching {
+                                    source to
+                                        findAssets(
+                                            sourceId = source.sourceId,
+                                            query = uiStateFlow.value.searchText,
+                                            groups = section.groups,
+                                            perPage = section.count,
+                                        )
                                 }
-                            }.awaitAll()
-                                .mapNotNull { it.getOrNull() }
-                                .takeIf { it.isNotEmpty() }
-                                ?.flatMap { (source, findResult) ->
-                                    total = runCatching {
-                                        Math.addExact(total, findResult.total)
-                                    }.getOrNull() ?: Int.MAX_VALUE
-                                    findResult.assets.map { asset -> source to asset }
-                                }
-                                ?.take(section.count)
-                                ?.map { (source, asset) ->
-                                    createWrappedAsset(asset, source, section.assetType)
-                                }?.let { wrappedAssets ->
-                                    LibrarySectionItem.Content(
-                                        stackIndex = stackIndex,
-                                        sectionIndex = content.sectionIndex,
-                                        wrappedAssets = wrappedAssets,
-                                        assetType = section.assetType,
-                                        expandContent = if (total > wrappedAssets.size) section.expandContent else null,
-                                    )
-                                } ?: LibrarySectionItem.Error(
-                                stackIndex = stackIndex,
-                                sectionIndex = content.sectionIndex,
-                                assetType = section.assetType,
-                            )
+                            }
+                        }.awaitAll()
+                            .mapNotNull { it.getOrNull() }
+                            .takeIf { it.isNotEmpty() }
+                            ?.flatMap { (source, findResult) ->
+                                total = runCatching {
+                                    Math.addExact(total, findResult.total)
+                                }.getOrNull() ?: Int.MAX_VALUE
+                                findResult.assets.map { asset -> source to asset }
+                            }
+                            ?.take(section.count)
+                            ?.map { (source, asset) ->
+                                createWrappedAsset(asset, source, section.assetType)
+                            }?.let { wrappedAssets ->
+                                LibrarySectionItem.Content(
+                                    stackIndex = stackIndex,
+                                    sectionIndex = content.sectionIndex,
+                                    wrappedAssets = wrappedAssets,
+                                    assetType = section.assetType,
+                                    expandContent = if (total > wrappedAssets.size) section.expandContent else null,
+                                )
+                            } ?: LibrarySectionItem.Error(
+                            stackIndex = stackIndex,
+                            sectionIndex = content.sectionIndex,
+                            assetType = section.assetType,
+                        )
 
                         uiStateFlow.update {
                             it.copy(
-                                sectionItems =
-                                    it.sectionItems.map { item ->
-                                        when {
-                                            item is LibrarySectionItem.Header && item.sectionIndex == content.sectionIndex -> {
-                                                item.copy(count = total)
-                                            }
-
-                                            item is LibrarySectionItem.ContentLoading &&
-                                                item.sectionIndex == content.sectionIndex &&
-                                                item.subSectionIndex == content.subSectionIndex -> {
-                                                updatedContent
-                                            }
-
-                                            else -> item
+                                sectionItems = it.sectionItems.map { item ->
+                                    when {
+                                        item is LibrarySectionItem.Header && item.sectionIndex == content.sectionIndex -> {
+                                            item.copy(count = total)
                                         }
-                                    },
+
+                                        item is LibrarySectionItem.ContentLoading &&
+                                            item.sectionIndex == content.sectionIndex &&
+                                            item.subSectionIndex == content.subSectionIndex -> {
+                                            updatedContent
+                                        }
+
+                                        else -> item
+                                    }
+                                },
                             )
                         }
                     }
@@ -723,24 +705,21 @@ class LibraryViewModel(
         asset: Asset,
         assetSourceType: AssetSourceType,
         assetType: AssetType,
-    ): WrappedAsset {
-        return if (assetType == AssetType.Text) {
-            WrappedAsset.TextAsset(
-                asset = asset,
-                assetSourceType = assetSourceType,
-                assetType = assetType,
-                fontData =
-                    asset.getMeta("fontFamily")
-                        ?.let { typefaceProvider.provideTypeface(engine, it) }
-                        ?.let { fontDataMapper.getFontData(it, asset.getMeta("fontWeight")?.toInt()) },
-            )
-        } else {
-            WrappedAsset.GenericAsset(
-                asset = asset,
-                assetType = assetType,
-                assetSourceType = assetSourceType,
-            )
-        }
+    ): WrappedAsset = if (assetType == AssetType.Text) {
+        WrappedAsset.TextAsset(
+            asset = asset,
+            assetSourceType = assetSourceType,
+            assetType = assetType,
+            fontData = asset.getMeta("fontFamily")
+                ?.let { typefaceProvider.provideTypeface(engine, it) }
+                ?.let { fontDataMapper.getFontData(it, asset.getMeta("fontWeight")?.toInt()) },
+        )
+    } else {
+        WrappedAsset.GenericAsset(
+            asset = asset,
+            assetType = assetType,
+            assetSourceType = assetSourceType,
+        )
     }
 
     private suspend fun findAssets(
@@ -749,19 +728,16 @@ class LibraryViewModel(
         query: String,
         page: Int = 0,
         groups: List<String>? = null,
-    ): FindAssetsResult {
-        return engine.asset.findAssets(
-            sourceId = sourceId,
-            query =
-                FindAssetsQuery(
-                    perPage = perPage,
-                    query = query,
-                    page = page,
-                    groups = groups,
-                    locale = "en",
-                ),
-        )
-    }
+    ): FindAssetsResult = engine.asset.findAssets(
+        sourceId = sourceId,
+        query = FindAssetsQuery(
+            perPage = perPage,
+            query = query,
+            page = page,
+            groups = groups,
+            locale = "en",
+        ),
+    )
 
     private fun onDrillDown(
         currentLibrary: LibraryCategory,
@@ -801,10 +777,9 @@ class LibraryViewModel(
     ): Asset {
         val uuid = UUID.randomUUID().toString()
         val uriString = uri.toString()
-        val meta =
-            mutableMapOf(
-                "uri" to uriString,
-            )
+        val meta = mutableMapOf(
+            "uri" to uriString,
+        )
         var label: String? = null
 
         when (assetSourceType) {
@@ -844,14 +819,13 @@ class LibraryViewModel(
             }
         }
 
-        val assetDefinition =
-            AssetDefinition(
-                id = uuid,
-                meta = meta,
-                label = if (label != null) mapOf("en" to label!!) else null,
-            ).let {
-                onUpload(editorScope, it, assetSourceType)
-            }
+        val assetDefinition = AssetDefinition(
+            id = uuid,
+            meta = meta,
+            label = if (label != null) mapOf("en" to label!!) else null,
+        ).let {
+            onUpload(editorScope, it, assetSourceType)
+        }
 
         engine.asset.addAsset(
             sourceId = assetSourceType.sourceId,

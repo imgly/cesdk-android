@@ -42,24 +42,22 @@ fun ApparelUi(
         mutableStateOf(Unit)
     }
 
-    val libraryViewModel =
-        viewModel {
-            LibraryViewModel(
-                editorScope = editorScope,
-                onUpload = onUpload,
-            )
-        }
-    val viewModel =
-        viewModel {
-            ApparelUiViewModel(
-                editorScope = editorScope,
-                onCreate = onCreate,
-                onExport = onExport,
-                onClose = onClose,
-                onError = onError,
-                libraryViewModel = libraryViewModel,
-            )
-        }
+    val libraryViewModel = viewModel {
+        LibraryViewModel(
+            editorScope = editorScope,
+            onUpload = onUpload,
+        )
+    }
+    val viewModel = viewModel {
+        ApparelUiViewModel(
+            editorScope = editorScope,
+            onCreate = onCreate,
+            onExport = onExport,
+            onClose = onClose,
+            onError = onError,
+            libraryViewModel = libraryViewModel,
+        )
+    }
 
     val uiState by viewModel.uiState.collectAsState()
     val editorContext = editorScope.run { editorContext }
@@ -82,10 +80,9 @@ fun ApparelUi(
         canvasOverlay = {
             if (!uiState.isInPreviewMode) {
                 LibraryButton(
-                    modifier =
-                        Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(16.dp),
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp),
                     onEvent = viewModel::send,
                 )
             }

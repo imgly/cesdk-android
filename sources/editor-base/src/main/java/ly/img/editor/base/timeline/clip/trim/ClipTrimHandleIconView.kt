@@ -26,36 +26,34 @@ fun ClipTrimHandleIconView(
 ) {
     Canvas(modifier = modifier.size(4.dp, 12.dp)) {
         val strokeWidth = (if (style == IconStyle.Neutral) 4f else 3.5f).dp.toPx()
-        val path =
-            Path().apply {
-                when (style) {
-                    IconStyle.Neutral -> {
-                        moveTo(center.x, 0f)
-                        lineTo(center.x, size.height)
-                    }
+        val path = Path().apply {
+            when (style) {
+                IconStyle.Neutral -> {
+                    moveTo(center.x, 0f)
+                    lineTo(center.x, size.height)
+                }
 
-                    IconStyle.Left -> {
-                        moveTo(size.width * 0.75f, 0f)
-                        lineTo(0f, size.height / 2)
-                        lineTo(size.width * 0.75f, size.height)
-                    }
+                IconStyle.Left -> {
+                    moveTo(size.width * 0.75f, 0f)
+                    lineTo(0f, size.height / 2)
+                    lineTo(size.width * 0.75f, size.height)
+                }
 
-                    IconStyle.Right -> {
-                        moveTo(size.width * 0.25f, 0f)
-                        lineTo(size.width, size.height / 2)
-                        lineTo(size.width * 0.25f, size.height)
-                    }
+                IconStyle.Right -> {
+                    moveTo(size.width * 0.25f, 0f)
+                    lineTo(size.width, size.height / 2)
+                    lineTo(size.width * 0.25f, size.height)
                 }
             }
+        }
         drawPath(
             path = path,
             color = color,
-            style =
-                Stroke(
-                    width = strokeWidth,
-                    cap = StrokeCap.Round,
-                    join = StrokeJoin.Miter,
-                ),
+            style = Stroke(
+                width = strokeWidth,
+                cap = StrokeCap.Round,
+                join = StrokeJoin.Miter,
+            ),
         )
     }
 }

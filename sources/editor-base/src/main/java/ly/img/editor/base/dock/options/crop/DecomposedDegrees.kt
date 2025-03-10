@@ -20,16 +20,12 @@ fun getNormalizedDegrees(
 fun getRotationDegrees(
     engine: Engine,
     designBlock: DesignBlock,
-): Float {
-    return getDecomposedDegrees(engine, designBlock).first
-}
+): Float = getDecomposedDegrees(engine, designBlock).first
 
 fun getStraightenDegrees(
     engine: Engine,
     designBlock: DesignBlock,
-): Float {
-    return getDecomposedDegrees(engine, designBlock).second
-}
+): Float = getDecomposedDegrees(engine, designBlock).second
 
 private fun getDecomposedDegrees(
     engine: Engine,
@@ -52,6 +48,4 @@ private fun getDecomposedDegrees(
     return rotationDeg to straightenDeg
 }
 
-private fun Float.roundToZero(): Float {
-    return if (this > 0) floor(this) else ceil(this)
-}
+private fun Float.roundToZero(): Float = if (this > 0) floor(this) else ceil(this)

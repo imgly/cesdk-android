@@ -51,17 +51,15 @@ fun FontListUi(
             colors = UiDefaults.cardColors,
             modifier = Modifier.sheetCardContentModifier(),
         ) {
-            val selectedIndex =
-                remember(selectedFontFamily) { fontList.indexOfFirst { selectedFontFamily == it.typeface.name } }
+            val selectedIndex = remember(selectedFontFamily) { fontList.indexOfFirst { selectedFontFamily == it.typeface.name } }
             val initialFirstVisibleItemIndex = if (selectedIndex == -1) 0 else selectedIndex
             val lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = initialFirstVisibleItemIndex)
             LazyColumn(state = lazyListState) {
                 items(fontList) {
                     CheckedTextRow(
-                        isChecked =
-                            selectedFontFamily == it.typeface.name &&
-                                (selectedWeight == null || it.weight.weight == selectedWeight.value) &&
-                                (selectedStyle == null || it.style == selectedStyle),
+                        isChecked = selectedFontFamily == it.typeface.name &&
+                            (selectedWeight == null || it.weight.weight == selectedWeight.value) &&
+                            (selectedStyle == null || it.style == selectedStyle),
                         text = labelMap(it),
                         fontData = it,
                         onClick = {

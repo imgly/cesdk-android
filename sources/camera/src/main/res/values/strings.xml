@@ -12,7 +12,7 @@
     <string name="ly_img_camera_delete_recordings_dialog_title">Close and delete all recordings?</string>
     <string name="ly_img_camera_delete_recordings_dialog_text">Deleting all recordings cannot be undone.</string>
     <string name="ly_img_camera_delete_recordings_dialog_confirm_text">Delete all</string>
-    
+
     <string name="ly_img_camera_timer">Timer</string>
     <string name="ly_img_camera_timer_off">Off</string>
     <string name="ly_img_camera_timer_3">3 seconds</string>

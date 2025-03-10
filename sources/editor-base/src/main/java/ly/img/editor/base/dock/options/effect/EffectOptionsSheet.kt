@@ -17,7 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ly.img.editor.base.components.NestedSheetHeader
 import ly.img.editor.base.components.PropertySlider
-import ly.img.editor.base.components.color_picker.ColorPickerButton
+import ly.img.editor.base.components.colorpicker.ColorPickerButton
 import ly.img.editor.base.engine.AdjustmentState
 import ly.img.editor.base.engine.EffectAndBlurOptions
 import ly.img.editor.base.ui.BlockEvent
@@ -60,10 +60,9 @@ fun EffectOptionsSheet(
                     )
                 }
                 is EffectAndBlurOptions.ValueOptions.Int -> {
-                    val range =
-                        type.valueOptions.range.let {
-                            it.first.toFloat()..it.last.toFloat()
-                        }
+                    val range = type.valueOptions.range.let {
+                        it.first.toFloat()..it.last.toFloat()
+                    }
                     PropertySlider(
                         title = type.nameRes,
                         value = (currentValue as AdjustmentState.Value.Int).value.toFloat(),
@@ -83,10 +82,9 @@ fun EffectOptionsSheet(
                         },
                     ) {
                         Row(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {

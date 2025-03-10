@@ -111,29 +111,28 @@ class InspectorBar private constructor(
              * @return a new [ListBuilder] instance.
              */
             @Composable
-            fun remember(): EditorComponent.ListBuilder<Item<*>> =
-                EditorComponent.ListBuilder.remember {
-                    add { Button.rememberReplace() } // Video, Image, Sticker, Audio
-                    add { Button.rememberEditText() } // Text
-                    add { Button.rememberFormatText() } // Text
-                    add { Button.rememberFillStroke() } // Page, Video, Image, Shape, Text
-                    add { Button.rememberVolume() } // Video, Audio
-                    add { Button.rememberCrop() } // Video, Image
-                    add { Button.rememberAdjustments() } // Video, Image
-                    add { Button.rememberFilter() } // Video, Image
-                    add { Button.rememberEffect() } // Video, Image
-                    add { Button.rememberBlur() } // Video, Image
-                    add { Button.rememberShape() } // Video, Image, Shape
-                    add { Button.rememberSelectGroup() } // Video, Image, Sticker, Shape, Text
-                    add { Button.rememberEnterGroup() } // Group
-                    add { Button.rememberLayer() } // Video, Image, Sticker, Shape, Text
-                    add { Button.rememberSplit() } // Video, Image, Sticker, Shape, Text, Audio
-                    add { Button.rememberMoveAsClip() } // Video, Image, Sticker, Shape, Text
-                    add { Button.rememberMoveAsOverlay() } // Video, Image, Sticker, Shape, Text
-                    add { Button.rememberReorder() } // Video, Image, Sticker, Shape, Text
-                    add { Button.rememberDuplicate() } // Video, Image, Sticker, Shape, Text
-                    add { Button.rememberDelete() } // Video, Image, Sticker, Shape, Text
-                }
+            fun remember(): EditorComponent.ListBuilder<Item<*>> = EditorComponent.ListBuilder.remember {
+                add { Button.rememberReplace() } // Video, Image, Sticker, Audio
+                add { Button.rememberEditText() } // Text
+                add { Button.rememberFormatText() } // Text
+                add { Button.rememberFillStroke() } // Page, Video, Image, Shape, Text
+                add { Button.rememberVolume() } // Video, Audio
+                add { Button.rememberCrop() } // Video, Image
+                add { Button.rememberAdjustments() } // Video, Image
+                add { Button.rememberFilter() } // Video, Image
+                add { Button.rememberEffect() } // Video, Image
+                add { Button.rememberBlur() } // Video, Image
+                add { Button.rememberShape() } // Video, Image, Shape
+                add { Button.rememberSelectGroup() } // Video, Image, Sticker, Shape, Text
+                add { Button.rememberEnterGroup() } // Group
+                add { Button.rememberLayer() } // Video, Image, Sticker, Shape, Text
+                add { Button.rememberSplit() } // Video, Image, Sticker, Shape, Text, Audio
+                add { Button.rememberMoveAsClip() } // Video, Image, Sticker, Shape, Text
+                add { Button.rememberMoveAsOverlay() } // Video, Image, Sticker, Shape, Text
+                add { Button.rememberReorder() } // Video, Image, Sticker, Shape, Text
+                add { Button.rememberDuplicate() } // Video, Image, Sticker, Shape, Text
+                add { Button.rememberDelete() } // Video, Image, Sticker, Shape, Text
+            }
 
             /**
              * A composable function that creates and remembers a [ListBuilder] instance.
@@ -151,19 +150,17 @@ class InspectorBar private constructor(
     @OptIn(ExperimentalAnimationApi::class)
     @Composable
     override fun Scope.Content(animatedVisibilityScope: AnimatedVisibilityScope?) {
-        val animationModifier =
-            animatedVisibilityScope?.run {
-                Modifier.animateEnterExit(
-                    enter = itemsRowEnterTransition(),
-                    exit = itemsRowExitTransition(),
-                )
-            } ?: Modifier
+        val animationModifier = animatedVisibilityScope?.run {
+            Modifier.animateEnterExit(
+                enter = itemsRowEnterTransition(),
+                exit = itemsRowExitTransition(),
+            )
+        } ?: Modifier
         Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .then(animationModifier),
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .then(animationModifier),
             horizontalArrangement = horizontalArrangement(),
         ) {
             listBuilder.scope.items.forEach {
@@ -201,9 +198,7 @@ class InspectorBar private constructor(
             get() = requireNotNull(this@Scope.selection)
     }
 
-    override fun toString(): String {
-        return "$`_`InspectorBar(id=$id)"
-    }
+    override fun toString(): String = "$`_`InspectorBar(id=$id)"
 
     /**
      * The scope of the [Item] component.
@@ -285,9 +280,7 @@ class InspectorBar private constructor(
             content()
         }
 
-        override fun toString(): String {
-            return "InspectorBar.Custom(id=$id)"
-        }
+        override fun toString(): String = "InspectorBar.Custom(id=$id)"
 
         companion object {
             /**
@@ -391,10 +384,9 @@ class InspectorBar private constructor(
         @Composable
         override fun ButtonScope.ItemContent() {
             IconTextButton(
-                modifier =
-                    Modifier
-                        .widthIn(min = 64.dp)
-                        .height(64.dp),
+                modifier = Modifier
+                    .widthIn(min = 64.dp)
+                    .height(64.dp),
                 onClick = { onClick() },
                 enabled = enabled(),
                 icon = icon?.let { { it() } },
@@ -402,9 +394,7 @@ class InspectorBar private constructor(
             )
         }
 
-        override fun toString(): String {
-            return "$`_`InspectorBar.Button(id=$id)"
-        }
+        override fun toString(): String = "$`_`InspectorBar.Button(id=$id)"
 
         class Id {
             companion object
@@ -445,10 +435,9 @@ class InspectorBar private constructor(
             @Composable
             fun remember(
                 id: EditorComponentId,
-                scope: ButtonScope =
-                    LocalEditorScope.current.run {
-                        remember(this) { ButtonScope(parentScope = this) }
-                    },
+                scope: ButtonScope = LocalEditorScope.current.run {
+                    remember(this) { ButtonScope(parentScope = this) }
+                },
                 visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
                 enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
                 exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -458,22 +447,20 @@ class InspectorBar private constructor(
                 text: (@Composable ButtonScope.() -> Unit)? = null,
                 enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
                 `_`: Nothing = nothing,
-            ): Button {
-                return remember(scope, visible, enterTransition, exitTransition, onClick, icon, text, enabled) {
-                    Button(
-                        id = id,
-                        scope = scope,
-                        visible = visible,
-                        enterTransition = enterTransition,
-                        exitTransition = exitTransition,
-                        decoration = decoration,
-                        onClick = onClick,
-                        icon = icon,
-                        text = text,
-                        enabled = enabled,
-                        `_` = `_`,
-                    )
-                }
+            ): Button = remember(scope, visible, enterTransition, exitTransition, onClick, icon, text, enabled) {
+                Button(
+                    id = id,
+                    scope = scope,
+                    visible = visible,
+                    enterTransition = enterTransition,
+                    exitTransition = exitTransition,
+                    decoration = decoration,
+                    onClick = onClick,
+                    icon = icon,
+                    text = text,
+                    enabled = enabled,
+                    `_` = `_`,
+                )
             }
 
             /**
@@ -508,10 +495,9 @@ class InspectorBar private constructor(
             @Composable
             fun remember(
                 id: EditorComponentId,
-                scope: ButtonScope =
-                    LocalEditorScope.current.run {
-                        remember(this) { ButtonScope(parentScope = this) }
-                    },
+                scope: ButtonScope = LocalEditorScope.current.run {
+                    remember(this) { ButtonScope(parentScope = this) }
+                },
                 visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
                 enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
                 exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -522,39 +508,36 @@ class InspectorBar private constructor(
                 tint: (@Composable ButtonScope.() -> Color)? = null,
                 enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
                 `_`: Nothing = nothing,
-            ): Button =
-                remember(
-                    id = id,
-                    scope = scope,
-                    visible = visible,
-                    enterTransition = enterTransition,
-                    exitTransition = exitTransition,
-                    decoration = decoration,
-                    onClick = onClick,
-                    icon =
-                        vectorIcon?.let {
-                            {
-                                Icon(
-                                    imageVector = vectorIcon(this),
-                                    contentDescription = null,
-                                    tint = tint?.invoke(this) ?: LocalContentColor.current,
-                                )
-                            }
-                        },
-                    text =
-                        text?.let {
-                            {
-                                Text(
-                                    text = text(this),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = tint?.invoke(this) ?: Color.Unspecified,
-                                    modifier = Modifier.padding(top = 4.dp),
-                                )
-                            }
-                        },
-                    enabled = enabled,
-                    `_` = `_`,
-                )
+            ): Button = remember(
+                id = id,
+                scope = scope,
+                visible = visible,
+                enterTransition = enterTransition,
+                exitTransition = exitTransition,
+                decoration = decoration,
+                onClick = onClick,
+                icon = vectorIcon?.let {
+                    {
+                        Icon(
+                            imageVector = vectorIcon(this),
+                            contentDescription = null,
+                            tint = tint?.invoke(this) ?: LocalContentColor.current,
+                        )
+                    }
+                },
+                text = text?.let {
+                    {
+                        Text(
+                            text = text(this),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = tint?.invoke(this) ?: Color.Unspecified,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+                },
+                enabled = enabled,
+                `_` = `_`,
+            )
         }
     }
 
@@ -565,30 +548,28 @@ class InspectorBar private constructor(
         @OptIn(ExperimentalCoroutinesApi::class)
         val defaultScope: Scope
             @Composable
-            get() =
-                LocalEditorScope.current.run {
-                    fun getSelectedDesignBlock(): DesignBlock? {
-                        return editorContext.engine.block.findAllSelected().firstOrNull()
-                    }
-                    val initial = remember { getSelectedDesignBlock()?.let { Selection.getDefault(editorContext.engine, it) } }
-                    val selection by remember(this) {
-                        editorContext.engine.block.onSelectionChanged()
-                            .flatMapLatest {
-                                val selectedDesignBlock = getSelectedDesignBlock() ?: return@flatMapLatest flowOf(null)
-                                editorContext.engine.event.subscribe(listOf(selectedDesignBlock))
-                                    .filter {
-                                        // When the design block is unselected/deleted, this lambda is entered before onSelectionChanged is emitted.
-                                        // We need to make sure that this flow does not emit previous selection in such scenario.
-                                        selectedDesignBlock == getSelectedDesignBlock()
-                                    }
-                                    .map { Selection.getDefault(editorContext.engine, selectedDesignBlock) }
-                                    .onStart { emit(Selection.getDefault(editorContext.engine, selectedDesignBlock)) }
-                            }
-                    }.collectAsState(initial = initial)
-                    remember(this, selection) {
-                        Scope(parentScope = this, selection = selection)
-                    }
+            get() = LocalEditorScope.current.run {
+                fun getSelectedDesignBlock(): DesignBlock? = editorContext.engine.block.findAllSelected().firstOrNull()
+
+                val initial = remember { getSelectedDesignBlock()?.let { Selection.getDefault(editorContext.engine, it) } }
+                val selection by remember(this) {
+                    editorContext.engine.block.onSelectionChanged()
+                        .flatMapLatest {
+                            val selectedDesignBlock = getSelectedDesignBlock() ?: return@flatMapLatest flowOf(null)
+                            editorContext.engine.event.subscribe(listOf(selectedDesignBlock))
+                                .filter {
+                                    // When the design block is unselected/deleted, this lambda is entered before onSelectionChanged is emitted.
+                                    // We need to make sure that this flow does not emit previous selection in such scenario.
+                                    selectedDesignBlock == getSelectedDesignBlock()
+                                }
+                                .map { Selection.getDefault(editorContext.engine, selectedDesignBlock) }
+                                .onStart { emit(Selection.getDefault(editorContext.engine, selectedDesignBlock)) }
+                        }
+                }.collectAsState(initial = initial)
+                remember(this, selection) {
+                    Scope(parentScope = this, selection = selection)
                 }
+            }
 
         /**
          * The default enter transition of the row of items.
@@ -609,11 +590,10 @@ class InspectorBar private constructor(
         val defaultEnterTransition: @Composable Scope.() -> EnterTransition = {
             remember {
                 slideInVertically(
-                    animationSpec =
-                        tween(
-                            durationMillis = 400,
-                            easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f),
-                        ),
+                    animationSpec = tween(
+                        durationMillis = 400,
+                        easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f),
+                    ),
                     initialOffsetY = { it },
                 )
             }
@@ -625,11 +605,10 @@ class InspectorBar private constructor(
         val defaultExitTransition: @Composable Scope.() -> ExitTransition = {
             remember {
                 slideOutVertically(
-                    animationSpec =
-                        tween(
-                            durationMillis = 150,
-                            easing = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f),
-                        ),
+                    animationSpec = tween(
+                        durationMillis = 150,
+                        easing = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f),
+                    ),
                     targetOffsetY = { it },
                 )
             }
@@ -658,11 +637,10 @@ class InspectorBar private constructor(
             content: @Composable () -> Unit,
         ) {
             Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .background(background)
-                        .padding(paddingValues),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(background)
+                    .padding(paddingValues),
             ) {
                 Box {
                     val gradientHeight = 64.dp
@@ -676,11 +654,10 @@ class InspectorBar private constructor(
                             onClick = {
                                 editorContext.engine.block.setSelected(editorContext.selection.designBlock, false)
                             },
-                            modifier =
-                                Modifier
-                                    .size(closeButtonWidth, gradientHeight)
-                                    .padding(start = 4.dp, end = 4.dp, top = 2.dp, bottom = 6.dp)
-                                    .semantics { role = Role.Button },
+                            modifier = Modifier
+                                .size(closeButtonWidth, gradientHeight)
+                                .padding(start = 4.dp, end = 4.dp, top = 2.dp, bottom = 6.dp)
+                                .semantics { role = Role.Button },
                             shape = IconButtonDefaults.filledShape,
                             color = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -697,21 +674,19 @@ class InspectorBar private constructor(
                     }
 
                     val gradientColor = MaterialTheme.colorScheme.surface
-                    val gradient =
-                        remember(gradientColor) {
-                            Brush.horizontalGradient(
-                                listOf(
-                                    gradientColor,
-                                    gradientColor.copy(alpha = 0f),
-                                ),
-                            )
-                        }
+                    val gradient = remember(gradientColor) {
+                        Brush.horizontalGradient(
+                            listOf(
+                                gradientColor,
+                                gradientColor.copy(alpha = 0f),
+                            ),
+                        )
+                    }
                     Box(
-                        modifier =
-                            Modifier
-                                .offset(x = closeButtonWidth)
-                                .size(gradientWidth, gradientHeight)
-                                .background(gradient),
+                        modifier = Modifier
+                            .offset(x = closeButtonWidth)
+                            .size(gradientWidth, gradientHeight)
+                            .background(gradient),
                     )
                 }
             }
@@ -904,33 +879,31 @@ class InspectorBar private constructor(
             itemsRowExitTransition: @Composable Scope.() -> ExitTransition = noneExitTransition,
             itemDecoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = { it() },
             `_`: Nothing = nothing,
-        ): InspectorBar {
-            return remember(
-                scope,
-                visible,
-                enterTransition,
-                exitTransition,
-                decoration,
-                listBuilder,
-                horizontalArrangement,
-                itemsRowEnterTransition,
-                itemsRowExitTransition,
-                itemDecoration,
-            ) {
-                InspectorBar(
-                    scope = scope,
-                    visible = visible,
-                    enterTransition = enterTransition,
-                    exitTransition = exitTransition,
-                    decoration = decoration,
-                    listBuilder = listBuilder,
-                    horizontalArrangement = horizontalArrangement,
-                    itemsRowEnterTransition = itemsRowEnterTransition,
-                    itemsRowExitTransition = itemsRowExitTransition,
-                    itemDecoration = itemDecoration,
-                    `_` = `_`,
-                )
-            }
+        ): InspectorBar = remember(
+            scope,
+            visible,
+            enterTransition,
+            exitTransition,
+            decoration,
+            listBuilder,
+            horizontalArrangement,
+            itemsRowEnterTransition,
+            itemsRowExitTransition,
+            itemDecoration,
+        ) {
+            InspectorBar(
+                scope = scope,
+                visible = visible,
+                enterTransition = enterTransition,
+                exitTransition = exitTransition,
+                decoration = decoration,
+                listBuilder = listBuilder,
+                horizontalArrangement = horizontalArrangement,
+                itemsRowEnterTransition = itemsRowEnterTransition,
+                itemsRowExitTransition = itemsRowExitTransition,
+                itemDecoration = itemDecoration,
+                `_` = `_`,
+            )
         }
     }
 }

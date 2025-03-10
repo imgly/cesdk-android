@@ -9,8 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import ly.img.editor.base.components.color_picker.ColorPickerButton
-import ly.img.editor.base.components.color_picker.fillAndStrokeColors
+import ly.img.editor.base.components.colorpicker.ColorPickerButton
+import ly.img.editor.base.components.colorpicker.fillAndStrokeColors
 import ly.img.editor.core.theme.EditorTheme
 import ly.img.editor.core.ui.ColorButton
 import ly.img.editor.core.ui.utils.ThemePreview
@@ -27,10 +27,9 @@ fun ColorOptions(
     colors: List<Color> = fillAndStrokeColors,
 ) {
     Row(
-        modifier =
-            Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .fillMaxWidth(),
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {

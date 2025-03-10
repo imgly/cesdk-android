@@ -51,17 +51,15 @@ fun CheckedTextRow(
             }
             Text(
                 text = text,
-                style =
-                    MaterialTheme.typography.bodyLarge.copy(
-                        fontFamily = fontData?.fontFamily,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontFamily = fontData?.fontFamily,
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(
+                        start = if (isChecked) 0.dp else 56.dp,
+                        end = if (icon != null) 0.dp else 24.dp,
                     ),
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .padding(
-                            start = if (isChecked) 0.dp else 56.dp,
-                            end = if (icon != null) 0.dp else 24.dp,
-                        ),
             )
             if (icon != null) {
                 Icon(icon, contentDescription = null, Modifier.padding(start = 16.dp, end = 24.dp))

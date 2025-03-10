@@ -46,22 +46,19 @@ fun EngineCanvasView(
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val savedStateRegistryOwner = LocalSavedStateRegistryOwner.current
-    val activity =
-        requireNotNull(LocalContext.current.activity) {
-            "Unable to find the activity. This is an internal error. Please report this issue."
-        }
-    val renderView =
-        remember {
-            when (renderTarget) {
-                EngineRenderTarget.SURFACE_VIEW -> SurfaceView(activity)
-                EngineRenderTarget.TEXTURE_VIEW -> TextureView(activity)
-            }.apply { id = R.id.editor_render_view }
-        }
-    val renderViewHandler =
-        remember {
-            // For TextureView, more than one callbacks cannot be attached
-            if (renderView is SurfaceView) RenderViewHandler(renderView) else null
-        }
+    val activity = requireNotNull(LocalContext.current.activity) {
+        "Unable to find the activity. This is an internal error. Please report this issue."
+    }
+    val renderView = remember {
+        when (renderTarget) {
+            EngineRenderTarget.SURFACE_VIEW -> SurfaceView(activity)
+            EngineRenderTarget.TEXTURE_VIEW -> TextureView(activity)
+        }.apply { id = R.id.editor_render_view }
+    }
+    val renderViewHandler = remember {
+        // For TextureView, more than one callbacks cannot be attached
+        if (renderView is SurfaceView) RenderViewHandler(renderView) else null
+    }
     renderView.alpha = if (isCanvasVisible) 1F else 0F
     val clearColor = MaterialTheme.colorScheme.surface1
     var onMoveStarted by remember { mutableStateOf(false) }
@@ -83,34 +80,33 @@ fun EngineCanvasView(
 
     AndroidView(
         factory = { renderView },
-        modifier =
-            Modifier
-                .pointerInput(passTouches) {
-                    forEachGesture {
-                        awaitPointerEventScope {
-                            if (passTouches) {
-                                awaitFirstDown(requireUnconsumed = false)
-                                do {
-                                    val event: PointerEvent = awaitPointerEvent(pass = PointerEventPass.Final)
-                                    if (!onMoveStarted) {
-                                        onMoveStarted = true
-                                        onMoveStart()
-                                    }
-                                } while (event.changes.any { it.pressed })
-                                if (onMoveStarted) {
-                                    onMoveStarted = false
-                                    onMoveEnd()
+        modifier = Modifier
+            .pointerInput(passTouches) {
+                forEachGesture {
+                    awaitPointerEventScope {
+                        if (passTouches) {
+                            awaitFirstDown(requireUnconsumed = false)
+                            do {
+                                val event: PointerEvent = awaitPointerEvent(pass = PointerEventPass.Final)
+                                if (!onMoveStarted) {
+                                    onMoveStarted = true
+                                    onMoveStart()
                                 }
-                            } else {
-                                val awaitPointerEvent = awaitPointerEvent(pass = PointerEventPass.Initial)
-                                awaitPointerEvent.changes.forEach {
-                                    it.consume()
-                                }
+                            } while (event.changes.any { it.pressed })
+                            if (onMoveStarted) {
+                                onMoveStarted = false
+                                onMoveEnd()
+                            }
+                        } else {
+                            val awaitPointerEvent = awaitPointerEvent(pass = PointerEventPass.Initial)
+                            awaitPointerEvent.changes.forEach {
+                                it.consume()
                             }
                         }
-                        onTouch()
                     }
-                },
+                    onTouch()
+                }
+            },
     )
     LaunchedEffect(Unit) {
         runCatching {
@@ -128,25 +124,24 @@ fun EngineCanvasView(
         }
     }
     DisposableEffect(Unit) {
-        val observer =
-            LifecycleEventObserver { _, event ->
-                if (engine.isEngineRunning().not()) return@LifecycleEventObserver
-                when (event) {
-                    Lifecycle.Event.ON_PAUSE -> {
-                        appIsPaused = true
-                        engine.editor.setAppIsPaused(true)
-                        engine.pause()
-                    }
-                    Lifecycle.Event.ON_RESUME -> {
-                        appIsPaused = false
-                        engine.unpause()
-                        bind()
-                        engine.editor.setAppIsPaused(false)
-                    }
-                    else -> {
-                    }
+        val observer = LifecycleEventObserver { _, event ->
+            if (engine.isEngineRunning().not()) return@LifecycleEventObserver
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> {
+                    appIsPaused = true
+                    engine.editor.setAppIsPaused(true)
+                    engine.pause()
+                }
+                Lifecycle.Event.ON_RESUME -> {
+                    appIsPaused = false
+                    engine.unpause()
+                    bind()
+                    engine.editor.setAppIsPaused(false)
+                }
+                else -> {
                 }
             }
+        }
 
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {

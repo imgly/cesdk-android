@@ -31,14 +31,14 @@ import ly.img.editor.core.theme.surface1
 import ly.img.editor.core.ui.Environment
 import ly.img.editor.core.ui.library.LibraryViewModel
 import ly.img.editor.core.ui.utils.activity
-import ly.img.editor.postcard.bottomsheet.message_color.MessageColorBottomSheetContent
-import ly.img.editor.postcard.bottomsheet.message_color.MessageColorSheet
-import ly.img.editor.postcard.bottomsheet.message_font.MessageFontBottomSheetContent
-import ly.img.editor.postcard.bottomsheet.message_font.MessageFontSheet
-import ly.img.editor.postcard.bottomsheet.message_size.MessageSizeBottomSheetContent
-import ly.img.editor.postcard.bottomsheet.message_size.MessageSizeSheet
-import ly.img.editor.postcard.bottomsheet.template_colors.TemplateColorsBottomSheetContent
-import ly.img.editor.postcard.bottomsheet.template_colors.TemplateColorsSheet
+import ly.img.editor.postcard.bottomsheet.color.MessageColorBottomSheetContent
+import ly.img.editor.postcard.bottomsheet.color.MessageColorSheet
+import ly.img.editor.postcard.bottomsheet.font.MessageFontBottomSheetContent
+import ly.img.editor.postcard.bottomsheet.font.MessageFontSheet
+import ly.img.editor.postcard.bottomsheet.size.MessageSizeBottomSheetContent
+import ly.img.editor.postcard.bottomsheet.size.MessageSizeSheet
+import ly.img.editor.postcard.bottomsheet.template.TemplateColorsBottomSheetContent
+import ly.img.editor.postcard.bottomsheet.template.TemplateColorsSheet
 import ly.img.editor.postcard.rootbar.RootBarItem
 import ly.img.engine.AssetDefinition
 
@@ -61,24 +61,22 @@ fun PostcardUi(
         mutableStateOf(Unit)
     }
 
-    val libraryViewModel =
-        viewModel {
-            LibraryViewModel(
-                editorScope = editorScope,
-                onUpload = onUpload,
-            )
-        }
-    val viewModel =
-        viewModel {
-            PostcardUiViewModel(
-                editorScope = editorScope,
-                onCreate = onCreate,
-                onExport = onExport,
-                onClose = onClose,
-                onError = onError,
-                libraryViewModel = libraryViewModel,
-            )
-        }
+    val libraryViewModel = viewModel {
+        LibraryViewModel(
+            editorScope = editorScope,
+            onUpload = onUpload,
+        )
+    }
+    val viewModel = viewModel {
+        PostcardUiViewModel(
+            editorScope = editorScope,
+            onCreate = onCreate,
+            onExport = onExport,
+            onClose = onClose,
+            onError = onError,
+            libraryViewModel = libraryViewModel,
+        )
+    }
 
     val uiState by viewModel.uiState.collectAsState()
     val editorContext = editorScope.run { editorContext }
@@ -116,10 +114,9 @@ fun PostcardUi(
                             )
 
                             Divider(
-                                modifier =
-                                    Modifier
-                                        .height(32.dp)
-                                        .width(1.dp),
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .width(1.dp),
                             )
 
                             Spacer(modifier = Modifier.width(4.dp))

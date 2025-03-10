@@ -17,25 +17,22 @@ internal fun rememberScrollbarLayoutState(
     val settingsUpdated by rememberUpdatedState(settings)
     val thumbIsInActionUpdated by rememberUpdatedState(thumbIsInAction)
 
-    val currentDurationMillis =
-        remember {
-            derivedStateOf {
-                val reductionRatio: Int = if (thumbIsInActionUpdated) 4 else 1
-                settingsUpdated.durationAnimationMillis / reductionRatio
-            }
+    val currentDurationMillis = remember {
+        derivedStateOf {
+            val reductionRatio: Int = if (thumbIsInActionUpdated) 4 else 1
+            settingsUpdated.durationAnimationMillis / reductionRatio
         }
+    }
 
-    val hideAlpha =
-        animateFloatAsState(
-            targetValue = if (thumbIsInActionUpdated) 1f else 0f,
-            animationSpec =
-                tween(
-                    durationMillis = currentDurationMillis.value,
-                    delayMillis = if (thumbIsInActionUpdated) 0 else settingsUpdated.hideDelayMillis,
-                    easing = settingsUpdated.hideEasingAnimation,
-                ),
-            label = "scrollbar alpha value",
-        )
+    val hideAlpha = animateFloatAsState(
+        targetValue = if (thumbIsInActionUpdated) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = currentDurationMillis.value,
+            delayMillis = if (thumbIsInActionUpdated) 0 else settingsUpdated.hideDelayMillis,
+            easing = settingsUpdated.hideEasingAnimation,
+        ),
+        label = "scrollbar alpha value",
+    )
 
     return remember {
         ScrollbarLayoutState(

@@ -18,14 +18,13 @@ inline fun Sheet(
     crossinline content: @Composable () -> Unit,
 ) {
     BoxWithConstraints {
-        val maxHeight =
-            remember(style) {
-                when (val maxHeight = style.maxHeight) {
-                    is Height.Exactly -> maxHeight.size
-                    is Height.Fraction -> this.maxHeight * maxHeight.fraction
-                    null -> Dp.Unspecified
-                }
+        val maxHeight = remember(style) {
+            when (val maxHeight = style.maxHeight) {
+                is Height.Exactly -> maxHeight.size
+                is Height.Fraction -> this.maxHeight * maxHeight.fraction
+                null -> Dp.Unspecified
             }
+        }
         Box(
             Modifier.ifTrue(!LocalInspectionMode.current) {
                 heightIn(

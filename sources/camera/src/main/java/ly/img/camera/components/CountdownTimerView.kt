@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,11 +25,13 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -123,14 +126,13 @@ internal fun CountdownTimerView(
     }
 
     Box(
-        modifier =
-            modifier
-                .size(size)
-                .graphicsLayer {
-                    scaleX = scaleAnimation
-                    scaleY = scaleAnimation
-                    alpha = scaleAnimation
-                },
+        modifier = modifier
+            .size(size)
+            .graphicsLayer {
+                scaleX = scaleAnimation
+                scaleY = scaleAnimation
+                alpha = scaleAnimation
+            },
     ) {
         val strokeSweepAngleAnimation by animateFloatAsState(
             targetValue = -360f * (remainingTime.toFloat() / totalTime),
@@ -192,16 +194,14 @@ internal fun CountdownTimerView(
             visible = state == State.TimerRunning,
             enter = fadeIn() + scaleIn(),
             exit = fadeOut() + scaleOut(),
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(strokeWidth),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(strokeWidth),
         ) {
             AnimatedContent(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(strokeWidth),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(strokeWidth),
                 transitionSpec = {
                     fadeIn() + slideInVertically() with fadeOut() + scaleOut()
                 },
@@ -209,19 +209,22 @@ internal fun CountdownTimerView(
                 contentAlignment = Alignment.Center,
             ) { time ->
                 if (time > 0) {
-                    Text(
-                        modifier = Modifier.wrapContentHeight(),
-                        style =
-                            TextStyle(
-                                fontSize = 137.sp,
+                    // We only want to scale the text as a proportion of the total size of the container.
+                    val density = LocalDensity.current.density
+                    CompositionLocalProvider(LocalDensity provides Density(density, 1f)) {
+                        Text(
+                            modifier = Modifier.wrapContentHeight(),
+                            style = TextStyle(
+                                fontSize = (size * 0.6f).value.sp,
                                 fontFamily = FontFamily.Default,
                                 fontWeight = FontWeight.W400,
                                 textAlign = TextAlign.Center,
                                 platformStyle = PlatformTextStyle(includeFontPadding = false),
                             ),
-                        color = LocalExtendedColorScheme.current.white,
-                        text = "$time",
-                    )
+                            color = LocalExtendedColorScheme.current.white,
+                            text = "$time",
+                        )
+                    }
                 }
             }
         }

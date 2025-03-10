@@ -26,12 +26,11 @@ fun LifecycleEventEffect(
     // Safely update the current `onEvent` lambda when a new one is provided
     val currentOnEvent by rememberUpdatedState(onEvent)
     DisposableEffect(lifecycleOwner) {
-        val observer =
-            LifecycleEventObserver { _, e ->
-                if (e == event) {
-                    currentOnEvent()
-                }
+        val observer = LifecycleEventObserver { _, e ->
+            if (e == event) {
+                currentOnEvent()
             }
+        }
 
         lifecycleOwner.lifecycle.addObserver(observer)
 

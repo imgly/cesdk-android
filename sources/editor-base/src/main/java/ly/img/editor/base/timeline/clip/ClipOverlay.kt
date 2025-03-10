@@ -11,9 +11,8 @@ import ly.img.editor.core.theme.surface1
 @Composable
 fun ClipOverlay(modifier: Modifier = Modifier) {
     Box(
-        modifier =
-            modifier
-                .alpha(0.75f)
-                .background(MaterialTheme.colorScheme.surface1),
+        modifier = modifier
+            .alpha(0.75f)
+            .background(MaterialTheme.colorScheme.surface1),
     )
 }

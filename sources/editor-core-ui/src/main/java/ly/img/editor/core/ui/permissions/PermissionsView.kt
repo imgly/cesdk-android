@@ -57,10 +57,9 @@ fun PermissionsView(
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text =
-                stringResource(
-                    if (requestOnlyCameraPermission) R.string.ly_img_camera_permission_text else R.string.ly_img_camera_mic_permission_text,
-                ),
+            text = stringResource(
+                if (requestOnlyCameraPermission) R.string.ly_img_camera_permission_text else R.string.ly_img_camera_mic_permission_text,
+            ),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
         )
@@ -81,12 +80,11 @@ fun PermissionsView(
         }
     }
 
-    val permissionLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.RequestPermission(),
-        ) {
-            // refresh() is already being handled below.
-        }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) {
+        // refresh() is already being handled below.
+    }
 
     // The user could enable the permissions from settings
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
@@ -139,11 +137,10 @@ private fun PermissionButton(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         enabled = !isPermissionGranted,
-        colors =
-            ButtonDefaults.filledTonalButtonColors(
-                disabledContainerColor = disabledContainerColor,
-                disabledContentColor = disabledContentColor,
-            ),
+        colors = ButtonDefaults.filledTonalButtonColors(
+            disabledContainerColor = disabledContainerColor,
+            disabledContentColor = disabledContentColor,
+        ),
     ) {
         Icon(
             if (isPermissionGranted) IconPack.Check else icon,

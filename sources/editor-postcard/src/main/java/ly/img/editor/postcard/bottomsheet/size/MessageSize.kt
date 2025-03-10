@@ -1,4 +1,4 @@
-package ly.img.editor.postcard.bottomsheet.message_size
+package ly.img.editor.postcard.bottomsheet.size
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import ly.img.editor.core.ui.iconpack.IconPack
@@ -11,7 +11,11 @@ import ly.img.editor.core.ui.iconpack.Sizescircled
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
 
-enum class MessageSize(val size: Float, val circledIcon: ImageVector, val icon: ImageVector) {
+enum class MessageSize(
+    val size: Float,
+    val circledIcon: ImageVector,
+    val icon: ImageVector,
+) {
     Small(14f, IconPack.Sizescircled, IconPack.Sizes),
     Medium(18f, IconPack.Sizemcircled, IconPack.Sizem),
     Large(22f, IconPack.Sizelcircled, IconPack.Sizel),

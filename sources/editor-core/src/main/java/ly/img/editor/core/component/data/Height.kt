@@ -13,7 +13,9 @@ sealed interface Height {
      * Height as an exact [size].
      */
     @Stable
-    data class Exactly(val size: Dp) : Height
+    data class Exactly(
+        val size: Dp,
+    ) : Height
 
     /**
      * Height as a [fraction] of another height.

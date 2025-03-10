@@ -83,20 +83,18 @@ private fun SeeAllButton(
     onClick: () -> Unit,
 ) {
     Column(
-        modifier =
-            Modifier
-                .size(AssetLibraryUiConfig.contentRowHeight(assetType))
-                .clip(shape = MaterialTheme.shapes.medium)
-                .clickable { onClick() },
+        modifier = Modifier
+            .size(AssetLibraryUiConfig.contentRowHeight(assetType))
+            .clip(shape = MaterialTheme.shapes.medium)
+            .clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(
             imageVector = IconPack.Arrowrightbig,
-            modifier =
-                Modifier
-                    .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shape = CircleShape)
-                    .padding(12.dp),
+            modifier = Modifier
+                .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shape = CircleShape)
+                .padding(12.dp),
             contentDescription = null,
         )
         Text(

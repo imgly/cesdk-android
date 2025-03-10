@@ -25,12 +25,11 @@ data class EditorUiState(
         showLoading = true, // showLoading should never be stored
         showCloseConfirmationDialog = parcel.readByte() != 0.toByte(),
         error = null, // error should never be stored
-        videoExportStatus =
-            ParcelCompat.readParcelable(
-                parcel,
-                VideoExportStatus::class.java.classLoader,
-                VideoExportStatus::class.java,
-            )!!,
+        videoExportStatus = ParcelCompat.readParcelable(
+            parcel,
+            VideoExportStatus::class.java.classLoader,
+            VideoExportStatus::class.java,
+        )!!,
         sceneIsLoaded = false, // sceneIsLoaded should never be stored
     )
 
@@ -64,19 +63,17 @@ sealed class VideoExportStatus : Parcelable {
 
     companion object {
         @JvmField
-        val CREATOR =
-            object : Parcelable.Creator<VideoExportStatus> {
-                override fun createFromParcel(source: Parcel): VideoExportStatus =
-                    when (val type = source.readInt()) {
-                        0 -> Loading(source.readFloat())
-                        1 -> Success(source.readSerializable() as File, source.readString()!!)
-                        2 -> Error
-                        3 -> Idle
-                        else -> throw IllegalArgumentException("Unknown type: $type")
-                    }
-
-                override fun newArray(size: Int): Array<VideoExportStatus?> = arrayOfNulls(size)
+        val CREATOR = object : Parcelable.Creator<VideoExportStatus> {
+            override fun createFromParcel(source: Parcel): VideoExportStatus = when (val type = source.readInt()) {
+                0 -> Loading(source.readFloat())
+                1 -> Success(source.readSerializable() as File, source.readString()!!)
+                2 -> Error
+                3 -> Idle
+                else -> throw IllegalArgumentException("Unknown type: $type")
             }
+
+            override fun newArray(size: Int): Array<VideoExportStatus?> = arrayOfNulls(size)
+        }
     }
 
     data class Loading(

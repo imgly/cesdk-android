@@ -29,8 +29,12 @@ data class AssetLibrary(
     val stickers: (SceneMode) -> LibraryCategory = { LibraryCategory.Stickers },
     val overlays: (SceneMode) -> LibraryCategory = { createOverlaysCategory(videos(it), images(it)) },
     val clips: (SceneMode) -> LibraryCategory = { createClipsCategory(videos(it), images(it)) },
-    val stickersAndShapes: (SceneMode) -> LibraryCategory =
-        { createStickersAndShapesCategory(stickers = stickers(it), shapes = shapes(it)) },
+    val stickersAndShapes: (SceneMode) -> LibraryCategory = {
+        createStickersAndShapesCategory(
+            stickers = stickers(it),
+            shapes = shapes(it),
+        )
+    },
 ) {
     /**
      * Predefined tabs that can be displayed in the asset library.
@@ -75,16 +79,15 @@ data class AssetLibrary(
             clips: LibraryCategory = createClipsCategory(videos = videos, images = images),
             stickersAndShapes: LibraryCategory = createStickersAndShapesCategory(stickers = stickers, shapes = shapes),
         ): AssetLibrary {
-            fun getElements(sceneMode: SceneMode): LibraryCategory =
-                LibraryCategory.getElements(
-                    sceneMode = sceneMode,
-                    images = images,
-                    videos = videos,
-                    audios = audios,
-                    text = text,
-                    shapes = shapes,
-                    stickers = stickers,
-                )
+            fun getElements(sceneMode: SceneMode): LibraryCategory = LibraryCategory.getElements(
+                sceneMode = sceneMode,
+                images = images,
+                videos = videos,
+                audios = audios,
+                text = text,
+                shapes = shapes,
+                stickers = stickers,
+            )
             return AssetLibrary(
                 tabs = { sceneMode ->
                     tabs.mapNotNull {
@@ -115,38 +118,34 @@ data class AssetLibrary(
         private fun createOverlaysCategory(
             videos: LibraryCategory,
             images: LibraryCategory,
-        ): LibraryCategory {
-            return LibraryCategory.Overlays
-                .replaceSection(0) {
-                    copy(
-                        sourceTypes = videos.content.sourceTypes,
-                        expandContent = videos.content,
-                    )
-                }.replaceSection(1) {
-                    copy(
-                        sourceTypes = images.content.sourceTypes,
-                        expandContent = images.content,
-                    )
-                }
-        }
+        ): LibraryCategory = LibraryCategory.Overlays
+            .replaceSection(0) {
+                copy(
+                    sourceTypes = videos.content.sourceTypes,
+                    expandContent = videos.content,
+                )
+            }.replaceSection(1) {
+                copy(
+                    sourceTypes = images.content.sourceTypes,
+                    expandContent = images.content,
+                )
+            }
 
         private fun createClipsCategory(
             videos: LibraryCategory,
             images: LibraryCategory,
-        ): LibraryCategory {
-            return LibraryCategory.Clips
-                .replaceSection(0) {
-                    copy(
-                        sourceTypes = videos.content.sourceTypes,
-                        expandContent = videos.content,
-                    )
-                }.replaceSection(1) {
-                    copy(
-                        sourceTypes = images.content.sourceTypes,
-                        expandContent = images.content,
-                    )
-                }
-        }
+        ): LibraryCategory = LibraryCategory.Clips
+            .replaceSection(0) {
+                copy(
+                    sourceTypes = videos.content.sourceTypes,
+                    expandContent = videos.content,
+                )
+            }.replaceSection(1) {
+                copy(
+                    sourceTypes = images.content.sourceTypes,
+                    expandContent = images.content,
+                )
+            }
 
         private fun createStickersAndShapesCategory(
             stickers: LibraryCategory,
@@ -155,10 +154,9 @@ data class AssetLibrary(
             require(stickers.content is LibraryContent.Sections)
             require(shapes.content is LibraryContent.Sections)
             return LibraryCategory.StickersAndShapes.copy(
-                content =
-                    LibraryContent.StickersAndShapes.copy(
-                        sections = stickers.content.sections + shapes.content.sections,
-                    ),
+                content = LibraryContent.StickersAndShapes.copy(
+                    sections = stickers.content.sections + shapes.content.sections,
+                ),
             )
         }
     }

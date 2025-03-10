@@ -31,10 +31,9 @@ internal fun createStrokeUiState(
         colorPalette = colorPalette,
         isStrokeEnabled = isEnabled,
         strokeColor = checkNotNull(engine.getStrokeColor(designBlock)),
-        strokeWidth =
-            engine.block.getStrokeWidth(designBlock).takeIf {
-                it > 0
-            }?.let { ln(it) } ?: STROKE_WIDTH_LOWER_BOUND,
+        strokeWidth = engine.block.getStrokeWidth(designBlock).takeIf {
+            it > 0
+        }?.let { ln(it) } ?: STROKE_WIDTH_LOWER_BOUND,
         strokeStyleRes = engine.block.getStrokeStyle(designBlock).getText(),
         isStrokePositionEnabled = block.type != BlockType.Text && block.type != BlockType.Page,
         isStrokeJointEnabled = block.type != BlockType.Page,

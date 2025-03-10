@@ -59,14 +59,13 @@ fun VolumeSheet(
                 IconButton(
                     onClick = { onEvent(BlockEvent.OnToggleMute) },
                 ) {
-                    val icon =
-                        when (sliderValue) {
-                            0f -> IconPack.Volumeoff
-                            in 0f..0.4f -> IconPack.Volumelow
-                            in 0.4f..0.7f -> IconPack.Volumemedium
-                            in 0.7f..1f -> CoreIconPack.VolumeHigh
-                            else -> throw IllegalStateException()
-                        }
+                    val icon = when (sliderValue) {
+                        0f -> IconPack.Volumeoff
+                        in 0f..0.4f -> IconPack.Volumelow
+                        in 0.4f..0.7f -> IconPack.Volumemedium
+                        in 0.7f..1f -> CoreIconPack.VolumeHigh
+                        else -> throw IllegalStateException()
+                    }
 
                     Icon(icon, contentDescription = stringResource(R.string.ly_img_editor_volume))
                 }

@@ -21,10 +21,9 @@ internal fun TimerDropdownMenuItem(
 ) {
     val checked = timer == currentTimer
     DropdownMenuItem(
-        modifier =
-            Modifier.ifTrue(checked) {
-                background(MaterialTheme.colorScheme.surfaceVariant)
-            },
+        modifier = Modifier.ifTrue(checked) {
+            background(MaterialTheme.colorScheme.surfaceVariant)
+        },
         text = { Text(stringResource(id = timer.label)) },
         onClick = {
             onClick(timer)

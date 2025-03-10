@@ -46,29 +46,26 @@ fun TimelineRulerView(
             }
         }
         val tickIntervalInSeconds = tickInterval.seconds
-        val totalDuration =
-            remember(duration, extraWidth, zoomState.zoomLevel) {
-                val drawingDuration = duration + zoomState.toSeconds(extraWidth)
-                (ceil(drawingDuration.inWholeSeconds / 10.0) * 10).toInt()
-            }
+        val totalDuration = remember(duration, extraWidth, zoomState.zoomLevel) {
+            val drawingDuration = duration + zoomState.toSeconds(extraWidth)
+            (ceil(drawingDuration.inWholeSeconds / 10.0) * 10).toInt()
+        }
         val totalDurationInSeconds = totalDuration.seconds
 
         (0..totalDuration step tickInterval).forEach { secs ->
             val seconds = secs.seconds
             Text(
-                modifier =
-                    Modifier
-                        .align(Alignment.CenterStart)
-                        .offset(zoomState.toDp(seconds))
-                        // offset the duration text by half of its width to make it appear in center
-                        .offsetByWidth(OffsetDirection.Left)
-                        .alpha(0.5f),
-                text =
-                    if (seconds < 60.seconds) {
-                        seconds.formatForClip(showFractionalPart = false)
-                    } else {
-                        seconds.formatForPlayer()
-                    },
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .offset(zoomState.toDp(seconds))
+                    // offset the duration text by half of its width to make it appear in center
+                    .offsetByWidth(OffsetDirection.Left)
+                    .alpha(0.5f),
+                text = if (seconds < 60.seconds) {
+                    seconds.formatForClip(showFractionalPart = false)
+                } else {
+                    seconds.formatForPlayer()
+                },
                 style = MaterialTheme.typography.labelMedium,
             )
 
@@ -77,20 +74,18 @@ fun TimelineRulerView(
                     val inSeconds = it.seconds
                     if (seconds + inSeconds <= totalDurationInSeconds) {
                         Tick(
-                            modifier =
-                                Modifier
-                                    .align(Alignment.CenterStart)
-                                    .offset(zoomState.toDp(seconds + inSeconds)),
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .offset(zoomState.toDp(seconds + inSeconds)),
                         )
                     }
                 }
             } else {
                 if (seconds + tickIntervalInSeconds / 2 <= totalDurationInSeconds) {
                     Tick(
-                        modifier =
-                            Modifier
-                                .align(Alignment.CenterStart)
-                                .offset(zoomState.toDp(seconds + tickIntervalInSeconds / 2)),
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .offset(zoomState.toDp(seconds + tickIntervalInSeconds / 2)),
                     )
                 }
             }
@@ -104,10 +99,9 @@ private fun Tick(
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     Canvas(
-        modifier =
-            modifier
-                .size(3.dp)
-                .alpha(0.5f),
+        modifier = modifier
+            .size(3.dp)
+            .alpha(0.5f),
     ) {
         drawCircle(color = color)
     }

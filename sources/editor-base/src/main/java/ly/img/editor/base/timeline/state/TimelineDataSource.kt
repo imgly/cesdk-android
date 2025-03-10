@@ -22,7 +22,11 @@ class TimelineDataSource {
 
     fun findClip(block: DesignBlock): Clip? {
         val find: ((Clip) -> Boolean) = {
-            it.id == block || it.trimmableId == block || it.fillId == block || it.shapeId == block || it.blurId == block ||
+            it.id == block ||
+                it.trimmableId == block ||
+                it.fillId == block ||
+                it.shapeId == block ||
+                it.blurId == block ||
                 it.effectIds?.contains(block) == true
         }
         // Search in tracks
@@ -34,22 +38,16 @@ class TimelineDataSource {
         return backgroundTrack.clips.find(find)
     }
 
-    fun allClips(): List<Clip> {
-        return backgroundTrack.clips + tracks.flatMap { it.clips }
-    }
+    fun allClips(): List<Clip> = backgroundTrack.clips + tracks.flatMap { it.clips }
 
-    fun findTrack(clip: Clip): Track {
-        return checkNotNull(
-            tracks.find {
-                it.clips.contains(clip)
-            },
-        )
-    }
-
-    fun indexOf(clip: Clip): Int {
-        return tracks.indexOfFirst {
+    fun findTrack(clip: Clip): Track = checkNotNull(
+        tracks.find {
             it.clips.contains(clip)
-        }
+        },
+    )
+
+    fun indexOf(clip: Clip): Int = tracks.indexOfFirst {
+        it.clips.contains(clip)
     }
 
     fun reset() {
@@ -57,11 +55,9 @@ class TimelineDataSource {
         backgroundTrack.clips.clear()
     }
 
-    override fun toString(): String {
-        return "TimelineDataSource: \n tracks=${
-            tracks.flatMap { it.clips }.joinToString("\n")
-        } \n backgroundTrack=${
-            backgroundTrack.clips.joinToString("\n")
-        }"
-    }
+    override fun toString(): String = "TimelineDataSource: \n tracks=${
+        tracks.flatMap { it.clips }.joinToString("\n")
+    } \n backgroundTrack=${
+        backgroundTrack.clips.joinToString("\n")
+    }"
 }

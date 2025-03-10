@@ -29,13 +29,12 @@ data class EffectUiState(
     val libraryCategory: LibraryCategory,
     val adjustments: List<AdjustmentState>,
 ) {
-    val titleRes =
-        when (libraryCategory) {
-            AppearanceLibraryCategory.FxEffects -> CoreR.string.ly_img_editor_effect
-            AppearanceLibraryCategory.Filters -> CoreR.string.ly_img_editor_filter
-            AppearanceLibraryCategory.Blur -> CoreR.string.ly_img_editor_blur
-            else -> throw IllegalArgumentException("Unsupported library category: $libraryCategory")
-        }
+    val titleRes = when (libraryCategory) {
+        AppearanceLibraryCategory.FxEffects -> CoreR.string.ly_img_editor_effect
+        AppearanceLibraryCategory.Filters -> CoreR.string.ly_img_editor_filter
+        AppearanceLibraryCategory.Blur -> CoreR.string.ly_img_editor_blur
+        else -> throw IllegalArgumentException("Unsupported library category: $libraryCategory")
+    }
 
     companion object Factory {
         private fun getEffectBlock(
@@ -49,12 +48,11 @@ data class EffectUiState(
                 null
             }
         } else {
-            val neededGroup =
-                if (libraryCategory == AppearanceLibraryCategory.Filters) {
-                    EffectGroup.Filter
-                } else {
-                    EffectGroup.FxEffect
-                }
+            val neededGroup = if (libraryCategory == AppearanceLibraryCategory.Filters) {
+                EffectGroup.Filter
+            } else {
+                EffectGroup.FxEffect
+            }
             engine.block.getEffects(designBlock).find { effect ->
                 val effectType = engine.block.getType(effect)
                 EffectType.getOrNull(effectType)?.getGroup() == neededGroup
@@ -82,9 +80,7 @@ data class EffectUiState(
         private fun buildDuotoneUri(
             darkColor: Color,
             lightColor: Color,
-        ): String {
-            return "DuotoneFilter:$darkColor:$lightColor"
-        }
+        ): String = "DuotoneFilter:$darkColor:$lightColor"
 
         /**
          * Create a EffectUiState instance based on the given Block and Engine.
@@ -105,9 +101,7 @@ data class EffectUiState(
         }
     }
 
-    fun getSelectedAsset(assets: List<WrappedAsset>): WrappedAsset? {
-        return assets.firstOrNull { isAssetSelected(it) }
-    }
+    fun getSelectedAsset(assets: List<WrappedAsset>): WrappedAsset? = assets.firstOrNull { isAssetSelected(it) }
 
     private fun isAssetSelected(asset: WrappedAsset?): Boolean {
         return when (asset?.assetSourceType) {
@@ -115,11 +109,10 @@ data class EffectUiState(
                 appliedEffectId == asset.asset.getUri()
             }
             AppearanceAssetSourceType.DuoToneFilter -> {
-                appliedEffectId ==
-                    buildDuotoneUri(
-                        Color.fromHex(asset.asset.getMeta("darkColor")!!),
-                        Color.fromHex(asset.asset.getMeta("lightColor")!!),
-                    )
+                appliedEffectId == buildDuotoneUri(
+                    Color.fromHex(asset.asset.getMeta("darkColor")!!),
+                    Color.fromHex(asset.asset.getMeta("lightColor")!!),
+                )
             }
             AppearanceAssetSourceType.FxEffect -> {
                 val appliedEffectName = appliedEffectId ?: return false

@@ -95,10 +95,9 @@ class Dock private constructor(
     @Composable
     override fun Scope.Content(animatedVisibilityScope: AnimatedVisibilityScope?) {
         Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
             horizontalArrangement = horizontalArrangement(),
         ) {
             listBuilder.scope.items.forEach {
@@ -121,9 +120,7 @@ class Dock private constructor(
         override val impl: EditorContext = parentScope.editorContext
     }
 
-    override fun toString(): String {
-        return "$`_`Dock(id=$id)"
-    }
+    override fun toString(): String = "$`_`Dock(id=$id)"
 
     /**
      * The scope of the [Item] component.
@@ -186,9 +183,7 @@ class Dock private constructor(
             content()
         }
 
-        override fun toString(): String {
-            return "Dock.Custom(id=$id)"
-        }
+        override fun toString(): String = "Dock.Custom(id=$id)"
 
         companion object {
             /**
@@ -289,10 +284,9 @@ class Dock private constructor(
         @Composable
         override fun ButtonScope.ItemContent() {
             IconTextButton(
-                modifier =
-                    Modifier
-                        .widthIn(min = 64.dp)
-                        .height(64.dp),
+                modifier = Modifier
+                    .widthIn(min = 64.dp)
+                    .height(64.dp),
                 onClick = { onClick() },
                 enabled = enabled(),
                 icon = icon?.let { { it() } },
@@ -300,9 +294,7 @@ class Dock private constructor(
             )
         }
 
-        override fun toString(): String {
-            return "$`_`Dock.Button(id=$id)"
-        }
+        override fun toString(): String = "$`_`Dock.Button(id=$id)"
 
         class Id {
             companion object
@@ -346,10 +338,9 @@ class Dock private constructor(
             @Composable
             fun remember(
                 id: EditorComponentId,
-                scope: ButtonScope =
-                    LocalEditorScope.current.run {
-                        remember(this) { ButtonScope(parentScope = this) }
-                    },
+                scope: ButtonScope = LocalEditorScope.current.run {
+                    remember(this) { ButtonScope(parentScope = this) }
+                },
                 visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
                 enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
                 exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -359,22 +350,20 @@ class Dock private constructor(
                 text: (@Composable ButtonScope.() -> Unit)? = null,
                 enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
                 `_`: Nothing = nothing,
-            ): Button {
-                return remember(scope, visible, enterTransition, exitTransition, decoration, onClick, icon, text, enabled) {
-                    Button(
-                        id = id,
-                        scope = scope,
-                        visible = visible,
-                        enterTransition = enterTransition,
-                        exitTransition = exitTransition,
-                        decoration = decoration,
-                        onClick = onClick,
-                        icon = icon,
-                        text = text,
-                        enabled = enabled,
-                        `_` = `_`,
-                    )
-                }
+            ): Button = remember(scope, visible, enterTransition, exitTransition, decoration, onClick, icon, text, enabled) {
+                Button(
+                    id = id,
+                    scope = scope,
+                    visible = visible,
+                    enterTransition = enterTransition,
+                    exitTransition = exitTransition,
+                    decoration = decoration,
+                    onClick = onClick,
+                    icon = icon,
+                    text = text,
+                    enabled = enabled,
+                    `_` = `_`,
+                )
             }
 
             /**
@@ -412,10 +401,9 @@ class Dock private constructor(
             @Composable
             fun remember(
                 id: EditorComponentId,
-                scope: ButtonScope =
-                    LocalEditorScope.current.run {
-                        remember(this) { ButtonScope(parentScope = this) }
-                    },
+                scope: ButtonScope = LocalEditorScope.current.run {
+                    remember(this) { ButtonScope(parentScope = this) }
+                },
                 visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
                 enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
                 exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -426,39 +414,36 @@ class Dock private constructor(
                 tint: (@Composable ButtonScope.() -> Color)? = null,
                 enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
                 `_`: Nothing = nothing,
-            ): Button =
-                remember(
-                    id = id,
-                    scope = scope,
-                    visible = visible,
-                    enterTransition = enterTransition,
-                    exitTransition = exitTransition,
-                    decoration = decoration,
-                    onClick = onClick,
-                    icon =
-                        vectorIcon?.let {
-                            {
-                                Icon(
-                                    imageVector = vectorIcon(this),
-                                    contentDescription = null,
-                                    tint = tint?.invoke(this) ?: LocalContentColor.current,
-                                )
-                            }
-                        },
-                    text =
-                        text?.let {
-                            {
-                                Text(
-                                    text = text(this),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = tint?.invoke(this) ?: Color.Unspecified,
-                                    modifier = Modifier.padding(top = 4.dp),
-                                )
-                            }
-                        },
-                    enabled = enabled,
-                    `_` = `_`,
-                )
+            ): Button = remember(
+                id = id,
+                scope = scope,
+                visible = visible,
+                enterTransition = enterTransition,
+                exitTransition = exitTransition,
+                decoration = decoration,
+                onClick = onClick,
+                icon = vectorIcon?.let {
+                    {
+                        Icon(
+                            imageVector = vectorIcon(this),
+                            contentDescription = null,
+                            tint = tint?.invoke(this) ?: LocalContentColor.current,
+                        )
+                    }
+                },
+                text = text?.let {
+                    {
+                        Text(
+                            text = text(this),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = tint?.invoke(this) ?: Color.Unspecified,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+                },
+                enabled = enabled,
+                `_` = `_`,
+            )
         }
     }
 
@@ -486,11 +471,10 @@ class Dock private constructor(
             content: @Composable () -> Unit,
         ) {
             Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .background(background)
-                        .padding(paddingValues),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(background)
+                    .padding(paddingValues),
             ) {
                 content()
             }
@@ -530,10 +514,9 @@ class Dock private constructor(
          */
         @Composable
         fun remember(
-            scope: Scope =
-                LocalEditorScope.current.run {
-                    remember(this) { Scope(parentScope = this) }
-                },
+            scope: Scope = LocalEditorScope.current.run {
+                remember(this) { Scope(parentScope = this) }
+            },
             visible: @Composable Scope.() -> Boolean = alwaysVisible,
             enterTransition: @Composable Scope.() -> EnterTransition = noneEnterTransition,
             exitTransition: @Composable Scope.() -> ExitTransition = noneExitTransition,
@@ -542,29 +525,27 @@ class Dock private constructor(
             horizontalArrangement: @Composable Scope.() -> Arrangement.Horizontal = { Arrangement.SpaceEvenly },
             itemDecoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = { it() },
             `_`: Nothing = nothing,
-        ): Dock {
-            return remember(
-                scope,
-                visible,
-                enterTransition,
-                exitTransition,
-                listBuilder,
-                horizontalArrangement,
-                decoration,
-                itemDecoration,
-            ) {
-                Dock(
-                    scope = scope,
-                    visible = visible,
-                    enterTransition = enterTransition,
-                    exitTransition = exitTransition,
-                    decoration = decoration,
-                    listBuilder = listBuilder,
-                    horizontalArrangement = horizontalArrangement,
-                    itemDecoration = itemDecoration,
-                    `_` = `_`,
-                )
-            }
+        ): Dock = remember(
+            scope,
+            visible,
+            enterTransition,
+            exitTransition,
+            listBuilder,
+            horizontalArrangement,
+            decoration,
+            itemDecoration,
+        ) {
+            Dock(
+                scope = scope,
+                visible = visible,
+                enterTransition = enterTransition,
+                exitTransition = exitTransition,
+                decoration = decoration,
+                listBuilder = listBuilder,
+                horizontalArrangement = horizontalArrangement,
+                itemDecoration = itemDecoration,
+                `_` = `_`,
+            )
         }
     }
 }

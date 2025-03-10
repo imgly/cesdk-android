@@ -105,12 +105,11 @@ internal fun AudioAssetContent(
     )
 
     DisposableEffect(exoPlayerInstance) {
-        val listener =
-            object : Player.Listener {
-                override fun onIsLoadingChanged(isLoadingState: Boolean) {
-                    isLoading = isLoadingState
-                }
+        val listener = object : Player.Listener {
+            override fun onIsLoadingChanged(isLoadingState: Boolean) {
+                isLoading = isLoadingState
             }
+        }
 
         exoPlayerInstance?.addListener(listener)
 
@@ -170,13 +169,13 @@ internal fun AudioAssetContent(
                                     isPlaying = player.playWhenReady
                                 } else {
                                     val dataSourceFactory = DefaultDataSource.Factory(context)
-                                    val mediaSource: MediaSource =
-                                        ProgressiveMediaSource.Factory(dataSourceFactory)
-                                            .createMediaSource(
-                                                MediaItem.fromUri(
-                                                    wrappedAsset.asset.getMeta("previewUri") ?: wrappedAsset.asset.getUri(),
-                                                ),
-                                            )
+                                    val mediaSource: MediaSource = ProgressiveMediaSource
+                                        .Factory(dataSourceFactory)
+                                        .createMediaSource(
+                                            MediaItem.fromUri(
+                                                wrappedAsset.asset.getMeta("previewUri") ?: wrappedAsset.asset.getUri(),
+                                            ),
+                                        )
                                     player.prepare(mediaSource)
                                     player.repeatMode = Player.REPEAT_MODE_ONE
                                     player.playWhenReady = true
@@ -201,14 +200,19 @@ internal fun AudioAssetContent(
                     if (isCurrentAssetPlaying) {
                         if (isLoading) {
                             CircularProgressIndicator(
-                                modifier = Modifier.align(Alignment.Center).size(36.dp),
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .size(36.dp),
                                 color = Color.White,
                                 trackColor = Color.Transparent,
                             )
                         } else {
                             CircularProgressIndicator(
                                 progress = playbackPositionPercent * playStateTransitionProgress,
-                                modifier = Modifier.align(Alignment.Center).size(56.dp).alpha(playStateTransitionProgress),
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .size(56.dp)
+                                    .alpha(playStateTransitionProgress),
                                 color = Color.White,
                                 strokeCap = StrokeCap.Round,
                                 strokeWidth = 3.dp,
@@ -225,30 +229,28 @@ internal fun AudioAssetContent(
                 val seconds = (playbackTime / 1000) % 60
                 val playTimeFormatted = String.format("%d:%02d", minutes, seconds)
 
-                val annotatedString =
-                    buildAnnotatedString {
-                        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
-                            append(playTimeFormatted)
-                        }
-                        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.75f))) {
-                            append(" / ")
-                        }
-                        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.75f))) {
-                            append(wrappedAsset.asset.getFormattedDuration())
-                        }
+                val annotatedString = buildAnnotatedString {
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
+                        append(playTimeFormatted)
                     }
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.75f))) {
+                        append(" / ")
+                    }
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.75f))) {
+                        append(wrappedAsset.asset.getFormattedDuration())
+                    }
+                }
                 Text(annotatedString)
             } else {
                 Text(wrappedAsset.asset.getFormattedDuration())
             }
         },
-        modifier =
-            Modifier.combinedClickable(
-                onClick = {
-                    onAssetClick(wrappedAsset)
-                },
-                onLongClick = { onAssetLongClick(wrappedAsset) },
-            ),
+        modifier = Modifier.combinedClickable(
+            onClick = {
+                onAssetClick(wrappedAsset)
+            },
+            onLongClick = { onAssetLongClick(wrappedAsset) },
+        ),
     )
 }
 
@@ -258,26 +260,25 @@ fun PlayPauseButton(
     rotation: Float,
 ) {
     val densityContext = LocalDensity.current
-    val triangleToRectangle =
-        GenericShape { size, _ ->
-            with(densityContext) {
-                if (rotation < 90f || rotation > 270f) {
-                    val width = Dp(11f).toPx()
-                    val height = Dp(14f).toPx()
-                    moveTo(width, height / 2)
-                    lineTo(0f, height)
-                    lineTo(0f, 0f)
-                    translate(Offset((size.width - width) / 2f + 2.dp.toPx(), (size.height - height) / 2f))
-                    close()
-                } else {
-                    val width = Dp(4f).toPx()
-                    val height = Dp(14f).toPx()
-                    val rect = Rect(0f, 0f, width, height).translate((size.width - (width * 3)) / 2, (size.height - height) / 2)
-                    addRect(rect)
-                    addRect(rect.translate(width * 2, 0f))
-                }
+    val triangleToRectangle = GenericShape { size, _ ->
+        with(densityContext) {
+            if (rotation < 90f || rotation > 270f) {
+                val width = Dp(11f).toPx()
+                val height = Dp(14f).toPx()
+                moveTo(width, height / 2)
+                lineTo(0f, height)
+                lineTo(0f, 0f)
+                translate(Offset((size.width - width) / 2f + 2.dp.toPx(), (size.height - height) / 2f))
+                close()
+            } else {
+                val width = Dp(4f).toPx()
+                val height = Dp(14f).toPx()
+                val rect = Rect(0f, 0f, width, height).translate((size.width - (width * 3)) / 2, (size.height - height) / 2)
+                addRect(rect)
+                addRect(rect.translate(width * 2, 0f))
             }
         }
+    }
 
     Surface(
         modifier = modifier.size(40.dp),
@@ -285,12 +286,11 @@ fun PlayPauseButton(
         color = Color.Black.copy(0.5f),
     ) {
         Box(
-            modifier =
-                Modifier
-                    .rotate(rotation)
-                    .padding(16.dp)
-                    .background(Color.White, triangleToRectangle)
-                    .size(24.dp),
+            modifier = Modifier
+                .rotate(rotation)
+                .padding(16.dp)
+                .background(Color.White, triangleToRectangle)
+                .size(24.dp),
         )
     }
 }
@@ -300,23 +300,20 @@ fun PlayPauseButton(
 @Composable
 fun DefaultPreview() {
     AudioAssetContent(
-        wrappedAsset =
-            WrappedAsset.GenericAsset(
-                asset =
-                    Asset(
-                        id = "",
-                        label = "Audio 1",
-                        context = AssetContext(""),
-                        meta =
-                            mapOf(
-                                "uri" to "https://dummy",
-                                "thumbUri" to "https://dummy",
-                                "duration" to "4333",
-                            ),
-                    ),
-                assetSourceType = AssetSourceType.Audio,
-                assetType = AssetType.Audio,
+        wrappedAsset = WrappedAsset.GenericAsset(
+            asset = Asset(
+                id = "",
+                label = "Audio 1",
+                context = AssetContext(""),
+                meta = mapOf(
+                    "uri" to "https://dummy",
+                    "thumbUri" to "https://dummy",
+                    "duration" to "4333",
+                ),
             ),
+            assetSourceType = AssetSourceType.Audio,
+            assetType = AssetType.Audio,
+        ),
         onAssetClick = {},
         onAssetLongClick = {},
         exoPlayer = { null },

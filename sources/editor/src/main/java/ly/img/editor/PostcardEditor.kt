@@ -36,11 +36,10 @@ fun PostcardEditor(
     EditorTheme(
         useDarkTheme = editorConfiguration.uiMode.useDarkTheme,
     ) {
-        val editorScope =
-            rememberEditorScope(
-                engineConfiguration = engineConfiguration,
-                editorConfiguration = editorConfiguration,
-            )
+        val editorScope = rememberEditorScope(
+            engineConfiguration = engineConfiguration,
+            editorConfiguration = editorConfiguration,
+        )
         EditorScope(editorScope) {
             @Suppress("UNCHECKED_CAST")
             PostcardUi(

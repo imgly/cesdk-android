@@ -21,12 +21,11 @@ fun ToggleIconButton(
     FilledIconToggleButton(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        colors =
-            IconButtonDefaults.filledIconToggleButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = LocalContentColor.current,
-                disabledContainerColor = Color.Transparent,
-            ),
+        colors = IconButtonDefaults.filledIconToggleButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = LocalContentColor.current,
+            disabledContainerColor = Color.Transparent,
+        ),
         enabled = enabled,
         content = content,
     )
@@ -46,16 +45,14 @@ fun ToggleIconButton(
         onCheckedChange = onCheckedChange,
         enabled = enabled,
         shape = IconButtonDefaults.filledShape,
-        color =
-            when {
-                enabled && checked -> checkedContainerColor
-                else -> Color.Transparent
-            },
-        contentColor =
-            when {
-                enabled && checked -> MaterialTheme.colorScheme.onPrimary
-                else -> LocalContentColor.current
-            },
+        color = when {
+            enabled && checked -> checkedContainerColor
+            else -> Color.Transparent
+        },
+        contentColor = when {
+            enabled && checked -> MaterialTheme.colorScheme.onPrimary
+            else -> LocalContentColor.current
+        },
     ) {
         Box(
             modifier = modifier,

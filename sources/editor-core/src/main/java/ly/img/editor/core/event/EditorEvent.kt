@@ -133,7 +133,9 @@ interface EditorEvent {
      *
      * @param throwable an optional parameter in case the editor is closed due to an error.
      */
-    class CloseEditor(val throwable: Throwable? = null) : EditorEvent
+    class CloseEditor(
+        val throwable: Throwable? = null,
+    ) : EditorEvent
 
     /**
      * An event for canceling the export job if it is running.

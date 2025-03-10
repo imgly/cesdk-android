@@ -43,10 +43,9 @@ internal fun LibrarySectionHeader(
     launchCamera: (Boolean) -> Unit,
 ) {
     Row(
-        modifier =
-            Modifier
-                .padding(start = 16.dp, end = 8.dp)
-                .fillMaxWidth(),
+        modifier = Modifier
+            .padding(start = 16.dp, end = 8.dp)
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -73,10 +72,9 @@ internal fun LibrarySectionHeader(
             TextButton(
                 onClick = { onDrillDown(item.expandContent) },
             ) {
-                val countText =
-                    item.count?.let { count ->
-                        if (count > 999) stringResource(id = R.string.ly_img_editor_more_count) else count.toString()
-                    } ?: ""
+                val countText = item.count?.let { count ->
+                    if (count > 999) stringResource(id = R.string.ly_img_editor_more_count) else count.toString()
+                } ?: ""
                 Text(
                     text = countText,
                     style = MaterialTheme.typography.labelLarge,

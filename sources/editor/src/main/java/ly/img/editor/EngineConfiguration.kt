@@ -61,7 +61,7 @@ import ly.img.engine.MimeType
  * the default implementation which displays a popup dialog with action button that closes the editor.
  * Note that the "error" coroutine job will survive configuration changes and will be cancelled only if the editor is closed or
  * the process is killed when in the background.
-*/
+ */
 class EngineConfiguration private constructor(
     val license: String,
     val userId: String? = null,
@@ -87,18 +87,16 @@ class EngineConfiguration private constructor(
     },
     private val `_`: Nothing = nothing,
 ) {
-    override fun toString(): String {
-        return "$`_`EngineConfiguration(" +
-            "license = $license, " +
-            ", userId = $userId" +
-            ", baseUri = $baseUri" +
-            ", renderTarget = $renderTarget" +
-            ", onCreate = $onCreate" +
-            ", onUpload = $onExport" +
-            ", onClose = $onClose" +
-            ", onError = $onError" +
-            ")"
-    }
+    override fun toString(): String = "$`_`EngineConfiguration(" +
+        "license = $license, " +
+        ", userId = $userId" +
+        ", baseUri = $baseUri" +
+        ", renderTarget = $renderTarget" +
+        ", onCreate = $onCreate" +
+        ", onUpload = $onExport" +
+        ", onClose = $onClose" +
+        ", onError = $onError" +
+        ")"
 
     @OptIn(UnstableEditorApi::class)
     companion object {
@@ -212,8 +210,7 @@ class EngineConfiguration private constructor(
                 editorContext.eventHandler.send(ShowErrorDialogEvent(error))
             },
             `_`: Nothing = nothing,
-        ): EngineConfiguration =
-            // todo consider adding all parameters as keys. If we add now it crashes.
+        ): EngineConfiguration = // todo consider adding all parameters as keys. If we add now it crashes.
             // todo https://console.firebase.google.com/project/cesdk-staging/crashlytics/app/android:ly.img.cesdk.catalog.internal/issues/36a035a4cf1c6c472ba005f7a8b2b854?time=last-seven-days&types=crash&sessionEventKey=673E417703A6000117603B895C0593F9_2017901230288394945
             androidx.compose.runtime.remember {
                 EngineConfiguration(
@@ -266,11 +263,10 @@ class EngineConfiguration private constructor(
             onExport = { engine, eventHandler ->
                 EditorDefaults.run {
                     eventHandler.send(ShowLoading)
-                    val blob =
-                        engine.block.export(
-                            block = requireNotNull(engine.scene.get()),
-                            mimeType = MimeType.PNG,
-                        )
+                    val blob = engine.block.export(
+                        block = requireNotNull(engine.scene.get()),
+                        mimeType = MimeType.PNG,
+                    )
                     val tempFile = writeToTempFile(blob, mimeType = MimeType.PNG)
                     eventHandler.send(HideLoading)
                     eventHandler.send(
@@ -370,10 +366,7 @@ class EngineConfiguration private constructor(
         renderTarget = renderTarget,
         onCreate = { onCreate(editorContext.engine, editorContext.eventHandler) },
         onExport = { onExport(editorContext.engine, editorContext.eventHandler) },
-        onUpload = {
-                asset,
-                uploadAssetSourceType,
-            ->
+        onUpload = { asset, uploadAssetSourceType ->
             onUpload(asset, editorContext.engine, editorContext.eventHandler, uploadAssetSourceType)
         },
         onClose = { hasUnsavedChanges -> onClose(editorContext.engine, hasUnsavedChanges, editorContext.eventHandler) },

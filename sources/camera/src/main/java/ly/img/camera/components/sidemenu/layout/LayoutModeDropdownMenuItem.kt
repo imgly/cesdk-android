@@ -20,10 +20,9 @@ internal fun LayoutModeDropdownMenuItem(
 ) {
     val checked = layoutMode == currentLayoutMode
     DropdownMenuItem(
-        modifier =
-            Modifier.ifTrue(checked) {
-                background(MaterialTheme.colorScheme.surfaceVariant)
-            },
+        modifier = Modifier.ifTrue(checked) {
+            background(MaterialTheme.colorScheme.surfaceVariant)
+        },
         text = { Text(stringResource(id = layoutMode.label)) },
         onClick = {
             onClick(layoutMode)

@@ -78,10 +78,9 @@ private fun PageIndicators(
         val pagerState = rememberPagerState()
 
         val indexOffset = visiblePageIndicators / 2
-        val middleIndex =
-            pageIndex
-                .coerceAtMost(pageCount - indexOffset - 1)
-                .coerceAtLeast(indexOffset)
+        val middleIndex = pageIndex
+            .coerceAtMost(pageCount - indexOffset - 1)
+            .coerceAtLeast(indexOffset)
 
         val firstVisibleIndex = (middleIndex - indexOffset).coerceAtLeast(0)
         val lastVisibleIndex = (middleIndex + indexOffset).coerceAtMost(pageCount - 1)
@@ -115,9 +114,8 @@ private fun PageIndicators(
             key(index) {
                 PageCircle(
                     selected = index == pageIndex,
-                    moreIndicator =
-                        (index <= middleIndex - indexOffset && firstVisibleIndex > 0) ||
-                            (index >= middleIndex + indexOffset && lastVisibleIndex < pageCount - 1),
+                    moreIndicator = (index <= middleIndex - indexOffset && firstVisibleIndex > 0) ||
+                        (index >= middleIndex + indexOffset && lastVisibleIndex < pageCount - 1),
                 )
             }
         }
@@ -129,13 +127,12 @@ private fun PageCircle(
     modifier: Modifier = Modifier,
     selected: Boolean,
     moreIndicator: Boolean,
-): Unit =
-    PageCircle(
-        modifier = modifier,
-        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-        canvasSize = 16.dp,
-        dotSize = if (moreIndicator) 6.dp else 8.dp,
-    )
+): Unit = PageCircle(
+    modifier = modifier,
+    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+    canvasSize = 16.dp,
+    dotSize = if (moreIndicator) 6.dp else 8.dp,
+)
 
 @Composable
 private fun PageCircle(
@@ -147,11 +144,10 @@ private fun PageCircle(
     modifier.size(canvasSize),
 ) {
     Box(
-        modifier =
-            Modifier
-                .clip(CircleShape)
-                .background(color)
-                .align(Alignment.Center)
-                .size(dotSize),
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(color)
+            .align(Alignment.Center)
+            .size(dotSize),
     )
 }

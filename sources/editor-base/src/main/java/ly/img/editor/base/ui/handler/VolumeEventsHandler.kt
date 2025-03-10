@@ -23,23 +23,21 @@ fun EventsHandler.volumeEvents(
 
     register<BlockEvent.OnVolumeChange> {
         val volume = it.volume
-        val volumeBlock =
-            if (DesignBlockType.get(engine.block.getType(block)) == DesignBlockType.Audio) {
-                block
-            } else {
-                engine.block.getFill(block)
-            }
+        val volumeBlock = if (DesignBlockType.get(engine.block.getType(block)) == DesignBlockType.Audio) {
+            block
+        } else {
+            engine.block.getFill(block)
+        }
         engine.block.setVolume(volumeBlock, volume)
         engine.block.setMuted(volumeBlock, volume == 0f)
     }
 
     register<BlockEvent.OnToggleMute> {
-        val volumeBlock =
-            if (DesignBlockType.get(engine.block.getType(block)) == DesignBlockType.Audio) {
-                block
-            } else {
-                engine.block.getFill(block)
-            }
+        val volumeBlock = if (DesignBlockType.get(engine.block.getType(block)) == DesignBlockType.Audio) {
+            block
+        } else {
+            engine.block.getFill(block)
+        }
         val volume = engine.block.getVolume(volumeBlock)
         val isMuted = engine.block.isMuted(volumeBlock)
         if (volume == 0f && isMuted) {

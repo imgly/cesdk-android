@@ -23,27 +23,29 @@ import java.net.URL
 val FontData.fontFamily: FontFamily
     @Composable
     get() {
-        val font =
-            uri.toAssetPathOrNull()?.let {
-                Font(
-                    path = it,
-                    assetManager = LocalContext.current.assets,
-                    weight = weight,
-                )
-            } ?: uri.toFileOrNull()?.let {
-                Font(
-                    file = it,
-                    weight = weight,
-                )
-            } ?: RemoteFont(uri = uri, weight = weight)
+        val font = uri.toAssetPathOrNull()?.let {
+            Font(
+                path = it,
+                assetManager = LocalContext.current.assets,
+                weight = weight,
+            )
+        } ?: uri.toFileOrNull()?.let {
+            Font(
+                file = it,
+                weight = weight,
+            )
+        } ?: RemoteFont(uri = uri, weight = weight)
         return FontFamily(font)
     }
 
-class RemoteFont(val uri: Uri, override val weight: FontWeight) : AndroidFont(
-    loadingStrategy = FontLoadingStrategy.Async,
-    typefaceLoader = RemoteTypefaceLoader(),
-    variationSettings = FontVariation.Settings(),
-) {
+class RemoteFont(
+    val uri: Uri,
+    override val weight: FontWeight,
+) : AndroidFont(
+        loadingStrategy = FontLoadingStrategy.Async,
+        typefaceLoader = RemoteTypefaceLoader(),
+        variationSettings = FontVariation.Settings(),
+    ) {
     override val style: FontStyle = FontStyle.Normal
 }
 

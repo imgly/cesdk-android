@@ -36,25 +36,22 @@ fun ClipLabelView(
     duration: String,
     isSelected: Boolean,
 ) {
-    val backgroundColor =
-        when (clip.clipType) {
-            ClipType.Audio -> LocalExtendedColorScheme.current.purple.onColor.copy(alpha = 0.24f)
-            else -> MaterialTheme.colorScheme.surface2.copy(alpha = 0.75f)
-        }
+    val backgroundColor = when (clip.clipType) {
+        ClipType.Audio -> LocalExtendedColorScheme.current.purple.onColor.copy(alpha = 0.24f)
+        else -> MaterialTheme.colorScheme.surface2.copy(alpha = 0.75f)
+    }
 
     Box(
-        modifier =
-            modifier
-                .padding(2.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .background(backgroundColor),
+        modifier = modifier
+            .padding(2.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(backgroundColor),
     ) {
         Row(
-            modifier =
-                Modifier
-                    .height(16.dp)
-                    .wrapContentWidth(align = Alignment.Start, unbounded = true)
-                    .padding(horizontal = 4.dp),
+            modifier = Modifier
+                .height(16.dp)
+                .wrapContentWidth(align = Alignment.Start, unbounded = true)
+                .padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -80,18 +77,17 @@ fun ClipLabelView(
 
 @Composable
 private fun ClipIcon(clip: Clip) {
-    val icon =
-        if (!clip.allowsSelecting) {
-            IconPack.Lockoutline
-        } else {
-            when (clip.clipType) {
-                ClipType.Audio -> ly.img.editor.core.iconpack.IconPack.Music
-                ClipType.Image -> ly.img.editor.core.iconpack.IconPack.ImageOutline
-                ClipType.Shape -> ly.img.editor.core.iconpack.IconPack.ShapesOutline
-                ClipType.Sticker -> ly.img.editor.core.iconpack.IconPack.StickerEmojiOutline
-                ClipType.Text -> ly.img.editor.core.iconpack.IconPack.TextFields
-                ClipType.Video -> ly.img.editor.core.iconpack.IconPack.PlayBoxOutline
-            }
+    val icon = if (!clip.allowsSelecting) {
+        IconPack.Lockoutline
+    } else {
+        when (clip.clipType) {
+            ClipType.Audio -> ly.img.editor.core.iconpack.IconPack.Music
+            ClipType.Image -> ly.img.editor.core.iconpack.IconPack.ImageOutline
+            ClipType.Shape -> ly.img.editor.core.iconpack.IconPack.ShapesOutline
+            ClipType.Sticker -> ly.img.editor.core.iconpack.IconPack.StickerEmojiOutline
+            ClipType.Text -> ly.img.editor.core.iconpack.IconPack.TextFields
+            ClipType.Video -> ly.img.editor.core.iconpack.IconPack.PlayBoxOutline
         }
+    }
     Icon(icon, contentDescription = null, modifier = Modifier.requiredSize(16.dp))
 }

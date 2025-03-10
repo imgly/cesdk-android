@@ -29,9 +29,8 @@ fun TimelineView(
     onEvent: (EditorEvent) -> Unit,
 ) {
     Column(
-        modifier =
-            modifier
-                .background(MaterialTheme.colorScheme.surface1),
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.surface1),
     ) {
         PlayerHeader(
             timelineState = timelineState,
@@ -47,11 +46,10 @@ fun TimelineView(
                 .collect { clip ->
                     val index = timelineState.dataSource.indexOf(clip)
                     if (index == -1) return@collect
-                    val isClipAlreadyVisible =
-                        verticalScrollState.layoutInfo.visibleItemsInfo.find { it.index == index }?.let { itemInfo ->
-                            itemInfo.offset >= verticalScrollState.layoutInfo.viewportStartOffset &&
-                                (itemInfo.offset + itemInfo.size) <= verticalScrollState.layoutInfo.viewportEndOffset
-                        } ?: false
+                    val isClipAlreadyVisible = verticalScrollState.layoutInfo.visibleItemsInfo.find { it.index == index }?.let { itemInfo ->
+                        itemInfo.offset >= verticalScrollState.layoutInfo.viewportStartOffset &&
+                            (itemInfo.offset + itemInfo.size) <= verticalScrollState.layoutInfo.viewportEndOffset
+                    } ?: false
                     if (!isClipAlreadyVisible) {
                         verticalScrollState.animateScrollToItem(index)
                     }
@@ -71,12 +69,10 @@ fun TimelineView(
     }
 }
 
-private fun enterTransition() =
-    fadeIn(tween(durationMillis = 500, easing = Easing.EmphasizedDecelerate)) +
-        expandVertically(tween(durationMillis = 500, easing = Easing.EmphasizedDecelerate))
+private fun enterTransition() = fadeIn(tween(durationMillis = 500, easing = Easing.EmphasizedDecelerate)) +
+    expandVertically(tween(durationMillis = 500, easing = Easing.EmphasizedDecelerate))
 
-private fun exitTransition() =
-    fadeOut(tween(durationMillis = 250, easing = Easing.EmphasizedDecelerate)) +
-        shrinkVertically(
-            tween(durationMillis = 350, easing = Easing.EmphasizedDecelerate),
-        )
+private fun exitTransition() = fadeOut(tween(durationMillis = 250, easing = Easing.EmphasizedDecelerate)) +
+    shrinkVertically(
+        tween(durationMillis = 350, easing = Easing.EmphasizedDecelerate),
+    )

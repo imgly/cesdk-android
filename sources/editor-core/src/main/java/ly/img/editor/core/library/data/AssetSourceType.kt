@@ -5,7 +5,9 @@ package ly.img.editor.core.library.data
  * register an asset source or local asset source with the same id as [sourceId] before using the asset source:
  * [ly.img.engine.AssetApi.addSource] / [ly.img.engine.AssetApi.addLocalSource].
  */
-open class AssetSourceType(val sourceId: String) {
+open class AssetSourceType(
+    val sourceId: String,
+) {
     companion object {
         /**
          * The default source type for shapes.
@@ -84,4 +86,7 @@ open class AssetSourceType(val sourceId: String) {
  *
  * @param mimeTypeFilter the mime type filter that is used to filter out the device assets when system picker is displayed.
  */
-class UploadAssetSourceType(sourceId: String, val mimeTypeFilter: String) : AssetSourceType(sourceId)
+class UploadAssetSourceType(
+    sourceId: String,
+    val mimeTypeFilter: String,
+) : AssetSourceType(sourceId)

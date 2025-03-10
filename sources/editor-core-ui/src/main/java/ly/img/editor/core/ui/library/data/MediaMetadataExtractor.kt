@@ -11,30 +11,28 @@ import java.io.File
 import java.io.FileOutputStream
 import kotlin.time.Duration.Companion.milliseconds
 
-class MediaMetadataExtractor(private val context: Context) {
-    suspend fun getAudioMetadata(uri: Uri): AudioMetadata? {
-        return withContext(Dispatchers.IO) {
-            val retriever = MediaMetadataRetriever()
-            try {
-                retriever.setDataSource(context, uri)
-                val title =
-                    retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE).takeIf { !it.isNullOrEmpty() }
-                        ?: getFileName(uri)
-                val durationInSeconds = retriever.getDuration()
-                val albumArtUri =
-                    retriever.embeddedPicture?.let {
-                        val file = File.createTempFile("artwork", null)
-                        val outputStream = FileOutputStream(file)
-                        outputStream.write(it)
-                        outputStream.close()
-                        Uri.fromFile(file)
-                    }
-                AudioMetadata(title, durationInSeconds?.toString(), albumArtUri?.toString())
-            } catch (ex: Exception) {
-                null
-            } finally {
-                retriever.release()
+class MediaMetadataExtractor(
+    private val context: Context,
+) {
+    suspend fun getAudioMetadata(uri: Uri): AudioMetadata? = withContext(Dispatchers.IO) {
+        val retriever = MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(context, uri)
+            val title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE).takeIf { !it.isNullOrEmpty() }
+                ?: getFileName(uri)
+            val durationInSeconds = retriever.getDuration()
+            val albumArtUri = retriever.embeddedPicture?.let {
+                val file = File.createTempFile("artwork", null)
+                val outputStream = FileOutputStream(file)
+                outputStream.write(it)
+                outputStream.close()
+                Uri.fromFile(file)
             }
+            AudioMetadata(title, durationInSeconds?.toString(), albumArtUri?.toString())
+        } catch (ex: Exception) {
+            null
+        } finally {
+            retriever.release()
         }
     }
 
@@ -44,19 +42,18 @@ class MediaMetadataExtractor(private val context: Context) {
             try {
                 retriever.setDataSource(context, uri)
                 val bitmap = retriever.frameAtTime
-                val thumbFile =
-                    bitmap?.let {
-                        try {
-                            val file = File.createTempFile("thumb", null)
-                            val outputStream = FileOutputStream(file)
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-                            outputStream.flush()
-                            outputStream.close()
-                            file
-                        } catch (e: Exception) {
-                            null
-                        }
-                    } ?: return@withContext null
+                val thumbFile = bitmap?.let {
+                    try {
+                        val file = File.createTempFile("thumb", null)
+                        val outputStream = FileOutputStream(file)
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                        outputStream.flush()
+                        outputStream.close()
+                        file
+                    } catch (e: Exception) {
+                        null
+                    }
+                } ?: return@withContext null
                 val durationInSeconds = retriever.getDuration()?.toString()
                 VideoMetadata(
                     duration = durationInSeconds,

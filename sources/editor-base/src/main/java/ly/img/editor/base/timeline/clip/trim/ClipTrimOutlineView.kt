@@ -30,28 +30,30 @@ fun ClipTrimOutlineView(
 ) {
     if (clipDragType != null && clipDragType != ClipDragType.Move && clip.footageDuration != null) {
         Box(
-            modifier =
-                Modifier
-                    .wrapContentSize(unbounded = true, align = Alignment.CenterStart)
-                    .width(zoomState.toPx(clip.footageDuration).toDp())
-                    .height(height)
-                    .offset {
-                        val extraOffset =
-                            if (clipDragType == ClipDragType.Trailing) {
-                                0f
-                            } else {
-                                zoomState.toPx(clip.duration) - realtimeWidth
-                            }
-                        IntOffset(
-                            x = (-zoomState.toPx(clip.trimOffset) - extraOffset).roundToInt(),
-                            y = 0,
-                        )
+            modifier = Modifier
+                .wrapContentSize(unbounded = true, align = Alignment.CenterStart)
+                .width(
+                    zoomState
+                        .toPx(clip.footageDuration)
+                        .toDp(),
+                )
+                .height(height)
+                .offset {
+                    val extraOffset = if (clipDragType == ClipDragType.Trailing) {
+                        0f
+                    } else {
+                        zoomState.toPx(clip.duration) - realtimeWidth
                     }
-                    .animatedDashedBorder(
-                        color = dashColor,
-                        strokeWidth = 1.dp,
-                        shape = MaterialTheme.shapes.small,
-                    ),
+                    IntOffset(
+                        x = (-zoomState.toPx(clip.trimOffset) - extraOffset).roundToInt(),
+                        y = 0,
+                    )
+                }
+                .animatedDashedBorder(
+                    color = dashColor,
+                    strokeWidth = 1.dp,
+                    shape = MaterialTheme.shapes.small,
+                ),
         )
     }
 }

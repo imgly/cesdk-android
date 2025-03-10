@@ -1,4 +1,4 @@
-package ly.img.editor.base.components.color_picker
+package ly.img.editor.base.components.colorpicker
 
 import androidx.annotation.FloatRange
 import androidx.compose.ui.graphics.Color

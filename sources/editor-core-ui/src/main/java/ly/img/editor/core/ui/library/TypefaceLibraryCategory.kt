@@ -14,18 +14,16 @@ val TypefaceLibraryCategory by lazy {
         tabTitleRes = R.string.ly_img_editor_typeface,
         tabSelectedIcon = IconPack.LibraryElements,
         tabUnselectedIcon = IconPack.LibraryElementsOutline,
-        content =
-            LibraryContent.Sections(
-                titleRes = R.string.ly_img_editor_typeface,
-                sections =
-                    listOf(
-                        LibraryContent.Section(
-                            sourceTypes = listOf(AssetSourceType(sourceId = "ly.img.typeface")),
-                            count = Int.MAX_VALUE,
-                            assetType = AssetType.Typeface,
-                            expandContent = null,
-                        ),
-                    ),
+        content = LibraryContent.Sections(
+            titleRes = R.string.ly_img_editor_typeface,
+            sections = listOf(
+                LibraryContent.Section(
+                    sourceTypes = listOf(AssetSourceType(sourceId = "ly.img.typeface")),
+                    count = Int.MAX_VALUE,
+                    assetType = AssetType.Typeface,
+                    expandContent = null,
+                ),
             ),
+        ),
     )
 }

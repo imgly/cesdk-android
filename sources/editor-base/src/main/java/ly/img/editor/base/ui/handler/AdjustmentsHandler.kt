@@ -7,7 +7,10 @@ import ly.img.editor.base.engine.getGroup
 import ly.img.editor.base.engine.removeEffectByType
 import ly.img.editor.base.engine.setBlurType
 import ly.img.editor.base.engine.toEngineColor
-import ly.img.editor.base.ui.BlockEvent.*
+import ly.img.editor.base.ui.BlockEvent.OnChangeEffectSettings
+import ly.img.editor.base.ui.BlockEvent.OnReplaceBlurEffect
+import ly.img.editor.base.ui.BlockEvent.OnReplaceColorFilter
+import ly.img.editor.base.ui.BlockEvent.OnReplaceFxEffect
 import ly.img.editor.core.library.data.AssetSourceType
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.inject
@@ -52,20 +55,19 @@ fun EventsHandler.appearanceEvents(
     }
 
     register<OnChangeEffectSettings> {
-        val filter =
-            when (it.adjustment.type) {
-                is BlurType -> {
-                    engine.block.getBlur(block)
-                }
-
-                is EffectType -> {
-                    engine.block.getEffectOrCreateAndAppend(block, it.adjustment.type)
-                }
-
-                else -> throw IllegalArgumentException(
-                    "Unsupported adjustment type: ${it.adjustment.type}",
-                )
+        val filter = when (it.adjustment.type) {
+            is BlurType -> {
+                engine.block.getBlur(block)
             }
+
+            is EffectType -> {
+                engine.block.getEffectOrCreateAndAppend(block, it.adjustment.type)
+            }
+
+            else -> throw IllegalArgumentException(
+                "Unsupported adjustment type: ${it.adjustment.type}",
+            )
+        }
         when (it.value) {
             is AdjustmentState.Value.Int ->
                 engine.block.setInt(

@@ -36,11 +36,10 @@ internal fun TimecodeView(
     recordingColor: Color,
 ) {
     Row(
-        modifier =
-            modifier
-                .clip(RoundedCornerShape(40))
-                .background(LocalExtendedColorScheme.current.black.copy(alpha = 0.5f))
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+        modifier = modifier
+            .clip(RoundedCornerShape(40))
+            .background(LocalExtendedColorScheme.current.black.copy(alpha = 0.5f))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val sizeAnimation by animateDpAsState(
@@ -49,10 +48,9 @@ internal fun TimecodeView(
         )
 
         Canvas(
-            modifier =
-                Modifier
-                    .width(sizeAnimation)
-                    .height(14.dp),
+            modifier = Modifier
+                .width(sizeAnimation)
+                .height(14.dp),
         ) {
             drawCircle(
                 color = recordingColor,
@@ -61,16 +59,14 @@ internal fun TimecodeView(
             )
         }
 
-        val isMaxDurationLimited =
-            remember(maxDuration) {
-                maxDuration < Duration.INFINITE
-            }
+        val isMaxDurationLimited = remember(maxDuration) {
+            maxDuration < Duration.INFINITE
+        }
 
         // Setting `includeFontPadding` to false ensures that the recording indicator and the text are correctly aligned.
-        val textStyle =
-            MaterialTheme.typography.labelLarge.copy(
-                platformStyle = PlatformTextStyle(includeFontPadding = false),
-            )
+        val textStyle = MaterialTheme.typography.labelLarge.copy(
+            platformStyle = PlatformTextStyle(includeFontPadding = false),
+        )
 
         // We don't want to show in the UI if we exceed the max duration
         // (can happen if you switch camera very close to the max duration)

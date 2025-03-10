@@ -75,10 +75,9 @@ private const val KIND_STICKER = "sticker"
  *
  * @return true if the [designBlock] is a background track.
  */
-private fun Engine.isBackgroundTrack(designBlock: DesignBlock): Boolean {
-    return DesignBlockType.get(block.getType(designBlock)) == DesignBlockType.Track &&
+private fun Engine.isBackgroundTrack(designBlock: DesignBlock): Boolean =
+    DesignBlockType.get(block.getType(designBlock)) == DesignBlockType.Track &&
         block.isAlwaysOnBottom(designBlock)
-}
 
 /**
  * An extension function for checking whether the [selection] can be moved up/down.
@@ -86,10 +85,9 @@ private fun Engine.isBackgroundTrack(designBlock: DesignBlock): Boolean {
  * @param selection the selection that is queried.
  * @return true if the [selection] can be moved, false otherwise.
  */
-private fun Engine.isMoveAllowed(selection: Selection): Boolean {
-    return block.isAllowedByScope(selection.designBlock, "editor/add") &&
-        !isGrouped(selection) && selection.parentDesignBlock?.let { !isBackgroundTrack(it) } ?: true
-}
+private fun Engine.isMoveAllowed(selection: Selection): Boolean = block.isAllowedByScope(selection.designBlock, "editor/add") &&
+    !isGrouped(selection) &&
+    selection.parentDesignBlock?.let { !isBackgroundTrack(it) } ?: true
 
 /**
  * An extension function for checking whether the [selection] can be duplicated.
@@ -97,9 +95,8 @@ private fun Engine.isMoveAllowed(selection: Selection): Boolean {
  * @param selection the selection that is queried.
  * @return true if the [selection] can be duplicated, false otherwise.
  */
-private fun Engine.isDuplicateAllowed(selection: Selection): Boolean {
-    return block.isAllowedByScope(selection.designBlock, "lifecycle/duplicate") && !isGrouped(selection)
-}
+private fun Engine.isDuplicateAllowed(selection: Selection): Boolean =
+    block.isAllowedByScope(selection.designBlock, "lifecycle/duplicate") && !isGrouped(selection)
 
 /**
  * An extension function for checking whether the [selection] can be deleted.
@@ -107,9 +104,8 @@ private fun Engine.isDuplicateAllowed(selection: Selection): Boolean {
  * @param selection the selection that is queried.
  * @return true if the [selection] can be deleted, false otherwise.
  */
-private fun Engine.isDeleteAllowed(selection: Selection): Boolean {
-    return block.isAllowedByScope(selection.designBlock, "lifecycle/destroy") && !isGrouped(selection)
-}
+private fun Engine.isDeleteAllowed(selection: Selection): Boolean =
+    block.isAllowedByScope(selection.designBlock, "lifecycle/destroy") && !isGrouped(selection)
 
 /**
  * An extension function for checking whether the [selection] is part of a group.
@@ -160,12 +156,11 @@ val Button.Id.Companion.reorder by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberReorder(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             editorContext.selection.parentDesignBlock
@@ -186,21 +181,20 @@ fun Button.Companion.rememberReorder(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Reorder()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.reorder,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.reorder,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberAdjustments].
@@ -239,12 +233,11 @@ val Button.Id.Companion.adjustments by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberAdjustments(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             (
@@ -268,21 +261,20 @@ fun Button.Companion.rememberAdjustments(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Adjustments()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.adjustments,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.adjustments,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberFilter].
@@ -321,12 +313,11 @@ val Button.Id.Companion.filter by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberFilter(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             (
@@ -350,21 +341,20 @@ fun Button.Companion.rememberFilter(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Filter()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.filter,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.filter,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberEffect].
@@ -403,12 +393,11 @@ val Button.Id.Companion.effect by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberEffect(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             (
@@ -432,21 +421,20 @@ fun Button.Companion.rememberEffect(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Effect()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.effect,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.effect,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberBlur].
@@ -485,12 +473,11 @@ val Button.Id.Companion.blur by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberBlur(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             (
@@ -514,21 +501,20 @@ fun Button.Companion.rememberBlur(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Blur()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.blur,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.blur,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberVolume].
@@ -567,12 +553,11 @@ val Button.Id.Companion.volume by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberVolume(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             (editorContext.selection.type == DesignBlockType.Audio || editorContext.selection.fillType == FillType.Video) &&
@@ -590,21 +575,20 @@ fun Button.Companion.rememberVolume(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Volume()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.volume,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.volume,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberCrop].
@@ -643,12 +627,11 @@ val Button.Id.Companion.crop by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberCrop(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             val designBlock = editorContext.selection.designBlock
@@ -671,21 +654,20 @@ fun Button.Companion.rememberCrop(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Crop()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.crop,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.crop,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberDuplicate].
@@ -725,12 +707,11 @@ val Button.Id.Companion.duplicate by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberDuplicate(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             editorContext.selection.type != DesignBlockType.Page &&
@@ -748,21 +729,20 @@ fun Button.Companion.rememberDuplicate(
         editorContext.eventHandler.send(EditorEvent.Selection.Duplicate())
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.duplicate,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.duplicate,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberLayer].
@@ -802,17 +782,17 @@ val Button.Id.Companion.layer by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberLayer(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             val selection = editorContext.selection
             selection.type != DesignBlockType.Page &&
-                selection.type != DesignBlockType.Audio && (
+                selection.type != DesignBlockType.Audio &&
+                (
                     editorContext.engine.block.isAllowedByScope(selection.designBlock, "layer/blendMode") ||
                         editorContext.engine.block.isAllowedByScope(selection.designBlock, "layer/opacity") ||
                         editorContext.engine.isMoveAllowed(selection) ||
@@ -832,21 +812,20 @@ fun Button.Companion.rememberLayer(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Layer()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.layer,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.layer,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberSplit].
@@ -886,18 +865,18 @@ val Button.Id.Companion.split by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberSplit(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             editorContext.engine.block.isAllowedByScope(
                 editorContext.selection.designBlock,
                 "lifecycle/duplicate",
-            ) && editorContext.engine.scene.getMode() == SceneMode.VIDEO
+            ) &&
+                editorContext.engine.scene.getMode() == SceneMode.VIDEO
         }
     },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
@@ -911,21 +890,20 @@ fun Button.Companion.rememberSplit(
         editorContext.eventHandler.send(EditorEvent.Selection.Split())
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.split,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.split,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * An extension function that constructs [EditorIcon.FillStroke] icon from [designBlock] based on
@@ -934,26 +912,21 @@ fun Button.Companion.rememberSplit(
  * @param designBlock the design block to construct the icon from.
  */
 private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon.FillStroke {
-    fun RGBAColor.toComposeColor(): Color {
-        return Color(
-            red = this.r,
-            green = this.g,
-            blue = this.b,
-            alpha = this.a,
-        )
-    }
+    fun RGBAColor.toComposeColor(): Color = Color(
+        red = this.r,
+        green = this.g,
+        blue = this.b,
+        alpha = this.a,
+    )
 
-    fun ly.img.engine.Color.toRGBColor(engine: Engine): RGBAColor {
-        return this as? RGBAColor
-            ?: engine.editor.convertColorToColorSpace(this, ColorSpace.SRGB) as RGBAColor
-    }
+    fun ly.img.engine.Color.toRGBColor(engine: Engine): RGBAColor = this as? RGBAColor
+        ?: engine.editor.convertColorToColorSpace(this, ColorSpace.SRGB) as RGBAColor
 
-    fun BlockApi.getFillType(designBlock: DesignBlock): FillType? =
-        if (!this.supportsFill(designBlock)) {
-            null
-        } else {
-            FillType.get(this.getType(this.getFill(designBlock)))
-        }
+    fun BlockApi.getFillType(designBlock: DesignBlock): FillType? = if (!this.supportsFill(designBlock)) {
+        null
+    } else {
+        FillType.get(this.getType(this.getFill(designBlock)))
+    }
 
     fun BlockApi.hasColorOrGradientFill(designBlock: DesignBlock): Boolean {
         val fillType = getFillType(designBlock)
@@ -963,54 +936,51 @@ private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon
             fillType == FillType.ConicalGradient
     }
 
-    fun Engine.getFill(designBlock: DesignBlock): Fill? {
-        return if (!block.supportsFill(designBlock)) {
-            null
-        } else {
-            when (block.getFillType(designBlock)) {
-                FillType.Color -> {
-                    val rgbaColor =
-                        if (DesignBlockType.getOrNull(block.getType(designBlock)) == DesignBlockType.Text) {
-                            block.getTextColors(designBlock).first().toRGBColor(this)
-                        } else {
-                            block.getColor(designBlock, "fill/solid/color") as RGBAColor
-                        }
-                    SolidFill(rgbaColor.toComposeColor())
+    fun Engine.getFill(designBlock: DesignBlock): Fill? = if (!block.supportsFill(designBlock)) {
+        null
+    } else {
+        when (block.getFillType(designBlock)) {
+            FillType.Color -> {
+                val rgbaColor = if (DesignBlockType.getOrNull(block.getType(designBlock)) == DesignBlockType.Text) {
+                    block.getTextColors(designBlock).first().toRGBColor(this)
+                } else {
+                    block.getColor(designBlock, "fill/solid/color") as RGBAColor
                 }
-
-                FillType.LinearGradient -> {
-                    val fill = block.getFill(designBlock)
-                    LinearGradientFill(
-                        startPointX = block.getFloat(fill, "fill/gradient/linear/startPointX"),
-                        startPointY = block.getFloat(fill, "fill/gradient/linear/startPointY"),
-                        endPointX = block.getFloat(fill, "fill/gradient/linear/endPointX"),
-                        endPointY = block.getFloat(fill, "fill/gradient/linear/endPointY"),
-                        colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
-                    )
-                }
-
-                FillType.RadialGradient -> {
-                    val fill = block.getFill(designBlock)
-                    RadialGradientFill(
-                        centerX = block.getFloat(fill, "fill/gradient/radial/centerPointX"),
-                        centerY = block.getFloat(fill, "fill/gradient/radial/centerPointY"),
-                        radius = block.getFloat(fill, "fill/gradient/radial/radius"),
-                        colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
-                    )
-                }
-
-                FillType.ConicalGradient -> {
-                    val fill = block.getFill(designBlock)
-                    ConicalGradientFill(
-                        centerX = block.getFloat(fill, "fill/gradient/conical/centerPointX"),
-                        centerY = block.getFloat(fill, "fill/gradient/conical/centerPointY"),
-                        colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
-                    )
-                }
-
-                // Image fill and Video fill are not supported yet
-                else -> null
+                SolidFill(rgbaColor.toComposeColor())
             }
+
+            FillType.LinearGradient -> {
+                val fill = block.getFill(designBlock)
+                LinearGradientFill(
+                    startPointX = block.getFloat(fill, "fill/gradient/linear/startPointX"),
+                    startPointY = block.getFloat(fill, "fill/gradient/linear/startPointY"),
+                    endPointX = block.getFloat(fill, "fill/gradient/linear/endPointX"),
+                    endPointY = block.getFloat(fill, "fill/gradient/linear/endPointY"),
+                    colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+                )
+            }
+
+            FillType.RadialGradient -> {
+                val fill = block.getFill(designBlock)
+                RadialGradientFill(
+                    centerX = block.getFloat(fill, "fill/gradient/radial/centerPointX"),
+                    centerY = block.getFloat(fill, "fill/gradient/radial/centerPointY"),
+                    radius = block.getFloat(fill, "fill/gradient/radial/radius"),
+                    colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+                )
+            }
+
+            FillType.ConicalGradient -> {
+                val fill = block.getFill(designBlock)
+                ConicalGradientFill(
+                    centerX = block.getFloat(fill, "fill/gradient/conical/centerPointX"),
+                    centerY = block.getFloat(fill, "fill/gradient/conical/centerPointY"),
+                    colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+                )
+            }
+
+            // Image fill and Video fill are not supported yet
+            else -> null
         }
     }
 
@@ -1020,26 +990,24 @@ private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon
             .toRGBColor(this)
             .toComposeColor()
     }
-    val showFill =
-        block.supportsFill(designBlock) &&
-            block.hasColorOrGradientFill(designBlock) &&
-            block.isAllowedByScope(designBlock, "fill/change")
+
+    val showFill = block.supportsFill(designBlock) &&
+        block.hasColorOrGradientFill(designBlock) &&
+        block.isAllowedByScope(designBlock, "fill/change")
     val showStroke = block.supportsStroke(designBlock) && block.isAllowedByScope(designBlock, "stroke/change")
     return EditorIcon.FillStroke(
         showFill = showFill,
         showStroke = showStroke,
-        fill =
-            if (showFill && block.isFillEnabled(designBlock)) {
-                getFill(designBlock)
-            } else {
-                null
-            },
-        stroke =
-            if (showStroke && block.isStrokeEnabled(designBlock)) {
-                getStrokeColor(designBlock)
-            } else {
-                null
-            },
+        fill = if (showFill && block.isFillEnabled(designBlock)) {
+            getFill(designBlock)
+        } else {
+            null
+        },
+        stroke = if (showStroke && block.isStrokeEnabled(designBlock)) {
+            getStrokeColor(designBlock)
+        } else {
+            null
+        },
     )
 }
 
@@ -1081,31 +1049,28 @@ val Button.Id.Companion.fillStroke by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberFillStroke(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            val parentScope =
-                rememberLastValue(this) {
-                    if (editorContext.safeSelection == null) lastValue else this@run
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        val parentScope = rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else this@run
+        }
+        val initial = remember(parentScope) {
+            editorContext.engine.getFillStrokeButtonIcon(editorContext.selection.designBlock)
+        }
+        val fillStrokeIcon by remember(parentScope) {
+            val selection = parentScope.editorContext.selection
+            editorContext.engine.event.subscribe(listOf(selection.designBlock))
+                .filter {
+                    // When the design block is unselected/deleted, this lambda is entered before parent scope is updated.
+                    // We need to make sure that current component does not update if engine selection has changed.
+                    selection.designBlock == editorContext.engine.block.findAllSelected().firstOrNull()
                 }
-            val initial =
-                remember(parentScope) {
-                    editorContext.engine.getFillStrokeButtonIcon(editorContext.selection.designBlock)
-                }
-            val fillStrokeIcon by remember(parentScope) {
-                val selection = parentScope.editorContext.selection
-                editorContext.engine.event.subscribe(listOf(selection.designBlock))
-                    .filter {
-                        // When the design block is unselected/deleted, this lambda is entered before parent scope is updated.
-                        // We need to make sure that current component does not update if engine selection has changed.
-                        selection.designBlock == editorContext.engine.block.findAllSelected().firstOrNull()
-                    }
-                    .map { editorContext.engine.getFillStrokeButtonIcon(selection.designBlock) }
-                    .onStart { emit(initial) }
-            }.collectAsState(initial = initial)
-            remember(parentScope, fillStrokeIcon) {
-                InspectorBar.FillStrokeButtonScope(parentScope = this, fillStrokeIcon = fillStrokeIcon)
-            }
-        },
+                .map { editorContext.engine.getFillStrokeButtonIcon(selection.designBlock) }
+                .onStart { emit(initial) }
+        }.collectAsState(initial = initial)
+        remember(parentScope, fillStrokeIcon) {
+            InspectorBar.FillStrokeButtonScope(parentScope = this, fillStrokeIcon = fillStrokeIcon)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             val fillStrokeIcon = (this as InspectorBar.FillStrokeButtonScope).editorContext.fillStrokeIcon
@@ -1121,17 +1086,16 @@ fun Button.Companion.rememberFillStroke(
         EditorIcon(fillStrokeIcon)
     },
     text: (@Composable ButtonScope.() -> String)? = {
-        val textResId =
-            remember(this) {
-                val fillStrokeIcon = (this as InspectorBar.FillStrokeButtonScope).editorContext.fillStrokeIcon
-                if (fillStrokeIcon.showFill && fillStrokeIcon.showStroke) {
-                    R.string.ly_img_editor_fill_and_stroke
-                } else if (fillStrokeIcon.showFill) {
-                    R.string.ly_img_editor_fill
-                } else {
-                    R.string.ly_img_editor_stroke
-                }
+        val textResId = remember(this) {
+            val fillStrokeIcon = (this as InspectorBar.FillStrokeButtonScope).editorContext.fillStrokeIcon
+            if (fillStrokeIcon.showFill && fillStrokeIcon.showStroke) {
+                R.string.ly_img_editor_fill_and_stroke
+            } else if (fillStrokeIcon.showFill) {
+                R.string.ly_img_editor_fill
+            } else {
+                R.string.ly_img_editor_stroke
             }
+        }
         stringResource(textResId)
     },
     tint: (@Composable ButtonScope.() -> Color)? = null,
@@ -1140,30 +1104,28 @@ fun Button.Companion.rememberFillStroke(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.FillStroke()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.fillStroke,
-        icon = icon,
-        text =
-            text?.let {
-                {
-                    Text(
-                        text = text(this),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = tint?.invoke(this) ?: Color.Unspecified,
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
-                }
-            },
-        enabled = enabled,
-        onClick = onClick,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.fillStroke,
+    icon = icon,
+    text = text?.let {
+        {
+            Text(
+                text = text(this),
+                style = MaterialTheme.typography.labelSmall,
+                color = tint?.invoke(this) ?: Color.Unspecified,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+    },
+    enabled = enabled,
+    onClick = onClick,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberMoveAsClip].
@@ -1203,12 +1165,11 @@ val Button.Id.Companion.moveAsClip by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberMoveAsClip(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             editorContext.selection.type != DesignBlockType.Audio &&
@@ -1229,21 +1190,20 @@ fun Button.Companion.rememberMoveAsClip(
         editorContext.eventHandler.send(EditorEvent.Selection.MoveAsClip())
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.moveAsClip,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.moveAsClip,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberMoveAsOverlay].
@@ -1283,12 +1243,11 @@ val Button.Id.Companion.moveAsOverlay by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberMoveAsOverlay(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             editorContext.selection.type != DesignBlockType.Audio &&
@@ -1309,21 +1268,20 @@ fun Button.Companion.rememberMoveAsOverlay(
         editorContext.eventHandler.send(EditorEvent.Selection.MoveAsOverlay())
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.moveAsOverlay,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.moveAsOverlay,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberReplace].
@@ -1367,21 +1325,22 @@ val Button.Id.Companion.replace by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberReplace(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             (
                 editorContext.selection.type == DesignBlockType.Audio ||
                     (
                         editorContext.selection.type == DesignBlockType.Graphic &&
-                            editorContext.selection.fillType == FillType.Image || editorContext.selection.fillType == FillType.Video
+                            editorContext.selection.fillType == FillType.Image ||
+                            editorContext.selection.fillType == FillType.Video
                     )
-            ) && editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "fill/change")
+            ) &&
+                editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "fill/change")
         }
     },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
@@ -1392,44 +1351,42 @@ fun Button.Companion.rememberReplace(
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
-        val libraryCategory =
-            when (editorContext.selection.type) {
-                DesignBlockType.Audio -> editorContext.assetLibrary.audios
-                DesignBlockType.Graphic ->
-                    when (editorContext.selection.fillType) {
-                        FillType.Video -> editorContext.assetLibrary.videos
-                        FillType.Image -> {
-                            when (editorContext.selection.kind) {
-                                KIND_STICKER -> editorContext.assetLibrary.stickers
-                                else -> editorContext.assetLibrary.images
-                            }
-                        }
-                        else -> {
-                            error(
-                                "Unsupported fillType ${editorContext.selection.fillType} for replace inspector bar button.",
-                            )
+        val libraryCategory = when (editorContext.selection.type) {
+            DesignBlockType.Audio -> editorContext.assetLibrary.audios
+            DesignBlockType.Graphic ->
+                when (editorContext.selection.fillType) {
+                    FillType.Video -> editorContext.assetLibrary.videos
+                    FillType.Image -> {
+                        when (editorContext.selection.kind) {
+                            KIND_STICKER -> editorContext.assetLibrary.stickers
+                            else -> editorContext.assetLibrary.images
                         }
                     }
-                else -> error("Unsupported type ${editorContext.selection.type} for replace inspector bar button.")
-            }(editorContext.engine.scene.getMode())
+                    else -> {
+                        error(
+                            "Unsupported fillType ${editorContext.selection.fillType} for replace inspector bar button.",
+                        )
+                    }
+                }
+            else -> error("Unsupported type ${editorContext.selection.type} for replace inspector bar button.")
+        }(editorContext.engine.scene.getMode())
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.LibraryReplace(libraryCategory = libraryCategory)))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.replace,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.replace,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberEnterGroup].
@@ -1468,12 +1425,11 @@ val Button.Id.Companion.enterGroup by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberEnterGroup(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             editorContext.selection.type == DesignBlockType.Group
@@ -1490,21 +1446,20 @@ fun Button.Companion.rememberEnterGroup(
         editorContext.eventHandler.send(EditorEvent.Selection.EnterGroup())
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.enterGroup,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.enterGroup,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberSelectGroup].
@@ -1543,12 +1498,11 @@ val Button.Id.Companion.selectGroup by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberSelectGroup(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             editorContext.engine.isGrouped(editorContext.selection)
@@ -1565,21 +1519,20 @@ fun Button.Companion.rememberSelectGroup(
         editorContext.eventHandler.send(EditorEvent.Selection.SelectGroup())
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.selectGroup,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.selectGroup,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberDelete].
@@ -1619,12 +1572,11 @@ val Button.Id.Companion.delete by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberDelete(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             editorContext.selection.type != DesignBlockType.Page &&
@@ -1642,21 +1594,20 @@ fun Button.Companion.rememberDelete(
         editorContext.eventHandler.send(EditorEvent.Selection.Delete())
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.delete,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.delete,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberEditText].
@@ -1696,12 +1647,11 @@ val Button.Id.Companion.editText by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberEditText(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             editorContext.selection.type == DesignBlockType.Text &&
@@ -1719,21 +1669,20 @@ fun Button.Companion.rememberEditText(
         editorContext.eventHandler.send(EditorEvent.Selection.EnterTextEditMode())
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.editText,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.editText,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberFormatText].
@@ -1772,12 +1721,11 @@ val Button.Id.Companion.formatText by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberFormatText(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             editorContext.selection.type == DesignBlockType.Text &&
@@ -1795,21 +1743,20 @@ fun Button.Companion.rememberFormatText(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.FormatText()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.formatText,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.formatText,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberShape].
@@ -1851,26 +1798,24 @@ val Button.Id.Companion.shape by unsafeLazy {
  */
 @Composable
 fun Button.Companion.rememberShape(
-    scope: ButtonScope =
-        (LocalEditorScope.current as InspectorBar.Scope).run {
-            rememberLastValue(this) {
-                if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
-            }
-        },
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             val designBlock = editorContext.selection.designBlock
             (editorContext.selection.fillType != FillType.Image || editorContext.selection.kind != KIND_STICKER) &&
                 editorContext.engine.block.isAllowedByScope(designBlock, "shape/change") &&
                 run {
-                    val shapeType =
-                        if (editorContext.engine.block.supportsShape(designBlock)) {
-                            ShapeType.get(
-                                editorContext.engine.block.getType(editorContext.engine.block.getShape(designBlock)),
-                            )
-                        } else {
-                            null
-                        }
+                    val shapeType = if (editorContext.engine.block.supportsShape(designBlock)) {
+                        ShapeType.get(
+                            editorContext.engine.block.getType(editorContext.engine.block.getShape(designBlock)),
+                        )
+                    } else {
+                        null
+                    }
                     shapeType in arrayOf(ShapeType.Star, ShapeType.Polygon, ShapeType.Line, ShapeType.Rect)
                 }
         }
@@ -1886,18 +1831,17 @@ fun Button.Companion.rememberShape(
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Shape()))
     },
     `_`: Nothing = nothing,
-): Button =
-    remember(
-        id = Button.Id.shape,
-        scope = scope,
-        visible = visible,
-        enterTransition = enterTransition,
-        exitTransition = exitTransition,
-        decoration = decoration,
-        vectorIcon = vectorIcon,
-        text = text,
-        tint = tint,
-        enabled = enabled,
-        onClick = onClick,
-        `_` = `_`,
-    )
+): Button = remember(
+    id = Button.Id.shape,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    `_` = `_`,
+)

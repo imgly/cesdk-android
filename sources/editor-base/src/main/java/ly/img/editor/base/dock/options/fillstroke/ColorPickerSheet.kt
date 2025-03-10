@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import ly.img.editor.base.components.NestedSheetHeader
-import ly.img.editor.base.components.color_picker.ColorPicker
+import ly.img.editor.base.components.colorpicker.ColorPicker
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.base.ui.Event
 import ly.img.editor.core.event.EditorEvent

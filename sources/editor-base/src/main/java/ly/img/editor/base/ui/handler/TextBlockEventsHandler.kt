@@ -129,16 +129,15 @@ fun EventsHandler.textBlockEvents(
     register<OnChangeSizeMode> {
         val changedSizeMode = SizeModeUi.valueOf(it.sizeMode)
 
-        val (newHeightMode, newWidthMode) =
-            when (changedSizeMode) {
-                SizeModeUi.ABSOLUTE ->
-                    Pair(SizeMode.ABSOLUTE, SizeMode.ABSOLUTE)
-                SizeModeUi.AUTO_HEIGHT ->
-                    Pair(SizeMode.AUTO, SizeMode.ABSOLUTE)
-                SizeModeUi.AUTO_SIZE ->
-                    Pair(SizeMode.AUTO, SizeMode.AUTO)
-                SizeModeUi.UNKNOWN -> throw IllegalStateException("Unknown size mode")
-            }
+        val (newHeightMode, newWidthMode) = when (changedSizeMode) {
+            SizeModeUi.ABSOLUTE ->
+                Pair(SizeMode.ABSOLUTE, SizeMode.ABSOLUTE)
+            SizeModeUi.AUTO_HEIGHT ->
+                Pair(SizeMode.AUTO, SizeMode.ABSOLUTE)
+            SizeModeUi.AUTO_SIZE ->
+                Pair(SizeMode.AUTO, SizeMode.AUTO)
+            SizeModeUi.UNKNOWN -> throw IllegalStateException("Unknown size mode")
+        }
 
         if (
             newWidthMode != engine.block.getWidthMode(block) ||

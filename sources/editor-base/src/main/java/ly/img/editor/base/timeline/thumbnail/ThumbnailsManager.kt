@@ -13,9 +13,7 @@ class ThumbnailsManager(
 ) {
     private val providers = hashMapOf<DesignBlock, ThumbnailsProvider>()
 
-    fun getProvider(designBlock: DesignBlock): ThumbnailsProvider? {
-        return providers[designBlock]
-    }
+    fun getProvider(designBlock: DesignBlock): ThumbnailsProvider? = providers[designBlock]
 
     fun destroyProvider(designBlock: DesignBlock) {
         val provider = providers.remove(designBlock)
@@ -28,10 +26,9 @@ class ThumbnailsManager(
     ) {
         if (clip.clipType == ClipType.Audio) return
 
-        val provider =
-            providers.getOrPut(clip.id) {
-                ThumbnailsProvider(engine, scope)
-            }
+        val provider = providers.getOrPut(clip.id) {
+            ThumbnailsProvider(engine, scope)
+        }
         provider.loadThumbnails(clip, width)
     }
 }

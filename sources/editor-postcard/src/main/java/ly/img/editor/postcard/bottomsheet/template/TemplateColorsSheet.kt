@@ -1,4 +1,4 @@
-package ly.img.editor.postcard.bottomsheet.template_colors
+package ly.img.editor.postcard.bottomsheet.template
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
@@ -102,7 +102,9 @@ fun TemplateColorsSheet(
 private sealed interface ScreenState {
     data object Main : ScreenState
 
-    data class SectionColorPicker(val namedColor: NamedColor) : ScreenState
+    data class SectionColorPicker(
+        val namedColor: NamedColor,
+    ) : ScreenState
 }
 
 class TemplateColorsBottomSheetContent(

@@ -24,12 +24,11 @@ internal fun AssetColumn(
 ) {
     val activatedPreviewItemId = remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
-    val exoPlayerInstance by
-        remember {
-            lazy {
-                ExoPlayer.Builder(context.applicationContext).build()
-            }
+    val exoPlayerInstance by remember {
+        lazy {
+            ExoPlayer.Builder(context.applicationContext).build()
         }
+    }
 
     DisposableEffect(exoPlayerInstance) {
         onDispose {

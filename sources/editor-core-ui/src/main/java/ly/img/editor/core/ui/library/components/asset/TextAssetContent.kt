@@ -31,12 +31,11 @@ internal fun TextAssetContent(
     onAssetLongClick: (WrappedAsset) -> Unit,
 ) {
     ListItem(
-        modifier =
-            Modifier
-                .combinedClickable(
-                    onClick = { onAssetClick(wrappedAsset) },
-                    onLongClick = { onAssetLongClick(wrappedAsset) },
-                ),
+        modifier = Modifier
+            .combinedClickable(
+                onClick = { onAssetClick(wrappedAsset) },
+                onLongClick = { onAssetLongClick(wrappedAsset) },
+            ),
         headlineContent = {
             Text(
                 text = wrappedAsset.asset.label ?: "",
@@ -48,20 +47,18 @@ internal fun TextAssetContent(
         },
         trailingContent = {
             Box(
-                modifier =
-                    Modifier
-                        .clip(MaterialTheme.shapes.extraSmall)
-                        .background(MaterialTheme.colorScheme.surface3)
-                        .size(24.dp),
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.extraSmall)
+                    .background(MaterialTheme.colorScheme.surface3)
+                    .size(24.dp),
             ) {
                 Icon(
                     imageVector = IconPack.Add,
                     contentDescription = stringResource(id = R.string.ly_img_editor_add),
                     tint = MaterialTheme.colorScheme.onSurface,
-                    modifier =
-                        Modifier
-                            .size(16.dp)
-                            .align(Alignment.Center),
+                    modifier = Modifier
+                        .size(16.dp)
+                        .align(Alignment.Center),
                 )
             }
         },

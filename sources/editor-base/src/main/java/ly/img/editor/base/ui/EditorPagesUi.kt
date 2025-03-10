@@ -72,9 +72,8 @@ fun EditorPagesUi(
     ) {
         cachedState?.let { cachedState ->
             Box(
-                modifier =
-                    Modifier
-                        .background(color = MaterialTheme.colorScheme.surface1),
+                modifier = Modifier
+                    .background(color = MaterialTheme.colorScheme.surface1),
             ) {
                 val shape = remember { RoundedCornerShape(12.dp) }
                 val borderShape = remember { RoundedCornerShape(18.dp) }
@@ -108,31 +107,27 @@ fun EditorPagesUi(
                                 }
                             }
                             Column(
-                                modifier =
-                                    Modifier
-                                        .animateGridItem()
-                                        .fillMaxWidth(),
+                                modifier = Modifier
+                                    .animateGridItem()
+                                    .fillMaxWidth(),
                             ) {
-                                val borderColor =
-                                    if (page == cachedState.selectedPage) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        Color.Transparent
-                                    }
+                                val borderColor = if (page == cachedState.selectedPage) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    Color.Transparent
+                                }
                                 Box(
-                                    modifier =
-                                        Modifier
-                                            .padding(2.dp)
-                                            .fillMaxWidth()
-                                            .border(color = borderColor, shape = borderShape, width = 3.dp),
+                                    modifier = Modifier
+                                        .padding(2.dp)
+                                        .fillMaxWidth()
+                                        .border(color = borderColor, shape = borderShape, width = 3.dp),
                                 ) {
                                     var clickData by remember { mutableStateOf(0 to 0L) }
                                     Card(
-                                        modifier =
-                                            Modifier
-                                                .padding(6.dp)
-                                                .fillMaxWidth()
-                                                .aspectRatio(cachedState.pageAspectRatio),
+                                        modifier = Modifier
+                                            .padding(6.dp)
+                                            .fillMaxWidth()
+                                            .aspectRatio(cachedState.pageAspectRatio),
                                         onClick = {
                                             val (clickCounter, lastClickTime) = clickData
                                             val newClickTime = System.currentTimeMillis()
@@ -153,18 +148,16 @@ fun EditorPagesUi(
                                             clickData = newClickCounter to newClickTime
                                         },
                                         shape = shape,
-                                        elevation =
-                                            CardDefaults.cardElevation(
-                                                defaultElevation = 2.dp,
-                                                pressedElevation = 2.dp,
-                                            ),
+                                        elevation = CardDefaults.cardElevation(
+                                            defaultElevation = 2.dp,
+                                            pressedElevation = 2.dp,
+                                        ),
                                     ) {
                                         Box(
-                                            modifier =
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .aspectRatio(cachedState.pageAspectRatio)
-                                                    .onSizeChanged { imageHeight = it.height },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .aspectRatio(cachedState.pageAspectRatio)
+                                                .onSizeChanged { imageHeight = it.height },
                                             contentAlignment = Alignment.Center,
                                         ) {
                                             if (loadingDelayPassed && page.thumbnail == null) {
@@ -175,21 +168,18 @@ fun EditorPagesUi(
                                             }
                                             ly.img.editor.compose.animation.AnimatedVisibility(
                                                 visible = page.thumbnail != null,
-                                                enter =
-                                                    fadeIn(
-                                                        animationSpec = tween(durationMillis = FADE_ANIMATION_DURATION),
-                                                    ),
-                                                exit =
-                                                    fadeOut(
-                                                        animationSpec = tween(durationMillis = FADE_ANIMATION_DURATION),
-                                                    ),
+                                                enter = fadeIn(
+                                                    animationSpec = tween(durationMillis = FADE_ANIMATION_DURATION),
+                                                ),
+                                                exit = fadeOut(
+                                                    animationSpec = tween(durationMillis = FADE_ANIMATION_DURATION),
+                                                ),
                                             ) {
                                                 page.thumbnail?.let {
                                                     Image(
-                                                        modifier =
-                                                            Modifier
-                                                                .fillMaxWidth()
-                                                                .aspectRatio(cachedState.pageAspectRatio),
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .aspectRatio(cachedState.pageAspectRatio),
                                                         bitmap = it.asImageBitmap(),
                                                         contentDescription = null,
                                                     )
@@ -199,48 +189,43 @@ fun EditorPagesUi(
                                     }
                                 }
                                 Text(
-                                    modifier =
-                                        Modifier
-                                            .padding(top = 12.dp)
-                                            .align(Alignment.CenterHorizontally),
+                                    modifier = Modifier
+                                        .padding(top = 12.dp)
+                                        .align(Alignment.CenterHorizontally),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color =
-                                        if (page == cachedState.selectedPage) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurface
-                                        },
+                                    color = if (page == cachedState.selectedPage) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    },
                                     text = "${index + 1}",
                                 )
                             }
                         } else {
                             Card(
-                                modifier =
-                                    Modifier
-                                        .padding(8.dp)
-                                        .fillMaxWidth()
-                                        .animateGridItem()
-                                        .aspectRatio(cachedState.pageAspectRatio),
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth()
+                                    .animateGridItem()
+                                    .aspectRatio(cachedState.pageAspectRatio),
                                 onClick = {
                                     onEvent(Event.OnAddPage(index))
                                 },
                                 border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outlineVariant),
                                 shape = shape,
-                                colors =
-                                    CardDefaults.cardColors(
-                                        containerColor = Color.Transparent,
-                                    ),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.Transparent,
+                                ),
                             ) {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
                                 ) {
                                     Image(
-                                        modifier =
-                                            Modifier
-                                                .size(40.dp)
-                                                .align(Alignment.Center)
-                                                .background(color = MaterialTheme.colorScheme.surface3, shape = shape)
-                                                .padding(8.dp),
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .align(Alignment.Center)
+                                            .background(color = MaterialTheme.colorScheme.surface3, shape = shape)
+                                            .padding(8.dp),
                                         imageVector = IconPack.Add,
                                         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
                                         contentDescription = null,

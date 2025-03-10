@@ -65,11 +65,10 @@ fun AddClipButton(
                 onEvent(Event.OnVideoCameraClick { callback = it })
             }
 
-            val galleryLauncher =
-                rememberGalleryLauncherForActivityResult(addToBackgroundTrack = true) { event ->
-                    showClipMenu = false
-                    libraryViewModel.onEvent(event)
-                }
+            val galleryLauncher = rememberGalleryLauncherForActivityResult(addToBackgroundTrack = true) { event ->
+                showClipMenu = false
+                libraryViewModel.onEvent(event)
+            }
             ClipMenuItem(
                 textResourceId = ly.img.editor.core.R.string.ly_img_editor_gallery,
                 icon = IconPack.AddGalleryBackground,

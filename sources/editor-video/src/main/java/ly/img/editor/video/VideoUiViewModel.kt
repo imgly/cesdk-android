@@ -28,26 +28,23 @@ class VideoUiViewModel(
         onError = onError,
         libraryViewModel = libraryViewModel,
     ) {
-    val uiState =
-        baseUiState.map {
-            VideoUiViewState(
-                editorUiViewState = baseUiState.value,
-                canExport = timelineState?.totalDuration?.isPositive() == true,
-            )
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = VideoUiViewState(baseUiState.value),
+    val uiState = baseUiState.map {
+        VideoUiViewState(
+            editorUiViewState = baseUiState.value,
+            canExport = timelineState?.totalDuration?.isPositive() == true,
         )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = VideoUiViewState(baseUiState.value),
+    )
 
     override val verticalPageInset = 1F
 
-    override fun getBlockForEvents(): Block {
-        return super.getBlockForEvents() ?: Block(
-            designBlock = engine.getCurrentPage(),
-            type = BlockType.Page,
-        )
-    }
+    override fun getBlockForEvents(): Block = super.getBlockForEvents() ?: Block(
+        designBlock = engine.getCurrentPage(),
+        type = BlockType.Page,
+    )
 
     override fun onPreCreate() {
         super.onPreCreate()

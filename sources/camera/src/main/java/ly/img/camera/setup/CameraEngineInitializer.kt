@@ -20,10 +20,9 @@ internal fun CameraEngineInitializer(
     val context = LocalContext.current
     val savedStateRegistryOwner = LocalSavedStateRegistryOwner.current
     LaunchedEffect(Unit) {
-        val deferredCameraProvider =
-            async {
-                ProcessCameraProvider.getInstance(context).await()
-            }
+        val deferredCameraProvider = async {
+            ProcessCameraProvider.getInstance(context).await()
+        }
         runCatching {
             engine.start(
                 license = engineConfiguration.license,

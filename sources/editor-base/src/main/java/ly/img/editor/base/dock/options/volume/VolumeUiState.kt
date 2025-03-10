@@ -12,12 +12,11 @@ data class VolumeUiState(
             designBlock: DesignBlock,
             engine: Engine,
         ): VolumeUiState {
-            val volumeBlock =
-                if (DesignBlockType.get(engine.block.getType(designBlock)) == DesignBlockType.Audio) {
-                    designBlock
-                } else {
-                    engine.block.getFill(designBlock)
-                }
+            val volumeBlock = if (DesignBlockType.get(engine.block.getType(designBlock)) == DesignBlockType.Audio) {
+                designBlock
+            } else {
+                engine.block.getFill(designBlock)
+            }
             val isMuted = engine.block.isMuted(volumeBlock)
             return VolumeUiState(if (isMuted) 0f else engine.block.getVolume(volumeBlock))
         }

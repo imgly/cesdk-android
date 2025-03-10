@@ -30,13 +30,12 @@ suspend fun Engine.awaitEngineAndSceneLoad() {
  * @return true if there is an active scene and it has scene mode [ly.img.engine.SceneMode.VIDEO], false otherwise.
  */
 val Engine.isSceneModeVideo: Boolean
-    get() =
-        try {
-            scene.getMode() == SceneMode.VIDEO
-        } catch (ex: IllegalArgumentException) {
-            // In case we don't have any active scene
-            false
-        }
+    get() = try {
+        scene.getMode() == SceneMode.VIDEO
+    } catch (ex: IllegalArgumentException) {
+        // In case we don't have any active scene
+        false
+    }
 
 fun Engine.deselectAllBlocks() {
     block.findAllSelected().forEach {
@@ -49,9 +48,7 @@ fun Engine.deselectAllBlocks() {
  *
  * @return the page at [index].
  */
-fun Engine.getPage(index: Int): DesignBlock {
-    return scene.getPages()[index]
-}
+fun Engine.getPage(index: Int): DesignBlock = scene.getPages()[index]
 
 /**
  * An extension function for getting the current page of the scene. The definition of current is defined
@@ -60,31 +57,22 @@ fun Engine.getPage(index: Int): DesignBlock {
  *
  * @return the current page in the scene.
  */
-fun Engine.getCurrentPage(): DesignBlock {
-    return scene.getCurrentPage() ?: getPage(0)
-}
+fun Engine.getCurrentPage(): DesignBlock = scene.getCurrentPage() ?: getPage(0)
 
-fun Engine.getScene(): DesignBlock {
-    return block.findByType(DesignBlockType.Scene).first()
-}
+fun Engine.getScene(): DesignBlock = block.findByType(DesignBlockType.Scene).first()
 
-fun Engine.getStackOrNull(): DesignBlock? {
-    return block.findByType(DesignBlockType.Stack).firstOrNull()
-}
+fun Engine.getStackOrNull(): DesignBlock? = block.findByType(DesignBlockType.Stack).firstOrNull()
 
-fun Engine.getCamera(): DesignBlock {
-    return block.findByType(DesignBlockType.Camera).first()
-}
+fun Engine.getCamera(): DesignBlock = block.findByType(DesignBlockType.Camera).first()
 
 fun Engine.dpToCanvasUnit(dp: Float): Float {
     val sceneUnit = block.getEnum(getScene(), "scene/designUnit")
     val sceneDpi = block.getFloat(getScene(), "scene/dpi")
-    val densityFactor =
-        when (sceneUnit) {
-            "Millimeter" -> sceneDpi / 25.4f
-            "Inch" -> sceneDpi
-            else -> 1f
-        }
+    val densityFactor = when (sceneUnit) {
+        "Millimeter" -> sceneDpi / 25.4f
+        "Inch" -> sceneDpi
+        else -> 1f
+    }
     val zoomLevel = scene.getZoomLevel()
     return dp * (block.getFloat(getCamera(), "camera/pixelRatio")) / (densityFactor * zoomLevel)
 }
@@ -138,14 +126,12 @@ private fun Engine.restoreScopes(
  *
  * @return the converted color.
  */
-fun RGBAColor.toComposeColor(): Color {
-    return Color(
-        red = this.r,
-        green = this.g,
-        blue = this.b,
-        alpha = this.a,
-    )
-}
+fun RGBAColor.toComposeColor(): Color = Color(
+    red = this.r,
+    green = this.g,
+    blue = this.b,
+    alpha = this.a,
+)
 
 /**
  * An extension function for converting any [Engine] color into an Engine RGBA color.
@@ -153,9 +139,8 @@ fun RGBAColor.toComposeColor(): Color {
  *
  * @return the converted color.
  */
-fun ly.img.engine.Color.toRGBColor(engine: Engine): RGBAColor {
-    return this as? RGBAColor ?: engine.editor.convertColorToColorSpace(this, ColorSpace.SRGB) as RGBAColor
-}
+fun ly.img.engine.Color.toRGBColor(engine: Engine): RGBAColor =
+    this as? RGBAColor ?: engine.editor.convertColorToColorSpace(this, ColorSpace.SRGB) as RGBAColor
 
 /**
  * An extension function for getting the [FillType] of the [designBlock]. Check the documentation of [FillType] for more information.
@@ -163,12 +148,11 @@ fun ly.img.engine.Color.toRGBColor(engine: Engine): RGBAColor {
  *
  * @return the [FillType] of the [designBlock].
  */
-fun BlockApi.getFillType(designBlock: DesignBlock): FillType? =
-    if (!this.supportsFill(designBlock)) {
-        null
-    } else {
-        FillType.get(this.getType(this.getFill(designBlock)))
-    }
+fun BlockApi.getFillType(designBlock: DesignBlock): FillType? = if (!this.supportsFill(designBlock)) {
+    null
+} else {
+    FillType.get(this.getType(this.getFill(designBlock)))
+}
 
 /**
  * An extension function for getting the [Fill] of the [designBlock]. Check the documentation of [Fill] for more information.
@@ -178,54 +162,51 @@ fun BlockApi.getFillType(designBlock: DesignBlock): FillType? =
  *
  * @return the [Fill] of the [designBlock] based on its [FillType] and engine's current state.
  */
-fun Engine.getFill(designBlock: DesignBlock): Fill? {
-    return if (!block.supportsFill(designBlock)) {
-        null
-    } else {
-        when (block.getFillType(designBlock)) {
-            FillType.Color -> {
-                val rgbaColor =
-                    if (DesignBlockType.getOrNull(block.getType(designBlock)) == DesignBlockType.Text) {
-                        block.getTextColors(designBlock).first().toRGBColor(this)
-                    } else {
-                        block.getColor(designBlock, "fill/solid/color") as RGBAColor
-                    }
-                SolidFill(rgbaColor.toComposeColor())
+fun Engine.getFill(designBlock: DesignBlock): Fill? = if (!block.supportsFill(designBlock)) {
+    null
+} else {
+    when (block.getFillType(designBlock)) {
+        FillType.Color -> {
+            val rgbaColor = if (DesignBlockType.getOrNull(block.getType(designBlock)) == DesignBlockType.Text) {
+                block.getTextColors(designBlock).first().toRGBColor(this)
+            } else {
+                block.getColor(designBlock, "fill/solid/color") as RGBAColor
             }
-
-            FillType.LinearGradient -> {
-                val fill = block.getFill(designBlock)
-                LinearGradientFill(
-                    startPointX = block.getFloat(fill, "fill/gradient/linear/startPointX"),
-                    startPointY = block.getFloat(fill, "fill/gradient/linear/startPointY"),
-                    endPointX = block.getFloat(fill, "fill/gradient/linear/endPointX"),
-                    endPointY = block.getFloat(fill, "fill/gradient/linear/endPointY"),
-                    colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
-                )
-            }
-
-            FillType.RadialGradient -> {
-                val fill = block.getFill(designBlock)
-                RadialGradientFill(
-                    centerX = block.getFloat(fill, "fill/gradient/radial/centerPointX"),
-                    centerY = block.getFloat(fill, "fill/gradient/radial/centerPointY"),
-                    radius = block.getFloat(fill, "fill/gradient/radial/radius"),
-                    colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
-                )
-            }
-
-            FillType.ConicalGradient -> {
-                val fill = block.getFill(designBlock)
-                ConicalGradientFill(
-                    centerX = block.getFloat(fill, "fill/gradient/conical/centerPointX"),
-                    centerY = block.getFloat(fill, "fill/gradient/conical/centerPointY"),
-                    colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
-                )
-            }
-
-            // Image fill and Video fill are not supported yet
-            else -> null
+            SolidFill(rgbaColor.toComposeColor())
         }
+
+        FillType.LinearGradient -> {
+            val fill = block.getFill(designBlock)
+            LinearGradientFill(
+                startPointX = block.getFloat(fill, "fill/gradient/linear/startPointX"),
+                startPointY = block.getFloat(fill, "fill/gradient/linear/startPointY"),
+                endPointX = block.getFloat(fill, "fill/gradient/linear/endPointX"),
+                endPointY = block.getFloat(fill, "fill/gradient/linear/endPointY"),
+                colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+            )
+        }
+
+        FillType.RadialGradient -> {
+            val fill = block.getFill(designBlock)
+            RadialGradientFill(
+                centerX = block.getFloat(fill, "fill/gradient/radial/centerPointX"),
+                centerY = block.getFloat(fill, "fill/gradient/radial/centerPointY"),
+                radius = block.getFloat(fill, "fill/gradient/radial/radius"),
+                colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+            )
+        }
+
+        FillType.ConicalGradient -> {
+            val fill = block.getFill(designBlock)
+            ConicalGradientFill(
+                centerX = block.getFloat(fill, "fill/gradient/conical/centerPointX"),
+                centerY = block.getFloat(fill, "fill/gradient/conical/centerPointY"),
+                colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+            )
+        }
+
+        // Image fill and Video fill are not supported yet
+        else -> null
     }
 }
 
@@ -249,10 +230,8 @@ fun Engine.getStrokeColor(designBlock: DesignBlock): Color? {
  * @param designBlock the design block that is being queried.
  * @return true if the design block is a background track, false otherwise.
  */
-fun BlockApi.isBackgroundTrack(designBlock: DesignBlock): Boolean {
-    return DesignBlockType.get(getType(designBlock)) == DesignBlockType.Track &&
-        isAlwaysOnBottom(designBlock)
-}
+fun BlockApi.isBackgroundTrack(designBlock: DesignBlock): Boolean = DesignBlockType.get(getType(designBlock)) == DesignBlockType.Track &&
+    isAlwaysOnBottom(designBlock)
 
 /**
  * An extension function for getting the background track from the scene.
@@ -261,9 +240,9 @@ fun BlockApi.isBackgroundTrack(designBlock: DesignBlock): Boolean {
  *
  * @return the design block of the background track.
  */
-fun Engine.getBackgroundTrack(): DesignBlock {
-    return block.findByType(DesignBlockType.Track).firstOrNull { block.isBackgroundTrack(it) } ?: createBackgroundTrack()
-}
+fun Engine.getBackgroundTrack(): DesignBlock = block.findByType(DesignBlockType.Track).firstOrNull {
+    block.isBackgroundTrack(it)
+} ?: createBackgroundTrack()
 
 private fun Engine.createBackgroundTrack(): DesignBlock {
     val backgroundTrack = block.create(DesignBlockType.Track)

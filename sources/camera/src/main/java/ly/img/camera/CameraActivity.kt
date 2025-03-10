@@ -47,22 +47,20 @@ open class CameraActivity : ComponentActivity() {
                 val viewModel = viewModel<CameraViewModel>()
 
                 // fail early
-                val engineConfig =
-                    viewModel.engineConfiguration ?: run {
-                        Log.i("CameraActivity", "EngineConfiguration not found in intent, finishing...")
-                        finish()
-                        return@EditorTheme
-                    }
+                val engineConfig = viewModel.engineConfiguration ?: run {
+                    Log.i("CameraActivity", "EngineConfiguration not found in intent, finishing...")
+                    finish()
+                    return@EditorTheme
+                }
 
                 SystemNavBar(LocalExtendedColorScheme.current.black)
 
                 Box(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .background(LocalExtendedColorScheme.current.black)
-                            .systemBarsPadding()
-                            .background(MaterialTheme.colorScheme.surface),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(LocalExtendedColorScheme.current.black)
+                        .systemBarsPadding()
+                        .background(MaterialTheme.colorScheme.surface),
                 ) {
                     val context = LocalContext.current
 
@@ -83,11 +81,10 @@ open class CameraActivity : ComponentActivity() {
                         )
                     } else {
                         SetupView(
-                            modifier =
-                                Modifier
-                                    .fillMaxSize()
-                                    .align(Alignment.TopCenter)
-                                    .padding(top = TOOLBAR_HEIGHT, bottom = 196.dp),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .align(Alignment.TopCenter)
+                                .padding(top = TOOLBAR_HEIGHT, bottom = 196.dp),
                             hasRequiredPermissions = hasRequiredPermissions,
                             isLoading = initResult == null,
                             error = initResult?.exceptionOrNull(),

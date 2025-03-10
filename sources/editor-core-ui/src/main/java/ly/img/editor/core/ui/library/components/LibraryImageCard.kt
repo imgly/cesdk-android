@@ -50,24 +50,22 @@ internal fun LibraryImageCard(
 ) {
     var state by remember { mutableStateOf(ImageState.Loading) }
     GradientCard(
-        modifier =
-            modifier
-                .testTag(tag = "LibraryImageCard${uri?.toUri()?.path}")
-                .aspectRatio(1f)
-                .ifTrue(state == ImageState.Loading) {
-                    shimmerWithLocalShimmer()
-                },
+        modifier = modifier
+            .testTag(tag = "LibraryImageCard${uri?.toUri()?.path}")
+            .aspectRatio(1f)
+            .ifTrue(state == ImageState.Loading) {
+                shimmerWithLocalShimmer()
+            },
         onClick = onClick,
         onLongClick = onLongClick,
         cornerRadius = cornerRadius,
     ) {
         if (uri != null) {
             AsyncImage(
-                model =
-                    ImageRequest.Builder(LocalContext.current)
-                        .data(uri)
-                        .addHeader(HEADER_USER_AGENT_KEY, HEADER_USER_AGENT_VALUE)
-                        .build(),
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(uri)
+                    .addHeader(HEADER_USER_AGENT_KEY, HEADER_USER_AGENT_VALUE)
+                    .build(),
                 onLoading = {
                     state = ImageState.Loading
                 },
@@ -79,44 +77,42 @@ internal fun LibraryImageCard(
                 },
                 contentScale = contentScale,
                 contentDescription = null,
-                placeholder =
-                    if (LocalInspectionMode.current) {
-                        GradientPainter(
-                            Brush.linearGradient(
-                                colors = listOf(Color.Blue, Color.Red),
-                            ),
-                        )
-                    } else {
-                        null
-                    },
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding),
-                colorFilter =
-                    if (tintImages) {
-                        ColorFilter.tint(
-                            MaterialTheme.colorScheme.onSurface,
-                        )
-                    } else {
-                        null
-                    },
+                placeholder = if (LocalInspectionMode.current) {
+                    GradientPainter(
+                        Brush.linearGradient(
+                            colors = listOf(Color.Blue, Color.Red),
+                        ),
+                    )
+                } else {
+                    null
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding),
+                colorFilter = if (tintImages) {
+                    ColorFilter.tint(
+                        MaterialTheme.colorScheme.onSurface,
+                    )
+                } else {
+                    null
+                },
             )
         }
         if (state == ImageState.Error) {
             Icon(
                 IconPack.Erroroutline,
                 contentDescription = null,
-                modifier =
-                    Modifier
-                        .size(18.dp)
-                        .align(Alignment.Center),
+                modifier = Modifier
+                    .size(18.dp)
+                    .align(Alignment.Center),
             )
         }
     }
 }
 
-class GradientPainter(private val brush: Brush) : Painter() {
+class GradientPainter(
+    private val brush: Brush,
+) : Painter() {
     override val intrinsicSize: Size
         get() = Size(256f, 256f)
 

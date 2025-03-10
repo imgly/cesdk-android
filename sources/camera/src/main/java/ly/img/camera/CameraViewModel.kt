@@ -51,10 +51,9 @@ internal class CameraViewModel(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     @OptIn(UnstableEngineApi::class)
-    val engine =
-        Engine.getInstance("ly.img.camera").also {
-            it.idlingEnabled = true
-        }
+    val engine = Engine.getInstance("ly.img.camera").also {
+        it.idlingEnabled = true
+    }
 
     private val cameraInput = savedStateHandle.get<CaptureVideo.Input>(CaptureVideo.INTENT_KEY_CAMERA_INPUT)
     val engineConfiguration: EngineConfiguration? = cameraInput?.engineConfiguration
@@ -63,44 +62,40 @@ internal class CameraViewModel(
 
     private var reactionVideoIsPlaying = false
 
-    private val previewUseCase =
-        Preview
-            .Builder()
-            .setResolutionSelector(
-                ResolutionSelector
-                    .Builder()
-                    .setResolutionStrategy(
-                        ResolutionStrategy(
-                            Size(
-                                cameraConfiguration.videoSize.width.toInt(),
-                                cameraConfiguration.videoSize.height.toInt(),
-                            ),
-                            ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
+    private val previewUseCase = Preview
+        .Builder()
+        .setResolutionSelector(
+            ResolutionSelector
+                .Builder()
+                .setResolutionStrategy(
+                    ResolutionStrategy(
+                        Size(
+                            cameraConfiguration.videoSize.width.toInt(),
+                            cameraConfiguration.videoSize.height.toInt(),
                         ),
-                    ).setAspectRatioStrategy(AspectRatioStrategy.RATIO_16_9_FALLBACK_AUTO_STRATEGY)
-                    .build(),
-            ).build()
+                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
+                    ),
+                ).setAspectRatioStrategy(AspectRatioStrategy.RATIO_16_9_FALLBACK_AUTO_STRATEGY)
+                .build(),
+        ).build()
 
-    private val videoCaptureUseCase =
-        VideoCapture
-            .Builder(Recorder.Builder().build())
-            .setMirrorMode(MIRROR_MODE_ON_FRONT_ONLY)
-            .build()
+    private val videoCaptureUseCase = VideoCapture
+        .Builder(Recorder.Builder().build())
+        .setMirrorMode(MIRROR_MODE_ON_FRONT_ONLY)
+        .build()
 
-    val cameraState =
-        CameraState(
-            previewUseCase = previewUseCase,
-            videoCaptureUseCase = videoCaptureUseCase,
-            startWithFrontCamera = cameraMode is CameraMode.Reaction,
-        )
+    val cameraState = CameraState(
+        previewUseCase = previewUseCase,
+        videoCaptureUseCase = videoCaptureUseCase,
+        startWithFrontCamera = cameraMode is CameraMode.Reaction,
+    )
 
-    val recordingManager =
-        RecordingManager(
-            maxDuration = cameraConfiguration.maxTotalDuration,
-            allowExceedingMaxDuration = cameraConfiguration.allowExceedingMaxDuration,
-            coroutineScope = viewModelScope,
-            videoRecorder = VideoRecorder(videoCaptureUseCase),
-        )
+    val recordingManager = RecordingManager(
+        maxDuration = cameraConfiguration.maxTotalDuration,
+        allowExceedingMaxDuration = cameraConfiguration.allowExceedingMaxDuration,
+        coroutineScope = viewModelScope,
+        videoRecorder = VideoRecorder(videoCaptureUseCase),
+    )
 
     var cameraLayoutMode by mutableStateOf(
         when ((cameraMode as? CameraMode.Reaction)?.cameraLayoutMode) {
@@ -245,22 +240,20 @@ internal class CameraViewModel(
         }
     }
 
-    fun getResult(): CameraResult =
-        when (cameraMode) {
-            is CameraMode.Reaction ->
-                CameraResult.Reaction(
-                    video =
-                        Video(
-                            uri = cameraMode.video,
-                            rect = layoutState.rect1,
-                        ),
-                    reaction = ArrayList(recordingManager.state.recordings),
-                )
-            is CameraMode.Standard ->
-                CameraResult.Record(
-                    recordings = ArrayList(recordingManager.state.recordings),
-                )
-        }
+    fun getResult(): CameraResult = when (cameraMode) {
+        is CameraMode.Reaction ->
+            CameraResult.Reaction(
+                video = Video(
+                    uri = cameraMode.video,
+                    rect = layoutState.rect1,
+                ),
+                reaction = ArrayList(recordingManager.state.recordings),
+            )
+        is CameraMode.Standard ->
+            CameraResult.Record(
+                recordings = ArrayList(recordingManager.state.recordings),
+            )
+    }
 
     private fun loadVideo() {
         viewModelScope.launch {

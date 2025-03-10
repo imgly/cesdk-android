@@ -13,11 +13,10 @@ import ly.img.editor.base.timeline.state.TimelineConfiguration
 @Composable
 fun BackgroundTrackDivider(modifier: Modifier) {
     Box(
-        modifier =
-            modifier
-                .height(TimelineConfiguration.backgroundTrackDividerHeight)
-                .fillMaxWidth()
-                .alpha(0.5f)
-                .background(MaterialTheme.colorScheme.outlineVariant),
+        modifier = modifier
+            .height(TimelineConfiguration.backgroundTrackDividerHeight)
+            .fillMaxWidth()
+            .alpha(0.5f)
+            .background(MaterialTheme.colorScheme.outlineVariant),
     )
 }

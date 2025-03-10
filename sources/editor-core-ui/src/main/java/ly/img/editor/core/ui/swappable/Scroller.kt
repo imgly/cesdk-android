@@ -50,43 +50,39 @@ internal class Scroller(
         if (!canScroll(direction)) return
 
         this.scrollJobInfo = scrollJobInfo
-        scrollJob =
-            scope.launch {
-                while (true) {
-                    try {
-                        if (!canScroll(direction)) break
+        scrollJob = scope.launch {
+            while (true) {
+                try {
+                    if (!canScroll(direction)) break
 
-                        val duration = 100L
-                        val diff =
-                            when (direction) {
-                                ScrollDirection.Backward -> -multipliedScrollOffset
-                                ScrollDirection.Forward -> multipliedScrollOffset
-                            }
-                        launch {
-                            state.animateScrollBy(
-                                diff,
-                                tween(durationMillis = duration.toInt(), easing = LinearEasing),
-                            )
-                        }
-
-                        launch {
-                            // keep dragging item in visible area to prevent it from disappearing
-                            swapDraggingItemToEndIfNecessary(draggingItemProvider, direction)
-                        }
-
-                        delay(duration)
-                    } catch (e: Exception) {
-                        break
+                    val duration = 100L
+                    val diff = when (direction) {
+                        ScrollDirection.Backward -> -multipliedScrollOffset
+                        ScrollDirection.Forward -> multipliedScrollOffset
                     }
+                    launch {
+                        state.animateScrollBy(
+                            diff,
+                            tween(durationMillis = duration.toInt(), easing = LinearEasing),
+                        )
+                    }
+
+                    launch {
+                        // keep dragging item in visible area to prevent it from disappearing
+                        swapDraggingItemToEndIfNecessary(draggingItemProvider, direction)
+                    }
+
+                    delay(duration)
+                } catch (e: Exception) {
+                    break
                 }
             }
+        }
     }
 
-    private fun canScroll(direction: ScrollDirection): Boolean {
-        return when (direction) {
-            ScrollDirection.Backward -> state.canScrollBackward
-            ScrollDirection.Forward -> state.canScrollForward
-        }
+    private fun canScroll(direction: ScrollDirection): Boolean = when (direction) {
+        ScrollDirection.Backward -> state.canScrollBackward
+        ScrollDirection.Forward -> state.canScrollForward
     }
 
     private fun swapDraggingItemToEndIfNecessary(
@@ -95,21 +91,19 @@ internal class Scroller(
     ) {
         val draggingItem = draggingItemProvider() ?: return
         val itemsInContentArea = state.layoutInfo.getItemsInContentArea()
-        val draggingItemIsAtTheEnd =
-            when (direction) {
-                ScrollDirection.Backward -> itemsInContentArea.firstOrNull()?.index?.let { draggingItem.index < it }
-                ScrollDirection.Forward -> itemsInContentArea.lastOrNull()?.index?.let { draggingItem.index > it }
-            } ?: false
+        val draggingItemIsAtTheEnd = when (direction) {
+            ScrollDirection.Backward -> itemsInContentArea.firstOrNull()?.index?.let { draggingItem.index < it }
+            ScrollDirection.Forward -> itemsInContentArea.lastOrNull()?.index?.let { draggingItem.index > it }
+        } ?: false
 
         if (draggingItemIsAtTheEnd) return
 
-        val targetItem =
-            itemsInContentArea.let {
-                when (direction) {
-                    ScrollDirection.Backward -> it.firstOrNull()
-                    ScrollDirection.Forward -> it.lastOrNull()
-                }
+        val targetItem = itemsInContentArea.let {
+            when (direction) {
+                ScrollDirection.Backward -> it.firstOrNull()
+                ScrollDirection.Forward -> it.lastOrNull()
             }
+        }
         if (targetItem != null && targetItem.index != draggingItem.index) {
             swapItems(draggingItem, targetItem)
         }

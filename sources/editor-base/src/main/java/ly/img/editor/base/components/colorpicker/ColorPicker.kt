@@ -1,4 +1,4 @@
-package ly.img.editor.base.components.color_picker
+package ly.img.editor.base.components.colorpicker
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -125,9 +125,13 @@ fun ColorPicker(
                 columns = GridCells.Fixed(5),
             ) {
                 items(fillAndStrokeColors + secondaryColors) {
-                    ColorButton(color = it, selected = composeColor == it, onClick = {
-                        onPresetColorClick(it)
-                    })
+                    ColorButton(
+                        color = it,
+                        selected = composeColor == it,
+                        onClick = {
+                            onPresetColorClick(it)
+                        },
+                    )
                 }
             }
         }

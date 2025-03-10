@@ -103,16 +103,15 @@ internal fun LibrarySearchHeader(
                     )
                 }
                 SearchTextField(
-                    modifier =
-                        Modifier
-                            .onFocusChanged {
-                                if (it.isFocused) {
-                                    onSearchFocus()
-                                }
+                    modifier = Modifier
+                        .onFocusChanged {
+                            if (it.isFocused) {
+                                onSearchFocus()
                             }
-                            .focusRequester(focusRequester)
-                            .padding(8.dp)
-                            .fillMaxWidth(),
+                        }
+                        .focusRequester(focusRequester)
+                        .padding(8.dp)
+                        .fillMaxWidth(),
                     textFieldValue = textFieldValue,
                     placeholder = {
                         Text(stringResource(R.string.ly_img_editor_search_placeholder, stringResource(id = uiState.titleRes)))
@@ -125,18 +124,22 @@ internal fun LibrarySearchHeader(
                         onLibraryEvent(LibraryEvent.OnSearchTextChange(it.text, uiState.libraryCategory, debounce = true))
                     },
                     leadingIcon = {
-                        IconButton(onClick = {
-                            onLibraryEvent(LibraryEvent.OnEnterSearchMode(enter = false, uiState.libraryCategory))
-                        }) {
+                        IconButton(
+                            onClick = {
+                                onLibraryEvent(LibraryEvent.OnEnterSearchMode(enter = false, uiState.libraryCategory))
+                            },
+                        ) {
                             Icon(CoreIconPack.ArrowBack, contentDescription = stringResource(R.string.ly_img_editor_back))
                         }
                     },
                     trailingIcon = {
                         if (uiState.searchText.isNotEmpty()) {
-                            IconButton(onClick = {
-                                textFieldValue = textFieldValue.copy(text = "", selection = TextRange(0))
-                                onLibraryEvent(LibraryEvent.OnSearchTextChange("", uiState.libraryCategory))
-                            }) {
+                            IconButton(
+                                onClick = {
+                                    textFieldValue = textFieldValue.copy(text = "", selection = TextRange(0))
+                                    onLibraryEvent(LibraryEvent.OnSearchTextChange("", uiState.libraryCategory))
+                                },
+                            ) {
                                 Icon(CoreIconPack.Close, contentDescription = stringResource(R.string.ly_img_editor_search_clear))
                             }
                         }
@@ -156,9 +159,11 @@ internal fun LibrarySearchHeader(
                     },
                     navigationIcon = {
                         if (!uiState.isRoot) {
-                            IconButton(onClick = {
-                                onLibraryEvent(LibraryEvent.OnPopStack(uiState.libraryCategory))
-                            }) {
+                            IconButton(
+                                onClick = {
+                                    onLibraryEvent(LibraryEvent.OnPopStack(uiState.libraryCategory))
+                                },
+                            ) {
                                 Icon(
                                     CoreIconPack.ArrowBack,
                                     contentDescription = stringResource(R.string.ly_img_editor_back),
@@ -183,9 +188,12 @@ internal fun LibrarySearchHeader(
                                     )
                                 },
                                 trailingIcon = {
-                                    IconButton(onClick = {
-                                        onLibraryEvent(LibraryEvent.OnSearchTextChange("", uiState.libraryCategory))
-                                    }, Modifier.size(InputChipDefaults.IconSize)) {
+                                    IconButton(
+                                        onClick = {
+                                            onLibraryEvent(LibraryEvent.OnSearchTextChange("", uiState.libraryCategory))
+                                        },
+                                        Modifier.size(InputChipDefaults.IconSize),
+                                    ) {
                                         Icon(
                                             CoreIconPack.Close,
                                             contentDescription = stringResource(R.string.ly_img_editor_search_clear),
@@ -233,29 +241,27 @@ private fun SearchTextField(
     maxLines: Int = 1,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.extraLarge,
-    colors: TextFieldColors =
-        TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surface3,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surface3,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-        ),
+    colors: TextFieldColors = TextFieldDefaults.colors(
+        focusedContainerColor = MaterialTheme.colorScheme.surface3,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surface3,
+        focusedIndicatorColor = Color.Transparent,
+        unfocusedIndicatorColor = Color.Transparent,
+    ),
 ) {
     val textColor = MaterialTheme.colorScheme.onSurface
     val mergedTextStyle = MaterialTheme.typography.bodyLarge.merge(TextStyle(color = textColor))
 
     BasicTextField(
         value = textFieldValue,
-        modifier =
-            modifier
-                .indicatorLine(
-                    enabled = true,
-                    isError = false,
-                    interactionSource = interactionSource,
-                    colors = colors,
-                    focusedIndicatorLineThickness = 0.dp, // to hide the indicator line
-                    unfocusedIndicatorLineThickness = 0.dp, // to hide the indicator line
-                ),
+        modifier = modifier
+            .indicatorLine(
+                enabled = true,
+                isError = false,
+                interactionSource = interactionSource,
+                colors = colors,
+                focusedIndicatorLineThickness = 0.dp, // to hide the indicator line
+                unfocusedIndicatorLineThickness = 0.dp, // to hide the indicator line
+            ),
         onValueChange = onValueChange,
         enabled = true,
         readOnly = false,

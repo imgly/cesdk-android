@@ -23,10 +23,9 @@ class FontDataMapper {
         weight: Int?,
     ): FontData {
         val finalWeight = weight ?: FontWeight.NORMAL.value
-        val displayFont =
-            typeface.fonts.firstOrNull {
-                it.weight.value == finalWeight && it.style == FontStyle.NORMAL
-            } ?: typeface.fonts.first()
+        val displayFont = typeface.fonts.firstOrNull {
+            it.weight.value == finalWeight && it.style == FontStyle.NORMAL
+        } ?: typeface.fonts.first()
         return FontData(
             typeface = typeface,
             uri = displayFont.uri,

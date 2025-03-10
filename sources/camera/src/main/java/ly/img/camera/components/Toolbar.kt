@@ -30,15 +30,14 @@ internal fun Toolbar(
     onCloseClick: () -> Unit,
 ) {
     Box(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .height(TOOLBAR_HEIGHT),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(TOOLBAR_HEIGHT),
     ) {
         IconButton(
-            modifier =
-                Modifier.align(Alignment.CenterStart)
-                    .padding(start = 12.dp),
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 12.dp),
             onClick = onCloseClick,
         ) {
             Icon(

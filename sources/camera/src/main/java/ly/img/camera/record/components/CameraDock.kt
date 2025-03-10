@@ -42,20 +42,18 @@ internal fun CameraDock(
 
         AnimatedVisibility(
             visible = state.status is RecordingManager.Status.Idle && state.recordings.isNotEmpty(),
-            modifier =
-                Modifier
-                    .align(Alignment.Center)
-                    .offset(x = (-80).dp),
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset(x = (-80).dp),
             enter = fadeIn() + slideInHorizontally(),
             exit = fadeOut() + slideOutHorizontally(),
         ) {
             var showDeleteLastRecordingDialog by remember { mutableStateOf(false) }
 
             IconButton(
-                colors =
-                    IconButtonDefaults.iconButtonColors(
-                        contentColor = LocalExtendedColorScheme.current.white,
-                    ),
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = LocalExtendedColorScheme.current.white,
+                ),
                 onClick = {
                     showDeleteLastRecordingDialog = true
                 },
@@ -63,10 +61,9 @@ internal fun CameraDock(
                 Shadowed {
                     Icon(
                         IconPack.Backspace,
-                        contentDescription =
-                            stringResource(
-                                ly.img.camera.R.string.ly_img_camera_delete_last_recording,
-                            ),
+                        contentDescription = stringResource(
+                            ly.img.camera.R.string.ly_img_camera_delete_last_recording,
+                        ),
                     )
                 }
             }
@@ -98,9 +95,8 @@ internal fun CameraDock(
         val context = LocalContext.current
 
         RecordingButton(
-            modifier =
-                Modifier
-                    .align(Alignment.Center),
+            modifier = Modifier
+                .align(Alignment.Center),
             recordingColor = cameraConfiguration.recordingColor,
             maxDuration = recordingManager.state.maxDuration,
             enabled = state.status != RecordingManager.Status.Disabled && cameraState.isReady && !state.hasReachedMaxDuration,

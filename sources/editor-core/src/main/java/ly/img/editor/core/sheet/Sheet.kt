@@ -38,12 +38,11 @@ interface SheetType {
      * @param libraryCategory the library category that should be displayed in the sheet.
      */
     class LibraryAdd(
-        override val style: SheetStyle =
-            SheetStyle(
-                isFloating = true,
-                maxHeight = Height.Fraction(1F),
-                isHalfExpandingEnabled = true,
-            ),
+        override val style: SheetStyle = SheetStyle(
+            isFloating = true,
+            maxHeight = Height.Fraction(1F),
+            isHalfExpandingEnabled = true,
+        ),
         val libraryCategory: LibraryCategory,
     ) : SheetType
 
@@ -55,13 +54,12 @@ interface SheetType {
      * @param libraryCategory the library category that should be displayed in the sheet.
      */
     class LibraryReplace(
-        override val style: SheetStyle =
-            SheetStyle(
-                isFloating = false,
-                maxHeight = Height.Fraction(1F),
-                isHalfExpandingEnabled = true,
-                isHalfExpandedInitially = true,
-            ),
+        override val style: SheetStyle = SheetStyle(
+            isFloating = false,
+            maxHeight = Height.Fraction(1F),
+            isHalfExpandingEnabled = true,
+            isHalfExpandedInitially = true,
+        ),
         val libraryCategory: LibraryCategory,
     ) : SheetType
 
@@ -103,10 +101,9 @@ interface SheetType {
      */
     class Effect(
         // The minHeight 204.dp is chosen to match the height of the "Main" screen, while you are on the "Adjustment" screen.
-        override val style: SheetStyle =
-            SheetStyle(
-                minHeight = Height.Exactly(204.dp),
-            ),
+        override val style: SheetStyle = SheetStyle(
+            minHeight = Height.Exactly(204.dp),
+        ),
     ) : SheetType
 
     /**

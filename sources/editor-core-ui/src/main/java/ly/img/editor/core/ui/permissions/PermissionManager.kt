@@ -13,7 +13,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ly.img.editor.core.ui.utils.activity
 
-class PermissionManager(private val context: Context) {
+class PermissionManager(
+    private val context: Context,
+) {
     companion object {
         fun Context.hasCameraPermission() = hasPermission(Manifest.permission.CAMERA)
 
@@ -24,43 +26,39 @@ class PermissionManager(private val context: Context) {
             return packageInfo.requestedPermissions?.any { it == Manifest.permission.CAMERA } ?: false
         }
 
-        private fun Context.hasPermission(permission: String): Boolean {
-            return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
-        }
+        private fun Context.hasPermission(permission: String): Boolean =
+            ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
     }
 
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences("PermissionPrefs", Context.MODE_PRIVATE)
     }
 
-    suspend fun checkPermission(permission: String): PermissionStatus =
-        withContext(Dispatchers.IO) {
-            val isGranted = context.hasPermission(permission)
+    suspend fun checkPermission(permission: String): PermissionStatus = withContext(Dispatchers.IO) {
+        val isGranted = context.hasPermission(permission)
 
-            if (isGranted) {
-                return@withContext PermissionStatus.GRANTED
-            }
-
-            val shouldShowRationale =
-                withContext(Dispatchers.Main) {
-                    shouldShowRequestPermissionRationale(checkNotNull(context.activity), permission)
-                }
-            val previousShouldShowRationale = sharedPreferences.getBoolean(permission, false)
-
-            updateSharedPreferences(permission, shouldShowRationale)
-
-            return@withContext when {
-                shouldShowRationale -> PermissionStatus.DENIED_CAN_REQUEST
-                !shouldShowRationale && previousShouldShowRationale -> PermissionStatus.DENIED_DONT_ASK
-                else -> PermissionStatus.DENIED_FIRST_TIME
-            }
+        if (isGranted) {
+            return@withContext PermissionStatus.GRANTED
         }
 
+        val shouldShowRationale = withContext(Dispatchers.Main) {
+            shouldShowRequestPermissionRationale(checkNotNull(context.activity), permission)
+        }
+        val previousShouldShowRationale = sharedPreferences.getBoolean(permission, false)
+
+        updateSharedPreferences(permission, shouldShowRationale)
+
+        return@withContext when {
+            shouldShowRationale -> PermissionStatus.DENIED_CAN_REQUEST
+            !shouldShowRationale && previousShouldShowRationale -> PermissionStatus.DENIED_DONT_ASK
+            else -> PermissionStatus.DENIED_FIRST_TIME
+        }
+    }
+
     fun openAppSettings() {
-        val intent =
-            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                data = Uri.fromParts("package", context.packageName, null)
-            }
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
+        }
         context.startActivity(intent)
     }
 

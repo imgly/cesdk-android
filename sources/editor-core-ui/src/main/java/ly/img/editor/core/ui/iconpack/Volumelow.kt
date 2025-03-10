@@ -12,38 +12,37 @@ import androidx.compose.ui.unit.dp
 
 val IconPack.Volumelow: ImageVector
     get() {
-        if (_volumelow != null) {
-            return _volumelow!!
+        if (volumelow != null) {
+            return volumelow!!
         }
-        _volumelow =
-            Builder(
-                name = "Volumelow",
-                defaultWidth = 24.0.dp,
-                defaultHeight = 24.0.dp,
-                viewportWidth = 24.0f,
-                viewportHeight = 24.0f,
-            ).apply {
-                path(
-                    fill = SolidColor(Color(0xFF46464F)),
-                    stroke = null,
-                    strokeLineWidth = 0.0f,
-                    strokeLineCap = Butt,
-                    strokeLineJoin = Miter,
-                    strokeLineMiter = 4.0f,
-                    pathFillType = NonZero,
-                ) {
-                    moveTo(7.0f, 9.0f)
-                    verticalLineTo(15.0f)
-                    horizontalLineTo(11.0f)
-                    lineTo(16.0f, 20.0f)
-                    verticalLineTo(4.0f)
-                    lineTo(11.0f, 9.0f)
-                    horizontalLineTo(7.0f)
-                    close()
-                }
+        volumelow = Builder(
+            name = "Volumelow",
+            defaultWidth = 24.0.dp,
+            defaultHeight = 24.0.dp,
+            viewportWidth = 24.0f,
+            viewportHeight = 24.0f,
+        ).apply {
+            path(
+                fill = SolidColor(Color(0xFF46464F)),
+                stroke = null,
+                strokeLineWidth = 0.0f,
+                strokeLineCap = Butt,
+                strokeLineJoin = Miter,
+                strokeLineMiter = 4.0f,
+                pathFillType = NonZero,
+            ) {
+                moveTo(7.0f, 9.0f)
+                verticalLineTo(15.0f)
+                horizontalLineTo(11.0f)
+                lineTo(16.0f, 20.0f)
+                verticalLineTo(4.0f)
+                lineTo(11.0f, 9.0f)
+                horizontalLineTo(7.0f)
+                close()
             }
-                .build()
-        return _volumelow!!
+        }
+            .build()
+        return volumelow!!
     }
 
-private var _volumelow: ImageVector? = null
+private var volumelow: ImageVector? = null

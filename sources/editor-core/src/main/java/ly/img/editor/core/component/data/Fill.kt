@@ -124,11 +124,9 @@ data class ConicalGradientFill(
     override val colorStops: List<GradientColorStop>,
 ) : GradientFill
 
-internal fun RGBAColor.toComposeColor(): Color {
-    return Color(
-        red = this.r,
-        green = this.g,
-        blue = this.b,
-        alpha = this.a,
-    )
-}
+internal fun RGBAColor.toComposeColor(): Color = Color(
+    red = this.r,
+    green = this.g,
+    blue = this.b,
+    alpha = this.a,
+)

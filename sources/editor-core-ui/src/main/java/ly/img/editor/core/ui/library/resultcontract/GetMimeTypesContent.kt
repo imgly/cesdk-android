@@ -12,12 +12,10 @@ internal class GetMimeTypesContent : ActivityResultContract<Array<String>, Uri?>
     override fun createIntent(
         context: Context,
         input: Array<String>,
-    ): Intent {
-        return Intent(Intent.ACTION_GET_CONTENT)
-            .addCategory(Intent.CATEGORY_OPENABLE)
-            .setType("*/*")
-            .putExtra(Intent.EXTRA_MIME_TYPES, input)
-    }
+    ): Intent = Intent(Intent.ACTION_GET_CONTENT)
+        .addCategory(Intent.CATEGORY_OPENABLE)
+        .setType("*/*")
+        .putExtra(Intent.EXTRA_MIME_TYPES, input)
 
     override fun getSynchronousResult(
         context: Context,
@@ -27,7 +25,5 @@ internal class GetMimeTypesContent : ActivityResultContract<Array<String>, Uri?>
     override fun parseResult(
         resultCode: Int,
         intent: Intent?,
-    ): Uri? {
-        return intent.takeIf { resultCode == Activity.RESULT_OK }?.data
-    }
+    ): Uri? = intent.takeIf { resultCode == Activity.RESULT_OK }?.data
 }

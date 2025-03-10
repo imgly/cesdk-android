@@ -42,17 +42,11 @@ class CameraConfiguration(
         parcel.writeByte(if (allowExceedingMaxDuration) 1 else 0)
     }
 
-    override fun describeContents(): Int {
-        return 0
-    }
+    override fun describeContents(): Int = 0
 
     companion object CREATOR : Parcelable.Creator<CameraConfiguration> {
-        override fun createFromParcel(parcel: Parcel): CameraConfiguration {
-            return CameraConfiguration(parcel)
-        }
+        override fun createFromParcel(parcel: Parcel): CameraConfiguration = CameraConfiguration(parcel)
 
-        override fun newArray(size: Int): Array<CameraConfiguration?> {
-            return arrayOfNulls(size)
-        }
+        override fun newArray(size: Int): Array<CameraConfiguration?> = arrayOfNulls(size)
     }
 }

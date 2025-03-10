@@ -62,33 +62,32 @@ fun EventsHandler.blockFillEvents(
         val currentFillType = engine.block.getFillType(block)
         if (currentFillType == fillStyleEnum) return
 
-        val colorStops =
-            when (currentFillType) {
-                FillType.Color -> {
-                    val originalColor = engine.block.getFillSolidColor(block)
-                    listOf(
-                        GradientColorStop(0f, originalColor),
-                        GradientColorStop(1f, originalColor.changeLightnessBy(0.4f)),
-                    )
-                }
-
-                FillType.LinearGradient,
-                FillType.RadialGradient,
-                FillType.ConicalGradient,
-                -> {
-                    engine.block.getGradientColorStops(
-                        engine.block.getFill(block),
-                        "fill/gradient/colors",
-                    )
-                }
-
-                else -> {
-                    listOf(
-                        GradientColorStop(0f, Color.White.toEngineColor()),
-                        GradientColorStop(1f, Color.Black.toEngineColor()),
-                    )
-                }
+        val colorStops = when (currentFillType) {
+            FillType.Color -> {
+                val originalColor = engine.block.getFillSolidColor(block)
+                listOf(
+                    GradientColorStop(0f, originalColor),
+                    GradientColorStop(1f, originalColor.changeLightnessBy(0.4f)),
+                )
             }
+
+            FillType.LinearGradient,
+            FillType.RadialGradient,
+            FillType.ConicalGradient,
+            -> {
+                engine.block.getGradientColorStops(
+                    engine.block.getFill(block),
+                    "fill/gradient/colors",
+                )
+            }
+
+            else -> {
+                listOf(
+                    GradientColorStop(0f, Color.White.toEngineColor()),
+                    GradientColorStop(1f, Color.Black.toEngineColor()),
+                )
+            }
+        }
 
         when (fillStyleEnum) {
             FillType.Color -> {

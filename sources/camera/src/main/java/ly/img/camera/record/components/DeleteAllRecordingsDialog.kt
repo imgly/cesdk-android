@@ -18,27 +18,24 @@ internal fun DeleteAllRecordingsDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text =
-                    stringResource(
-                        ly.img.camera.R.string.ly_img_camera_delete_recordings_dialog_title,
-                    ),
+                text = stringResource(
+                    ly.img.camera.R.string.ly_img_camera_delete_recordings_dialog_title,
+                ),
             )
         },
         text = {
             Text(
-                text =
-                    stringResource(
-                        ly.img.camera.R.string.ly_img_camera_delete_recordings_dialog_text,
-                    ),
+                text = stringResource(
+                    ly.img.camera.R.string.ly_img_camera_delete_recordings_dialog_text,
+                ),
             )
         },
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
-                colors =
-                    ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
-                    ),
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                ),
             ) {
                 Text(stringResource(ly.img.camera.R.string.ly_img_camera_delete_recordings_dialog_confirm_text))
             }

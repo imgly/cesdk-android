@@ -52,27 +52,21 @@ internal fun AssetGrid(
     val shouldStartPaginate by remember(uiState.assetsData.canPaginate) {
         derivedStateOf {
             uiState.assetsData.canPaginate &&
-                (
-                    lazyGridState.layoutInfo.visibleItemsInfo
-                        .lastOrNull()
-                        ?.index ?: -9
-                ) >=
-                lazyGridState.layoutInfo.totalItemsCount - 6
+                (lazyGridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -9) >= lazyGridState.layoutInfo.totalItemsCount - 6
         }
     }
 
-    val nestedScrollConnection =
-        remember(libraryCategory) {
-            object : NestedScrollConnection {
-                override fun onPreScroll(
-                    available: Offset,
-                    source: NestedScrollSource,
-                ): Offset {
-                    onLibraryEvent(LibraryEvent.OnEnterSearchMode(false, libraryCategory))
-                    return Offset.Zero
-                }
+    val nestedScrollConnection = remember(libraryCategory) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
+                onLibraryEvent(LibraryEvent.OnEnterSearchMode(false, libraryCategory))
+                return Offset.Zero
             }
         }
+    }
 
     LaunchedEffect(shouldStartPaginate, uiState.assetsData.assetsLoadState) {
         if (shouldStartPaginate && uiState.assetsData.assetsLoadState == AssetsLoadState.Idle) {
@@ -102,24 +96,24 @@ internal fun AssetGrid(
                 EmptyResultContent(
                     icon = IconPack.Folder,
                     text = stringResource(R.string.ly_img_editor_no_elements),
-                    button =
-                        if (assetSource is UploadAssetSourceType) {
-                            {
-                                val launcher =
-                                    rememberLauncherForActivityResult(
-                                        contract = ActivityResultContracts.GetContent(),
-                                    ) { uri: Uri? ->
-                                        uri?.let { onUriPick(assetSource, it) }
-                                    }
-                                Button(onClick = {
-                                    launcher.launch(assetSource.mimeTypeFilter)
-                                }) {
-                                    Text(text = stringResource(R.string.ly_img_editor_add))
-                                }
+                    button = if (assetSource is UploadAssetSourceType) {
+                        {
+                            val launcher = rememberLauncherForActivityResult(
+                                contract = ActivityResultContracts.GetContent(),
+                            ) { uri: Uri? ->
+                                uri?.let { onUriPick(assetSource, it) }
                             }
-                        } else {
-                            null
-                        },
+                            Button(
+                                onClick = {
+                                    launcher.launch(assetSource.mimeTypeFilter)
+                                },
+                            ) {
+                                Text(text = stringResource(R.string.ly_img_editor_add))
+                            }
+                        }
+                    } else {
+                        null
+                    },
                 )
             }
         }
@@ -130,12 +124,11 @@ internal fun AssetGrid(
             if (assetType != null && assetSource != null) {
                 val activatedPreviewItemId = remember { mutableStateOf<String?>(null) }
                 val context = LocalContext.current
-                val exoPlayerInstance by
-                    remember {
-                        lazy {
-                            ExoPlayer.Builder(context.applicationContext).build()
-                        }
+                val exoPlayerInstance by remember {
+                    lazy {
+                        ExoPlayer.Builder(context.applicationContext).build()
                     }
+                }
 
                 DisposableEffect(exoPlayerInstance) {
                     onDispose {
@@ -148,10 +141,9 @@ internal fun AssetGrid(
                     horizontalArrangement = AssetLibraryUiConfig.assetGridHorizontalArrangement(assetType),
                     contentPadding = PaddingValues(4.dp),
                     columns = GridCells.Fixed(AssetLibraryUiConfig.assetGridColumns(assetType)),
-                    modifier =
-                        Modifier
-                            .nestedScroll(nestedScrollConnection)
-                            .fillMaxSize(),
+                    modifier = Modifier
+                        .nestedScroll(nestedScrollConnection)
+                        .fillMaxSize(),
                 ) {
                     val assets = uiState.assetsData.assets
                     if (assetSource is UploadAssetSourceType && assets.isNotEmpty()) {

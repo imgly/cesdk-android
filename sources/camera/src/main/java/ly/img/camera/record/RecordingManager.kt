@@ -63,12 +63,11 @@ internal class RecordingManager(
         recording ?: return
         val recordings = state.recordings.dropLast(1)
         val updatedDuration = calculateUpdatedDuration(recordings)
-        state =
-            state.copy(
-                recordings = recordings,
-                totalRecordedDuration = updatedDuration,
-                hasReachedMaxDuration = hasReachedMaxDuration(updatedDuration),
-            )
+        state = state.copy(
+            recordings = recordings,
+            totalRecordedDuration = updatedDuration,
+            hasReachedMaxDuration = hasReachedMaxDuration(updatedDuration),
+        )
         GlobalScope.launch(Dispatchers.IO) {
             deleteSingleRecording(recording)
         }
@@ -117,28 +116,25 @@ internal class RecordingManager(
 
                 is VideoRecorder.RecordingStatus.Finished -> {
                     val updatedDuration = calculateUpdatedDuration()
-                    state =
-                        state.copy(
-                            status = Status.Idle,
-                            recordings =
-                                state.recordings +
-                                    Recording(
-                                        videos = listOf(Video(uri = status.outputUri, rect = cameraRect)),
-                                        duration = status.duration,
-                                    ),
-                            totalRecordedDuration = updatedDuration,
-                            hasReachedMaxDuration = hasReachedMaxDuration(updatedDuration),
-                        )
+                    state = state.copy(
+                        status = Status.Idle,
+                        recordings = state.recordings +
+                            Recording(
+                                videos = listOf(Video(uri = status.outputUri, rect = cameraRect)),
+                                duration = status.duration,
+                            ),
+                        totalRecordedDuration = updatedDuration,
+                        hasReachedMaxDuration = hasReachedMaxDuration(updatedDuration),
+                    )
                 }
 
                 is VideoRecorder.RecordingStatus.Recording -> {
                     val updatedDuration = calculateUpdatedDuration()
                     if (!reachedMaxDuration) {
-                        state =
-                            state.copy(
-                                status = Status.Recording(status.duration),
-                                totalRecordedDuration = updatedDuration,
-                            )
+                        state = state.copy(
+                            status = Status.Recording(status.duration),
+                            totalRecordedDuration = updatedDuration,
+                        )
                     }
                     if (hasReachedMaxDuration(updatedDuration)) {
                         reachedMaxDuration = true
@@ -154,19 +150,18 @@ internal class RecordingManager(
     private fun startTimer(context: Context) {
         var countDownValue = state.timer.duration
         state = state.copy(status = Status.TimerRunning(remainingTime = countDownValue, totalTime = countDownValue))
-        timerJob =
-            coroutineScope.launch {
-                while (isActive && countDownValue > 0) {
-                    delay(1000)
-                    countDownValue--
-                    if (countDownValue != 0) {
-                        val status = state.status as? Status.TimerRunning ?: break
-                        state = state.copy(status = status.copy(remainingTime = countDownValue))
-                    }
+        timerJob = coroutineScope.launch {
+            while (isActive && countDownValue > 0) {
+                delay(1000)
+                countDownValue--
+                if (countDownValue != 0) {
+                    val status = state.status as? Status.TimerRunning ?: break
+                    state = state.copy(status = status.copy(remainingTime = countDownValue))
                 }
-                yield()
-                startRecording(context)
             }
+            yield()
+            startRecording(context)
+        }
     }
 
     private fun resetTimer() {
@@ -193,20 +188,25 @@ internal class RecordingManager(
         currentRecordingDuration: Duration? = (state.status as? Status.Recording)?.currentRecordingDuration,
     ) = recordings.fold(0.seconds) { total, recording -> total + recording.duration } + (currentRecordingDuration ?: 0.seconds)
 
-    private fun hasReachedMaxDuration(duration: Duration): Boolean {
-        return overridenMaxDuration?.let { duration >= it } ?: (!allowExceedingMaxDuration && duration >= maxDuration)
-    }
+    private fun hasReachedMaxDuration(duration: Duration): Boolean = overridenMaxDuration?.let {
+        duration >= it
+    } ?: (!allowExceedingMaxDuration && duration >= maxDuration)
 
     sealed interface Status {
         data object Disabled : Status
 
         data object Idle : Status
 
-        data class TimerRunning(val remainingTime: Int, val totalTime: Int) : Status
+        data class TimerRunning(
+            val remainingTime: Int,
+            val totalTime: Int,
+        ) : Status
 
         data object StartRecording : Status
 
-        data class Recording(val currentRecordingDuration: Duration) : Status
+        data class Recording(
+            val currentRecordingDuration: Duration,
+        ) : Status
     }
 
     data class State(

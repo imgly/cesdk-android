@@ -21,7 +21,9 @@ import java.util.LinkedList
  */
 @JvmInline
 @Immutable
-value class EditorComponentId(val id: String)
+value class EditorComponentId(
+    val id: String,
+)
 
 /**
  * A class that represents a component that can be rendered in the editor.
@@ -111,14 +113,13 @@ abstract class EditorComponent<Scope : EditorScope> {
                         private val itemProviderList: MutableList<@Composable EditorScope.() -> Item> = LinkedList()
                         override val items: List<Item>
                             @Composable
-                            get() =
-                                LinkedList<Item>().apply {
-                                    // Every recomposition calls the block, fills up the item list and then clears it
-                                    block()
-                                    val editorScope = LocalEditorScope.current
-                                    itemProviderList.forEach { add(it(editorScope)) }
-                                    itemProviderList.clear()
-                                }
+                            get() = LinkedList<Item>().apply {
+                                // Every recomposition calls the block, fills up the item list and then clears it
+                                block()
+                                val editorScope = LocalEditorScope.current
+                                itemProviderList.forEach { add(it(editorScope)) }
+                                itemProviderList.clear()
+                            }
 
                         /**
                          * Appends a new [EditorComponent] item in the list.
@@ -143,11 +144,9 @@ abstract class EditorComponent<Scope : EditorScope> {
                     private val addFirstProviderList: MutableList<@Composable EditorScope.() -> Item> = mutableListOf()
                     private val addLastProviderList: MutableList<@Composable EditorScope.() -> Item> = mutableListOf()
                     private val addAfterProviderMapping:
-                        MutableMap<EditorComponentId, LinkedList<@Composable EditorScope.() -> Item>> =
-                        mutableMapOf()
+                        MutableMap<EditorComponentId, LinkedList<@Composable EditorScope.() -> Item>> = mutableMapOf()
                     private val addBeforeProviderMapping:
-                        MutableMap<EditorComponentId, LinkedList<@Composable EditorScope.() -> Item>> =
-                        mutableMapOf()
+                        MutableMap<EditorComponentId, LinkedList<@Composable EditorScope.() -> Item>> = mutableMapOf()
                     private val replaceItemProviderMapping: MutableMap<EditorComponentId, @Composable EditorScope.() -> Item> =
                         mutableMapOf()
                     private val removeList: LinkedList<EditorComponentId> = LinkedList()
@@ -157,46 +156,46 @@ abstract class EditorComponent<Scope : EditorScope> {
                         id: EditorComponentId,
                     ) {
                         error(
-                            "$operation was invoked with id=${id.id} which does not exist in the source ListBuilder or is already removed via remove API.",
+                            "$operation was invoked with id=${id.id} which does not exist in the source ListBuilder " +
+                                "or is already removed via remove API.",
                         )
                     }
 
                     override val items: List<Item>
                         @Composable
-                        get() =
-                            LinkedList<Item>().apply {
-                                // Every recomposition calls the block, fills up the item list and then clears it
-                                block()
-                                val editorScope = LocalEditorScope.current
-                                addAll(addFirstProviderList.map { it(editorScope) })
-                                source.scope.items.forEach { item ->
-                                    // Try remove item first, then do other operations.
-                                    if (removeList.remove(item.id)) return@forEach
-                                    addBeforeProviderMapping.remove(item.id)?.map { it(editorScope) }?.let(::addAll)
-                                    add(replaceItemProviderMapping.remove(item.id)?.invoke(editorScope) ?: item)
-                                    addAfterProviderMapping.remove(item.id)?.map { it(editorScope) }?.let(::addAll)
-                                }
-                                addAll(addLastProviderList.map { it(editorScope) })
-                                if (removeList.isNotEmpty()) {
-                                    val id = removeList.first()
-                                    error(operation = "remove", id = id)
-                                }
-                                if (addBeforeProviderMapping.isNotEmpty()) {
-                                    val id = addBeforeProviderMapping.keys.first()
-                                    error(operation = "addBefore", id = id)
-                                }
-                                if (addAfterProviderMapping.isNotEmpty()) {
-                                    val id = addAfterProviderMapping.keys.first()
-                                    error(operation = "addAfter", id = id)
-                                }
-                                if (replaceItemProviderMapping.isNotEmpty()) {
-                                    val id = replaceItemProviderMapping.keys.first()
-                                    error(operation = "replace", id = id)
-                                }
-                                addFirstProviderList.clear()
-                                addLastProviderList.clear()
-                                replaceItemProviderMapping.clear()
+                        get() = LinkedList<Item>().apply {
+                            // Every recomposition calls the block, fills up the item list and then clears it
+                            block()
+                            val editorScope = LocalEditorScope.current
+                            addAll(addFirstProviderList.map { it(editorScope) })
+                            source.scope.items.forEach { item ->
+                                // Try remove item first, then do other operations.
+                                if (removeList.remove(item.id)) return@forEach
+                                addBeforeProviderMapping.remove(item.id)?.map { it(editorScope) }?.let(::addAll)
+                                add(replaceItemProviderMapping.remove(item.id)?.invoke(editorScope) ?: item)
+                                addAfterProviderMapping.remove(item.id)?.map { it(editorScope) }?.let(::addAll)
                             }
+                            addAll(addLastProviderList.map { it(editorScope) })
+                            if (removeList.isNotEmpty()) {
+                                val id = removeList.first()
+                                error(operation = "remove", id = id)
+                            }
+                            if (addBeforeProviderMapping.isNotEmpty()) {
+                                val id = addBeforeProviderMapping.keys.first()
+                                error(operation = "addBefore", id = id)
+                            }
+                            if (addAfterProviderMapping.isNotEmpty()) {
+                                val id = addAfterProviderMapping.keys.first()
+                                error(operation = "addAfter", id = id)
+                            }
+                            if (replaceItemProviderMapping.isNotEmpty()) {
+                                val id = replaceItemProviderMapping.keys.first()
+                                error(operation = "replace", id = id)
+                            }
+                            addFirstProviderList.clear()
+                            addLastProviderList.clear()
+                            replaceItemProviderMapping.clear()
+                        }
 
                     /**
                      * Appends a new [EditorComponent] item in the list.
@@ -292,10 +291,8 @@ abstract class EditorComponent<Scope : EditorScope> {
                 @PublishedApi
                 internal fun <Item : EditorComponent<*>> remember(
                     block: @DisallowComposableCalls Scope.New<Item>.() -> Unit,
-                ): ListBuilder<Item> {
-                    return androidx.compose.runtime.remember {
-                        ListBuilder(scope = Scope.New(block))
-                    }
+                ): ListBuilder<Item> = androidx.compose.runtime.remember {
+                    ListBuilder(scope = Scope.New(block))
                 }
 
                 /**
@@ -308,10 +305,8 @@ abstract class EditorComponent<Scope : EditorScope> {
                 @Composable
                 fun <Item : EditorComponent<*>> ListBuilder<Item>.modify(
                     block: @DisallowComposableCalls Scope.Modify<Item>.() -> Unit,
-                ): ListBuilder<Item> {
-                    return androidx.compose.runtime.remember {
-                        ListBuilder(scope = Scope.Modify(this, block))
-                    }
+                ): ListBuilder<Item> = androidx.compose.runtime.remember {
+                    ListBuilder(scope = Scope.Modify(this, block))
                 }
             }
         }

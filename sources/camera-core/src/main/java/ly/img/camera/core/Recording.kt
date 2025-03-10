@@ -28,17 +28,11 @@ data class Recording(
         parcel.writeLong(duration.inWholeMilliseconds)
     }
 
-    override fun describeContents(): Int {
-        return 0
-    }
+    override fun describeContents(): Int = 0
 
     companion object CREATOR : Parcelable.Creator<Recording> {
-        override fun createFromParcel(parcel: Parcel): Recording {
-            return Recording(parcel)
-        }
+        override fun createFromParcel(parcel: Parcel): Recording = Recording(parcel)
 
-        override fun newArray(size: Int): Array<Recording?> {
-            return arrayOfNulls(size)
-        }
+        override fun newArray(size: Int): Array<Recording?> = arrayOfNulls(size)
     }
 }

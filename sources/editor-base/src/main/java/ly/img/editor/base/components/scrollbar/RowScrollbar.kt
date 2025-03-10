@@ -15,14 +15,13 @@ fun RowScrollbar(
     settings: ScrollbarSettings = ScrollbarSettings.Default,
     visibleLengthDp: Dp,
 ) {
-    val stateController =
-        rememberScrollStateController(
-            state = state,
-            visibleLengthDp = visibleLengthDp,
-            thumbMinLength = settings.thumbMinLength,
-            thumbMaxLength = settings.thumbMaxLength,
-            alwaysShowScrollBar = settings.alwaysShowScrollbar,
-        )
+    val stateController = rememberScrollStateController(
+        state = state,
+        visibleLengthDp = visibleLengthDp,
+        thumbMinLength = settings.thumbMinLength,
+        thumbMaxLength = settings.thumbMaxLength,
+        alwaysShowScrollBar = settings.alwaysShowScrollbar,
+    )
 
     ElementScrollbar(
         orientation = Orientation.Horizontal,

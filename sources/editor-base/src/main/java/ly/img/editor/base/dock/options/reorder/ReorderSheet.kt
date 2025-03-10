@@ -57,16 +57,14 @@ fun ReorderSheet(
 
             val lazyListState = rememberLazyListState()
             val backgroundClips = timelineState.dataSource.backgroundTrack.clips
-            val clipItems =
-                remember(backgroundClips) {
-                    backgroundClips.toMutableStateList()
+            val clipItems = remember(backgroundClips) {
+                backgroundClips.toMutableStateList()
+            }
+            val swappableListState = rememberSwappableListState(lazyListState = lazyListState) { from, to ->
+                clipItems.apply {
+                    add(to.index - 1, removeAt(from.index - 1))
                 }
-            val swappableListState =
-                rememberSwappableListState(lazyListState = lazyListState) { from, to ->
-                    clipItems.apply {
-                        add(to.index - 1, removeAt(from.index - 1))
-                    }
-                }
+            }
             var dragStartedKey: Int? = remember { null }
 
             LazyRow(
@@ -108,12 +106,11 @@ fun ReorderSheet(
                                 clip = clipItems[index],
                                 timelineState = timelineState,
                                 elevation = elevation,
-                                modifier =
-                                    Modifier
-                                        .graphicsLayer {
-                                            scaleX = scale
-                                            scaleY = scale
-                                        },
+                                modifier = Modifier
+                                    .graphicsLayer {
+                                        scaleX = scale
+                                        scaleY = scale
+                                    },
                             )
 
                             // Adding spacing manually because of the fake first item

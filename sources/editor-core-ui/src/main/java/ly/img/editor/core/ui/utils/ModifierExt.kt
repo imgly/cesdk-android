@@ -18,11 +18,10 @@ inline fun Modifier.ifTrue(
 ) = if (predicate) this.builder() else this
 
 fun Modifier.animateItemPlacement(
-    animationSpec: FiniteAnimationSpec<IntOffset> =
-        spring(
-            stiffness = Spring.StiffnessMediumLow,
-            visibilityThreshold = IntOffset.VisibilityThreshold,
-        ),
+    animationSpec: FiniteAnimationSpec<IntOffset> = spring(
+        stiffness = Spring.StiffnessMediumLow,
+        visibilityThreshold = IntOffset.VisibilityThreshold,
+    ),
 ) = this.then(
     AnimateItemPlacementModifier(
         animationSpec,
@@ -36,7 +35,8 @@ fun Modifier.animateItemPlacement(
 private class AnimateItemPlacementModifier(
     val animationSpec: FiniteAnimationSpec<IntOffset>,
     inspectorInfo: InspectorInfo.() -> Unit,
-) : ParentDataModifier, InspectorValueInfo(inspectorInfo) {
+) : InspectorValueInfo(inspectorInfo),
+    ParentDataModifier {
     override fun Density.modifyParentData(parentData: Any?): Any = animationSpec
 
     override fun equals(other: Any?): Boolean {
@@ -45,7 +45,5 @@ private class AnimateItemPlacementModifier(
         return animationSpec != other.animationSpec
     }
 
-    override fun hashCode(): Int {
-        return animationSpec.hashCode()
-    }
+    override fun hashCode(): Int = animationSpec.hashCode()
 }

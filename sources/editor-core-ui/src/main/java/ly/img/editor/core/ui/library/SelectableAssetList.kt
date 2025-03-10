@@ -71,10 +71,9 @@ fun SelectableAssetList(
         var sectionStartIndex = 2 // "None" element + first section spacer
         uiState.value.sectionItems.forEach { section ->
             if (section !is LibrarySectionItem.Content) return@forEach
-            val assetIndex =
-                section.wrappedAssets.indexOfFirst { wrappedAsset ->
-                    wrappedAsset == selectedAsset
-                }
+            val assetIndex = section.wrappedAssets.indexOfFirst { wrappedAsset ->
+                wrappedAsset == selectedAsset
+            }
             if (assetIndex != -1) {
                 selectedAssetIndex = sectionStartIndex + assetIndex
                 return@LaunchedEffect
@@ -84,14 +83,13 @@ fun SelectableAssetList(
     }
 
     suspend fun centerSelectedItem(animate: Boolean = true) {
-        val target =
-            listState.layoutInfo.visibleItemsInfo.firstOrNull {
-                it.index == selectedAssetIndex
-            } ?: run {
-                listState.scrollToItem(selectedAssetIndex)
-                centerSelectedItem(animate = false)
-                return
-            }
+        val target = listState.layoutInfo.visibleItemsInfo.firstOrNull {
+            it.index == selectedAssetIndex
+        } ?: run {
+            listState.scrollToItem(selectedAssetIndex)
+            centerSelectedItem(animate = false)
+            return
+        }
         val center = listState.layoutInfo.viewportEndOffset / 2
         val childCenter = target.offset + target.size / 2
         val diff = (childCenter - center).toFloat()
@@ -107,17 +105,15 @@ fun SelectableAssetList(
     }
 
     Surface(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
+        modifier = modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
     ) {
         LazyRow(
-            modifier =
-                Modifier
-                    .height(130.dp)
-                    .padding(top = 8.dp, bottom = 8.dp)
-                    .fillMaxWidth(),
+            modifier = Modifier
+                .height(130.dp)
+                .padding(top = 8.dp, bottom = 8.dp)
+                .fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(0.dp),
             state = listState,
@@ -125,10 +121,9 @@ fun SelectableAssetList(
             item {
                 Column {
                     Column(
-                        modifier =
-                            Modifier
-                                .wrapContentSize()
-                                .padding(bottom = 8.dp),
+                        modifier = Modifier
+                            .wrapContentSize()
+                            .padding(bottom = 8.dp),
                     ) {
                         SelectableAssetWrapper(
                             isSelected = selectedAsset == null,
@@ -142,11 +137,10 @@ fun SelectableAssetList(
                                 Icon(
                                     IconPack.None,
                                     contentDescription = null,
-                                    modifier =
-                                        Modifier
-                                            .fillMaxSize()
-                                            .padding(12.dp)
-                                            .align(Alignment.Center),
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(12.dp)
+                                        .align(Alignment.Center),
                                 )
                             }
                         }
@@ -169,10 +163,9 @@ fun SelectableAssetList(
                     items(wrappedAssets) { wrappedAsset ->
                         Column {
                             Column(
-                                modifier =
-                                    Modifier
-                                        .wrapContentSize()
-                                        .padding(bottom = 8.dp),
+                                modifier = Modifier
+                                    .wrapContentSize()
+                                    .padding(bottom = 8.dp),
                             ) {
                                 SelectableAssetWrapper(
                                     isSelected = wrappedAsset == selectedAsset,

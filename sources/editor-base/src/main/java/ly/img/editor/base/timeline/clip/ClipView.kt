@@ -145,16 +145,15 @@ fun ClipView(
                 zoomState = zoomState,
                 clipDurationText = clipDurationText,
                 overlayWidth = overlayWidth.toDp(),
-                overlayShape =
-                    if (overlayWidth <= 0) {
-                        null
+                overlayShape = if (overlayWidth <= 0) {
+                    null
+                } else {
+                    if (offset > totalDurationWidth) {
+                        MaterialTheme.shapes.small
                     } else {
-                        if (offset > totalDurationWidth) {
-                            MaterialTheme.shapes.small
-                        } else {
-                            MaterialTheme.shapes.small.copy(topStart = CornerSize(0.dp), bottomStart = CornerSize(0.dp))
-                        }
-                    },
+                        MaterialTheme.shapes.small.copy(topStart = CornerSize(0.dp), bottomStart = CornerSize(0.dp))
+                    }
+                },
             )
 
             if (isSelected) {
@@ -177,32 +176,28 @@ fun ClipView(
                 HapticFeedbackOnOvershoot(overshootValue = trailingTrimHandleOvershoot, clipDragType = clipDragType)
 
                 Box(
-                    modifier =
-                        Modifier
-                            .wrapContentSize(
-                                unbounded = true,
-                                align =
-                                    when {
-                                        animatedLeadingTrimHandleOvershoot != 0f -> Alignment.CenterEnd
-                                        animatedTrailingTrimHandleOvershoot != 0f -> Alignment.CenterStart
-                                        else -> Alignment.Center
-                                    },
-                            )
-                            .offset(
-                                x =
-                                    handleWidth *
-                                        when {
-                                            animatedLeadingTrimHandleOvershoot != 0f -> 1
-                                            animatedTrailingTrimHandleOvershoot != 0f -> -1
-                                            else -> 0
-                                        },
-                            )
-                            .size(
-                                width =
-                                    maxWidth + (handleWidth * 2) +
-                                        (animatedLeadingTrimHandleOvershoot + animatedTrailingTrimHandleOvershoot).toDp(),
-                                height = maxHeight + (verticalInset * 2),
-                            ),
+                    modifier = Modifier
+                        .wrapContentSize(
+                            unbounded = true,
+                            align = when {
+                                animatedLeadingTrimHandleOvershoot != 0f -> Alignment.CenterEnd
+                                animatedTrailingTrimHandleOvershoot != 0f -> Alignment.CenterStart
+                                else -> Alignment.Center
+                            },
+                        )
+                        .offset(
+                            x = handleWidth *
+                                when {
+                                    animatedLeadingTrimHandleOvershoot != 0f -> 1
+                                    animatedTrailingTrimHandleOvershoot != 0f -> -1
+                                    else -> 0
+                                },
+                        )
+                        .size(
+                            width = maxWidth + (handleWidth * 2) +
+                                (animatedLeadingTrimHandleOvershoot + animatedTrailingTrimHandleOvershoot).toDp(),
+                            height = maxHeight + (verticalInset * 2),
+                        ),
                 ) {
                     ClipSelectionView(
                         modifier = Modifier.fillMaxSize(),
@@ -225,13 +220,7 @@ fun ClipView(
                         if (hasReachedMaxWidth != null) {
                             return if (hasReachedMaxWidth) IconStyle.Neutral else IconStyle.Right
                         }
-                        return if ((
-                                (
-                                    clip.footageDuration
-                                        ?: 0.seconds
-                                ) - clip.trimOffset - clip.duration
-                            ).almostEquals(0.seconds)
-                        ) {
+                        return if (((clip.footageDuration ?: 0.seconds) - clip.trimOffset - clip.duration).almostEquals(0.seconds)) {
                             IconStyle.Neutral
                         } else {
                             IconStyle.Right
@@ -262,74 +251,72 @@ fun ClipView(
 
                     // Leading trim handle
                     Box(
-                        modifier =
-                            Modifier
-                                .fillMaxHeight()
-                                .width(handleWidth)
-                                .align(Alignment.CenterStart)
-                                .pointerInput(clip, zoomState.zoomLevel) {
-                                    if (!clip.hasLoaded) return@pointerInput
-                                    val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minClipDuration))
-                                    val maxWidth =
-                                        if (clip.footageDuration != null) {
-                                            zoomState.toPx(clip.duration + clip.trimOffset)
-                                        } else if (clip.isInBackgroundTrack) {
-                                            Float.POSITIVE_INFINITY
-                                        } else {
-                                            zoomState.toPx(clip.duration + clip.timeOffset)
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(handleWidth)
+                            .align(Alignment.CenterStart)
+                            .pointerInput(clip, zoomState.zoomLevel) {
+                                if (!clip.hasLoaded) return@pointerInput
+                                val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minClipDuration))
+                                val maxWidth = if (clip.footageDuration != null) {
+                                    zoomState.toPx(clip.duration + clip.trimOffset)
+                                } else if (clip.isInBackgroundTrack) {
+                                    Float.POSITIVE_INFINITY
+                                } else {
+                                    zoomState.toPx(clip.duration + clip.timeOffset)
+                                }
+                                var initialWidth = 0f
+                                detectHorizontalDragGestures(
+                                    onDragStart = {
+                                        initialWidth = width
+                                        onDragStart(type = ClipDragType.Leading)
+                                    },
+                                    onHorizontalDrag = { _, drag ->
+                                        val oldWidth = width
+                                        val newProposedWidth = oldWidth - drag
+                                        if (leadingTrimHandleOvershoot.value == 0f) {
+                                            width = newProposedWidth.coerceIn(minWidth, maxWidth)
+                                            onDrag(width)
                                         }
-                                    var initialWidth = 0f
-                                    detectHorizontalDragGestures(
-                                        onDragStart = {
-                                            initialWidth = width
-                                            onDragStart(type = ClipDragType.Leading)
-                                        },
-                                        onHorizontalDrag = { _, drag ->
-                                            val oldWidth = width
-                                            val newProposedWidth = oldWidth - drag
-                                            if (leadingTrimHandleOvershoot.value == 0f) {
-                                                width = newProposedWidth.coerceIn(minWidth, maxWidth)
-                                                onDrag(width)
+                                        if (width != newProposedWidth) {
+                                            with(leadingTrimHandleOvershoot) {
+                                                value = (value + drag).coerceAtMost(0f)
                                             }
-                                            if (width != newProposedWidth) {
-                                                with(leadingTrimHandleOvershoot) {
-                                                    value = (value + drag).coerceAtMost(0f)
-                                                }
-                                            }
+                                        }
 
-                                            leadingTrimIconStyle = determineLeadingTrimIconStyle(width == maxWidth)
+                                        leadingTrimIconStyle = determineLeadingTrimIconStyle(width == maxWidth)
 
-                                            // we only want to consume as much drag that doesn't
-                                            // move the trailing handle at all from its original position
-                                            val consumeDragAmount = oldWidth - width
-                                            offset += consumeDragAmount
-                                        },
-                                        onDragEnd = {
-                                            onDragEnd()
-                                            leadingTrimHandleOvershoot.value = 0f
+                                        // we only want to consume as much drag that doesn't
+                                        // move the trailing handle at all from its original position
+                                        val consumeDragAmount = oldWidth - width
+                                        offset += consumeDragAmount
+                                    },
+                                    onDragEnd = {
+                                        onDragEnd()
+                                        leadingTrimHandleOvershoot.value = 0f
 
-                                            var trimOffset = clip.trimOffset
-                                            var timeOffset = clip.timeOffset
-                                            var duration = clip.duration
+                                        var trimOffset = clip.trimOffset
+                                        var timeOffset = clip.timeOffset
+                                        var duration = clip.duration
 
-                                            val delta = zoomState.toSeconds(initialWidth - width)
+                                        val delta = zoomState.toSeconds(initialWidth - width)
 
-                                            if (!clip.isInBackgroundTrack) {
-                                                timeOffset = (timeOffset + delta).coerceAtLeast(0.seconds)
-                                            }
-                                            trimOffset += delta
-                                            duration -= delta
+                                        if (!clip.isInBackgroundTrack) {
+                                            timeOffset = (timeOffset + delta).coerceAtLeast(0.seconds)
+                                        }
+                                        trimOffset += delta
+                                        duration -= delta
 
-                                            onEvent(
-                                                BlockEvent.OnUpdateTrim(
-                                                    trimOffset = trimOffset,
-                                                    timeOffset = timeOffset,
-                                                    duration = duration,
-                                                ),
-                                            )
-                                        },
-                                    )
-                                },
+                                        onEvent(
+                                            BlockEvent.OnUpdateTrim(
+                                                trimOffset = trimOffset,
+                                                timeOffset = timeOffset,
+                                                duration = duration,
+                                            ),
+                                        )
+                                    },
+                                )
+                            },
                     ) {
                         ClipTrimHandleIconView(
                             style = leadingTrimIconStyle,
@@ -340,72 +327,69 @@ fun ClipView(
 
                     // Trim clip body
                     Box(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.CenterStart)
-                                .padding(horizontal = handleWidth)
-                                .pointerInput(clip, zoomState.zoomLevel) {
-                                    if (!clip.isInBackgroundTrack) {
-                                        detectHorizontalDragGestures(
-                                            onDragStart = {
-                                                onDragStart(type = ClipDragType.Move)
-                                            },
-                                            onHorizontalDrag = { _, drag ->
-                                                // we don't want our clips to have a negative time offset
-                                                offset = (offset + drag).coerceAtLeast(0f)
-                                            },
-                                            onDragEnd = {
-                                                onDragEnd()
-                                                onEvent(BlockEvent.OnUpdateTimeOffset(zoomState.toSeconds(offset)))
-                                            },
-                                        )
-                                    }
-                                },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterStart)
+                            .padding(horizontal = handleWidth)
+                            .pointerInput(clip, zoomState.zoomLevel) {
+                                if (!clip.isInBackgroundTrack) {
+                                    detectHorizontalDragGestures(
+                                        onDragStart = {
+                                            onDragStart(type = ClipDragType.Move)
+                                        },
+                                        onHorizontalDrag = { _, drag ->
+                                            // we don't want our clips to have a negative time offset
+                                            offset = (offset + drag).coerceAtLeast(0f)
+                                        },
+                                        onDragEnd = {
+                                            onDragEnd()
+                                            onEvent(BlockEvent.OnUpdateTimeOffset(zoomState.toSeconds(offset)))
+                                        },
+                                    )
+                                }
+                            },
                     )
 
                     // Trailing trim handle
                     Box(
-                        modifier =
-                            Modifier
-                                .fillMaxHeight()
-                                .width(handleWidth)
-                                .align(Alignment.CenterEnd)
-                                .pointerInput(clip, zoomState.zoomLevel) {
-                                    if (!clip.hasLoaded) return@pointerInput
-                                    val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minClipDuration))
-                                    val maxWidth =
-                                        if (clip.footageDuration != null) {
-                                            zoomState.toPx(clip.footageDuration - clip.trimOffset)
-                                        } else {
-                                            Float.POSITIVE_INFINITY
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(handleWidth)
+                            .align(Alignment.CenterEnd)
+                            .pointerInput(clip, zoomState.zoomLevel) {
+                                if (!clip.hasLoaded) return@pointerInput
+                                val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minClipDuration))
+                                val maxWidth = if (clip.footageDuration != null) {
+                                    zoomState.toPx(clip.footageDuration - clip.trimOffset)
+                                } else {
+                                    Float.POSITIVE_INFINITY
+                                }
+                                detectHorizontalDragGestures(
+                                    onDragStart = {
+                                        onDragStart(ClipDragType.Trailing)
+                                    },
+                                    onHorizontalDrag = { _, drag ->
+                                        val newProposedWidth = width + drag
+
+                                        if (trailingTrimHandleOvershoot.value == 0f) {
+                                            width = newProposedWidth.coerceIn(minWidth, maxWidth)
+                                            onDrag(width)
                                         }
-                                    detectHorizontalDragGestures(
-                                        onDragStart = {
-                                            onDragStart(ClipDragType.Trailing)
-                                        },
-                                        onHorizontalDrag = { _, drag ->
-                                            val newProposedWidth = width + drag
-
-                                            if (trailingTrimHandleOvershoot.value == 0f) {
-                                                width = newProposedWidth.coerceIn(minWidth, maxWidth)
-                                                onDrag(width)
+                                        if (width != newProposedWidth) {
+                                            with(trailingTrimHandleOvershoot) {
+                                                value = (value + drag).coerceAtLeast(0f)
                                             }
-                                            if (width != newProposedWidth) {
-                                                with(trailingTrimHandleOvershoot) {
-                                                    value = (value + drag).coerceAtLeast(0f)
-                                                }
-                                            }
+                                        }
 
-                                            trailingTrimIconStyle = determineTrailingTrimIconStyle(width == maxWidth)
-                                        },
-                                        onDragEnd = {
-                                            trailingTrimHandleOvershoot.value = 0f
-                                            onDragEnd()
-                                            onEvent(BlockEvent.OnUpdateDuration(zoomState.toSeconds(width)))
-                                        },
-                                    )
-                                },
+                                        trailingTrimIconStyle = determineTrailingTrimIconStyle(width == maxWidth)
+                                    },
+                                    onDragEnd = {
+                                        trailingTrimHandleOvershoot.value = 0f
+                                        onDragEnd()
+                                        onEvent(BlockEvent.OnUpdateDuration(zoomState.toSeconds(width)))
+                                    },
+                                )
+                            },
                     ) {
                         ClipTrimHandleIconView(
                             style = trailingTrimIconStyle,
@@ -420,12 +404,11 @@ fun ClipView(
         // overlay
         if (!clip.isInBackgroundTrack) {
             ClipOverlay(
-                modifier =
-                    Modifier
-                        .offset(totalDurationWidth.toDp())
-                        .height(TimelineConfiguration.clipHeight)
-                        .fillMaxWidth()
-                        .align(Alignment.TopEnd),
+                modifier = Modifier
+                    .offset(totalDurationWidth.toDp())
+                    .height(TimelineConfiguration.clipHeight)
+                    .fillMaxWidth()
+                    .align(Alignment.TopEnd),
             )
         }
     }
@@ -436,20 +419,18 @@ fun ClipView(
 private fun animateOvershoot(
     overshootValue: State<Float>,
     shouldBounce: Boolean,
-): State<Float> =
-    animateFloatAsState(
-        targetValue = overshootValue.value.absoluteValue / 2.45f,
-        animationSpec =
-            if (shouldBounce) {
-                spring(
-                    dampingRatio = 0.35f,
-                    stiffness = 800f,
-                )
-            } else {
-                snap()
-            },
-        label = "animatedTrimHandleOvershoot",
-    )
+): State<Float> = animateFloatAsState(
+    targetValue = overshootValue.value.absoluteValue / 2.45f,
+    animationSpec = if (shouldBounce) {
+        spring(
+            dampingRatio = 0.35f,
+            stiffness = 800f,
+        )
+    } else {
+        snap()
+    },
+    label = "animatedTrimHandleOvershoot",
+)
 
 // Adds some vibration when the trim handles are dragged beyond their limits
 @Composable

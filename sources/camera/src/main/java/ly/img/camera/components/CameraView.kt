@@ -61,17 +61,18 @@ internal fun BoxScope.CameraView(
             cameraState = cameraState,
             setupLayout = viewModel::setupLayout,
             setCameraPreview = viewModel::setCameraPreview,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
         )
 
         CameraControls(
             isCameraReady = cameraState.isReady,
             isFlashEnabled = cameraState.isFlashEnabled,
             isFlashOn = cameraState.cameraFlash,
-            isSwappingAllowed = viewModel.cameraLayoutMode != null && !recordingManager.hasStartedRecording && recordingManager.hasNotRecordedYet,
+            isSwappingAllowed = viewModel.cameraLayoutMode != null &&
+                !recordingManager.hasStartedRecording &&
+                recordingManager.hasNotRecordedYet,
             toggleFlash = cameraState::toggleFlash,
             toggleCamera = viewModel::toggleCamera,
             swapLayoutPositions = viewModel::swapLayoutPositions,
@@ -106,10 +107,9 @@ internal fun BoxScope.CameraView(
     }
 
     Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(bottom = 84.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = 84.dp),
     ) {
         Toolbar(
             isRecording = recordingManager.hasStartedRecording,
@@ -120,17 +120,15 @@ internal fun BoxScope.CameraView(
         )
 
         Box(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
         ) {
             this@Column.AnimatedVisibility(
                 visible = cameraState.isReady && recordingManager.state.status is RecordingManager.Status.Idle,
-                modifier =
-                    Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(vertical = 32.dp, horizontal = 12.dp),
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(vertical = 32.dp, horizontal = 12.dp),
                 enter = fadeIn() + slideInHorizontally(),
                 exit = fadeOut() + slideOutHorizontally(),
             ) {
@@ -154,19 +152,17 @@ internal fun BoxScope.CameraView(
 
             this@Column.AnimatedVisibility(
                 visible = state.hasReachedMaxDuration,
-                modifier =
-                    Modifier
-                        .align(Alignment.BottomCenter),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter),
                 enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
                 exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
             ) {
                 Shadowed {
                     Text(
-                        text =
-                            stringResource(
-                                id = R.string.ly_img_camera_recording_limit,
-                                recordingManager.state.maxDuration.formatForClip(),
-                            ),
+                        text = stringResource(
+                            id = R.string.ly_img_camera_recording_limit,
+                            recordingManager.state.maxDuration.formatForClip(),
+                        ),
                         style = MaterialTheme.typography.titleMedium,
                         color = LocalExtendedColorScheme.current.white,
                     )
@@ -175,10 +171,9 @@ internal fun BoxScope.CameraView(
         }
 
         CameraDock(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
             cameraState = cameraState,
             recordingManager = recordingManager,
             cameraConfiguration = viewModel.cameraConfiguration,
