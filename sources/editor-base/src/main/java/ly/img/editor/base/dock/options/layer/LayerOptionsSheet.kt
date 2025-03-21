@@ -128,28 +128,28 @@ fun LayerOptionsSheet(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         CardButton(
-                            text = stringResource(R.string.ly_img_editor_to_front),
+                            text = stringResource(R.string.ly_img_editor_bring_to_front),
                             icon = IconPack.Bringtofront,
                             modifier = Modifier.weight(1f),
                             enabled = uiState.canBringForward,
                             onClick = { onEvent(BlockEvent.ToFront) },
                         )
                         CardButton(
-                            text = stringResource(R.string.ly_img_editor_forward),
+                            text = stringResource(CoreR.string.ly_img_editor_bring_forward),
                             icon = CoreIconPack.BringForward,
                             modifier = Modifier.weight(1f),
                             enabled = uiState.canBringForward,
                             onClick = { onEvent(BlockEvent.OnForward) },
                         )
                         CardButton(
-                            text = stringResource(R.string.ly_img_editor_backward),
+                            text = stringResource(CoreR.string.ly_img_editor_send_backward),
                             icon = CoreIconPack.SendBackward,
                             modifier = Modifier.weight(1f),
                             enabled = uiState.canSendBackward,
                             onClick = { onEvent(BlockEvent.OnBackward) },
                         )
                         CardButton(
-                            text = stringResource(R.string.ly_img_editor_to_back),
+                            text = stringResource(R.string.ly_img_editor_send_to_back),
                             icon = IconPack.Sendtoback,
                             modifier = Modifier.weight(1f),
                             enabled = uiState.canSendBackward,

@@ -6,11 +6,11 @@ import android.os.Parcelable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.coroutines.flow.StateFlow
 import ly.img.editor.core.component.CanvasMenu
 import ly.img.editor.core.component.Dock
 import ly.img.editor.core.component.InspectorBar
+import ly.img.editor.core.component.NavigationBar
 import ly.img.editor.core.event.EditorEventHandler
 import ly.img.editor.core.library.AssetLibrary
 import ly.img.editor.core.state.EditorState
@@ -42,11 +42,6 @@ interface EditorContext {
     val baseUri: Uri
 
     /**
-     * The navigationIcon provided via [ly.img.editor.EditorConfiguration.navigationIcon].
-     */
-    val navigationIcon: ImageVector
-
-    /**
      * The colorPalette provided via [ly.img.editor.EditorConfiguration.colorPalette].
      */
     val colorPalette: List<Color>
@@ -75,6 +70,11 @@ interface EditorContext {
      * The canvas menu provided via [ly.img.editor.EditorConfiguration.canvasMenu].
      */
     val canvasMenu: @Composable ((EditorScope.() -> CanvasMenu))?
+
+    /**
+     * The navigation bar provided via [ly.img.editor.EditorConfiguration.navigationBar].
+     */
+    val navigationBar: @Composable ((EditorScope.() -> NavigationBar))?
 
     /**
      * The engine of the current editor.

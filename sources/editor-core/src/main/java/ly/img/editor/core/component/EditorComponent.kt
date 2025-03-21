@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
@@ -11,9 +12,16 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.Alignment
+import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.LocalEditorScope
 import java.util.LinkedList
+
+internal typealias HorizontalListBuilder<Item> = EditorComponent.ListBuilder<Item, Alignment.Horizontal, Arrangement.Horizontal>
+
+internal typealias HorizontalListBuilderScope<Item> =
+    EditorComponent.ListBuilder.Scope.New<Item, Alignment.Horizontal, Arrangement.Horizontal>
 
 /**
  * A class that is used as an identifier for class [EditorComponent].
@@ -86,39 +94,70 @@ abstract class EditorComponent<Scope : EditorScope> {
      * A utility class for building list of [EditorComponent]s.
      */
     @Stable
-    class ListBuilder<Item : EditorComponent<*>>
+    class ListBuilder<Item : EditorComponent<*>, Alignment : Any, Arrangement : Any>
         @PublishedApi
         internal constructor(
-            internal val scope: Scope<Item>,
+            internal val scope: Scope<Item, Alignment, Arrangement>,
         ) {
+            class AlignmentData<Item : EditorComponent<*>, Arrangement : Any>(
+                val arrangement: Arrangement?,
+                val items: List<Item>,
+            )
+
+            private class AlignmentProviderData<Item : EditorComponent<*>, Arrangement : Any>(
+                val arrangement: Arrangement?,
+                val items: List<@Composable EditorScope.() -> Item>,
+            )
+
             /**
              * A scope class of the builder.
              */
             @Stable
-            sealed interface Scope<Item : EditorComponent<*>> {
+            sealed class Scope<Item : EditorComponent<*>, Alignment : Any, Arrangement : Any> : EditorScope() {
                 /**
                  * Final result of the builder.
                  */
                 @get:Composable
-                val items: List<Item>
+                abstract val result: Map<Alignment?, AlignmentData<Item, Arrangement>>
+
+                protected var editorContext: EditorContext? = null
+                override val impl: EditorContext
+                    get() = requireNotNull(editorContext)
 
                 /**
                  * A scope that allows only appending new items.
                  */
-                class New<Item : EditorComponent<*>>
+                class New<Item : EditorComponent<*>, Alignment : Any, Arrangement : Any>
                     @PublishedApi
                     internal constructor(
-                        private val block: @DisallowComposableCalls New<Item>.() -> Unit,
-                    ) : Scope<Item> {
-                        private val itemProviderList: MutableList<@Composable EditorScope.() -> Item> = LinkedList()
-                        override val items: List<Item>
+                        private val block: @DisallowComposableCalls New<Item, Alignment, Arrangement>.() -> Unit,
+                    ) : Scope<Item, Alignment, Arrangement>() {
+                        private val itemProviderMapping: MutableMap<Alignment?, AlignmentProviderData<Item, Arrangement>> = mutableMapOf()
+                        private val activeAlignmentItemProviderList: MutableList<@Composable EditorScope.() -> Item> = LinkedList()
+                        private var activeAlignment: Alignment? = null
+
+                        override val result: Map<Alignment?, AlignmentData<Item, Arrangement>>
                             @Composable
-                            get() = LinkedList<Item>().apply {
+                            get() = mutableMapOf<Alignment?, AlignmentData<Item, Arrangement>>().apply {
+                                val editorScope = LocalEditorScope.current.apply {
+                                    this@New.editorContext = editorContext
+                                }
                                 // Every recomposition calls the block, fills up the item list and then clears it
                                 block()
-                                val editorScope = LocalEditorScope.current
-                                itemProviderList.forEach { add(it(editorScope)) }
-                                itemProviderList.clear()
+                                if (activeAlignmentItemProviderList.isNotEmpty()) {
+                                    this[null] = AlignmentData(
+                                        arrangement = null,
+                                        items = activeAlignmentItemProviderList.map { it(editorScope) },
+                                    )
+                                    activeAlignmentItemProviderList.clear()
+                                }
+                                itemProviderMapping.forEach { (alignment, data) ->
+                                    AlignmentData(
+                                        arrangement = data.arrangement,
+                                        items = data.items.map { it(editorScope) },
+                                    ).let { this[alignment] = it }
+                                }
+                                itemProviderMapping.clear()
                             }
 
                         /**
@@ -130,70 +169,126 @@ abstract class EditorComponent<Scope : EditorScope> {
                          * @param block a building block that returns an item that should be added to the list.
                          */
                         fun add(block: @Composable EditorScope.() -> Item) {
-                            itemProviderList.add(block)
+                            if (activeAlignment == null && itemProviderMapping.isNotEmpty()) {
+                                error("It is not allowed to add items both inside and outside align block at the same time.")
+                            }
+                            activeAlignmentItemProviderList.add(block)
+                        }
+
+                        /**
+                         * Starts a new aligned group in the component. All [add] invocations withing [block] will be grouped
+                         * together, be aligned via [alignment] and be arranged via [arrangement].
+                         * Note that it is not allowed to add items both inside and outside align block at the same time
+                         * meaning all items should either be part of aligned groups or there should not be aligned groups at all.
+                         *
+                         * @param alignment the alignment of the group. Most commonly it should be an instance of
+                         * [androidx.compose.ui.Alignment.Horizontal] or [androidx.compose.ui.Alignment.Vertical].
+                         * @param arrangement the arrangement of the items in this group.
+                         * @param block the builder block of this aligned group.
+                         */
+                        fun aligned(
+                            alignment: Alignment,
+                            arrangement: Arrangement? = null,
+                            block: () -> Unit,
+                        ) {
+                            if (activeAlignmentItemProviderList.isNotEmpty()) {
+                                error("It is not allowed to add items both inside and outside align block at the same time.")
+                            }
+                            itemProviderMapping[alignment]?.let {
+                                error("Aligned block with alignment = $alignment already exists.")
+                            }
+                            activeAlignment = alignment
+                            block()
+                            itemProviderMapping[alignment] = AlignmentProviderData(
+                                arrangement = arrangement,
+                                items = activeAlignmentItemProviderList.toList(),
+                            )
+                            activeAlignment = null
+                            activeAlignmentItemProviderList.clear()
                         }
                     }
 
                 /**
                  * A scope that allows only modifications on the original [ListBuilder].
                  */
-                class Modify<Item : EditorComponent<*>> internal constructor(
-                    private val source: ListBuilder<Item>,
-                    private val block: @DisallowComposableCalls Modify<Item>.() -> Unit,
-                ) : Scope<Item> {
-                    private val addFirstProviderList: MutableList<@Composable EditorScope.() -> Item> = mutableListOf()
-                    private val addLastProviderList: MutableList<@Composable EditorScope.() -> Item> = mutableListOf()
-                    private val addAfterProviderMapping:
-                        MutableMap<EditorComponentId, LinkedList<@Composable EditorScope.() -> Item>> = mutableMapOf()
-                    private val addBeforeProviderMapping:
-                        MutableMap<EditorComponentId, LinkedList<@Composable EditorScope.() -> Item>> = mutableMapOf()
+                class Modify<Item : EditorComponent<*>, Alignment : Any, Arrangement : Any> internal constructor(
+                    private val source: ListBuilder<Item, Alignment, Arrangement>,
+                    private val block: @DisallowComposableCalls Modify<Item, Alignment, Arrangement>.() -> Unit,
+                ) : Scope<Item, Alignment, Arrangement>() {
+                    private val addFirstProviderMapping: MutableMap<Alignment?, LinkedList<@Composable EditorScope.() -> Item>> =
+                        mutableMapOf()
+                    private val addLastProviderMapping: MutableMap<Alignment?, LinkedList<@Composable EditorScope.() -> Item>> =
+                        mutableMapOf()
+                    private val addAfterProviderMapping: MutableMap<EditorComponentId, LinkedList<@Composable EditorScope.() -> Item>> =
+                        mutableMapOf()
+                    private val addBeforeProviderMapping: MutableMap<EditorComponentId, LinkedList<@Composable EditorScope.() -> Item>> =
+                        mutableMapOf()
                     private val replaceItemProviderMapping: MutableMap<EditorComponentId, @Composable EditorScope.() -> Item> =
                         mutableMapOf()
                     private val removeList: LinkedList<EditorComponentId> = LinkedList()
 
                     private fun error(
                         operation: String,
-                        id: EditorComponentId,
+                        key: String,
+                        value: Any,
                     ) {
                         error(
-                            "$operation was invoked with id=${id.id} which does not exist in the source ListBuilder " +
-                                "or is already removed via remove API.",
+                            "$operation was invoked with $key=$value which does not exist in the source ListBuilder or is already removed via remove API.",
                         )
                     }
 
-                    override val items: List<Item>
+                    override val result: Map<Alignment?, AlignmentData<Item, Arrangement>>
                         @Composable
-                        get() = LinkedList<Item>().apply {
+                        get() = mutableMapOf<Alignment?, AlignmentData<Item, Arrangement>>().apply {
+                            val editorScope = LocalEditorScope.current.apply {
+                                this@Modify.editorContext = editorContext
+                            }
                             // Every recomposition calls the block, fills up the item list and then clears it
                             block()
-                            val editorScope = LocalEditorScope.current
-                            addAll(addFirstProviderList.map { it(editorScope) })
-                            source.scope.items.forEach { item ->
-                                // Try remove item first, then do other operations.
-                                if (removeList.remove(item.id)) return@forEach
-                                addBeforeProviderMapping.remove(item.id)?.map { it(editorScope) }?.let(::addAll)
-                                add(replaceItemProviderMapping.remove(item.id)?.invoke(editorScope) ?: item)
-                                addAfterProviderMapping.remove(item.id)?.map { it(editorScope) }?.let(::addAll)
+                            source.scope.result.mapValues { (alignment, data) ->
+                                AlignmentData(
+                                    arrangement = data.arrangement,
+                                    items = buildList {
+                                        addFirstProviderMapping.remove(alignment)?.map { it(editorScope) }?.let(::addAll)
+                                        data.items.forEach { item ->
+                                            // Try remove item first, then do other operations.
+                                            if (removeList.remove(item.id)) return@forEach
+                                            addBeforeProviderMapping.remove(item.id)?.map { it(editorScope) }?.let(::addAll)
+                                            add(replaceItemProviderMapping.remove(item.id)?.invoke(editorScope) ?: item)
+                                            addAfterProviderMapping.remove(
+                                                item.id,
+                                            )?.map { it(editorScope) }?.let(::addAll)
+                                        }
+                                        addLastProviderMapping.remove(alignment)?.map { it(editorScope) }?.let(::addAll)
+                                    },
+                                )
                             }
-                            addAll(addLastProviderList.map { it(editorScope) })
+                            if (addFirstProviderMapping.isNotEmpty()) {
+                                val alignment = addFirstProviderMapping.keys.first()
+                                error(operation = "addFirst", key = "alignment", value = alignment ?: "")
+                            }
+                            if (addLastProviderMapping.isNotEmpty()) {
+                                val alignment = addLastProviderMapping.keys.first()
+                                error(operation = "addLast", key = "alignment", value = alignment ?: "")
+                            }
                             if (removeList.isNotEmpty()) {
                                 val id = removeList.first()
-                                error(operation = "remove", id = id)
+                                error(operation = "remove", key = "id", value = id.id)
                             }
                             if (addBeforeProviderMapping.isNotEmpty()) {
                                 val id = addBeforeProviderMapping.keys.first()
-                                error(operation = "addBefore", id = id)
+                                error(operation = "addBefore", key = "id", value = id.id)
                             }
                             if (addAfterProviderMapping.isNotEmpty()) {
                                 val id = addAfterProviderMapping.keys.first()
-                                error(operation = "addAfter", id = id)
+                                error(operation = "addAfter", key = "id", value = id.id)
                             }
                             if (replaceItemProviderMapping.isNotEmpty()) {
                                 val id = replaceItemProviderMapping.keys.first()
-                                error(operation = "replace", id = id)
+                                error(operation = "replace", key = "id", value = id.id)
                             }
-                            addFirstProviderList.clear()
-                            addLastProviderList.clear()
+                            addFirstProviderMapping.clear()
+                            addLastProviderMapping.clear()
                             replaceItemProviderMapping.clear()
                         }
 
@@ -206,7 +301,36 @@ abstract class EditorComponent<Scope : EditorScope> {
                      * @param block a building block that returns an item that should be added to the list at the back.
                      */
                     fun addLast(block: @Composable EditorScope.() -> Item) {
-                        addLastProviderList.add(block)
+                        if (addLastProviderMapping.size > 1 || addLastProviderMapping.keys.first() != null) {
+                            error(
+                                "addLast is already invoked with alignment value. ListBuilder cannot have aligned and non-aligned groups" +
+                                    " at the same time. Consider invoking the overloaded function with correct alignment value.",
+                            )
+                        }
+                        val newList = addLastProviderMapping[null] ?: LinkedList()
+                        newList.add(block)
+                    }
+
+                    /**
+                     * Appends a new [EditorComponent] item in the list of items that are aligned by [alignment].
+                     * Note that adding items to the list does not mean displaying. The items will be displayed if [EditorComponent.visible]
+                     * is true for them.
+                     * Also note that [EditorScope] in the [block] builder is the scope of the parent [EditorComponent].
+                     *
+                     * @param block a building block that returns an item that should be added to the list at the back.
+                     */
+                    fun addLast(
+                        alignment: Alignment,
+                        block: @Composable EditorScope.() -> Item,
+                    ) {
+                        if (addLastProviderMapping[null] != null) {
+                            error(
+                                "addLast is already invoked without alignment value. ListBuilder cannot have aligned and non-aligned" +
+                                    "groups at the same time. Consider invoking the overloaded function without any alignment value.",
+                            )
+                        }
+                        val newList = addLastProviderMapping[alignment] ?: LinkedList()
+                        newList.add(block)
                     }
 
                     /**
@@ -218,7 +342,36 @@ abstract class EditorComponent<Scope : EditorScope> {
                      * @param block a building block that returns an item that should be added to the list at the front.
                      */
                     fun addFirst(block: @Composable EditorScope.() -> Item) {
-                        addFirstProviderList.add(0, block)
+                        if (addFirstProviderMapping.size > 1 || addFirstProviderMapping.keys.first() != null) {
+                            error(
+                                "addFirst is already invoked with alignment value. ListBuilder cannot have aligned and non-aligned items" +
+                                    "at the same time. Consider invoking the overloaded function with correct alignment value.",
+                            )
+                        }
+                        val newList = addFirstProviderMapping[null] ?: LinkedList()
+                        newList.add(0, block)
+                    }
+
+                    /**
+                     * Prepends a new [EditorComponent] item in the list of items that are aligned by [alignment].
+                     * Note that adding items to the list does not mean displaying. The items will be displayed if [EditorComponent.visible]
+                     * is true for them.
+                     * Also note that [EditorScope] in the [block] builder is the scope of the parent [EditorComponent].
+                     *
+                     * @param block a building block that returns an item that should be added to the list at the back.
+                     */
+                    fun addFirst(
+                        alignment: Alignment,
+                        block: @Composable EditorScope.() -> Item,
+                    ) {
+                        if (addFirstProviderMapping[null] != null) {
+                            error(
+                                "addFirst is already invoked without alignment value. ListBuilder cannot have aligned and non-aligned" +
+                                    "items at the same time. Consider invoking the overloaded function without any alignment value.",
+                            )
+                        }
+                        val newList = addFirstProviderMapping[alignment] ?: LinkedList()
+                        newList.add(block)
                     }
 
                     /**
@@ -289,9 +442,9 @@ abstract class EditorComponent<Scope : EditorScope> {
                  */
                 @Composable
                 @PublishedApi
-                internal fun <Item : EditorComponent<*>> remember(
-                    block: @DisallowComposableCalls Scope.New<Item>.() -> Unit,
-                ): ListBuilder<Item> = androidx.compose.runtime.remember {
+                internal fun <Item : EditorComponent<*>, Alignment : Any, Arrangement : Any> remember(
+                    block: @DisallowComposableCalls Scope.New<Item, Alignment, Arrangement>.() -> Unit,
+                ): ListBuilder<Item, Alignment, Arrangement> = androidx.compose.runtime.remember {
                     ListBuilder(scope = Scope.New(block))
                 }
 
@@ -303,9 +456,9 @@ abstract class EditorComponent<Scope : EditorScope> {
                  * @return a new [ListBuilder] instance.
                  */
                 @Composable
-                fun <Item : EditorComponent<*>> ListBuilder<Item>.modify(
-                    block: @DisallowComposableCalls Scope.Modify<Item>.() -> Unit,
-                ): ListBuilder<Item> = androidx.compose.runtime.remember {
+                fun <Item : EditorComponent<*>, Alignment : Any, Arrangement : Any> ListBuilder<Item, Alignment, Arrangement>.modify(
+                    block: @DisallowComposableCalls Scope.Modify<Item, Alignment, Arrangement>.() -> Unit,
+                ): ListBuilder<Item, Alignment, Arrangement> = androidx.compose.runtime.remember {
                     ListBuilder(scope = Scope.Modify(this, block))
                 }
             }

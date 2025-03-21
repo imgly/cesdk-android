@@ -23,11 +23,6 @@
     <string name="ly_img_editor_export_cancel_dialog_confirm_text">Cancel export</string>
     <string name="ly_img_editor_export_cancel_dialog_dismiss_text">Resume</string>
 
-    <string name="ly_img_editor_undo">Undo</string>
-    <string name="ly_img_editor_redo">Redo</string>
-    <string name="ly_img_editor_toggle_preview_mode">Toggle Preview</string>
-    <string name="ly_img_editor_share">Share</string>
-
     <string name="ly_img_editor_unsaved_changes_dialog_title">Are you sure you want to exit?</string>
     <string name="ly_img_editor_unsaved_changes_dialog_text">Any changes will be permanently lost.</string>
 
@@ -55,10 +50,8 @@
     <string name="ly_img_editor_next_page">Next Page</string>
     <string name="ly_img_editor_previous_page">Previous</string>
     <string name="ly_img_editor_opacity">Opacity</string>
-    <string name="ly_img_editor_to_front">Bring to Front</string>
-    <string name="ly_img_editor_to_back">Send to Back</string>
-    <string name="ly_img_editor_forward">Bring Forward</string>
-    <string name="ly_img_editor_backward">Send Backward</string>
+    <string name="ly_img_editor_bring_to_front">Bring to Front</string>
+    <string name="ly_img_editor_send_to_back">Send to Back</string>
 
     <string name="ly_img_editor_blendmode">Blendmode</string>
     <string name="ly_img_editor_blendmode_pass_through">Pass Through</string>

@@ -152,6 +152,9 @@ val Button.Id.Companion.reorder by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Reorder].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -180,6 +183,7 @@ fun Button.Companion.rememberReorder(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Reorder()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.reorder,
@@ -193,6 +197,7 @@ fun Button.Companion.rememberReorder(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -229,6 +234,9 @@ val Button.Id.Companion.adjustments by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Adjustments].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -260,6 +268,7 @@ fun Button.Companion.rememberAdjustments(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Adjustments()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.adjustments,
@@ -273,6 +282,7 @@ fun Button.Companion.rememberAdjustments(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -309,6 +319,9 @@ val Button.Id.Companion.filter by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Filter].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -340,6 +353,7 @@ fun Button.Companion.rememberFilter(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Filter()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.filter,
@@ -353,6 +367,7 @@ fun Button.Companion.rememberFilter(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -389,6 +404,9 @@ val Button.Id.Companion.effect by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Effect].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -420,6 +438,7 @@ fun Button.Companion.rememberEffect(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Effect()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.effect,
@@ -433,6 +452,7 @@ fun Button.Companion.rememberEffect(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -469,6 +489,9 @@ val Button.Id.Companion.blur by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Blur].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -500,6 +523,7 @@ fun Button.Companion.rememberBlur(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Blur()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.blur,
@@ -513,6 +537,7 @@ fun Button.Companion.rememberBlur(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -549,6 +574,9 @@ val Button.Id.Companion.volume by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Volume].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -574,6 +602,7 @@ fun Button.Companion.rememberVolume(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Volume()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.volume,
@@ -587,6 +616,7 @@ fun Button.Companion.rememberVolume(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -623,6 +653,9 @@ val Button.Id.Companion.crop by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Crop].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -653,6 +686,7 @@ fun Button.Companion.rememberCrop(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Crop()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.crop,
@@ -666,6 +700,7 @@ fun Button.Companion.rememberCrop(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -703,6 +738,9 @@ val Button.Id.Companion.duplicate by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Selection.Duplicate] is invoked.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -728,6 +766,7 @@ fun Button.Companion.rememberDuplicate(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Selection.Duplicate())
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.duplicate,
@@ -741,6 +780,7 @@ fun Button.Companion.rememberDuplicate(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -778,6 +818,9 @@ val Button.Id.Companion.layer by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Layer].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -811,6 +854,7 @@ fun Button.Companion.rememberLayer(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Layer()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.layer,
@@ -824,6 +868,7 @@ fun Button.Companion.rememberLayer(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -861,6 +906,9 @@ val Button.Id.Companion.split by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Selection.Split] is invoked.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -889,6 +937,7 @@ fun Button.Companion.rememberSplit(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Selection.Split())
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.split,
@@ -902,6 +951,7 @@ fun Button.Companion.rememberSplit(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1161,6 +1211,9 @@ val Button.Id.Companion.moveAsClip by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Selection.MoveAsClip] is invoked.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -1189,6 +1242,7 @@ fun Button.Companion.rememberMoveAsClip(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Selection.MoveAsClip())
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.moveAsClip,
@@ -1202,6 +1256,7 @@ fun Button.Companion.rememberMoveAsClip(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1239,6 +1294,9 @@ val Button.Id.Companion.moveAsOverlay by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Selection.MoveAsOverlay] is invoked.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -1267,6 +1325,7 @@ fun Button.Companion.rememberMoveAsOverlay(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Selection.MoveAsOverlay())
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.moveAsOverlay,
@@ -1280,6 +1339,7 @@ fun Button.Companion.rememberMoveAsOverlay(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1321,6 +1381,9 @@ val Button.Id.Companion.replace by unsafeLazy {
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.LibraryReplace] where
  * the libraryCategory is picked from the [ly.img.editor.core.library.AssetLibrary] based on the [DesignBlockType], [FillType] and kind
  * of the selected block.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -1372,6 +1435,7 @@ fun Button.Companion.rememberReplace(
         }(editorContext.engine.scene.getMode())
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.LibraryReplace(libraryCategory = libraryCategory)))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.replace,
@@ -1385,6 +1449,7 @@ fun Button.Companion.rememberReplace(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1421,6 +1486,9 @@ val Button.Id.Companion.enterGroup by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Selection.EnterGroup] is invoked.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -1445,6 +1513,7 @@ fun Button.Companion.rememberEnterGroup(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Selection.EnterGroup())
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.enterGroup,
@@ -1458,6 +1527,7 @@ fun Button.Companion.rememberEnterGroup(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1494,6 +1564,9 @@ val Button.Id.Companion.selectGroup by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Selection.EnterGroup] is invoked.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -1518,6 +1591,7 @@ fun Button.Companion.rememberSelectGroup(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Selection.SelectGroup())
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.selectGroup,
@@ -1531,6 +1605,7 @@ fun Button.Companion.rememberSelectGroup(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1568,6 +1643,9 @@ val Button.Id.Companion.delete by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Selection.Delete] is invoked.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -1593,6 +1671,7 @@ fun Button.Companion.rememberDelete(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Selection.Delete())
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.delete,
@@ -1606,6 +1685,7 @@ fun Button.Companion.rememberDelete(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1643,6 +1723,9 @@ val Button.Id.Companion.editText by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Selection.EnterTextEditMode] is invoked.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -1668,6 +1751,7 @@ fun Button.Companion.rememberEditText(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Selection.EnterTextEditMode())
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.editText,
@@ -1681,6 +1765,7 @@ fun Button.Companion.rememberEditText(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1717,6 +1802,9 @@ val Button.Id.Companion.formatText by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.FormatText].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -1742,6 +1830,7 @@ fun Button.Companion.rememberFormatText(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.FormatText()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.formatText,
@@ -1755,6 +1844,7 @@ fun Button.Companion.rememberFormatText(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1794,6 +1884,9 @@ val Button.Id.Companion.shape by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Shape].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
@@ -1830,6 +1923,7 @@ fun Button.Companion.rememberShape(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Shape()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.shape,
@@ -1843,5 +1937,6 @@ fun Button.Companion.rememberShape(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )

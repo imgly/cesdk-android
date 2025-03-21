@@ -69,7 +69,6 @@ fun PostcardUi(
     }
     val viewModel = viewModel {
         PostcardUiViewModel(
-            editorScope = editorScope,
             onCreate = onCreate,
             onExport = onExport,
             onClose = onClose,
@@ -87,16 +86,6 @@ fun PostcardUi(
         editorScope = editorScope,
         editorContext = editorContext,
         onEvent = onEvent,
-        topBar = {
-            PostcardUiToolbar(
-                navigationIcon = editorContext.navigationIcon,
-                onEvent = viewModel::send,
-                postcardMode = uiState.postcardMode,
-                isInPreviewMode = uiState.editorUiViewState.isInPreviewMode,
-                isUndoEnabled = uiState.editorUiViewState.isUndoEnabled,
-                isRedoEnabled = uiState.editorUiViewState.isRedoEnabled,
-            )
-        },
         canvasOverlay = {
             if (!uiState.editorUiViewState.isInPreviewMode) {
                 Surface(

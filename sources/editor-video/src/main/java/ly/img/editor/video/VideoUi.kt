@@ -50,7 +50,6 @@ fun VideoUi(
     }
     val viewModel = viewModel {
         VideoUiViewModel(
-            editorScope = editorScope,
             onCreate = onCreate,
             onExport = onExport,
             onClose = onClose,
@@ -63,21 +62,12 @@ fun VideoUi(
     EditorUi(
         initialExternalState = initialExternalState,
         renderTarget = renderTarget,
-        uiState = uiState.editorUiViewState,
+        uiState = uiState,
         editorScope = editorScope,
         editorContext = editorContext,
         onEvent = onEvent,
-        topBar = {
-            VideoUiToolbar(
-                navigationIcon = editorContext.navigationIcon,
-                onEvent = viewModel::send,
-                isUndoEnabled = uiState.editorUiViewState.isUndoEnabled,
-                isRedoEnabled = uiState.editorUiViewState.isRedoEnabled,
-                isExportEnabled = uiState.canExport,
-            )
-        },
         canvasOverlay = {
-            if (uiState.editorUiViewState.isDockVisible) {
+            if (uiState.isSceneLoaded) {
                 editorContext.dock?.let {
                     Box(modifier = Modifier.align(Alignment.BottomStart)) {
                         EditorComponent(component = it(editorScope))

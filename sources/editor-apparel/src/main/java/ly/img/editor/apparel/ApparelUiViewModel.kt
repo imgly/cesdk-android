@@ -11,14 +11,12 @@ import ly.img.editor.core.ui.engine.overrideAndRestore
 import ly.img.editor.core.ui.library.LibraryViewModel
 
 class ApparelUiViewModel(
-    editorScope: EditorScope,
     onCreate: suspend EditorScope.() -> Unit,
     onExport: suspend EditorScope.() -> Unit,
     onClose: suspend EditorScope.(Boolean) -> Unit,
     onError: suspend EditorScope.(Throwable) -> Unit,
     libraryViewModel: LibraryViewModel,
 ) : EditorUiViewModel(
-        editorScope = editorScope,
         onCreate = onCreate,
         onExport = onExport,
         onClose = onClose,

@@ -578,7 +578,7 @@ object EditorDefaults {
                                             TextButton(
                                                 onClick = {
                                                     showCancelDialog = false
-                                                    eventHandler.send(EditorEvent.CancelExport())
+                                                    eventHandler.send(EditorEvent.Export.Cancel())
                                                 },
                                                 colors = ButtonDefaults.textButtonColors(
                                                     containerColor = MaterialTheme.colorScheme.errorContainer,

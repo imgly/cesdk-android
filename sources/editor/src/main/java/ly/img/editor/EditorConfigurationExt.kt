@@ -2,21 +2,21 @@ package ly.img.editor
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import ly.img.editor.base.components.colorpicker.fillAndStrokeColors
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.component.CanvasMenu
 import ly.img.editor.core.component.Dock
 import ly.img.editor.core.component.InspectorBar
+import ly.img.editor.core.component.NavigationBar
 import ly.img.editor.core.component.data.Nothing
 import ly.img.editor.core.component.data.nothing
+import ly.img.editor.core.component.rememberForApparel
 import ly.img.editor.core.component.rememberForDesign
 import ly.img.editor.core.component.rememberForPhoto
+import ly.img.editor.core.component.rememberForPostcard
 import ly.img.editor.core.component.rememberForVideo
 import ly.img.editor.core.event.EditorEvent
-import ly.img.editor.core.iconpack.ArrowBack
-import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.library.AssetLibrary
 
 /**
@@ -29,8 +29,6 @@ import ly.img.editor.core.library.AssetLibrary
  *
  * @param uiMode the UI mode of the editor for theming purpose.
  * Default value is [EditorUiMode.SYSTEM].
- * @param navigationIcon the navigation icon in the toolbar that is used to exit the editor.
- * Default value is [IconPack.ArrowBack].
  * @param assetLibrary the asset library configuration object. Check the documentation of [AssetLibrary] for more details.
  * Default value is [AssetLibrary.getDefault].
  * @param colorPalette the default color palette used in the UI elements that contain color modifiers such as "Fill color",
@@ -59,13 +57,15 @@ import ly.img.editor.core.library.AssetLibrary
  * the selected design block.
  * If null, then the canvas menu will not be rendered.
  * By default [CanvasMenu.remember] is returned with default items.
+ * @param navigationBar the configuration object of the navigation bar that is displayed as horizontal list of items at the top of the editor.
+ * If null, then the navigation bar will not be rendered.
+ * By default [ly.img.editor.core.component.NavigationBar.Companion.rememberForDesign] is used to handle the composable callback.
  * @return an [EditorConfiguration] that should be used to launch a [DesignEditor].
  */
 @UnstableEditorApi
 @Composable
 fun EditorConfiguration.Companion.rememberForDesign(
     uiMode: EditorUiMode = EditorUiMode.SYSTEM,
-    navigationIcon: ImageVector = IconPack.ArrowBack,
     assetLibrary: AssetLibrary = AssetLibrary.getDefault(),
     colorPalette: List<Color> = fillAndStrokeColors,
     onEvent: EditorScope.(EditorUiState, EditorEvent) -> EditorUiState = { state, event ->
@@ -77,11 +77,11 @@ fun EditorConfiguration.Companion.rememberForDesign(
     dock: (@Composable EditorScope.() -> Dock)? = { Dock.rememberForDesign() },
     inspectorBar: (@Composable EditorScope.() -> InspectorBar)? = { InspectorBar.remember() },
     canvasMenu: (@Composable EditorScope.() -> CanvasMenu)? = { CanvasMenu.remember() },
+    navigationBar: (@Composable EditorScope.() -> NavigationBar)? = { NavigationBar.rememberForDesign() },
     `_`: Nothing = nothing,
 ): EditorConfiguration<EditorUiState> = remember(
     initialState = EditorUiState(),
     uiMode = uiMode,
-    navigationIcon = navigationIcon,
     assetLibrary = assetLibrary,
     colorPalette = colorPalette,
     onEvent = onEvent,
@@ -89,6 +89,7 @@ fun EditorConfiguration.Companion.rememberForDesign(
     dock = dock,
     inspectorBar = inspectorBar,
     canvasMenu = canvasMenu,
+    navigationBar = navigationBar,
     `_` = `_`,
 )
 
@@ -102,8 +103,6 @@ fun EditorConfiguration.Companion.rememberForDesign(
  *
  * @param uiMode the UI mode of the editor for theming purpose.
  * Default value is [EditorUiMode.SYSTEM].
- * @param navigationIcon the navigation icon in the toolbar that is used to exit the editor.
- * Default value is [IconPack.ArrowBack].
  * @param assetLibrary the asset library configuration object. Check the documentation of [AssetLibrary] for more details.
  * Default value is [AssetLibrary.getDefault].
  * @param colorPalette the default color palette used in the UI elements that contain color modifiers such as "Fill color",
@@ -132,13 +131,15 @@ fun EditorConfiguration.Companion.rememberForDesign(
  * the selected design block.
  * If null, then the canvas menu will not be rendered.
  * By default [CanvasMenu.remember] is returned with default items.
+ * @param navigationBar the configuration object of the navigation bar that is displayed as horizontal list of items at the top of the editor.
+ * If null, then the navigation bar will not be rendered.
+ * By default [ly.img.editor.core.component.NavigationBar.Companion.rememberForPhoto] is used to handle the composable callback.
  * @return an [EditorConfiguration] that should be used to launch a [PhotoEditor].
  */
 @UnstableEditorApi
 @Composable
 fun EditorConfiguration.Companion.rememberForPhoto(
     uiMode: EditorUiMode = EditorUiMode.SYSTEM,
-    navigationIcon: ImageVector = IconPack.ArrowBack,
     assetLibrary: AssetLibrary = AssetLibrary.getDefault(),
     colorPalette: List<Color> = fillAndStrokeColors,
     onEvent: EditorScope.(EditorUiState, EditorEvent) -> EditorUiState = { state, event ->
@@ -150,11 +151,11 @@ fun EditorConfiguration.Companion.rememberForPhoto(
     dock: (@Composable EditorScope.() -> Dock)? = { Dock.rememberForPhoto() },
     inspectorBar: (@Composable EditorScope.() -> InspectorBar)? = { InspectorBar.remember() },
     canvasMenu: (@Composable EditorScope.() -> CanvasMenu)? = { CanvasMenu.remember() },
+    navigationBar: (@Composable EditorScope.() -> NavigationBar)? = { NavigationBar.rememberForPhoto() },
     `_`: Nothing = nothing,
 ): EditorConfiguration<EditorUiState> = remember(
     initialState = EditorUiState(),
     uiMode = uiMode,
-    navigationIcon = navigationIcon,
     assetLibrary = assetLibrary,
     colorPalette = colorPalette,
     onEvent = onEvent,
@@ -162,6 +163,7 @@ fun EditorConfiguration.Companion.rememberForPhoto(
     dock = dock,
     inspectorBar = inspectorBar,
     canvasMenu = canvasMenu,
+    navigationBar = navigationBar,
     `_` = `_`,
 )
 
@@ -175,8 +177,6 @@ fun EditorConfiguration.Companion.rememberForPhoto(
  *
  * @param uiMode the UI mode of the editor for theming purpose.
  * Default value is [EditorUiMode.SYSTEM].
- * @param navigationIcon the navigation icon in the toolbar that is used to exit the editor.
- * Default value is [IconPack.ArrowBack].
  * @param assetLibrary the asset library configuration object. Check the documentation of [AssetLibrary] for more details.
  * Default value is [AssetLibrary.getDefault].
  * @param colorPalette the default color palette used in the UI elements that contain color modifiers such as "Fill color",
@@ -202,13 +202,15 @@ fun EditorConfiguration.Companion.rememberForPhoto(
  * the selected design block.
  * If null, then the canvas menu will not be rendered.
  * By default [CanvasMenu.remember] is returned with default items.
+ * @param navigationBar the configuration object of the navigation bar that is displayed as horizontal list of items at the top of the editor.
+ * If null, then the navigation bar will not be rendered.
+ * By default [ly.img.editor.core.component.NavigationBar.Companion.rememberForApparel] is used to handle the composable callback.
  * @return an [EditorConfiguration] that should be used to launch a [ApparelEditor].
  */
 @UnstableEditorApi
 @Composable
 fun EditorConfiguration.Companion.rememberForApparel(
     uiMode: EditorUiMode = EditorUiMode.SYSTEM,
-    navigationIcon: ImageVector = IconPack.ArrowBack,
     assetLibrary: AssetLibrary = AssetLibrary.getDefault(),
     colorPalette: List<Color> = fillAndStrokeColors,
     onEvent: EditorScope.(EditorUiState, EditorEvent) -> EditorUiState = { state, event ->
@@ -219,17 +221,18 @@ fun EditorConfiguration.Companion.rememberForApparel(
     },
     inspectorBar: (@Composable EditorScope.() -> InspectorBar)? = { InspectorBar.remember() },
     canvasMenu: (@Composable EditorScope.() -> CanvasMenu)? = { CanvasMenu.remember() },
+    navigationBar: (@Composable EditorScope.() -> NavigationBar)? = { NavigationBar.rememberForApparel() },
     `_`: Nothing = nothing,
 ): EditorConfiguration<EditorUiState> = remember(
     initialState = EditorUiState(),
     uiMode = uiMode,
-    navigationIcon = navigationIcon,
     assetLibrary = assetLibrary,
     colorPalette = colorPalette,
     onEvent = onEvent,
     overlay = overlay,
     inspectorBar = inspectorBar,
     canvasMenu = canvasMenu,
+    navigationBar = navigationBar,
     `_` = `_`,
 )
 
@@ -243,8 +246,6 @@ fun EditorConfiguration.Companion.rememberForApparel(
  *
  * @param uiMode the UI mode of the editor for theming purpose.
  * Default value is [EditorUiMode.SYSTEM].
- * @param navigationIcon the navigation icon in the toolbar that is used to exit the editor.
- * Default value is [IconPack.ArrowBack].
  * @param assetLibrary the asset library configuration object. Check the documentation of [AssetLibrary] for more details.
  * Default value is [AssetLibrary.getDefault].
  * @param colorPalette the default color palette used in the UI elements that contain color modifiers such as "Fill color",
@@ -270,13 +271,15 @@ fun EditorConfiguration.Companion.rememberForApparel(
  * the selected design block.
  * If null, then the canvas menu will not be rendered.
  * By default [CanvasMenu.remember] is returned with default items.
+ * @param navigationBar the configuration object of the navigation bar that is displayed as horizontal list of items at the top of the editor.
+ * If null, then the navigation bar will not be rendered.
+ * By default [ly.img.editor.core.component.NavigationBar.Companion.rememberForPostcard] is used to handle the composable callback.
  * @return an [EditorConfiguration] that should be used to launch a [PostcardEditor].
  */
 @UnstableEditorApi
 @Composable
 fun EditorConfiguration.Companion.rememberForPostcard(
     uiMode: EditorUiMode = EditorUiMode.SYSTEM,
-    navigationIcon: ImageVector = IconPack.ArrowBack,
     assetLibrary: AssetLibrary = AssetLibrary.getDefault(),
     colorPalette: List<Color> = fillAndStrokeColors,
     onEvent: EditorScope.(EditorUiState, EditorEvent) -> EditorUiState = { state, event ->
@@ -287,17 +290,18 @@ fun EditorConfiguration.Companion.rememberForPostcard(
     },
     inspectorBar: (@Composable EditorScope.() -> InspectorBar)? = { InspectorBar.remember() },
     canvasMenu: (@Composable EditorScope.() -> CanvasMenu)? = { CanvasMenu.remember() },
+    navigationBar: (@Composable EditorScope.() -> NavigationBar)? = { NavigationBar.rememberForPostcard() },
     `_`: Nothing = nothing,
 ): EditorConfiguration<EditorUiState> = remember(
     initialState = EditorUiState(),
     uiMode = uiMode,
-    navigationIcon = navigationIcon,
     assetLibrary = assetLibrary,
     colorPalette = colorPalette,
     onEvent = onEvent,
     overlay = overlay,
     inspectorBar = inspectorBar,
     canvasMenu = canvasMenu,
+    navigationBar = navigationBar,
     `_` = `_`,
 )
 
@@ -311,8 +315,6 @@ fun EditorConfiguration.Companion.rememberForPostcard(
  *
  * @param uiMode the UI mode of the editor for theming purpose.
  * Default value is [EditorUiMode.SYSTEM].
- * @param navigationIcon the navigation icon in the toolbar that is used to exit the editor.
- * Default value is [IconPack.ArrowBack].
  * @param assetLibrary the asset library configuration object. Check the documentation of [AssetLibrary] for more details.
  * Default value is [AssetLibrary.getDefault].
  * @param colorPalette the default color palette used in the UI elements that contain color modifiers such as "Fill color",
@@ -340,13 +342,15 @@ fun EditorConfiguration.Companion.rememberForPostcard(
  * the selected design block.
  * If null, then the canvas menu will not be rendered.
  * By default [CanvasMenu.remember] is returned with default items.
+ * @param navigationBar the configuration object of the navigation bar that is displayed as horizontal list of items at the top of the editor.
+ * If null, then the navigation bar will not be rendered.
+ * By default [ly.img.editor.core.component.NavigationBar.Companion.rememberForVideo] is used to handle the composable callback.
  * @return an [EditorConfiguration] that should be used to launch a [VideoEditor].
  */
 @UnstableEditorApi
 @Composable
 fun EditorConfiguration.Companion.rememberForVideo(
     uiMode: EditorUiMode = EditorUiMode.SYSTEM,
-    navigationIcon: ImageVector = IconPack.ArrowBack,
     assetLibrary: AssetLibrary = AssetLibrary.getDefault(),
     colorPalette: List<Color> = fillAndStrokeColors,
     onEvent: EditorScope.(EditorUiState, EditorEvent) -> EditorUiState = { state, event ->
@@ -358,11 +362,11 @@ fun EditorConfiguration.Companion.rememberForVideo(
     dock: (@Composable EditorScope.() -> Dock)? = { Dock.rememberForVideo() },
     inspectorBar: (@Composable EditorScope.() -> InspectorBar)? = { InspectorBar.remember() },
     canvasMenu: (@Composable EditorScope.() -> CanvasMenu)? = { CanvasMenu.remember() },
+    navigationBar: (@Composable EditorScope.() -> NavigationBar)? = { NavigationBar.rememberForVideo() },
     `_`: Nothing = nothing,
 ): EditorConfiguration<EditorUiState> = remember(
     initialState = EditorUiState(),
     uiMode = uiMode,
-    navigationIcon = navigationIcon,
     assetLibrary = assetLibrary,
     colorPalette = colorPalette,
     onEvent = onEvent,
@@ -370,5 +374,6 @@ fun EditorConfiguration.Companion.rememberForVideo(
     dock = dock,
     inspectorBar = inspectorBar,
     canvasMenu = canvasMenu,
+    navigationBar = navigationBar,
     `_` = `_`,
 )

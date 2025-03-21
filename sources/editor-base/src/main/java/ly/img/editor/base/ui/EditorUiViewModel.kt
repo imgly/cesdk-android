@@ -1,10 +1,10 @@
 package ly.img.editor.base.ui
 
-import android.graphics.Bitmap
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Rect
 import androidx.core.content.FileProvider
+import androidx.core.graphics.createBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -78,6 +78,7 @@ import ly.img.editor.base.ui.handler.textBlockEvents
 import ly.img.editor.base.ui.handler.timelineEvents
 import ly.img.editor.base.ui.handler.volumeEvents
 import ly.img.editor.compose.bottomsheet.ModalBottomSheetValue
+import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.component.Dock
 import ly.img.editor.core.component.rememberImglyCamera
@@ -88,6 +89,7 @@ import ly.img.editor.core.library.data.AssetSourceType
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.state.EditorState
+import ly.img.editor.core.state.EditorViewMode
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.engine.BlockType
 import ly.img.editor.core.ui.engine.Scope
@@ -105,6 +107,7 @@ import ly.img.editor.core.ui.library.util.LibraryEvent
 import ly.img.editor.core.ui.register
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
+import ly.img.engine.Engine
 import ly.img.engine.FillType
 import ly.img.engine.GlobalScope
 import ly.img.engine.UnstableEngineApi
@@ -112,7 +115,6 @@ import java.io.File
 import kotlin.math.abs
 
 abstract class EditorUiViewModel(
-    private val editorScope: EditorScope,
     private val onCreate: suspend EditorScope.() -> Unit,
     private val onExport: suspend EditorScope.() -> Unit,
     private val onClose: suspend EditorScope.(Boolean) -> Unit,
@@ -121,8 +123,11 @@ abstract class EditorUiViewModel(
 ) : ViewModel(),
     EditorEventHandler {
     private val migrationHelper = EditorMigrationHelper()
-    val editor = editorScope.run { editorContext }
-    val engine = editor.engine
+    private lateinit var editorScope: EditorScope
+    val editor: EditorContext
+        get() = editorScope.run { editorContext }
+    val engine: Engine
+        get() = editor.engine
     protected var timelineState: TimelineState? = null
 
     private var firstLoad = true
@@ -136,9 +141,7 @@ abstract class EditorUiViewModel(
 
     private var isStraighteningOrRotating = false
 
-    private val isPreviewMode = MutableStateFlow(false)
     private val isExporting = MutableStateFlow(false)
-    private val enableHistory = MutableStateFlow(true)
 
     private val selectedBlock = MutableStateFlow<Block?>(null)
     private val isKeyboardShowing = MutableStateFlow(false)
@@ -234,13 +237,8 @@ abstract class EditorUiViewModel(
                 bottomSheetMaxOffset = it.bottomSheetMaxOffset,
             )
         }
-        register<Event.OnBack> { onBack() }
         register<Event.OnCloseInspectorBar> { engine.deselectAllBlocks() }
         register<Event.OnHideScrimSheet> { sendSingleEvent(SingleEvent.HideScrimSheet) }
-        register<Event.OnExportClick> { exportScene() }
-        register<Event.OnRedoClick> { engine.editor.redo() }
-        register<Event.OnUndoClick> { engine.editor.undo() }
-        register<Event.OnTogglePreviewMode> { togglePreviewMode(it.isChecked) }
         register<Event.OnCanvasMove> { onCanvasMove(it.move) }
         register<Event.OnCanvasTouch> { updateZoomState() }
         register<Event.OnResetZoom> {
@@ -251,15 +249,12 @@ abstract class EditorUiViewModel(
         register<Event.OnKeyboardClose> { onKeyboardClose() }
         register<Event.OnLoadScene> { loadScene(it.height, it.insets, it.inPortraitMode) }
         register<Event.OnUpdateBottomInset> { onUpdateBottomInset(it.bottomInset, it.zoom, it.isExpanding) }
-        register<Event.EnableHistory> { event -> enableHistory.update { event.enable } }
+        register<Event.EnableHistory> { event -> _publicState.update { it.copy(isHistoryEnabled = event.enable) } }
         register<Event.OnBottomSheetHeightChange> { onBottomSheetHeightChange(it.heightInDp, it.showTimeline) }
         register<Event.OnKeyboardHeightChange> { onKeyboardHeightChange(it.heightInDp) }
         register<Event.OnPause> { if (engine.isSceneModeVideo) timelineState?.playerState?.pause() }
         register<Event.OnPage> { setPage(it.page) }
-        register<Event.OnNextPage> { setPage(pageIndex.value + 1) }
-        register<Event.OnPreviousPage> { setPage(pageIndex.value - 1) }
         register<Event.OnAddPage> { onAddPage(it.index) }
-        register<Event.OnTogglePagesMode> { onTogglePagesMode() }
         register<Event.OnPagesModePageSelectionChange> { onPagesSelectionChange(it.page) }
         register<Event.OnPagesModePageBind> { onPagesModePageBind(it.page, it.pageHeight) }
         register<Event.OnSystemCameraClick> {
@@ -276,8 +271,14 @@ abstract class EditorUiViewModel(
         register<Event.OnLaunchContractResult> { onLaunchContractResult(it.onResult, it.editorScope, it.result) }
 
         /** Customer exposed internal events **/
+        register<EditorEvent.OnClose> { onClose() }
         register<EditorEvent.CloseEditor> { sendSingleEvent(SingleEvent.Exit(it.throwable)) }
+        register<EditorEvent.Navigation.ToNextPage> { setPage(pageIndex.value + 1) }
+        register<EditorEvent.Navigation.ToPreviousPage> { setPage(pageIndex.value - 1) }
+        register<EditorEvent.Export.Start> { exportScene() }
+        register<EditorEvent.Export.Cancel> { exportJob?.cancel() }
         register<EditorEvent.CancelExport> { exportJob?.cancel() }
+        register<EditorEvent.SetViewMode> { setViewMode(it.viewMode) }
         register<EditorEvent.Sheet.Open> { openSheet(it.type) }
         register<EditorEvent.Sheet.Expand> {
             sendSingleEvent(SingleEvent.ChangeSheetState(ModalBottomSheetValue.Expanded, it.animate))
@@ -361,6 +362,14 @@ abstract class EditorUiViewModel(
             sendSingleEvent(SingleEvent.ChangeSheetState(ModalBottomSheetValue.Hidden, animate = true))
         } else {
             bottomSheetContent.value?.type?.let { send(EditorEvent.Sheet.OnClosed(it)) }
+        }
+    }
+
+    private fun setViewMode(viewMode: EditorViewMode) {
+        when (viewMode) {
+            is EditorViewMode.Preview -> setPreviewMode(viewMode)
+            is EditorViewMode.Pages -> setPagesMode(viewMode)
+            is EditorViewMode.Edit -> setEditMode(viewMode)
         }
     }
 
@@ -532,7 +541,7 @@ abstract class EditorUiViewModel(
         _publicState.update { it.copy(isTouchActive = move) }
     }
 
-    protected open fun hasUnsavedChanges(): Boolean = _uiState.value.isUndoEnabled
+    protected open fun hasUnsavedChanges(): Boolean = engine.editor.canUndo()
 
     protected open fun updateBottomSheetUiState() {
         _bottomSheetContent.value ?: return
@@ -626,17 +635,20 @@ abstract class EditorUiViewModel(
     protected open fun handleBackPress(
         bottomSheetOffset: Float,
         bottomSheetMaxOffset: Float,
-    ): Boolean = if (bottomSheetOffset < bottomSheetMaxOffset) {
-        send(EditorEvent.Sheet.Close(animate = true))
-        true
-    } else if (selectedBlock.value != null) {
-        engine.deselectAllBlocks()
-        true
-    } else if (_uiState.value.pagesState != null) {
-        onTogglePagesMode()
-        true
-    } else {
-        false
+    ): Boolean = when {
+        bottomSheetOffset < bottomSheetMaxOffset -> {
+            send(EditorEvent.Sheet.Close(animate = true))
+            true
+        }
+        publicState.value.viewMode is EditorViewMode.Preview -> {
+            setViewMode(viewMode = EditorViewMode.Edit())
+            true
+        }
+        publicState.value.viewMode is EditorViewMode.Pages -> {
+            setViewMode(viewMode = EditorViewMode.Edit())
+            true
+        }
+        else -> false
     }
 
     private var lastKnownBottomInsetBeforeSheetOp = 0f
@@ -689,11 +701,7 @@ abstract class EditorUiViewModel(
         firstLoad = false
         if (isConfigChange) {
             lastKnownBottomInset = 0f
-            if (isPreviewMode.value) {
-                enablePreviewMode()
-            } else {
-                enableEditMode()
-            }
+            setViewMode(publicState.value.viewMode)
         } else {
             if (engine.scene.get() == null) {
                 viewModelScope.launch {
@@ -723,7 +731,7 @@ abstract class EditorUiViewModel(
                     engine.addOutline(scene, engine.getPage(pageIndex.value))
                     engine.showOutline(false)
                     showPage(pageIndex.value)
-                    enableEditMode().join()
+                    setEditMode(EditorViewMode.Edit()).join()
                     engine.resetHistory()
                 }.onSuccess {
                     _isSceneLoaded.update { true }
@@ -827,7 +835,7 @@ abstract class EditorUiViewModel(
         heightInDp: Float,
         showTimeline: Boolean,
     ) {
-        if (isPreviewMode.value || !_isSceneLoaded.value) return
+        if (publicState.value.viewMode !is EditorViewMode.Edit || !_isSceneLoaded.value) return
         bottomSheetHeight = heightInDp
         val closingSheetContent = this.closingSheetContent
         if (heightInDp == 0F && closingSheetContent != null) {
@@ -863,19 +871,6 @@ abstract class EditorUiViewModel(
         engine.block.setFillType(newPage, FillType.Color)
         engine.block.insertChild(parent, newPage, index)
         engine.editor.addUndoStep()
-    }
-
-    private fun onTogglePagesMode() {
-        if (_uiState.value.pagesState != null) {
-            // Cancel all thumb generation jobs
-            _uiState.update {
-                it.copy(pagesState = null)
-            }
-            onStopGenerateAllPageThumbnails()
-        } else {
-            engine.deselectAllBlocks()
-            updateEditorPagesState()
-        }
     }
 
     private fun updateEditorPagesState() {
@@ -916,7 +911,7 @@ abstract class EditorUiViewModel(
                     ).firstOrNull()
             }.getOrNull() ?: return@launch
             val bitmap = withContext(Dispatchers.Default) {
-                Bitmap.createBitmap(result.width, result.height, Bitmap.Config.ARGB_8888).also {
+                createBitmap(result.width, result.height).also {
                     it.copyPixelsFromBuffer(result.imageData)
                 }
             }
@@ -1090,25 +1085,22 @@ abstract class EditorUiViewModel(
             merge(
                 historyChangeTrigger,
                 _isSceneLoaded,
-                isPreviewMode,
+                publicState,
                 isExporting,
-                enableHistory,
                 selectedBlock,
                 isKeyboardShowing,
             ).collect {
                 val pageCount = if (_isSceneLoaded.value) engine.scene.getPages().size else 0
+                val viewMode = publicState.value.viewMode
                 _uiState.update {
                     it.copy(
-                        isCanvasVisible = _isSceneLoaded.value,
-                        isInPreviewMode = isPreviewMode.value,
-                        allowEditorInteraction = !isPreviewMode.value,
-                        isUndoEnabled = _isSceneLoaded.value && enableHistory.value && engine.editor.canUndo(),
-                        isRedoEnabled = _isSceneLoaded.value && enableHistory.value && engine.editor.canRedo(),
+                        isInPreviewMode = viewMode is EditorViewMode.Preview,
+                        allowEditorInteraction = viewMode is EditorViewMode.Edit,
                         selectedBlock = selectedBlock.value,
                         isEditingText = isKeyboardShowing.value,
                         timelineState = timelineState,
                         pageCount = pageCount,
-                        isDockVisible = _isSceneLoaded.value,
+                        isSceneLoaded = _isSceneLoaded.value,
                     )
                 }
             }
@@ -1246,7 +1238,7 @@ abstract class EditorUiViewModel(
         }
     }
 
-    private fun onBack() {
+    private fun onClose() {
         viewModelScope.launch {
             onClose(editorScope, hasUnsavedChanges())
         }
@@ -1263,31 +1255,32 @@ abstract class EditorUiViewModel(
         bottomSheetMaxOffset: Float,
     ) {
         if (!handleBackPress(bottomSheetOffset = bottomSheetOffset, bottomSheetMaxOffset = bottomSheetMaxOffset)) {
-            onBack()
+            onClose()
         }
     }
 
-    private fun enableEditMode(): Job {
-        isPreviewMode.update { false }
+    private fun setEditMode(viewMode: EditorViewMode.Edit): Job {
+        _publicState.update { state -> state.copy(viewMode = viewMode) }
+        _uiState.update { it.copy(pagesState = null) }
+        // Cancel all thumb generation jobs
+        onStopGenerateAllPageThumbnails()
         engine.editor.setGlobalScope(Scope.EditorSelect, initiallySetEditorSelectGlobalScope)
         enterEditMode()
         return zoom(zoomToPage = true)
     }
 
-    private fun enablePreviewMode() {
-        isPreviewMode.update { true }
+    private fun setPreviewMode(viewMode: EditorViewMode.Preview) {
+        _publicState.update { state -> state.copy(viewMode = viewMode) }
         send(EditorEvent.Sheet.Close(animate = false))
         engine.editor.setGlobalScope(Scope.EditorSelect, GlobalScope.DENY)
         enterPreviewMode()
         zoom(defaultInsets.copy(bottom = verticalPageInset))
     }
 
-    private fun togglePreviewMode(previewMode: Boolean) {
-        if (previewMode) {
-            enablePreviewMode()
-        } else {
-            enableEditMode()
-        }
+    private fun setPagesMode(viewMode: EditorViewMode.Pages) {
+        _publicState.update { state -> state.copy(viewMode = viewMode) }
+        engine.deselectAllBlocks()
+        updateEditorPagesState()
     }
 
     private var exportJob: Job? = null
@@ -1332,6 +1325,10 @@ abstract class EditorUiViewModel(
 
     open fun onPreCreate() {
         setSettingsForEditorUi(engine, editor.baseUri)
+    }
+
+    fun setEditorScope(editorScope: EditorScope) {
+        this.editorScope = editorScope
     }
 
     private companion object {

@@ -7,8 +7,10 @@ import ly.img.editor.base.R
 import ly.img.editor.base.engine.isDeleteAllowed
 import ly.img.editor.base.engine.isDuplicateAllowed
 import ly.img.editor.core.component.data.EditorIcon
+import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.iconpack.Delete
 import ly.img.editor.core.iconpack.Duplicate
+import ly.img.editor.core.state.EditorViewMode
 import ly.img.editor.core.ui.iconpack.Addpage
 import ly.img.editor.core.ui.iconpack.Edit
 import ly.img.editor.core.ui.iconpack.IconPack
@@ -41,7 +43,7 @@ data class EditorPagesState(
         @StringRes val titleRes: Int,
         val icon: EditorIcon.Vector,
         val enabled: Boolean,
-        val actions: List<Event>,
+        val actions: List<EditorEvent>,
     )
 }
 
@@ -126,7 +128,7 @@ private fun createEditorPagesState(
             enabled = true,
             actions = listOf(
                 Event.OnPage(page = selectedPageIndex),
-                Event.OnTogglePagesMode,
+                EditorEvent.SetViewMode(EditorViewMode.Edit()),
             ),
         ).let(::add)
         EditorPagesState.DockOption(

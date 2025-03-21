@@ -34,6 +34,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -122,13 +123,15 @@ fun EditorUi(
     editorScope: EditorScope,
     editorContext: EditorContext,
     onEvent: EditorScope.(Parcelable, EditorEvent) -> Parcelable,
-    topBar: @Composable () -> Unit,
     canvasOverlay: @Composable BoxScope.(PaddingValues) -> Unit,
     bottomSheetLayout: @Composable ColumnScope.(BottomSheetContent, (Boolean) -> Unit) -> Unit = { _, _ -> },
     pagesOverlay: @Composable BoxScope.(PaddingValues) -> Unit = {},
     viewModel: EditorUiViewModel,
     close: (Throwable?) -> Unit,
 ) {
+    SideEffect {
+        viewModel.setEditorScope(editorScope)
+    }
     val externalState = rememberSaveable { mutableStateOf(initialExternalState) }
     val uiScope = rememberCoroutineScope()
     val bottomSheetContent by viewModel.bottomSheetContent.collectAsState()
@@ -551,7 +554,13 @@ fun EditorUi(
             ) {
                 Scaffold(
                     modifier = Modifier.navigationBarsPadding(),
-                    topBar = topBar,
+                    topBar = {
+                        if (uiState.isSceneLoaded) {
+                            editorContext.navigationBar?.let {
+                                EditorComponent(component = it(editorScope))
+                            }
+                        }
+                    },
                     snackbarHost = {
                         SnackbarHost(snackbarHostState)
                     },
@@ -564,7 +573,7 @@ fun EditorUi(
                             userId = editorContext.userId,
                             renderTarget = renderTarget,
                             engine = viewModel.engine,
-                            isCanvasVisible = uiState.isCanvasVisible,
+                            isCanvasVisible = uiState.isSceneLoaded,
                             passTouches = uiState.allowEditorInteraction,
                             onLicenseValidationError = {
                                 viewModel.send(Event.OnError(it))
@@ -595,7 +604,7 @@ fun EditorUi(
                                 (editorContext as EditorContextImpl).clear()
                             },
                         )
-                        if (uiState.isCanvasVisible) {
+                        if (uiState.isSceneLoaded) {
                             Column(
                                 Modifier
                                     .fillMaxWidth()
@@ -624,23 +633,22 @@ fun EditorUi(
                                     canvasOverlay(paddingValues)
                                 }
                             }
-                        }
-                        if (uiState.isCanvasVisible) {
+
+                            if (uiState.isEditingText) {
+                                EditingTextCard(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomStart)
+                                        .onGloballyPositioned {
+                                            viewModel.send(Event.OnKeyboardHeightChange(it.size.height / oneDpInPx))
+                                        },
+                                    onClose = { viewModel.send(Event.OnKeyboardClose) },
+                                )
+                            }
+
                             editorContext.canvasMenu?.let {
                                 EditorComponent(component = it(editorScope))
                             }
-                        }
-                        if (uiState.isEditingText) {
-                            EditingTextCard(
-                                modifier = Modifier
-                                    .align(Alignment.BottomStart)
-                                    .onGloballyPositioned {
-                                        viewModel.send(Event.OnKeyboardHeightChange(it.size.height / oneDpInPx))
-                                    },
-                                onClose = { viewModel.send(Event.OnKeyboardClose) },
-                            )
-                        }
-                        if (uiState.isCanvasVisible) {
+
                             editorContext.inspectorBar?.let {
                                 Box(modifier = Modifier.align(Alignment.BottomStart)) {
                                     EditorComponent(component = it(editorScope))

@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,7 +26,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -72,14 +72,21 @@ import ly.img.engine.Engine
  * A component for rendering the inspector bar at the bottom of the editor.
  * Use [remember] from the companion object to create an instance of this class.
  *
- * @param scope the scope of this component. Every new value will trigger recomposition of all functions with
- * signature @Composable Scope.() -> {}.
+ * @param scope the scope of this component. Every new value will trigger recomposition of all the lambda parameters below.
+ * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
+ * Consider using Compose [androidx.compose.runtime.State] objects in the lambdas
+ * for granular recompositions over updating the scope, since scope change triggers full recomposition of the inspector bar.
+ * Also prefer updating individual [Item]s over updating the whole [InspectorBar].
+ * Ideally, scope should be updated when the parent scope (scope of the parent component) is updated and when you want to
+ * observe changes from the [Engine].
  * @param visible whether the inspector bar should be visible based on the [Engine]'s current state.
  * @param enterTransition transition of the inspector bar when it enters the parent composable.
  * @param exitTransition transition of the inspector bar when it exits the parent composable.
  * @param decoration decoration of the inspector bar. Useful when you want to add custom background, foreground, shadow, paddings etc.
  * @param listBuilder the list builder of this inspector bar.
  * @param horizontalArrangement the horizontal arrangement that should be used to render the items in the inspector bar horizontally.
+ * Note that the value will be ignored in case [listBuilder] contains aligned items. Check [EditorComponent.ListBuilder.Scope.New.aligned] for more
+ * details on how to configure arrangement of aligned items.
  * @param itemsRowEnterTransition separate transition of the [Item]s row only when [enterTransition] is running.
  * @param itemsRowExitTransition separate transition of the [Item]s row only when [exitTransition] is running.
  * @param itemDecoration decoration of the items in the inspector bar. Useful when you want to add custom background, foreground, shadow,
@@ -93,7 +100,7 @@ class InspectorBar private constructor(
     override val enterTransition: @Composable Scope.() -> EnterTransition,
     override val exitTransition: @Composable Scope.() -> ExitTransition,
     override val decoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit,
-    val listBuilder: EditorComponent.ListBuilder<Item<*>>,
+    val listBuilder: HorizontalListBuilder<Item<*>>,
     val horizontalArrangement: @Composable Scope.() -> Arrangement.Horizontal,
     val itemsRowEnterTransition: @Composable Scope.() -> EnterTransition,
     val itemsRowExitTransition: @Composable Scope.() -> ExitTransition,
@@ -111,7 +118,7 @@ class InspectorBar private constructor(
              * @return a new [ListBuilder] instance.
              */
             @Composable
-            fun remember(): EditorComponent.ListBuilder<Item<*>> = EditorComponent.ListBuilder.remember {
+            fun remember(): HorizontalListBuilder<Item<*>> = HorizontalListBuilder.remember {
                 add { Button.rememberReplace() } // Video, Image, Sticker, Audio
                 add { Button.rememberEditText() } // Text
                 add { Button.rememberFormatText() } // Text
@@ -141,9 +148,8 @@ class InspectorBar private constructor(
              * @return a new [ListBuilder] instance.
              */
             @Composable
-            fun remember(
-                block: @DisallowComposableCalls EditorComponent.ListBuilder.Scope.New<Item<*>>.() -> Unit,
-            ): EditorComponent.ListBuilder<Item<*>> = EditorComponent.ListBuilder.remember(block)
+            fun remember(block: @DisallowComposableCalls HorizontalListBuilderScope<Item<*>>.() -> Unit): HorizontalListBuilder<Item<*>> =
+                HorizontalListBuilder.remember(block)
         }
     }
 
@@ -156,17 +162,38 @@ class InspectorBar private constructor(
                 exit = itemsRowExitTransition(),
             )
         } ?: Modifier
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .then(animationModifier),
-            horizontalArrangement = horizontalArrangement(),
-        ) {
-            listBuilder.scope.items.forEach {
-                itemDecoration {
-                    EditorComponent(component = it)
+        listBuilder.scope.result.forEach { (alignment, data) ->
+            // Main list
+            if (alignment == null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .then(animationModifier),
+                    horizontalArrangement = horizontalArrangement(),
+                ) {
+                    Items(data)
                 }
+            } else {
+                // List with alignments
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.align(alignment),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = data.arrangement ?: Arrangement.Start,
+                    ) {
+                        Items(data)
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun Scope.Items(data: EditorComponent.ListBuilder.AlignmentData<Item<*>, *>) {
+        data.items.forEach {
+            itemDecoration {
+                EditorComponent(component = it)
             }
         }
     }
@@ -365,6 +392,7 @@ class InspectorBar private constructor(
      * @param onClick the callback that is invoked when the button is clicked.
      * @param icon the icon content of the button. If null, it will not be rendered.
      * @param text the text content of the button. If null, it will not be rendered.
+     * @param tint the tint color of the content. If null then no tint is applied.
      * @param enabled whether the button is enabled.
      */
     @Stable
@@ -378,6 +406,7 @@ class InspectorBar private constructor(
         val onClick: ButtonScope.() -> Unit,
         val icon: (@Composable ButtonScope.() -> Unit)?,
         val text: (@Composable ButtonScope.() -> Unit)?,
+        val tint: (@Composable ButtonScope.() -> Color)?,
         val enabled: @Composable ButtonScope.() -> Boolean,
         private val `_`: Nothing,
     ) : Item<ButtonScope>() {
@@ -391,6 +420,7 @@ class InspectorBar private constructor(
                 enabled = enabled(),
                 icon = icon?.let { { it() } },
                 text = text?.let { { it() } },
+                tint = tint?.invoke(this) ?: MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
@@ -428,6 +458,8 @@ class InspectorBar private constructor(
              * Default value is null.
              * @param text the text content of the button. If null, it will not be rendered.
              * Default value is null.
+             * @param tint the tint color of the content. If null then no tint is applied.
+             * Default value is null.
              * @param enabled whether the button is enabled.
              * Default value is always true.
              * @return a button that will be displayed in the inspector bar.
@@ -445,6 +477,7 @@ class InspectorBar private constructor(
                 onClick: ButtonScope.() -> Unit,
                 icon: (@Composable ButtonScope.() -> Unit)? = null,
                 text: (@Composable ButtonScope.() -> Unit)? = null,
+                tint: (@Composable ButtonScope.() -> Color)? = null,
                 enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
                 `_`: Nothing = nothing,
             ): Button = remember(scope, visible, enterTransition, exitTransition, onClick, icon, text, enabled) {
@@ -458,6 +491,7 @@ class InspectorBar private constructor(
                     onClick = onClick,
                     icon = icon,
                     text = text,
+                    tint = tint,
                     enabled = enabled,
                     `_` = `_`,
                 )
@@ -490,6 +524,9 @@ class InspectorBar private constructor(
              * Default value is null.
              * @param enabled whether the button is enabled.
              * Default value is always true.
+             * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+             * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+             * Default value is null.
              * @return a button that will be displayed in the inspector bar.
              */
             @Composable
@@ -507,43 +544,50 @@ class InspectorBar private constructor(
                 text: (@Composable ButtonScope.() -> String)? = null,
                 tint: (@Composable ButtonScope.() -> Color)? = null,
                 enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
+                contentDescription: (@Composable ButtonScope.() -> String)? = null,
                 `_`: Nothing = nothing,
-            ): Button = remember(
-                id = id,
-                scope = scope,
-                visible = visible,
-                enterTransition = enterTransition,
-                exitTransition = exitTransition,
-                decoration = decoration,
-                onClick = onClick,
-                icon = vectorIcon?.let {
-                    {
-                        Icon(
-                            imageVector = vectorIcon(this),
-                            contentDescription = null,
-                            tint = tint?.invoke(this) ?: LocalContentColor.current,
-                        )
-                    }
-                },
-                text = text?.let {
-                    {
-                        Text(
-                            text = text(this),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = tint?.invoke(this) ?: Color.Unspecified,
-                            modifier = Modifier.padding(top = 4.dp),
-                        )
-                    }
-                },
-                enabled = enabled,
-                `_` = `_`,
-            )
+            ): Button {
+                require(text != null || contentDescription != null) {
+                    "Content description must be provided when creating an InspectorBar.Button with icon only."
+                }
+                return remember(
+                    id = id,
+                    scope = scope,
+                    visible = visible,
+                    enterTransition = enterTransition,
+                    exitTransition = exitTransition,
+                    decoration = decoration,
+                    onClick = onClick,
+                    icon = vectorIcon?.let {
+                        {
+                            Icon(
+                                imageVector = vectorIcon(this),
+                                contentDescription = contentDescription?.invoke(this),
+                            )
+                        }
+                    },
+                    text = text?.let {
+                        {
+                            Text(
+                                text = text(this),
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                    },
+                    tint = tint,
+                    enabled = enabled,
+                    `_` = `_`,
+                )
+            }
         }
     }
 
     companion object {
         /**
-         * The default scope of the inspector bar.
+         * The default scope of the inspector bar. The value is updated when:
+         * 1. Parent scope is updated.
+         * 2. Selection is updated.
          */
         @OptIn(ExperimentalCoroutinesApi::class)
         val defaultScope: Scope
@@ -618,6 +662,7 @@ class InspectorBar private constructor(
          * The default decoration of the inspector bar.
          * Sets a background color, applies paddings and adds a close button to the inspector bar.
          */
+        @Deprecated("Use DefaultDecoration function instead.", ReplaceWith("{ DefaultDecoration() }"))
         val defaultDecoration: @Composable Scope.(@Composable () -> Unit) -> Unit = {
             DefaultDecoration { it() }
         }
@@ -761,10 +806,12 @@ class InspectorBar private constructor(
          *                 )
          *             }
          *             replace(id = InspectorBar.Button.Id.volume) {
-         *                 // Note that it can be replaced with a component that has a different id.
-         *                 InspectorBar.Button.rememberElementsLibrary(
-         *                     vectorIcon = { IconPack.Music }
-         *                 )
+         *                  InspectorBar.Button.remember(
+         *                      id = EditorComponentId("my.package.inspectorBar.button.replacedVolume"),
+         *                      vectorIcon = null,
+         *                      text = { "Replaced Volume" },
+         *                      onClick = {},
+         *                  )
          *             }
          *             remove(id = InspectorBar.Button.Id.shapesLibrary)
          *         }
@@ -795,7 +842,7 @@ class InspectorBar private constructor(
          *         listBuilder = InspectorBar.ListBuilder.remember {
          *             add {
          *                 InspectorBar.Button.remember(
-         *                     id = EditorComponentId("my.package.inspectorBar.button.first"),
+         *                     id = EditorComponentId("my.package.inspectorBar.button.custom1"),
          *                     vectorIcon = { listOf(IconPack.Music, IconPack.PlayBox).random() },
          *                     text = { "Custom1 $counter" },
          *                     onClick = {}
@@ -821,7 +868,7 @@ class InspectorBar private constructor(
          *             add { InspectorBar.Button.rememberBlur() }
          *             add {
          *                 InspectorBar.Button.remember(
-         *                     id = EditorComponentId("my.package.inspectorBar.button.middle"),
+         *                     id = EditorComponentId("my.package.inspectorBar.button.custom2"),
          *                     vectorIcon = { IconPack.PlayBox },
          *                     text = { "Custom2" },
          *                     onClick = { counter++ }
@@ -837,10 +884,14 @@ class InspectorBar private constructor(
          *     )
          * }
          *
-         * @param scope the scope of this component. Every new value will trigger recomposition of all functions with
-         * signature @Composable Scope.() -> {}.
+         * @param scope the scope of this component. Every new value will trigger recomposition of all the lambda parameters below.
          * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
-         * By default it is updated when the parent scope (accessed via [LocalEditorScope]) is updated and when [Selection] changes.
+         * Consider using Compose [androidx.compose.runtime.State] objects in the lambdas
+         * for granular recompositions over updating the scope, since scope change triggers full recomposition of the inspector bar.
+         * Also prefer updating individual [Item]s over updating the whole [InspectorBar].
+         * Ideally, scope should be updated when the parent scope (scope of the parent component) is updated and when you want to
+         * observe changes from the [Engine].
+         * By default [defaultScope] is used.
          * @param visible whether the inspector bar should be visible based on the [Engine]'s current state.
          * Default value is always true.
          * @param enterTransition transition of the inspector bar when it enters the parent composable.
@@ -848,13 +899,15 @@ class InspectorBar private constructor(
          * @param exitTransition transition of the inspector bar when it exits the parent composable.
          * Default value is [defaultExitTransition].
          * @param decoration decoration of the inspector bar. Useful when you want to add custom background, foreground, shadow, paddings etc.
-         * Default value is [defaultDecoration].
+         * Default value is [DefaultDecoration].
          * @param listBuilder a builder that builds the list of [InspectorBar.Item]s that should be part of the inspector bar.
          * Note that adding items to the list does not mean displaying. The items will be displayed if [InspectorBar.Item.visible]
          * is true for them.
          * Also note that items will be rebuilt when [scope] is updated.
          * By default, the list mentioned above is added to the inspector bar.
          * @param horizontalArrangement the horizontal arrangement that should be used to render the items in the inspector bar horizontally.
+         * Note that the value will be ignored in case [listBuilder] contains aligned items. Check [EditorComponent.ListBuilder.Scope.New.aligned] for more
+         * details on how to configure arrangement of aligned items.
          * Default value is [Arrangement.Start].
          * @param itemsRowEnterTransition separate transition of the [Item]s row only when [enterTransition] is running.
          * Default value is [defaultItemsRowEnterTransition].
@@ -872,8 +925,8 @@ class InspectorBar private constructor(
             visible: @Composable Scope.() -> Boolean = { editorContext.safeSelection != null },
             enterTransition: @Composable Scope.() -> EnterTransition = defaultEnterTransition,
             exitTransition: @Composable Scope.() -> ExitTransition = defaultExitTransition,
-            decoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = defaultDecoration,
-            listBuilder: EditorComponent.ListBuilder<Item<*>> = ListBuilder.remember(),
+            decoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = { DefaultDecoration { it() } },
+            listBuilder: HorizontalListBuilder<Item<*>> = ListBuilder.remember(),
             horizontalArrangement: @Composable Scope.() -> Arrangement.Horizontal = { Arrangement.Start },
             itemsRowEnterTransition: @Composable Scope.() -> EnterTransition = defaultItemsRowEnterTransition,
             itemsRowExitTransition: @Composable Scope.() -> ExitTransition = noneExitTransition,

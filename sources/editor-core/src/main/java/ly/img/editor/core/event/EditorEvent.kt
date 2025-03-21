@@ -5,6 +5,7 @@ import androidx.activity.result.contract.ActivityResultContract
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.sheet.SheetType
+import ly.img.editor.core.state.EditorViewMode
 import ly.img.engine.DesignBlock
 import kotlin.time.Duration
 
@@ -128,6 +129,26 @@ interface EditorEvent {
     }
 
     /**
+     * All events related to navigation inside the editor.
+     */
+    class Navigation {
+        /**
+         * An event for navigating to the previous page.
+         */
+        class ToPreviousPage : EditorEvent
+
+        /**
+         * An event for navigating to the next page.
+         */
+        class ToNextPage : EditorEvent
+    }
+
+    /**
+     * An event for triggering [ly.img.editor.EngineConfiguration.onClose] callback.
+     */
+    class OnClose : EditorEvent
+
+    /**
      * An event for closing the editor. This force closes the editor without entering the
      * [ly.img.editor.EngineConfiguration.onClose] callback.
      *
@@ -137,10 +158,30 @@ interface EditorEvent {
         val throwable: Throwable? = null,
     ) : EditorEvent
 
+    class Export {
+        /**
+         * An event for starting an export process. This event triggers the [ly.img.editor.EngineConfiguration.onExport] callback.
+         */
+        class Start : EditorEvent
+
+        /**
+         * An event for canceling the export job if it is running.
+         */
+        class Cancel : EditorEvent
+    }
+
     /**
-     * An event for canceling the export job if it is running.
+     * An event for setting the view mode of the editor to a new value.
+     *
+     * Note that some view modes may look weird or cause unexpected behaviors in some of the solutions.
+     * The following mapping shows the best [EditorViewMode] - solution combinations:
+     * [EditorViewMode.Edit] - best used in all solutions.
+     * [EditorViewMode.Preview] - best used in [ly.img.editor.PhotoEditor], [ly.img.editor.ApparelEditor] and [ly.img.editor.PostcardEditor].
+     * [EditorViewMode.Pages] - best used in [ly.img.editor.DesignEditor].
      */
-    class CancelExport : EditorEvent
+    class SetViewMode(
+        val viewMode: EditorViewMode,
+    ) : EditorEvent
 
     /**
      * An event for launching any contract via [ActivityResultContract] API.
@@ -205,6 +246,15 @@ interface EditorEvent {
         val uploadAssetSourceType: UploadAssetSourceType,
         val recordings: List<Pair<Uri, Duration>>,
     ) : EditorEvent
+
+    /**
+     * An event for canceling the export job if it is running.
+     */
+    @Deprecated(
+        message = "Use EditorEvent.Export.Cancel instead",
+        replaceWith = ReplaceWith("Export.Cancel"),
+    )
+    class CancelExport : EditorEvent
 }
 
 /**
@@ -233,8 +283,8 @@ interface EditorEventHandler {
      * A special function for canceling the export job if it is running.
      */
     @Deprecated(
-        message = "Use EditorEventHandler.send(EditorEvent.CancelExport() instead",
-        replaceWith = ReplaceWith("send(EditorEvent.CancelExport())"),
+        message = "Use EditorEventHandler.send(EditorEvent.Export.Cancel() instead",
+        replaceWith = ReplaceWith("send(EditorEvent.Export.Cancel())"),
     )
-    fun sendCancelExportEvent() = send(EditorEvent.CancelExport())
+    fun sendCancelExportEvent() = send(EditorEvent.Export.Cancel())
 }

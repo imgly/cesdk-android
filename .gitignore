@@ -5,4 +5,4 @@ local.properties
 build
 android-release.keystore
 showcases-app/build
-editor-version-details-dummy/build
+editor-debug-menu/build

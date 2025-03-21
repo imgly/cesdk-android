@@ -6,8 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.LocalEditorScope
+import ly.img.editor.core.R
 import ly.img.editor.core.component.CanvasMenu.Button
 import ly.img.editor.core.component.CanvasMenu.ButtonScope
 import ly.img.editor.core.component.EditorComponent.Companion.noneEnterTransition
@@ -57,6 +59,9 @@ val Button.Id.Companion.bringForward by unsafeLazy {
  * By default the value is true when the selected design block is not the last reorderable child in the parent design block.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Selection.BringForward] is invoked.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is always [R.string.ly_img_editor_bring_forward].
  * @return a button that will be displayed in the canvas menu.
  */
 @Composable
@@ -82,6 +87,9 @@ fun Button.Companion.rememberBringForward(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Selection.BringForward())
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = {
+        stringResource(R.string.ly_img_editor_bring_forward)
+    },
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.bringForward,
@@ -95,6 +103,7 @@ fun Button.Companion.rememberBringForward(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -131,6 +140,9 @@ val Button.Id.Companion.sendBackward by unsafeLazy {
  * By default the value is true when the selected design block is not the first reorderable child in the parent design block.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Selection.SendBackward] is invoked.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is always [R.string.ly_img_editor_send_backward].
  * @return a button that will be displayed in the canvas menu.
  */
 @Composable
@@ -156,6 +168,9 @@ fun Button.Companion.rememberSendBackward(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Selection.SendBackward())
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = {
+        stringResource(R.string.ly_img_editor_send_backward)
+    },
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.sendBackward,
@@ -169,6 +184,7 @@ fun Button.Companion.rememberSendBackward(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -206,6 +222,9 @@ val Button.Id.Companion.duplicate by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Selection.Duplicate] is invoked.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is always [R.string.ly_img_editor_duplicate].
  * @return a button that will be displayed in the canvas menu.
  */
 @Composable
@@ -229,6 +248,9 @@ fun Button.Companion.rememberDuplicate(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Selection.Duplicate())
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = {
+        stringResource(R.string.ly_img_editor_duplicate)
+    },
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.duplicate,
@@ -242,6 +264,7 @@ fun Button.Companion.rememberDuplicate(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -279,6 +302,9 @@ val Button.Id.Companion.delete by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Selection.Delete] is invoked.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is always [R.string.ly_img_editor_delete].
  * @return a button that will be displayed in the canvas menu.
  */
 @Composable
@@ -302,6 +328,9 @@ fun Button.Companion.rememberDelete(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Selection.Delete())
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = {
+        stringResource(R.string.ly_img_editor_delete)
+    },
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.delete,
@@ -315,5 +344,6 @@ fun Button.Companion.rememberDelete(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )

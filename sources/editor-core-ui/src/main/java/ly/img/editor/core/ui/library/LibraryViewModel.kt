@@ -294,7 +294,17 @@ class LibraryViewModel(
                 } else {
                     designBlock
                 }
+
                 refreshDuration(designBlock, fillBlock, oldDuration)
+
+                if (engine.block.supportsTrim(fillBlock)) {
+                    runCatching {
+                        // need to ensure that the resource has been loaded before setting trim properties
+                        engine.block.forceLoadAVResource(fillBlock)
+                        engine.block.setTrimOffset(fillBlock, 0.0)
+                        engine.block.setTrimLength(fillBlock, engine.block.getDuration(designBlock))
+                    }
+                }
             }
         }
         engine.editor.addUndoStep()

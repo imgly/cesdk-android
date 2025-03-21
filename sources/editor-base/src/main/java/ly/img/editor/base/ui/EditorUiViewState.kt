@@ -11,14 +11,11 @@ import ly.img.editor.core.event.EditorEvent
 data class EditorUiViewState(
     val isInPreviewMode: Boolean = false,
     val allowEditorInteraction: Boolean = false,
-    val isUndoEnabled: Boolean = false,
-    val isRedoEnabled: Boolean = false,
     val selectedBlock: Block? = null,
     val isEditingText: Boolean = false,
-    val isCanvasVisible: Boolean = false,
     val timelineState: TimelineState? = null,
     val pageCount: Int = 0,
-    val isDockVisible: Boolean = false,
+    val isSceneLoaded: Boolean = false,
     val timelineTrigger: Boolean = false,
     val pagesState: EditorPagesState? = null,
     val openContract: EditorEvent.LaunchContract<*, *> = EditorEvent.LaunchContract(

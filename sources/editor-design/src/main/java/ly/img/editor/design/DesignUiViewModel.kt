@@ -12,14 +12,12 @@ import ly.img.editor.core.ui.engine.getStackOrNull
 import ly.img.editor.core.ui.library.LibraryViewModel
 
 class DesignUiViewModel(
-    editorScope: EditorScope,
     onCreate: suspend EditorScope.() -> Unit,
     onExport: suspend EditorScope.() -> Unit,
     onClose: suspend EditorScope.(Boolean) -> Unit,
     onError: suspend EditorScope.(Throwable) -> Unit,
     libraryViewModel: LibraryViewModel,
 ) : EditorUiViewModel(
-        editorScope = editorScope,
         onCreate = onCreate,
         onExport = onExport,
         onClose = onClose,

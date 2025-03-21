@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +26,7 @@ import ly.img.editor.core.component.data.EditorIcon
  * @param text the text that should be rendered.
  * @param enabled whether the button is enabled.
  * @param contentPadding the content padding of the button.
+ * @param tint the tint color of the button.
  */
 @Composable
 fun IconTextButton(
@@ -34,11 +36,16 @@ fun IconTextButton(
     text: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(vertical = 10.dp, horizontal = 4.dp),
+    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     if (text == null) {
         IconButton(
             onClick = onClick,
             enabled = enabled,
+            colors = IconButtonDefaults.iconButtonColors(
+                contentColor = tint,
+                disabledContentColor = tint.copy(alpha = tint.alpha * 0.38F),
+            ),
             modifier = modifier.padding(contentPadding),
         ) {
             icon?.invoke()
@@ -47,10 +54,8 @@ fun IconTextButton(
         Button(
             modifier = modifier,
             colors = ButtonDefaults.textButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                disabledContainerColor = Color.Transparent,
-                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5F),
+                contentColor = tint,
+                disabledContentColor = tint.copy(alpha = tint.alpha * 0.5F),
             ),
             onClick = onClick,
             enabled = enabled,
@@ -75,9 +80,9 @@ fun IconTextButton(
  * @param modifier the [Modifier] to be applied to this button.
  * @param editorIcon the icon content of the button as an [EditorIcon]. If null then icon is not rendered.
  * @param text the text content of the button as a string. If null then text is not rendered. If null then text is not rendered.
- * @param textColor the color of the [text].
  * @param enabled whether the button is enabled.
  * @param contentPadding the content padding of the button.
+ * @param tint the tint color of the button.
  */
 @Composable
 fun IconTextButton(
@@ -85,9 +90,9 @@ fun IconTextButton(
     modifier: Modifier = Modifier,
     editorIcon: EditorIcon? = null,
     text: String? = null,
-    textColor: Color = Color.Unspecified,
     enabled: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(vertical = 10.dp, horizontal = 4.dp),
+    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     IconTextButton(
         modifier = modifier,
@@ -98,7 +103,6 @@ fun IconTextButton(
             {
                 Text(
                     text = text,
-                    color = textColor,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(top = 4.dp),
                 )
@@ -107,5 +111,6 @@ fun IconTextButton(
         enabled = enabled,
         onClick = onClick,
         contentPadding = contentPadding,
+        tint = tint,
     )
 }

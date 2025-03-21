@@ -13,17 +13,18 @@ internal fun rememberEditorScope(
     editorConfiguration: EditorConfiguration<*>,
 ): EditorScope = remember(engineConfiguration, editorConfiguration) {
     object : EditorScope() {
-        override val impl: EditorContext = EditorContextImpl(
-            license = engineConfiguration.license,
-            userId = engineConfiguration.userId,
-            baseUri = engineConfiguration.baseUri,
-            navigationIcon = editorConfiguration.navigationIcon,
-            colorPalette = editorConfiguration.colorPalette,
-            assetLibrary = editorConfiguration.assetLibrary,
-            dock = editorConfiguration.dock,
-            inspectorBar = editorConfiguration.inspectorBar,
-            canvasMenu = editorConfiguration.canvasMenu,
-            overlay = (editorConfiguration as EditorConfiguration<Parcelable>).overlay,
-        )
+        override val impl: EditorContext =
+            EditorContextImpl(
+                license = engineConfiguration.license,
+                userId = engineConfiguration.userId,
+                baseUri = engineConfiguration.baseUri,
+                colorPalette = editorConfiguration.colorPalette,
+                assetLibrary = editorConfiguration.assetLibrary,
+                dock = editorConfiguration.dock,
+                inspectorBar = editorConfiguration.inspectorBar,
+                canvasMenu = editorConfiguration.canvasMenu,
+                navigationBar = editorConfiguration.navigationBar,
+                overlay = (editorConfiguration as EditorConfiguration<Parcelable>).overlay,
+            )
     }
 }

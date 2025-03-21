@@ -8,7 +8,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.RememberObserver
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -19,6 +18,7 @@ import ly.img.editor.core.LocalEditorScope
 import ly.img.editor.core.component.CanvasMenu
 import ly.img.editor.core.component.Dock
 import ly.img.editor.core.component.InspectorBar
+import ly.img.editor.core.component.NavigationBar
 import ly.img.editor.core.event.EditorEventHandler
 import ly.img.editor.core.library.AssetLibrary
 import ly.img.editor.core.state.EditorState
@@ -59,13 +59,13 @@ class EditorContextImpl(
     override val license: String,
     override val userId: String?,
     override val baseUri: Uri,
-    override val navigationIcon: ImageVector,
     override val colorPalette: List<Color>,
     override val assetLibrary: AssetLibrary,
     override val overlay: (@Composable (EditorScope.(Parcelable) -> Unit)?),
     override val dock: (@Composable (EditorScope.() -> Dock))?,
     override val inspectorBar: (@Composable (EditorScope.() -> InspectorBar))?,
     override val canvasMenu: (@Composable (EditorScope.() -> CanvasMenu))?,
+    override val navigationBar: @Composable (EditorScope.() -> NavigationBar)?,
 ) : EditorContext {
     @OptIn(UnstableEngineApi::class)
     override val engine: Engine by lazy {

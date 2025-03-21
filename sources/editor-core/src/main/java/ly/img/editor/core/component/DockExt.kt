@@ -28,13 +28,13 @@ import ly.img.editor.core.R
 import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.component.Dock.Button
 import ly.img.editor.core.component.Dock.ButtonScope
+import ly.img.editor.core.component.Dock.Companion.DefaultDecoration
 import ly.img.editor.core.component.Dock.Item
 import ly.img.editor.core.component.Dock.Scope
 import ly.img.editor.core.component.EditorComponent.Companion.alwaysVisible
 import ly.img.editor.core.component.EditorComponent.Companion.noneEnterTransition
 import ly.img.editor.core.component.EditorComponent.Companion.noneExitTransition
 import ly.img.editor.core.component.EditorComponent.ListBuilder
-import ly.img.editor.core.component.EditorComponent.ListBuilder.Companion.modify
 import ly.img.editor.core.component.data.Height
 import ly.img.editor.core.component.data.Nothing
 import ly.img.editor.core.component.data.nothing
@@ -61,6 +61,8 @@ import ly.img.editor.core.iconpack.ReorderHorizontally
 import ly.img.editor.core.library.data.AssetSourceType
 import ly.img.editor.core.sheet.SheetStyle
 import ly.img.editor.core.sheet.SheetType
+import ly.img.editor.core.state.EditorViewMode
+import ly.img.editor.featureFlag.flags.IMGLYCameraFeature
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
@@ -69,7 +71,7 @@ import java.io.File
 
 /**
  * A composable helper function that creates and remembers a [Dock] instance when launching [ly.img.editor.DesignEditor].
- * By default, the following items are added to the dock:
+ * By default, the following items are registered in the dock:
  *
  * - Dock.Button.rememberElementsLibrary
  * - Dock.Button.rememberSystemGallery
@@ -79,116 +81,16 @@ import java.io.File
  * - Dock.Button.rememberShapesLibrary
  * - Dock.Button.rememberStickersLibrary
  *
- * For example, if you do not want to touch the default order, but rather add additional items and replace/hide default items, then
- * it is more convenient to call [EditorComponent.ListBuilder.modify] on existing builder [Dock.ListBuilder.Companion.rememberForDesign]:
- *
- * dock = {
- *     Dock.rememberForDesign(
- *         listBuilder = Dock.ListBuilder.rememberForDesign().modify {
- *             addLast {
- *                 Dock.Button.remember(
- *                     id = EditorComponentId("my.package.dock.button.last"),
- *                     vectorIcon = { IconPack.Music },
- *                     text = { "Last Button" },
- *                     onClick = {}
- *                 )
- *             }
- *             addFirst {
- *                 Dock.Button.remember(
- *                     id = EditorComponentId("my.package.dock.button.first"),
- *                     vectorIcon = { IconPack.Music },
- *                     text = { "First Button" },
- *                     onClick = {}
- *                 )
- *             }
- *             addAfter(id = Dock.Button.Id.systemGallery) {
- *                 Dock.Button.remember(
- *                     id = EditorComponentId("my.package.dock.button.afterSystemGallery"),
- *                     vectorIcon = { IconPack.Music },
- *                     text = { "After System Gallery" },
- *                     onClick = {}
- *                 )
- *             }
- *             addBefore(id = Dock.Button.Id.systemCamera) {
- *                 Dock.Button.remember(
- *                     id = EditorComponentId("my.package.dock.button.beforeSystemCamera"),
- *                     vectorIcon = { IconPack.Music },
- *                     text = { "Before System Camera" },
- *                     onClick = {}
- *                 )
- *             }
- *             replace(id = Dock.Button.Id.textLibrary) {
- *                 // Note that it can be replaced with a component that has a different id.
- *                 Dock.Button.rememberElementsLibrary(
- *                     vectorIcon = { IconPack.Music }
- *                 )
- *             }
- *             remove(id = Dock.Button.Id.shapesLibrary)
- *         }
- *     )
- * }
- *
- * However, if you want to make more complex customizations that includes touching the default order, it is more convenient to
- * go fully custom via [Dock.ListBuilder.remember] with [listBuilder] looking like this:
- *
- * For example, if you want to
- *  - 1. replace the icon of Dock.Button.rememberElementsLibrary,
- *  - 2. drop Dock.Button.rememberSystemCamera and Dock.Button.rememberShapesLibrary,
- *  - 3. swap Dock.Button.rememberTextLibrary and Dock.Button.rememberStickersLibrary,
- *  - 4. add one custom button to the front and another in the middle,
- *  - 5. update first custom button text when second custom button is clicked with an incremented value,
- *  - 6. show Dock.Button.rememberStickersLibrary when the counter is even,
- *  - 7. force update all items on any engine event (that will be obvious from first custom button random icon).
- * you should invoke [ly.img.editor.core.component.Dock.Companion.rememberForDesign] with [listBuilder] looking like this:
- *
- * dock = {
- *     var counter by remember { mutableStateOf(0) }
- *     val dockScope by remember(this) {
- *          editorContext.engine.event.subscribe()
- *              .map { Dock.Scope(parentScope = this) }
- *     }.collectAsState(initial = remember { Dock.Scope(parentScope = this) })
- *     Dock.rememberForDesign(
- *         scope = dockScope,
- *         listBuilder = Dock.ListBuilder.remember {
- *             add {
- *                 Dock.Button.remember(
- *                     vectorIcon = { listOf(IconPack.Music, IconPack.PlayBox).random() },
- *                     text = { "Custom1 $counter" },
- *                     onClick = {}
- *                 )
- *             }
- *             add {
- *                 Dock.Button.rememberElementsLibrary(
- *                     vectorIcon = { IconPack.Music }
- *                 )
- *             }
- *             add { Dock.Button.rememberSystemGallery() }
- *             add {
- *                 Dock.Button.remember(
- *                     vectorIcon = { IconPack.PlayBox },
- *                     text = { "Custom2" },
- *                     onClick = { counter++ }
- *                 )
- *             }
- *             add { Dock.Button.rememberImagesLibrary() }
- *             add {
- *                 Dock.Button.rememberStickersLibrary(
- *                     visible = { counter % 2 == 0 }
- *                 )
- *             }
- *             add { Dock.Button.rememberTextLibrary() }
- *         }
- *     )
- * }
+ * For more information on how to customize [listBuilder], check [Dock.remember].
  *
  * @param scope the scope of this component. Every new value will trigger recomposition of all the lambda parameters.
  * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
- * Consider using Compose [androidx.compose.runtime.State] objects in @Composable DockScope.() -> {} lambdas
+ * Consider using Compose [androidx.compose.runtime.State] objects in the lambdas
  * for granular recompositions over updating the scope, since scope change triggers full recomposition of the dock.
- * Also prefer updating individual `Dock.Item`s over updating the whole `Dock`.
+ * Also prefer updating individual [Item]s over updating the whole [Dock].
  * Ideally, scope should be updated when the parent scope (scope of the parent component) is updated and when you want to
  * observe changes from the [Engine].
- * By default the scope is never updated.
+ * By default it is updated only when the parent scope (accessed via [LocalEditorScope]) is updated.
  * @param visible whether the dock should be visible based on the [Engine]'s current state.
  * Default value is always true.
  * @param enterTransition transition of the dock when it enters the parent composable.
@@ -196,13 +98,14 @@ import java.io.File
  * @param exitTransition transition of the dock when it exits the parent composable.
  * Default value is always no exit transition.
  * @param decoration decoration of the button. Useful when you want to add custom background, foreground, shadow, paddings etc.
- * Default value is always no decoration.
- * Default value is [Dock.defaultDecoration].
+ * Default value is [Dock.DefaultDecoration].
  * @param listBuilder a builder that registers the list of [Dock.Item]s that should be part of the dock.
  * Note that registering does not mean displaying. The items will be displayed if [Dock.Item.visible] is true for them.
  * Also note that items will be rebuilt when [scope] is updated.
  * By default, the list mentioned above is added to the dock.
  * @param horizontalArrangement the horizontal arrangement that should be used to render the items in the dock horizontally.
+ * Note that the value will be ignored in case [listBuilder] contains aligned items. Check [EditorComponent.ListBuilder.Scope.New.aligned] for more
+ * details on how to configure arrangement of aligned items.
  * Default value is [Arrangement.SpaceEvenly].
  * @param itemDecoration decoration of the items in the dock. Useful when you want to add custom background, foreground, shadow,
  * paddings etc to the items. Prefer using this decoration when you want to apply the same decoration to all the items, otherwise
@@ -219,8 +122,8 @@ fun Dock.Companion.rememberForDesign(
     visible: @Composable Scope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable Scope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable Scope.() -> ExitTransition = noneExitTransition,
-    decoration: @Composable Scope.(@Composable () -> Unit) -> Unit = defaultDecoration,
-    listBuilder: ListBuilder<Item<*>> = Dock.ListBuilder.rememberForDesign(),
+    decoration: @Composable Scope.(@Composable () -> Unit) -> Unit = { DefaultDecoration { it() } },
+    listBuilder: HorizontalListBuilder<Item<*>> = Dock.ListBuilder.rememberForDesign(),
     horizontalArrangement: @Composable Scope.() -> Arrangement.Horizontal = { Arrangement.SpaceEvenly },
     itemDecoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = { it() },
     `_`: Nothing = nothing,
@@ -246,7 +149,7 @@ fun Dock.Companion.rememberForDesign(
  */
 @UnstableEditorApi
 @Composable
-fun Dock.ListBuilder.Companion.rememberForDesign(): ListBuilder<Item<*>> = ListBuilder.remember {
+fun Dock.ListBuilder.Companion.rememberForDesign(): HorizontalListBuilder<Item<*>> = HorizontalListBuilder.remember {
     add { Button.rememberElementsLibrary() }
     add { Button.rememberSystemGallery() }
     add { Button.rememberSystemCamera() }
@@ -269,28 +172,31 @@ fun Dock.ListBuilder.Companion.rememberForDesign(): ListBuilder<Item<*>> = ListB
  * - Dock.Button.rememberShapesLibrary
  * - Dock.Button.rememberStickersLibrary
  *
- * For more information on how to customize [listBuilder], check [rememberForDesign].
+ * For more information on how to customize [listBuilder], check [Dock.remember].
  *
  * @param scope the scope of this component. Every new value will trigger recomposition of all the lambda parameters.
  * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
- * Consider using Compose [androidx.compose.runtime.State] objects in @Composable DockScope.() -> {} lambdas
+ * Consider using Compose [androidx.compose.runtime.State] objects in the lambdas
  * for granular recompositions over updating the scope, since scope change triggers full recomposition of the dock.
- * Also prefer updating individual `Dock.Item`s over updating the whole `Dock`.
+ * Also prefer updating individual [Dock.Item]s over updating the whole [Dock].
  * Ideally, scope should be updated when the parent scope (scope of the parent component) is updated and when you want to
  * observe changes from the [Engine].
- * By default the scope is never updated.
+ * By default it is updated only when the parent scope (accessed via [LocalEditorScope]) is updated.
  * @param visible whether the dock should be visible based on the [Engine]'s current state.
- * Default value is always true.
+ * By default the value is true when the view mode of the editor is not [EditorViewMode.Preview].
  * @param enterTransition transition of the dock when it enters the parent composable.
  * Default value is always no enter transition.
  * @param exitTransition transition of the dock when it exits the parent composable.
  * Default value is always no exit transition.
  * @param decoration decoration of the button. Useful when you want to add custom background, foreground, shadow, paddings etc.
- * Default value is [Dock.defaultDecoration].
+ * Default value is [Dock.DefaultDecoration].
  * @param listBuilder a builder that registers the list of [Dock.Item]s that should be part of the dock.
  * Note that registering does not mean displaying. The items will be displayed if [Dock.Item.visible] is true for them.
  * Also note that items will be rebuilt when [scope] is updated.
+ * By default, the list mentioned above is added to the navigation bar.
  * @param horizontalArrangement the horizontal arrangement that should be used to render the items in the dock horizontally.
+ * Note that the value will be ignored in case [listBuilder] contains aligned items. Check [EditorComponent.ListBuilder.Scope.New.aligned] for more
+ * details on how to configure arrangement of aligned items.
  * Default value is [Arrangement.SpaceEvenly].
  * @param itemDecoration decoration of the items in the dock. Useful when you want to add custom background, foreground, shadow,
  * paddings etc to the items. Prefer using this decoration when you want to apply the same decoration to all the items, otherwise
@@ -304,11 +210,14 @@ fun Dock.Companion.rememberForPhoto(
     scope: Scope = LocalEditorScope.current.run {
         remember(this) { Scope(parentScope = this) }
     },
-    visible: @Composable Scope.() -> Boolean = alwaysVisible,
+    visible: @Composable Scope.() -> Boolean = {
+        val state by editorContext.state.collectAsState()
+        state.viewMode !is EditorViewMode.Preview
+    },
     enterTransition: @Composable Scope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable Scope.() -> ExitTransition = noneExitTransition,
-    decoration: @Composable Scope.(@Composable () -> Unit) -> Unit = defaultDecoration,
-    listBuilder: ListBuilder<Item<*>> = Dock.ListBuilder.rememberForPhoto(),
+    decoration: @Composable Scope.(@Composable () -> Unit) -> Unit = { DefaultDecoration { it() } },
+    listBuilder: HorizontalListBuilder<Item<*>> = Dock.ListBuilder.rememberForPhoto(),
     horizontalArrangement: @Composable Scope.() -> Arrangement.Horizontal = { Arrangement.SpaceEvenly },
     itemDecoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = { it() },
     `_`: Nothing = nothing,
@@ -334,7 +243,7 @@ fun Dock.Companion.rememberForPhoto(
  */
 @UnstableEditorApi
 @Composable
-fun Dock.ListBuilder.Companion.rememberForPhoto(): ListBuilder<Item<*>> = ListBuilder.remember {
+fun Dock.ListBuilder.Companion.rememberForPhoto(): HorizontalListBuilder<Item<*>> = HorizontalListBuilder.remember {
     add { Button.rememberAdjustments() }
     add { Button.rememberFilter() }
     add { Button.rememberEffect() }
@@ -360,16 +269,17 @@ fun Dock.ListBuilder.Companion.rememberForPhoto(): ListBuilder<Item<*>> = ListBu
  * - Dock.Button.rememberAudiosLibrary
  * - Dock.Button.rememberReorder
  *
- * For more information on how to customize [listBuilder], check [rememberForDesign].
+ * For more information on how to customize [listBuilder], check [Dock.remember].
  *
  * @param scope the scope of this component. Every new value will trigger recomposition of all the lambda parameters.
  * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
- * Consider using Compose [androidx.compose.runtime.State] objects in @Composable DockScope.() -> {} lambdas
+ * Consider using Compose [androidx.compose.runtime.State] objects in the lambdas
  * for granular recompositions over updating the scope, since scope change triggers full recomposition of the dock.
- * Also prefer updating individual `Dock.Item`s over updating the whole `Dock`.
+ * Also prefer updating individual [Item]s over updating the whole [Dock].
  * Ideally, scope should be updated when the parent scope (scope of the parent component) is updated and when you want to
  * observe changes from the [Engine].
- * By default the scope is never updated.
+ * By default it is updated only when the parent scope (accessed via [LocalEditorScope]) is updated and when the number of children
+ * in the background track becomes more or less than two.
  * @param visible whether the dock should be visible based on the [Engine]'s current state.
  * Default value is always true.
  * @param enterTransition transition of the dock when it enters the parent composable.
@@ -377,11 +287,14 @@ fun Dock.ListBuilder.Companion.rememberForPhoto(): ListBuilder<Item<*>> = ListBu
  * @param exitTransition transition of the dock when it exits the parent composable.
  * Default value is always no exit transition.
  * @param decoration decoration of the button. Useful when you want to add custom background, foreground, shadow, paddings etc.
- * Default value is [Dock.defaultDecoration].
+ * Default value is [Dock.DefaultDecoration].
  * @param listBuilder a builder that registers the list of [Dock.Item]s that should be part of the dock.
  * Note that registering does not mean displaying. The items will be displayed if [Dock.Item.visible] is true for them.
  * Also note that items will be rebuilt when [scope] is updated.
+ * By default, the list mentioned above is added to the navigation bar.
  * @param horizontalArrangement the horizontal arrangement that should be used to render the items in the dock horizontally.
+ * Note that the value will be ignored in case [listBuilder] contains aligned items. Check [EditorComponent.ListBuilder.Scope.New.aligned] for more
+ * details on how to configure arrangement of aligned items.
  * Default value is [Arrangement.SpaceEvenly].
  * @param itemDecoration decoration of the items in the dock. Useful when you want to add custom background, foreground, shadow,
  * paddings etc to the items. Prefer using this decoration when you want to apply the same decoration to all the items, otherwise
@@ -423,8 +336,8 @@ fun Dock.Companion.rememberForVideo(
     visible: @Composable Scope.() -> Boolean = alwaysVisible,
     enterTransition: @Composable Scope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable Scope.() -> ExitTransition = noneExitTransition,
-    decoration: @Composable Scope.(@Composable () -> Unit) -> Unit = defaultDecoration,
-    listBuilder: ListBuilder<Item<*>> = Dock.ListBuilder.rememberForVideo(),
+    decoration: @Composable Scope.(@Composable () -> Unit) -> Unit = { DefaultDecoration { it() } },
+    listBuilder: HorizontalListBuilder<Item<*>> = Dock.ListBuilder.rememberForVideo(),
     horizontalArrangement: @Composable Scope.() -> Arrangement.Horizontal = { Arrangement.SpaceEvenly },
     itemDecoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = { it() },
     `_`: Nothing = nothing,
@@ -450,7 +363,7 @@ fun Dock.Companion.rememberForVideo(
  */
 @UnstableEditorApi
 @Composable
-fun Dock.ListBuilder.Companion.rememberForVideo(): ListBuilder<Item<*>> = ListBuilder.remember {
+fun Dock.ListBuilder.Companion.rememberForVideo(): HorizontalListBuilder<Item<*>> = ListBuilder.remember {
     add { Button.rememberSystemGallery() }
     add {
         /*
@@ -460,7 +373,8 @@ fun Dock.ListBuilder.Companion.rememberForVideo(): ListBuilder<Item<*>> = ListBu
          */
         val isImglyCameraAvailable = androidx.compose.runtime.remember {
             runCatching { CaptureVideo() }.isSuccess
-        }
+        } &&
+            IMGLYCameraFeature.enabled
         if (isImglyCameraAvailable) {
             Button.rememberImglyCamera()
         } else {
@@ -511,6 +425,9 @@ val Button.Id.Companion.elementsLibrary by unsafeLazy {
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] event is invoked with sheet type [SheetType.LibraryAdd] and
  * [ly.img.editor.core.library.AssetLibrary.elements] content is displayed on the sheet.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -535,6 +452,7 @@ fun Button.Companion.rememberElementsLibrary(
             ),
         )
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.elementsLibrary,
@@ -548,6 +466,7 @@ fun Button.Companion.rememberElementsLibrary(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -588,6 +507,9 @@ val Button.Id.Companion.overlaysLibrary by unsafeLazy {
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] event is invoked with sheet type [SheetType.LibraryAdd] and
  * [ly.img.editor.core.library.AssetLibrary.overlays] content is displayed on the sheet.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -612,6 +534,7 @@ fun Button.Companion.rememberOverlaysLibrary(
             ),
         )
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.overlaysLibrary,
@@ -625,6 +548,7 @@ fun Button.Companion.rememberOverlaysLibrary(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -665,6 +589,9 @@ val Button.Id.Companion.imagesLibrary by unsafeLazy {
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] event is invoked with sheet type [SheetType.LibraryAdd] and
  * [ly.img.editor.core.library.AssetLibrary.images] content is displayed on the sheet.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -689,6 +616,7 @@ fun Button.Companion.rememberImagesLibrary(
             ),
         )
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.imagesLibrary,
@@ -702,6 +630,7 @@ fun Button.Companion.rememberImagesLibrary(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -742,6 +671,9 @@ val Button.Id.Companion.textLibrary by unsafeLazy {
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] event is invoked with sheet type [SheetType.LibraryAdd] and
  * [ly.img.editor.core.library.AssetLibrary.text] content is displayed on the sheet.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -772,6 +704,7 @@ fun Button.Companion.rememberTextLibrary(
             ),
         )
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.textLibrary,
@@ -785,6 +718,7 @@ fun Button.Companion.rememberTextLibrary(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -825,6 +759,9 @@ val Button.Id.Companion.shapesLibrary by unsafeLazy {
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] event is invoked with sheet type [SheetType.LibraryAdd] and
  * [ly.img.editor.core.library.AssetLibrary.shapes] content is displayed on the sheet.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -849,6 +786,7 @@ fun Button.Companion.rememberShapesLibrary(
             ),
         )
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.shapesLibrary,
@@ -862,6 +800,7 @@ fun Button.Companion.rememberShapesLibrary(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -902,6 +841,9 @@ val Button.Id.Companion.stickersLibrary by unsafeLazy {
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] event is invoked with sheet type [SheetType.LibraryAdd] and
  * [ly.img.editor.core.library.AssetLibrary.stickers] content is displayed on the sheet.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -926,6 +868,7 @@ fun Button.Companion.rememberStickersLibrary(
             ),
         )
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.stickersLibrary,
@@ -939,6 +882,7 @@ fun Button.Companion.rememberStickersLibrary(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -979,6 +923,9 @@ val Button.Id.Companion.stickersAndShapesLibrary by unsafeLazy {
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] event is invoked with sheet type [SheetType.LibraryAdd] and
  * [ly.img.editor.core.library.AssetLibrary.stickersAndShapes] content is displayed on the sheet.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -1003,6 +950,7 @@ fun Button.Companion.rememberStickersAndShapesLibrary(
             ),
         )
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.stickersAndShapesLibrary,
@@ -1016,6 +964,7 @@ fun Button.Companion.rememberStickersAndShapesLibrary(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1056,6 +1005,9 @@ val Button.Id.Companion.audiosLibrary by unsafeLazy {
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] event is invoked with sheet type [SheetType.LibraryAdd] and
  * [ly.img.editor.core.library.AssetLibrary.audios] content is displayed on the sheet.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -1080,6 +1032,7 @@ fun Button.Companion.rememberAudiosLibrary(
             ),
         )
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.audiosLibrary,
@@ -1093,6 +1046,7 @@ fun Button.Companion.rememberAudiosLibrary(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1132,6 +1086,9 @@ val Button.Id.Companion.systemGallery by unsafeLazy {
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.LaunchContract] event is invoked with [ActivityResultContracts.PickVisualMedia] contract.
  * If the editor has a video scene, then both images and videos are allowed to be picked, if not then only images.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -1174,6 +1131,7 @@ fun Button.Companion.rememberSystemGallery(
         }
         editorContext.eventHandler.send(event)
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.systemGallery,
@@ -1187,6 +1145,7 @@ fun Button.Companion.rememberSystemGallery(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1229,6 +1188,9 @@ val Button.Id.Companion.systemCamera by unsafeLazy {
  * The image/video is stored in the local files dir. After returning to the editor, the uri is added to the scene via
  * [EditorEvent.AddUriToScene] event and is converted to an asset and stored in [AssetSourceType.ImageUploads] or
  * [AssetSourceType.VideoUploads] depending on the type of the content.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -1273,6 +1235,7 @@ fun Button.Companion.rememberSystemCamera(
         }
         editorContext.eventHandler.send(event)
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.systemCamera,
@@ -1286,6 +1249,7 @@ fun Button.Companion.rememberSystemCamera(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1326,6 +1290,9 @@ val Button.Id.Companion.imglyCamera by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.LaunchContract] event is invoked with [CaptureVideo] contract.
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -1366,6 +1333,7 @@ fun Button.Companion.rememberImglyCamera(
             },
         ).let { editorContext.eventHandler.send(it) }
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.imglyCamera,
@@ -1379,6 +1347,7 @@ fun Button.Companion.rememberImglyCamera(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1419,6 +1388,9 @@ val Button.Id.Companion.reorder by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Reorder].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -1445,6 +1417,7 @@ fun Button.Companion.rememberReorder(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Reorder()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.reorder,
@@ -1458,6 +1431,7 @@ fun Button.Companion.rememberReorder(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1497,6 +1471,9 @@ val Button.Id.Companion.adjustments by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Adjustments].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -1520,6 +1497,7 @@ fun Button.Companion.rememberAdjustments(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Adjustments()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.adjustments,
@@ -1533,6 +1511,7 @@ fun Button.Companion.rememberAdjustments(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1572,6 +1551,9 @@ val Button.Id.Companion.filter by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Filter].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -1595,6 +1577,7 @@ fun Button.Companion.rememberFilter(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Filter()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.filter,
@@ -1608,6 +1591,7 @@ fun Button.Companion.rememberFilter(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1647,6 +1631,9 @@ val Button.Id.Companion.effect by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Effect].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -1670,6 +1657,7 @@ fun Button.Companion.rememberEffect(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Effect()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.effect,
@@ -1683,6 +1671,7 @@ fun Button.Companion.rememberEffect(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1722,6 +1711,9 @@ val Button.Id.Companion.blur by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Blur].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -1745,6 +1737,7 @@ fun Button.Companion.rememberBlur(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Blur()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.blur,
@@ -1758,6 +1751,7 @@ fun Button.Companion.rememberBlur(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )
 
@@ -1798,6 +1792,9 @@ val Button.Id.Companion.crop by unsafeLazy {
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Crop].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
  * @return a button that will be displayed in the dock.
  */
 @Composable
@@ -1822,6 +1819,7 @@ fun Button.Companion.rememberCrop(
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Crop()))
     },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.crop,
@@ -1835,5 +1833,6 @@ fun Button.Companion.rememberCrop(
     tint = tint,
     enabled = enabled,
     onClick = onClick,
+    contentDescription = contentDescription,
     `_` = `_`,
 )

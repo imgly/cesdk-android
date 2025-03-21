@@ -1,9 +1,6 @@
 package ly.img.editor.video
 
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import ly.img.editor.base.engine.CROP_EDIT_MODE
 import ly.img.editor.base.engine.TOUCH_ACTION_SCALE
 import ly.img.editor.base.engine.showPage
 import ly.img.editor.base.ui.Block
@@ -14,32 +11,22 @@ import ly.img.editor.core.ui.engine.getCurrentPage
 import ly.img.editor.core.ui.library.LibraryViewModel
 
 class VideoUiViewModel(
-    editorScope: EditorScope,
     onCreate: suspend EditorScope.() -> Unit,
     onExport: suspend EditorScope.() -> Unit,
     onClose: suspend EditorScope.(Boolean) -> Unit,
     onError: suspend EditorScope.(Throwable) -> Unit,
     libraryViewModel: LibraryViewModel,
 ) : EditorUiViewModel(
-        editorScope = editorScope,
         onCreate = onCreate,
         onExport = onExport,
         onClose = onClose,
         onError = onError,
         libraryViewModel = libraryViewModel,
     ) {
-    val uiState = baseUiState.map {
-        VideoUiViewState(
-            editorUiViewState = baseUiState.value,
-            canExport = timelineState?.totalDuration?.isPositive() == true,
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = VideoUiViewState(baseUiState.value),
-    )
+    val uiState = baseUiState
 
-    override val verticalPageInset = 1F
+    override val verticalPageInset
+        get() = if (engine.editor.getEditMode() == CROP_EDIT_MODE) CROP_MODE_INSET else 1f
 
     override fun getBlockForEvents(): Block = super.getBlockForEvents() ?: Block(
         designBlock = engine.getCurrentPage(),
@@ -64,4 +51,8 @@ class VideoUiViewModel(
     }
 
     override fun enterPreviewMode() = throw UnsupportedOperationException()
+
+    private companion object {
+        const val CROP_MODE_INSET = 24F
+    }
 }

@@ -20,4 +20,6 @@ dependencies {
     implementation libs.shimmer
 
     compileOnly(project(":camera-core"))
+
+    implementation findProject(":editor-debug-menu") ?: project(":editor-debug-menu-dummy")
 }

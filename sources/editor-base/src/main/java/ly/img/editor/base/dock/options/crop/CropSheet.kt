@@ -19,15 +19,16 @@ import ly.img.editor.base.components.SectionHeader
 import ly.img.editor.base.dock.BottomSheetContent
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.core.event.EditorEvent
+import ly.img.editor.core.iconpack.Undo
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.ui.SheetHeader
 import ly.img.editor.core.ui.UiDefaults
 import ly.img.editor.core.ui.iconpack.Flip
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Rotate90degreesccwoutline
-import ly.img.editor.core.ui.iconpack.Undo
 import ly.img.editor.core.ui.sheetScrollableContentModifier
 import ly.img.editor.core.R as CoreR
+import ly.img.editor.core.iconpack.IconPack as CoreIconPack
 
 @Composable
 fun CropSheet(
@@ -75,7 +76,7 @@ fun CropSheet(
             ) {
                 CardButton(
                     text = stringResource(R.string.ly_img_editor_reset),
-                    icon = IconPack.Undo,
+                    icon = CoreIconPack.Undo,
                     modifier = Modifier.weight(1f),
                     enabled = uiState.canResetCrop,
                     onClick = { onEvent(BlockEvent.OnResetCrop) },

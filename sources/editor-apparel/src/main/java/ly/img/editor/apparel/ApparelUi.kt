@@ -50,7 +50,6 @@ fun ApparelUi(
     }
     val viewModel = viewModel {
         ApparelUiViewModel(
-            editorScope = editorScope,
             onCreate = onCreate,
             onExport = onExport,
             onClose = onClose,
@@ -68,15 +67,6 @@ fun ApparelUi(
         editorScope = editorScope,
         editorContext = editorContext,
         onEvent = onEvent,
-        topBar = {
-            ApparelUiToolbar(
-                navigationIcon = editorContext.navigationIcon,
-                onEvent = viewModel::send,
-                isInPreviewMode = uiState.isInPreviewMode,
-                isUndoEnabled = uiState.isUndoEnabled,
-                isRedoEnabled = uiState.isRedoEnabled,
-            )
-        },
         canvasOverlay = {
             if (!uiState.isInPreviewMode) {
                 LibraryButton(

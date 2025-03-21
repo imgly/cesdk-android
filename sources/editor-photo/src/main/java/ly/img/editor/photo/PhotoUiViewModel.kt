@@ -21,14 +21,12 @@ import ly.img.engine.DesignBlock
 import ly.img.engine.UnstableEngineApi
 
 class PhotoUiViewModel(
-    editorScope: EditorScope,
     onCreate: suspend EditorScope.() -> Unit,
     onExport: suspend EditorScope.() -> Unit,
     onClose: suspend EditorScope.(Boolean) -> Unit,
     onError: suspend EditorScope.(Throwable) -> Unit,
     libraryViewModel: LibraryViewModel,
 ) : EditorUiViewModel(
-        editorScope = editorScope,
         onCreate = onCreate,
         onExport = onExport,
         onClose = onClose,

@@ -49,7 +49,6 @@ fun PhotoUi(
     }
     val viewModel = viewModel {
         PhotoUiViewModel(
-            editorScope = editorScope,
             onCreate = onCreate,
             onExport = onExport,
             onClose = onClose,
@@ -68,17 +67,8 @@ fun PhotoUi(
         editorContext = editorContext,
         onEvent = onEvent,
         close = close,
-        topBar = {
-            PhotoUiToolbar(
-                navigationIcon = editorContext.navigationIcon,
-                onEvent = viewModel::send,
-                isInPreviewMode = uiState.isInPreviewMode,
-                isUndoEnabled = uiState.isUndoEnabled,
-                isRedoEnabled = uiState.isRedoEnabled,
-            )
-        },
         canvasOverlay = {
-            if (uiState.isDockVisible && !uiState.isInPreviewMode) {
+            if (uiState.isSceneLoaded) {
                 editorContext.dock?.let {
                     Box(modifier = Modifier.align(Alignment.BottomStart)) {
                         EditorComponent(component = it(editorScope))

@@ -3,14 +3,16 @@ package ly.img.editor.core.component
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -45,6 +47,7 @@ import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.LocalEditorScope
 import ly.img.editor.core.component.CanvasMenu.Companion.remember
+import ly.img.editor.core.component.CanvasMenu.Item
 import ly.img.editor.core.component.EditorComponent.ListBuilder.Companion.modify
 import ly.img.editor.core.component.data.Nothing
 import ly.img.editor.core.component.data.Selection
@@ -53,6 +56,7 @@ import ly.img.editor.core.ui.IconTextButton
 import ly.img.editor.core.ui.toPx
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
+import ly.img.engine.Engine
 import kotlin.math.cos
 import kotlin.math.roundToInt
 
@@ -60,8 +64,13 @@ import kotlin.math.roundToInt
  * A component for rendering the canvas menu next to a design block when it is selected.
  * Use [remember] from the companion object to create an instance of this class.
  *
- * @param scope the scope of this component. Every new value will trigger recomposition of all functions with
- * signature @Composable Scope.() -> {}.
+ * @param scope the scope of this component. Every new value will trigger recomposition of all the lambda parameters below.
+ * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
+ * Consider using Compose [androidx.compose.runtime.State] objects in the lambdas
+ * for granular recompositions over updating the scope, since scope change triggers full recomposition of the canvas menu.
+ * Also prefer updating individual [Item]s over updating the whole [CanvasMenu].
+ * Ideally, scope should be updated when the parent scope (scope of the parent component) is updated and when you want to
+ * observe changes from the [Engine].
  * @param visible whether the canvas menu should be visible.
  * @param enterTransition transition of the canvas menu when it enters the parent composable.
  * @param exitTransition transition of the canvas menu when it exits the parent composable.
@@ -78,7 +87,7 @@ class CanvasMenu private constructor(
     override val enterTransition: @Composable Scope.() -> EnterTransition,
     override val exitTransition: @Composable Scope.() -> ExitTransition,
     override val decoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit,
-    val listBuilder: EditorComponent.ListBuilder<Item<*>>,
+    val listBuilder: HorizontalListBuilder<Item<*>>,
     val itemDecoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit,
     private val `_`: Nothing = nothing,
 ) : EditorComponent<CanvasMenu.Scope>() {
@@ -93,7 +102,7 @@ class CanvasMenu private constructor(
              * @return a new [ListBuilder] instance.
              */
             @Composable
-            fun remember(): EditorComponent.ListBuilder<Item<*>> = EditorComponent.ListBuilder.remember {
+            fun remember(): HorizontalListBuilder<Item<*>> = HorizontalListBuilder.remember {
                 add { Button.rememberBringForward() }
                 add { Button.rememberSendBackward() }
                 add { Divider.remember(visible = { editorContext.canSelectionMove }) }
@@ -108,21 +117,39 @@ class CanvasMenu private constructor(
              * @return a new [ListBuilder] instance.
              */
             @Composable
-            fun remember(
-                block: @DisallowComposableCalls EditorComponent.ListBuilder.Scope.New<Item<*>>.() -> Unit,
-            ): EditorComponent.ListBuilder<Item<*>> = EditorComponent.ListBuilder.remember(block)
+            fun remember(block: @DisallowComposableCalls HorizontalListBuilderScope<Item<*>>.() -> Unit): HorizontalListBuilder<Item<*>> =
+                HorizontalListBuilder.remember(block)
         }
     }
 
     @Composable
     override fun Scope.Content(animatedVisibilityScope: AnimatedVisibilityScope?) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            listBuilder.scope.items.forEach {
-                itemDecoration {
-                    EditorComponent(component = it)
+        listBuilder.scope.result.forEach { (alignment, data) ->
+            // Main list
+            if (alignment == null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Items(data)
                 }
+            } else {
+                // List with alignments
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.align(alignment),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = data.arrangement ?: Arrangement.Start,
+                    ) {
+                        Items(data)
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun Scope.Items(data: EditorComponent.ListBuilder.AlignmentData<Item<*>, *>) {
+        data.items.forEach {
+            itemDecoration {
+                EditorComponent(component = it)
             }
         }
     }
@@ -384,6 +411,7 @@ class CanvasMenu private constructor(
      * @param onClick the callback that is invoked when the button is clicked.
      * @param icon the icon content of the button. If null, it will not be rendered.
      * @param text the text content of the button. If null, it will not be rendered.
+     * @param tint the tint color of the content. If null then no tint is applied.
      * @param enabled whether the button is enabled.
      */
     @Stable
@@ -397,6 +425,7 @@ class CanvasMenu private constructor(
         val onClick: ButtonScope.() -> Unit,
         val icon: (@Composable ButtonScope.() -> Unit)?,
         val text: (@Composable ButtonScope.() -> Unit)?,
+        val tint: (@Composable ButtonScope.() -> Color)?,
         val enabled: @Composable ButtonScope.() -> Boolean,
         private val `_`: Nothing,
     ) : Item<ButtonScope>() {
@@ -408,6 +437,7 @@ class CanvasMenu private constructor(
                 icon = icon?.let { { it() } },
                 text = text?.let { { it() } },
                 contentPadding = PaddingValues(0.dp),
+                tint = tint?.invoke(this) ?: MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
@@ -445,6 +475,8 @@ class CanvasMenu private constructor(
              * Default value is null.
              * @param text the text content of the button. If null, it will not be rendered.
              * Default value is null.
+             * @param tint the tint color of the content. If null then no tint is applied.
+             * Default value is null.
              * @param enabled whether the button is enabled.
              * Default value is always true.
              * @return a button that will be displayed in the canvas menu.
@@ -462,6 +494,7 @@ class CanvasMenu private constructor(
                 onClick: ButtonScope.() -> Unit,
                 icon: (@Composable ButtonScope.() -> Unit)? = null,
                 text: (@Composable ButtonScope.() -> Unit)? = null,
+                tint: (@Composable ButtonScope.() -> Color)? = null,
                 enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
                 `_`: Nothing = nothing,
             ): Button = remember(scope, visible, enterTransition, exitTransition, onClick, icon, text, enabled) {
@@ -476,6 +509,7 @@ class CanvasMenu private constructor(
                     icon = icon,
                     text = text,
                     enabled = enabled,
+                    tint = tint,
                     `_` = `_`,
                 )
             }
@@ -507,6 +541,9 @@ class CanvasMenu private constructor(
              * Default value is null.
              * @param enabled whether the button is enabled.
              * Default value is always true.
+             * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+             * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+             * Default value is null.
              * @return a button that will be displayed in the canvas menu.
              */
             @Composable
@@ -524,37 +561,42 @@ class CanvasMenu private constructor(
                 text: (@Composable ButtonScope.() -> String)? = null,
                 tint: (@Composable ButtonScope.() -> Color)? = null,
                 enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
+                contentDescription: (@Composable ButtonScope.() -> String)? = null,
                 `_`: Nothing = nothing,
-            ): Button = remember(
-                id = id,
-                scope = scope,
-                visible = visible,
-                enterTransition = enterTransition,
-                exitTransition = exitTransition,
-                decoration = decoration,
-                onClick = onClick,
-                icon = vectorIcon?.let {
-                    {
-                        Icon(
-                            imageVector = vectorIcon(this),
-                            contentDescription = null,
-                            tint = tint?.invoke(this) ?: LocalContentColor.current,
-                        )
-                    }
-                },
-                text = text?.let {
-                    {
-                        Text(
-                            text = text(this),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = tint?.invoke(this) ?: Color.Unspecified,
-                            modifier = Modifier.padding(top = 4.dp),
-                        )
-                    }
-                },
-                enabled = enabled,
-                `_` = `_`,
-            )
+            ): Button {
+                require(text != null || contentDescription != null) {
+                    "Content description must be provided when creating a CanvasMenu.Button with icon only."
+                }
+                return remember(
+                    id = id,
+                    scope = scope,
+                    visible = visible,
+                    enterTransition = enterTransition,
+                    exitTransition = exitTransition,
+                    decoration = decoration,
+                    onClick = onClick,
+                    icon = vectorIcon?.let {
+                        {
+                            Icon(
+                                imageVector = vectorIcon(this),
+                                contentDescription = contentDescription?.invoke(this),
+                            )
+                        }
+                    },
+                    text = text?.let {
+                        {
+                            Text(
+                                text = text(this),
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                    },
+                    tint = tint,
+                    enabled = enabled,
+                    `_` = `_`,
+                )
+            }
         }
     }
 
@@ -667,7 +709,10 @@ class CanvasMenu private constructor(
 
     companion object {
         /**
-         * The default scope of the canvas menu.
+         * The default scope of the canvas menu. The value is updated when:
+         * 1. Parent scope is updated.
+         * 2. Selection is updated.
+         * 3. Scene playing status is updated (applicable in video scenes only).
          */
         @OptIn(ExperimentalCoroutinesApi::class)
         val defaultScope: Scope
@@ -849,10 +894,12 @@ class CanvasMenu private constructor(
          *                 )
          *             }
          *             replace(id = CanvasMenu.Button.Id.bringForward) {
-         *                 // Note that it can be replaced with a component that has a different id.
-         *                 CanvasMenu.Button.rememberBringForward(
-         *                     vectorIcon = { IconPack.Music }
-         *                 )
+         *                  CanvasMenu.Button.remember(
+         *                      id = EditorComponentId("my.package.canvasMenu.button.replacedBringForward"),
+         *                      vectorIcon = null,
+         *                      text = { "Replaced Bring Forward" },
+         *                      onClick = {},
+         *                  )
          *             }
          *             remove(id = CanvasMenu.Button.Id.delete)
          *         }
@@ -883,7 +930,7 @@ class CanvasMenu private constructor(
          *         listBuilder = CanvasMenu.ListBuilder.remember {
          *             add {
          *                 CanvasMenu.Button.remember(
-         *                     id = EditorComponentId("my.package.canvasMenu.button.first"),
+         *                     id = EditorComponentId("my.package.canvasMenu.button.custom1"),
          *                     vectorIcon = { listOf(IconPack.Music, IconPack.PlayBox).random() },
          *                     text = { "Custom1 $counter" },
          *                     onClick = {}
@@ -904,10 +951,14 @@ class CanvasMenu private constructor(
          *     )
          * }
          *
-         * @param scope the scope of this component. Every new value will trigger recomposition of all functions with
-         * signature @Composable Scope.() -> {}.
+         * @param scope the scope of this component. Every new value will trigger recomposition of all the lambda parameters below.
          * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
-         * By default it is updated when the parent scope (accessed via [LocalEditorScope]) is updated and when [Selection] changes.
+         * Consider using Compose [androidx.compose.runtime.State] objects in the lambdas
+         * for granular recompositions over updating the scope, since scope change triggers full recomposition of the canvas menu.
+         * Also prefer updating individual [Item]s over updating the whole [CanvasMenu].
+         * Ideally, scope should be updated when the parent scope (scope of the parent component) is updated and when you want to
+         * observe changes from the [Engine].
+         * By default [defaultScope] is used.
          * @param visible whether the canvas menu should be visible.
          * By default the value is true when touch is not active, no sheet is displayed currently, a design block is selected, it is not part of a group,
          * selected design block does not have a type [DesignBlockType.Audio] or [DesignBlockType.Page] and the keyboard is not visible.
@@ -949,7 +1000,7 @@ class CanvasMenu private constructor(
             enterTransition: @Composable Scope.() -> EnterTransition = noneEnterTransition,
             exitTransition: @Composable Scope.() -> ExitTransition = noneExitTransition,
             decoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = { DefaultDecoration { it() } },
-            listBuilder: EditorComponent.ListBuilder<Item<*>> = ListBuilder.remember(),
+            listBuilder: HorizontalListBuilder<Item<*>> = ListBuilder.remember(),
             itemDecoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = { it() },
             `_`: Nothing = nothing,
         ): CanvasMenu = remember(

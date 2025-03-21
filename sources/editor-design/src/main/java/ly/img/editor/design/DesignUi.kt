@@ -56,7 +56,6 @@ fun DesignUi(
     }
     val viewModel = viewModel {
         DesignUiViewModel(
-            editorScope = editorScope,
             onCreate = onCreate,
             onExport = onExport,
             onClose = onClose,
@@ -75,18 +74,8 @@ fun DesignUi(
         editorContext = editorContext,
         onEvent = onEvent,
         close = close,
-        topBar = {
-            DesignUiToolbar(
-                navigationIcon = editorContext.navigationIcon,
-                onEvent = viewModel::send,
-                pageCount = uiState.pageCount,
-                isPagesScreenActive = uiState.pagesState != null,
-                isUndoEnabled = uiState.isUndoEnabled,
-                isRedoEnabled = uiState.isRedoEnabled,
-            )
-        },
         canvasOverlay = {
-            if (uiState.isDockVisible) {
+            if (uiState.isSceneLoaded) {
                 editorContext.dock?.let {
                     Box(modifier = Modifier.align(Alignment.BottomStart)) {
                         EditorComponent(component = it(editorScope))

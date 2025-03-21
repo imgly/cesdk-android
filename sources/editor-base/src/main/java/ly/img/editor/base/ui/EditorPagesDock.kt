@@ -16,13 +16,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ly.img.editor.compose.animation.AnimatedVisibility
 import ly.img.editor.compose.animation_core.slideInVertically
 import ly.img.editor.compose.animation_core.slideOutVertically
 import ly.img.editor.compose.animation_core.tween
+import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.theme.surface2
 import ly.img.editor.core.ui.IconTextButton
 import ly.img.editor.core.ui.utils.Easing
@@ -31,7 +31,7 @@ import ly.img.editor.core.ui.utils.Easing
 fun EditorPagesDock(
     modifier: Modifier,
     state: EditorPagesState?,
-    onEvent: (Event) -> Unit,
+    onEvent: (EditorEvent) -> Unit,
 ) {
     var cachedState: EditorPagesState? by remember {
         mutableStateOf(state)
@@ -76,7 +76,7 @@ fun EditorPagesDock(
                         IconTextButton(
                             editorIcon = it.icon,
                             text = stringResource(it.titleRes),
-                            textColor = it.icon.tint?.invoke() ?: Color.Unspecified,
+                            tint = it.icon.tint?.invoke() ?: MaterialTheme.colorScheme.onSurfaceVariant,
                             enabled = it.enabled,
                             onClick = {
                                 it.actions.forEach { action -> onEvent(action) }

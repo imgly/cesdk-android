@@ -40,6 +40,8 @@ import ly.img.editor.compose.animation_core.fadeOut
 import ly.img.editor.compose.animation_core.tween
 import ly.img.editor.compose.material3.Card
 import ly.img.editor.compose.material3.CardDefaults
+import ly.img.editor.core.event.EditorEvent
+import ly.img.editor.core.state.EditorViewMode
 import ly.img.editor.core.theme.surface1
 import ly.img.editor.core.theme.surface3
 import ly.img.editor.core.ui.iconpack.Add
@@ -54,7 +56,7 @@ private const val LOADING_APPEAR_DELAY = 300L
 fun EditorPagesUi(
     modifier: Modifier,
     state: EditorPagesState?,
-    onEvent: (Event) -> Unit,
+    onEvent: (EditorEvent) -> Unit,
 ) {
     var cachedState: EditorPagesState? by remember {
         mutableStateOf(state)
@@ -135,7 +137,7 @@ fun EditorPagesUi(
                                             val diff = newClickTime - lastClickTime
                                             when {
                                                 diff < DOUBLE_CLICK_DELAY && clickCounter == 1 -> {
-                                                    onEvent(Event.OnTogglePagesMode)
+                                                    onEvent(EditorEvent.SetViewMode(EditorViewMode.Edit()))
                                                 }
                                                 diff >= DOUBLE_CLICK_DELAY -> {
                                                     newClickCounter = 0

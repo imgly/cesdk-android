@@ -44,14 +44,12 @@ import ly.img.engine.GlobalScope
 import ly.img.engine.Typeface
 
 class PostcardUiViewModel(
-    editorScope: EditorScope,
     onCreate: suspend EditorScope.() -> Unit,
     onExport: suspend EditorScope.() -> Unit,
     onClose: suspend EditorScope.(Boolean) -> Unit,
     onError: suspend EditorScope.(Throwable) -> Unit,
     libraryViewModel: LibraryViewModel,
 ) : EditorUiViewModel(
-        editorScope = editorScope,
         onCreate = onCreate,
         onExport = onExport,
         onClose = onClose,
@@ -249,7 +247,7 @@ class PostcardUiViewModel(
 
     override fun setPage(index: Int) {
         super.setPage(index)
-        if (baseUiState.value.isUndoEnabled) hasUnsavedChanges = true
+        if (engine.editor.canUndo()) hasUnsavedChanges = true
         engine.resetHistory()
     }
 

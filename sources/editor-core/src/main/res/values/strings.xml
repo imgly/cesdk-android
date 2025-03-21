@@ -80,4 +80,17 @@
     <string name="ly_img_editor_search">Search</string>
     <string name="ly_img_editor_search_placeholder">Search %s…</string>
     <string name="ly_img_editor_search_clear">Clear</string>
+
+    <string name="ly_img_editor_bring_forward">Bring Forward</string>
+    <string name="ly_img_editor_send_backward">Send Backward</string>
+
+    <string name="ly_img_editor_undo">Undo</string>
+    <string name="ly_img_editor_redo">Redo</string>
+    <string name="ly_img_editor_toggle_preview_mode">Toggle Preview</string>
+    <string name="ly_img_editor_toggle_pages_mode">Toggle Pages</string>
+    <string name="ly_img_editor_export">Export</string>
+    <string name="ly_img_editor_previous">Previous</string>
+    <string name="ly_img_editor_next">Next</string>
+    <string name="ly_img_editor_write">Write</string>
+    <string name="ly_img_editor_design">Design</string>
 </resources>

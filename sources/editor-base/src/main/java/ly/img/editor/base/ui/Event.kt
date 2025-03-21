@@ -29,8 +29,6 @@ interface Event : EditorEvent {
         val throwable: Throwable,
     ) : Event
 
-    object OnBack : Event
-
     class OnBackPress(
         val bottomSheetOffset: Float,
         val bottomSheetMaxOffset: Float,
@@ -89,16 +87,6 @@ interface Event : EditorEvent {
         val isExpanding: Boolean,
     ) : Event
 
-    object OnUndoClick : Event
-
-    object OnRedoClick : Event
-
-    object OnExportClick : Event
-
-    data class OnTogglePreviewMode(
-        val isChecked: Boolean,
-    ) : Event
-
     data class EnableHistory(
         val enable: Boolean,
     ) : Event
@@ -112,17 +100,11 @@ interface Event : EditorEvent {
         val page: Int,
     ) : Event
 
-    data object OnNextPage : Event
-
-    data object OnPreviousPage : Event
-
     data object OnPause : Event
 
     data class OnAddPage(
         val index: Int,
     ) : Event
-
-    data object OnTogglePagesMode : Event
 
     data class OnPagesModePageSelectionChange(
         val page: EditorPagesState.Page,
