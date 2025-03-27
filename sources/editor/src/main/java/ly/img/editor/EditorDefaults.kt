@@ -238,7 +238,8 @@ object EditorDefaults {
         EditorDefaults.run {
             if (engine.isSceneModeVideo) {
                 val page = engine.scene.getCurrentPage() ?: engine.scene.getPages()[0]
-                eventHandler.send(ShowVideoExportProgressEvent(0f))
+                var exportProgress = 0f
+                eventHandler.send(ShowVideoExportProgressEvent(exportProgress))
                 runCatching {
                     val buffer = engine.block.exportVideo(
                         block = page,
@@ -246,9 +247,11 @@ object EditorDefaults {
                         duration = engine.block.getDuration(page),
                         mimeType = mimeType,
                         progressCallback = { progress ->
-                            eventHandler.send(
-                                ShowVideoExportProgressEvent(progress.encodedFrames.toFloat() / progress.totalFrames),
-                            )
+                            val newProgress = progress.encodedFrames.toFloat() / progress.totalFrames
+                            if (newProgress >= exportProgress + 0.01f) {
+                                exportProgress = newProgress
+                                eventHandler.send(ShowVideoExportProgressEvent(exportProgress))
+                            }
                         },
                     )
                     writeToTempFile(buffer, mimeType)
