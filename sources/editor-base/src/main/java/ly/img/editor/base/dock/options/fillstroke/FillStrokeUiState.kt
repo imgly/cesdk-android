@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.base.ui.Block
 import ly.img.editor.core.R
+import ly.img.editor.core.ui.engine.Scope
 import ly.img.editor.core.ui.engine.getFillType
 import ly.img.engine.Engine
 import ly.img.engine.FillType
@@ -15,24 +16,24 @@ data class FillStrokeUiState(
 ) {
     companion object Factory {
         private fun getFillStrokeTitleRes(
-            hasSolidOrGradientFill: Boolean,
-            hasStroke: Boolean,
+            showFill: Boolean,
+            showStroke: Boolean,
         ) = when {
-            hasSolidOrGradientFill && hasStroke -> {
+            showFill && showStroke -> {
                 R.string.ly_img_editor_fill_and_stroke
             }
 
-            hasSolidOrGradientFill -> {
+            showFill -> {
                 R.string.ly_img_editor_fill
             }
 
-            hasStroke -> {
+            showStroke -> {
                 R.string.ly_img_editor_stroke
             }
 
             else -> {
                 throw IllegalArgumentException(
-                    "getFillStrokeTitleRes() should not be called when hasFill and hasStroke both are false.",
+                    "getFillStrokeTitleRes() should not be called when showFill and showStroke both are false.",
                 )
             }
         }
@@ -44,25 +45,22 @@ data class FillStrokeUiState(
         ): FillStrokeUiState {
             val designBlock = block.designBlock
             val fillType = engine.block.getFillType(designBlock)
-            val hasSolidOrGradientFill =
-                fillType == FillType.Color ||
-                    fillType == FillType.LinearGradient ||
-                    fillType == FillType.RadialGradient ||
-                    fillType == FillType.ConicalGradient
-            val hasStroke = engine.block.supportsStroke(designBlock)
+            val hasSolidOrGradientFill = fillType == FillType.Color ||
+                fillType == FillType.LinearGradient ||
+                fillType == FillType.RadialGradient ||
+                fillType == FillType.ConicalGradient
+            val showFill = hasSolidOrGradientFill && engine.block.isAllowedByScope(designBlock, Scope.FillChange)
+            val showStroke = engine.block.supportsStroke(designBlock) && engine.block.isAllowedByScope(designBlock, Scope.StrokeChange)
+
             val palette = colorPalette.take(6)
             return FillStrokeUiState(
-                titleRes = getFillStrokeTitleRes(hasSolidOrGradientFill, hasStroke),
-                fillUiState = if (hasSolidOrGradientFill) {
-                    createFillUiState(
-                        block,
-                        engine,
-                        palette,
-                    )
+                titleRes = getFillStrokeTitleRes(showFill, showStroke),
+                fillUiState = if (showFill) {
+                    createFillUiState(block, engine, palette)
                 } else {
                     null
                 },
-                strokeUiState = if (hasStroke) createStrokeUiState(block, engine, palette) else null,
+                strokeUiState = if (showStroke) createStrokeUiState(block, engine, palette) else null,
             )
         }
     }
