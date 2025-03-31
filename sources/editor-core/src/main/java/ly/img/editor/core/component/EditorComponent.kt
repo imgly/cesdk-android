@@ -152,10 +152,10 @@ abstract class EditorComponent<Scope : EditorScope> {
                                     activeAlignmentItemProviderList.clear()
                                 }
                                 itemProviderMapping.forEach { (alignment, data) ->
-                                    AlignmentData(
+                                    this[alignment] = AlignmentData(
                                         arrangement = data.arrangement,
                                         items = data.items.map { it(editorScope) },
-                                    ).let { this[alignment] = it }
+                                    )
                                 }
                                 itemProviderMapping.clear()
                             }
@@ -227,14 +227,34 @@ abstract class EditorComponent<Scope : EditorScope> {
                         mutableMapOf()
                     private val removeList: LinkedList<EditorComponentId> = LinkedList()
 
-                    private fun error(
+                    private fun getItemError(
                         operation: String,
-                        key: String,
-                        value: Any,
-                    ) {
-                        error(
-                            "$operation was invoked with $key=$value which does not exist in the source ListBuilder or is already removed via remove API.",
-                        )
+                        id: String,
+                    ): String =
+                        "$operation was invoked with id=$id which does not exist in the source ListBuilder or is already removed via remove API."
+
+                    private fun getAlignmentError(
+                        operation: String,
+                        alignment: Alignment?,
+                        sourceAlignments: Set<Alignment?>,
+                    ): String = when {
+                        alignment == null -> {
+                            "$operation was invoked without alignment, however source ListBuilder contains only aligned items."
+                        }
+                        sourceAlignments.contains(null) -> {
+                            "$operation was invoked with alignment, however source ListBuilder contains only non-aligned items."
+                        }
+                        else -> {
+                            "$operation was invoked with alignment=$alignment, however source ListBuilder does not contain such alignment."
+                        }
+                    }
+
+                    private inline fun <T> List<T>.ensureIsEmpty(message: (T) -> String) {
+                        if (isNotEmpty()) error(message(first()))
+                    }
+
+                    private inline fun <T> Map<T, *>.ensureIsEmpty(message: (T) -> String) {
+                        if (isNotEmpty()) error(message(keys.first()))
                     }
 
                     override val result: Map<Alignment?, AlignmentData<Item, Arrangement>>
@@ -245,14 +265,15 @@ abstract class EditorComponent<Scope : EditorScope> {
                             }
                             // Every recomposition calls the block, fills up the item list and then clears it
                             block()
-                            source.scope.result.mapValues { (alignment, data) ->
-                                AlignmentData(
+                            val sourceResult = source.scope.result
+                            sourceResult.forEach { (alignment, data) ->
+                                this[alignment] = AlignmentData(
                                     arrangement = data.arrangement,
                                     items = buildList {
                                         addFirstProviderMapping.remove(alignment)?.map { it(editorScope) }?.let(::addAll)
-                                        data.items.forEach { item ->
+                                        data.items.forEach forEachInner@{ item ->
                                             // Try remove item first, then do other operations.
-                                            if (removeList.remove(item.id)) return@forEach
+                                            if (removeList.remove(item.id)) return@forEachInner
                                             addBeforeProviderMapping.remove(item.id)?.map { it(editorScope) }?.let(::addAll)
                                             add(replaceItemProviderMapping.remove(item.id)?.invoke(editorScope) ?: item)
                                             addAfterProviderMapping.remove(
@@ -263,29 +284,23 @@ abstract class EditorComponent<Scope : EditorScope> {
                                     },
                                 )
                             }
-                            if (addFirstProviderMapping.isNotEmpty()) {
-                                val alignment = addFirstProviderMapping.keys.first()
-                                error(operation = "addFirst", key = "alignment", value = alignment ?: "")
+                            addFirstProviderMapping.ensureIsEmpty {
+                                getAlignmentError(operation = "addFirst", alignment = it, sourceAlignments = sourceResult.keys)
                             }
-                            if (addLastProviderMapping.isNotEmpty()) {
-                                val alignment = addLastProviderMapping.keys.first()
-                                error(operation = "addLast", key = "alignment", value = alignment ?: "")
+                            addLastProviderMapping.ensureIsEmpty {
+                                getAlignmentError(operation = "addLast", alignment = it, sourceAlignments = sourceResult.keys)
                             }
-                            if (removeList.isNotEmpty()) {
-                                val id = removeList.first()
-                                error(operation = "remove", key = "id", value = id.id)
+                            removeList.ensureIsEmpty {
+                                getItemError(operation = "remove", id = it.id)
                             }
-                            if (addBeforeProviderMapping.isNotEmpty()) {
-                                val id = addBeforeProviderMapping.keys.first()
-                                error(operation = "addBefore", key = "id", value = id.id)
+                            addBeforeProviderMapping.ensureIsEmpty {
+                                getItemError(operation = "addBefore", id = it.id)
                             }
-                            if (addAfterProviderMapping.isNotEmpty()) {
-                                val id = addAfterProviderMapping.keys.first()
-                                error(operation = "addAfter", key = "id", value = id.id)
+                            addAfterProviderMapping.ensureIsEmpty {
+                                getItemError(operation = "addAfter", id = it.id)
                             }
-                            if (replaceItemProviderMapping.isNotEmpty()) {
-                                val id = replaceItemProviderMapping.keys.first()
-                                error(operation = "replace", key = "id", value = id.id)
+                            replaceItemProviderMapping.ensureIsEmpty {
+                                getItemError(operation = "replace", id = it.id)
                             }
                             addFirstProviderMapping.clear()
                             addLastProviderMapping.clear()
@@ -301,14 +316,8 @@ abstract class EditorComponent<Scope : EditorScope> {
                      * @param block a building block that returns an item that should be added to the list at the back.
                      */
                     fun addLast(block: @Composable EditorScope.() -> Item) {
-                        if (addLastProviderMapping.size > 1 || addLastProviderMapping.keys.first() != null) {
-                            error(
-                                "addLast is already invoked with alignment value. ListBuilder cannot have aligned and non-aligned groups" +
-                                    " at the same time. Consider invoking the overloaded function with correct alignment value.",
-                            )
-                        }
-                        val newList = addLastProviderMapping[null] ?: LinkedList()
-                        newList.add(block)
+                        val items = addLastProviderMapping.getAlignmentItems(null, operation = "addLast")
+                        items.add(block)
                     }
 
                     /**
@@ -323,14 +332,8 @@ abstract class EditorComponent<Scope : EditorScope> {
                         alignment: Alignment,
                         block: @Composable EditorScope.() -> Item,
                     ) {
-                        if (addLastProviderMapping[null] != null) {
-                            error(
-                                "addLast is already invoked without alignment value. ListBuilder cannot have aligned and non-aligned" +
-                                    "groups at the same time. Consider invoking the overloaded function without any alignment value.",
-                            )
-                        }
-                        val newList = addLastProviderMapping[alignment] ?: LinkedList()
-                        newList.add(block)
+                        val items = addLastProviderMapping.getAlignmentItems(alignment, operation = "addLast")
+                        items.add(block)
                     }
 
                     /**
@@ -342,14 +345,8 @@ abstract class EditorComponent<Scope : EditorScope> {
                      * @param block a building block that returns an item that should be added to the list at the front.
                      */
                     fun addFirst(block: @Composable EditorScope.() -> Item) {
-                        if (addFirstProviderMapping.size > 1 || addFirstProviderMapping.keys.first() != null) {
-                            error(
-                                "addFirst is already invoked with alignment value. ListBuilder cannot have aligned and non-aligned items" +
-                                    "at the same time. Consider invoking the overloaded function with correct alignment value.",
-                            )
-                        }
-                        val newList = addFirstProviderMapping[null] ?: LinkedList()
-                        newList.add(0, block)
+                        val items = addFirstProviderMapping.getAlignmentItems(null, operation = "addFirst")
+                        items.add(0, block)
                     }
 
                     /**
@@ -364,14 +361,27 @@ abstract class EditorComponent<Scope : EditorScope> {
                         alignment: Alignment,
                         block: @Composable EditorScope.() -> Item,
                     ) {
-                        if (addFirstProviderMapping[null] != null) {
+                        val items = addFirstProviderMapping.getAlignmentItems(alignment, operation = "addFirst")
+                        items.add(block)
+                    }
+
+                    private fun MutableMap<Alignment?, LinkedList<@Composable EditorScope.() -> Item>>.getAlignmentItems(
+                        alignment: Alignment?,
+                        operation: String,
+                    ): LinkedList<@Composable EditorScope.() -> Item> {
+                        if (alignment == null && any { (otherAlignment) -> otherAlignment != null }) {
                             error(
-                                "addFirst is already invoked without alignment value. ListBuilder cannot have aligned and non-aligned" +
-                                    "items at the same time. Consider invoking the overloaded function without any alignment value.",
+                                "$operation is already invoked with alignment value. ListBuilder cannot have aligned and non-aligned" +
+                                    " items at the same time. Consider invoking the overloaded function with correct alignment value.",
                             )
                         }
-                        val newList = addFirstProviderMapping[alignment] ?: LinkedList()
-                        newList.add(block)
+                        if (alignment != null && any { (otherAlignment) -> otherAlignment == null }) {
+                            error(
+                                "$operation is already invoked without alignment value. ListBuilder cannot have aligned and non-aligned" +
+                                    " items at the same time. Consider invoking the overloaded function without any alignment value.",
+                            )
+                        }
+                        return getOrPut(alignment) { LinkedList() }
                     }
 
                     /**
@@ -386,9 +396,8 @@ abstract class EditorComponent<Scope : EditorScope> {
                         id: EditorComponentId,
                         block: @Composable EditorScope.() -> Item,
                     ) {
-                        val newList = addAfterProviderMapping[id] ?: LinkedList()
+                        val newList = addAfterProviderMapping.getOrPut(id) { LinkedList() }
                         newList.add(0, block)
-                        addAfterProviderMapping[id] = newList
                     }
 
                     /**
@@ -403,9 +412,8 @@ abstract class EditorComponent<Scope : EditorScope> {
                         id: EditorComponentId,
                         block: @Composable EditorScope.() -> Item,
                     ) {
-                        val newList = addBeforeProviderMapping[id] ?: LinkedList()
+                        val newList = addBeforeProviderMapping.getOrPut(id) { LinkedList() }
                         newList.add(block)
-                        addBeforeProviderMapping[id] = newList
                     }
 
                     /**
