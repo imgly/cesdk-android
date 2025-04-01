@@ -464,8 +464,8 @@ fun NavigationBar.ListBuilder.Companion.rememberForApparel(): HorizontalListBuil
  * By default, the following items are added to the navigation bar:
  *
  * // Aligned at the start
- * - NavigationBar.Button.rememberCloseEditor // visible at page 1
- * - NavigationBar.Button.rememberPostcardNavigateToDesign // visible at page 2
+ * - NavigationBar.Button.rememberCloseEditor
+ * - NavigationBar.Button.rememberPreviousPage
  *
  * // Aligned at the center
  * - NavigationBar.Button.rememberUndo
@@ -473,8 +473,8 @@ fun NavigationBar.ListBuilder.Companion.rememberForApparel(): HorizontalListBuil
  * - NavigationBar.Button.rememberTogglePreviewMode
  *
  * // Aligned at the end
- * - NavigationBar.Button.rememberPostcardNavigateToWrite // visible at page 1
- * - NavigationBar.Button.rememberExport // visible at page 2
+ * - NavigationBar.Button.rememberNextPage
+ * - NavigationBar.Button.rememberExport
  *
  * For more information on how to customize [listBuilder], check [NavigationBar.remember].
  *
@@ -485,8 +485,8 @@ fun NavigationBar.ListBuilder.Companion.rememberForApparel(): HorizontalListBuil
  * Also prefer updating individual [Item]s over updating the whole [NavigationBar].
  * Ideally, scope should be updated when the parent scope (scope of the parent component) is updated and when you want to
  * observe changes from the [Engine].
- * By default it is updated only when the parent scope (accessed via [LocalEditorScope]) is updated, when editor history is changed,
- * when the current page is changed and when the current view mode is changed.
+ * By default it is updated only when the parent scope (accessed via [LocalEditorScope]) is updated, when editor history is changed and
+ * when the current page is changed.
  * @param visible whether the navigation bar should be visible based on the [Engine]'s current state.
  * Default value is always true.
  * @param enterTransition transition of the navigation bar when it enters the parent composable.
@@ -513,7 +513,6 @@ fun NavigationBar.ListBuilder.Companion.rememberForApparel(): HorizontalListBuil
 @Composable
 fun NavigationBar.Companion.rememberForPostcard(
     scope: Scope = LocalEditorScope.current.run {
-        val state by editorContext.state.collectAsState()
         val pageIndex by remember(this) {
             val stack = editorContext.engine.block.findByType(DesignBlockType.Stack).first()
             editorContext.engine.event.subscribe(listOf(stack))
@@ -528,7 +527,7 @@ fun NavigationBar.Companion.rememberForPostcard(
                 .onEach { trigger = trigger.not() }
                 .collect()
         }
-        remember(this, pageIndex, trigger, state.viewMode) {
+        remember(this, pageIndex, trigger) {
             Scope(parentScope = this)
         }
     },
@@ -563,18 +562,12 @@ fun NavigationBar.Companion.rememberForPostcard(
 @UnstableEditorApi
 @Composable
 fun NavigationBar.ListBuilder.Companion.rememberForPostcard(): HorizontalListBuilder<Item<*>> = ListBuilder.remember {
-    val currentPage = editorContext.engine.scene.getCurrentPage()
-    val pageIndex = editorContext.engine.scene.getPages().indexOf(currentPage)
-    val state = editorContext.state.value
     aligned(alignment = Alignment.Start) {
-        if (pageIndex == 0 || state.viewMode is EditorViewMode.Preview) {
-            add { Button.rememberCloseEditor() }
-        } else {
-            add {
-                Button.rememberPreviousPage(
-                    text = { stringResource(R.string.ly_img_editor_design) },
-                )
-            }
+        add { Button.rememberCloseEditor() }
+        add {
+            Button.rememberPreviousPage(
+                text = { stringResource(R.string.ly_img_editor_design) },
+            )
         }
     }
 
@@ -585,15 +578,12 @@ fun NavigationBar.ListBuilder.Companion.rememberForPostcard(): HorizontalListBui
     }
 
     aligned(alignment = Alignment.End) {
-        if (pageIndex == 1 || state.viewMode is EditorViewMode.Preview) {
-            add { Button.rememberExport() }
-        } else {
-            add {
-                Button.rememberNextPage(
-                    text = { stringResource(R.string.ly_img_editor_write) },
-                )
-            }
+        add {
+            Button.rememberNextPage(
+                text = { stringResource(R.string.ly_img_editor_write) },
+            )
         }
+        add { Button.rememberExport() }
     }
 }
 
@@ -616,7 +606,8 @@ val Button.Id.Companion.closeEditor by unsafeLazy {
  * and when you want to observe changes from the [Engine].
  * By default the scope is updated only when the parent component scope ([NavigationBar.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * Default value is always true.
+ * By default the value is true if the current view mode is [EditorViewMode.Edit] and either "features/pageCarouselEnabled" engine setting
+ * is true or the current page is the first page of the scene, false otherwise.
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
  * @param exitTransition transition of the button when it exits the parent composable.
@@ -628,10 +619,9 @@ val Button.Id.Companion.closeEditor by unsafeLazy {
  * @param text the text content of the button as a string. If null then text is not rendered.
  * Default value is null.
  * @param tint the tint color of the content. If null then no tint is applied.
- * By default the value is [androidx.compose.material3.ColorScheme.onSurfaceVariant] when edit mode is [EditorViewMode.Edit],
- * [Color.Transparent] otherwise.
+ * Default value is null.
  * @param enabled whether the button is enabled.
- * By default the value is true if current view mode is [EditorViewMode.Edit], false otherwise.
+ * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.OnClose] event is invoked.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
@@ -644,23 +634,21 @@ fun Button.Companion.rememberCloseEditor(
     scope: ButtonScope = LocalEditorScope.current.run {
         remember(this) { ButtonScope(parentScope = this) }
     },
-    visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
+    visible: @Composable ButtonScope.() -> Boolean = {
+        val state by editorContext.state.collectAsState()
+        state.viewMode is EditorViewMode.Edit &&
+            remember(this) {
+                editorContext.engine.editor.getSettingBoolean("features/pageCarouselEnabled") ||
+                    editorContext.engine.scene.run { getPages().firstOrNull() == getCurrentPage() }
+            }
+    },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.ArrowBack },
     text: (@Composable ButtonScope.() -> String)? = null,
-    tint: (@Composable ButtonScope.() -> Color)? = {
-        val state by editorContext.state.collectAsState()
-        val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
-        remember(this, state.viewMode, onSurfaceVariant) {
-            if (state.viewMode is EditorViewMode.Edit) onSurfaceVariant else Color.Transparent
-        }
-    },
-    enabled: @Composable ButtonScope.() -> Boolean = {
-        val state by editorContext.state.collectAsState()
-        state.viewMode is EditorViewMode.Edit
-    },
+    tint: (@Composable ButtonScope.() -> Color)? = null,
+    enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.OnClose())
     },
@@ -881,7 +869,8 @@ val Button.Id.Companion.export by unsafeLazy {
  * and when you want to observe changes from the [Engine].
  * By default the scope is updated only when the parent component scope ([NavigationBar.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * Default value is always true.
+ * By default the value is true if the current view mode is not [EditorViewMode.Edit] or either "features/pageCarouselEnabled" engine setting
+ * is true or the current page is the last page of the scene, false otherwise.
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
  * @param exitTransition transition of the button when it exits the parent composable.
@@ -909,7 +898,14 @@ fun Button.Companion.rememberExport(
     scope: ButtonScope = LocalEditorScope.current.run {
         remember(this) { ButtonScope(parentScope = this) }
     },
-    visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
+    visible: @Composable ButtonScope.() -> Boolean = {
+        val state by editorContext.state.collectAsState()
+        state.viewMode !is EditorViewMode.Edit ||
+            remember(this) {
+                editorContext.engine.editor.getSettingBoolean("features/pageCarouselEnabled") ||
+                    editorContext.engine.scene.run { getPages().lastOrNull() == getCurrentPage() }
+            }
+    },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
@@ -1206,7 +1202,8 @@ val Button.Id.Companion.previousPage by unsafeLazy {
  * and when you want to observe changes from the [Engine].
  * By default the scope is updated only when the parent component scope ([NavigationBar.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * Default value is always true.
+ * By default the value is true if the current view mode is [EditorViewMode.Edit] and either "features/pageCarouselEnabled" engine setting
+ * is true or the current page is not the first page of the scene, false otherwise.
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
  * @param exitTransition transition of the button when it exits the parent composable.
@@ -1220,7 +1217,7 @@ val Button.Id.Companion.previousPage by unsafeLazy {
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
- * By default the value is true when the current page index is greater than 0.
+ * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Navigation.ToPreviousPage] event is invoked.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
@@ -1233,20 +1230,21 @@ fun Button.Companion.rememberPreviousPage(
     scope: ButtonScope = LocalEditorScope.current.run {
         remember(this) { ButtonScope(parentScope = this) }
     },
-    visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
+    visible: @Composable ButtonScope.() -> Boolean = {
+        val state by editorContext.state.collectAsState()
+        state.viewMode is EditorViewMode.Edit &&
+            remember(this) {
+                editorContext.engine.editor.getSettingBoolean("features/pageCarouselEnabled") ||
+                    editorContext.engine.scene.run { getPages().firstOrNull() != getCurrentPage() }
+            }
+    },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.ArrowBack },
     text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_previous) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
-    enabled: @Composable ButtonScope.() -> Boolean = {
-        remember(this) {
-            val pages = editorContext.engine.scene.getPages()
-            val currentPageIndex = pages.indexOf(editorContext.engine.scene.getCurrentPage())
-            currentPageIndex > 0
-        }
-    },
+    enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Navigation.ToPreviousPage())
     },
@@ -1317,7 +1315,8 @@ val Button.Id.Companion.nextPage by unsafeLazy {
  * and when you want to observe changes from the [Engine].
  * By default the scope is updated only when the parent component scope ([NavigationBar.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * Default value is always true.
+ * By default the value is true if the current view mode is [EditorViewMode.Edit] and either "features/pageCarouselEnabled" engine setting
+ * is true or the current page is not the last page of the scene, false otherwise.
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
  * @param exitTransition transition of the button when it exits the parent composable.
@@ -1331,7 +1330,7 @@ val Button.Id.Companion.nextPage by unsafeLazy {
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
- * By default the value is true when the current page index is less than total page count - 1.
+ * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Navigation.ToNextPage] event is invoked.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
@@ -1344,20 +1343,21 @@ fun Button.Companion.rememberNextPage(
     scope: ButtonScope = LocalEditorScope.current.run {
         remember(this) { ButtonScope(parentScope = this) }
     },
-    visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
+    visible: @Composable ButtonScope.() -> Boolean = {
+        val state by editorContext.state.collectAsState()
+        state.viewMode is EditorViewMode.Edit &&
+            remember(this) {
+                editorContext.engine.editor.getSettingBoolean("features/pageCarouselEnabled") ||
+                    editorContext.engine.scene.run { getPages().lastOrNull() != getCurrentPage() }
+            }
+    },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.ArrowForward },
     text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_next) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
-    enabled: @Composable ButtonScope.() -> Boolean = {
-        remember(this) {
-            val pages = editorContext.engine.scene.getPages()
-            val currentPageIndex = pages.indexOf(editorContext.engine.scene.getCurrentPage())
-            currentPageIndex < pages.lastIndex
-        }
-    },
+    enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Navigation.ToNextPage())
     },
