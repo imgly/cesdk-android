@@ -1,12 +1,15 @@
 package ly.img.editor.base.ui.handler
 
+import ly.img.editor.base.engine.PropertyValue
 import ly.img.editor.base.engine.delete
 import ly.img.editor.base.engine.duplicate
+import ly.img.editor.base.engine.toEngineColor
 import ly.img.editor.base.ui.BlockEvent.OnBackward
 import ly.img.editor.base.ui.BlockEvent.OnBackwardNonSelected
 import ly.img.editor.base.ui.BlockEvent.OnChangeBlendMode
 import ly.img.editor.base.ui.BlockEvent.OnChangeFinish
 import ly.img.editor.base.ui.BlockEvent.OnChangeOpacity
+import ly.img.editor.base.ui.BlockEvent.OnChangeProperty
 import ly.img.editor.base.ui.BlockEvent.OnDelete
 import ly.img.editor.base.ui.BlockEvent.OnDeleteNonSelected
 import ly.img.editor.base.ui.BlockEvent.OnDuplicate
@@ -91,4 +94,51 @@ fun EventsHandler.blockEvents(
     }
 
     register<OnChangeOpacity> { engine.block.setOpacity(block, it.opacity) }
+
+    register<OnChangeProperty> {
+        when (it.value) {
+            is PropertyValue.Int -> {
+                engine.block.setInt(
+                    block = it.designBlock,
+                    property = it.property.key,
+                    value = it.value.value,
+                )
+            }
+            is PropertyValue.Float -> {
+                engine.block.setFloat(
+                    block = it.designBlock,
+                    property = it.property.key,
+                    value = it.value.value,
+                )
+            }
+            is PropertyValue.Double -> {
+                engine.block.setDouble(
+                    block = it.designBlock,
+                    property = it.property.key,
+                    value = it.value.value,
+                )
+            }
+            is PropertyValue.Boolean -> {
+                engine.block.setBoolean(
+                    block = it.designBlock,
+                    property = it.property.key,
+                    value = it.value.value,
+                )
+            }
+            is PropertyValue.Color -> {
+                engine.block.setColor(
+                    block = it.designBlock,
+                    property = it.property.key,
+                    value = it.value.value.toEngineColor(),
+                )
+            }
+            is PropertyValue.Enum -> {
+                engine.block.setEnum(
+                    block = it.designBlock,
+                    property = it.property.key,
+                    value = it.value.value,
+                )
+            }
+        }
+    }
 }

@@ -270,7 +270,9 @@ class TimelineState(
         }
 
         val allowsSelecting = engine.block.isAllowedByScope(designBlock, Scope.EditorSelect)
-
+        val anyAnimationBlock = engine.block.getInAnimation(designBlock).takeIf { engine.block.isValid(it) }
+            ?: engine.block.getOutAnimation(designBlock).takeIf { engine.block.isValid(it) }
+            ?: engine.block.getLoopAnimation(designBlock).takeIf { engine.block.isValid(it) }
         val clip = Clip(
             id = designBlock,
             clipType = clipType,
@@ -290,6 +292,7 @@ class TimelineState(
             volume = volume,
             isInBackgroundTrack = isInBackgroundTrack,
             hasLoaded = hasLoaded,
+            hasAnimation = anyAnimationBlock != null,
         )
 
         // Find which track the clip will go to

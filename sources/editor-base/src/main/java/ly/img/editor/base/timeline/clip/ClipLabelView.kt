@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import ly.img.editor.core.iconpack.Animation
 import ly.img.editor.core.iconpack.ImageOutline
 import ly.img.editor.core.iconpack.Music
 import ly.img.editor.core.iconpack.PlayBoxOutline
@@ -28,6 +29,7 @@ import ly.img.editor.core.theme.surface2
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Lockoutline
 import ly.img.editor.core.ui.iconpack.Volumeoff
+import ly.img.editor.core.iconpack.IconPack as CoreIconPack
 
 @Composable
 fun ClipLabelView(
@@ -63,6 +65,13 @@ fun ClipLabelView(
             }
             if (clip.isMuted && (clip.clipType == ClipType.Video || clip.clipType == ClipType.Audio)) {
                 Icon(IconPack.Volumeoff, contentDescription = null)
+            }
+            if (clip.hasAnimation) {
+                Icon(
+                    imageVector = CoreIconPack.Animation,
+                    modifier = Modifier.requiredSize(16.dp),
+                    contentDescription = null,
+                )
             }
             ClipIcon(clip)
             if (clip.clipType == ClipType.Audio) {

@@ -175,6 +175,16 @@ interface SheetType {
     class Volume(
         override val style: SheetStyle = SheetStyle(),
     ) : SheetType
+
+    /**
+     * A sheet that is used to set in/out/loop animation to design blocks.
+     *
+     * @param style the style that should be used to display the sheet.
+     * Default value is the default [SheetStyle].
+     */
+    class Animation(
+        override val style: SheetStyle = SheetStyle(),
+    ) : SheetType
 }
 
 /**

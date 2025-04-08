@@ -65,7 +65,7 @@ fun ReorderSheet(
                     add(to.index - 1, removeAt(from.index - 1))
                 }
             }
-            var dragStartedKey: Int? = remember { null }
+            var dragStartedKey: DesignBlock? = remember { null }
 
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -84,7 +84,7 @@ fun ReorderSheet(
                         Row(
                             Modifier.longPressDraggable(
                                 onDragStarted = {
-                                    dragStartedKey = it as Int
+                                    dragStartedKey = it as DesignBlock
                                 },
                                 onDragStopped = {
                                     // Now that the drag has stopped, we need to check which clip was reordered

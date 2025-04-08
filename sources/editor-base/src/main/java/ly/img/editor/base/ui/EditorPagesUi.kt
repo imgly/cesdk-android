@@ -33,7 +33,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
-import ly.img.editor.base.engine.NoneDesignBlock
 import ly.img.editor.compose.animation.AnimatedVisibility
 import ly.img.editor.compose.animation_core.fadeIn
 import ly.img.editor.compose.animation_core.fadeOut
@@ -89,7 +88,7 @@ fun EditorPagesUi(
                     items(
                         count = cachedState.pages.size + 1,
                         key = {
-                            val blockId = cachedState.pages.getOrNull(it)?.block ?: NoneDesignBlock
+                            val blockId = cachedState.pages.getOrNull(it)?.block
                             "${cachedState.sessionId}$blockId"
                         },
                     ) { index ->

@@ -3,6 +3,7 @@ package ly.img.editor
 import android.net.Uri
 import android.util.SizeF
 import androidx.compose.runtime.Composable
+import androidx.core.net.toUri
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.component.data.Nothing
@@ -104,7 +105,11 @@ class EngineConfiguration private constructor(
          * The default baseUri value used in [EngineConfiguration].
          */
         val defaultBaseUri: Uri by lazy {
-            Uri.parse("https://cdn.img.ly/packages/imgly/cesdk-engine/${EditorBuildConfig.VERSION}/assets")
+            if (EditorBuildConfig.VERSION.contains("nightly")) {
+                "https://cdn.img.ly/nightlies/${EditorBuildConfig.VERSION}/packages/imgly/cesdk-engine/${EditorBuildConfig.VERSION}/assets"
+            } else {
+                "https://cdn.img.ly/packages/imgly/cesdk-engine/${EditorBuildConfig.VERSION}/assets"
+            }.toUri()
         }
 
         /**

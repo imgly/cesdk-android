@@ -23,6 +23,7 @@ data class Clip(
     val volume: Float = 1.0f,
     val isInBackgroundTrack: Boolean = false,
     val hasLoaded: Boolean = false,
+    val hasAnimation: Boolean = false,
 )
 
 enum class ClipType {

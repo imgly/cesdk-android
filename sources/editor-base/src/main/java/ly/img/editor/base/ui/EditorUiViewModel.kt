@@ -39,6 +39,8 @@ import ly.img.editor.base.dock.LibraryReplaceBottomSheetContent
 import ly.img.editor.base.dock.LibraryTabsBottomSheetContent
 import ly.img.editor.base.dock.OptionsBottomSheetContent
 import ly.img.editor.base.dock.options.adjustment.AdjustmentUiState
+import ly.img.editor.base.dock.options.animation.AnimationBottomSheetContent
+import ly.img.editor.base.dock.options.animation.AnimationUiState
 import ly.img.editor.base.dock.options.crop.CropBottomSheetContent
 import ly.img.editor.base.dock.options.crop.createCropUiState
 import ly.img.editor.base.dock.options.effect.EffectUiState
@@ -464,28 +466,28 @@ abstract class EditorUiViewModel(
                     timelineState?.clampPlayheadPositionToSelectedClip()
                     AdjustmentSheetContent(
                         type = type,
-                        uiState = AdjustmentUiState.create(block, engine),
+                        uiState = AdjustmentUiState.create(designBlock, engine),
                     )
                 }
                 is SheetType.Filter -> {
                     timelineState?.clampPlayheadPositionToSelectedClip()
                     EffectSheetContent(
                         type = type,
-                        uiState = EffectUiState.create(block, engine, AppearanceLibraryCategory.Filters),
+                        uiState = EffectUiState.create(designBlock, engine, AppearanceLibraryCategory.Filters),
                     )
                 }
                 is SheetType.Effect -> {
                     timelineState?.clampPlayheadPositionToSelectedClip()
                     EffectSheetContent(
                         type = type,
-                        uiState = EffectUiState.create(block, engine, AppearanceLibraryCategory.FxEffects),
+                        uiState = EffectUiState.create(designBlock, engine, AppearanceLibraryCategory.FxEffects),
                     )
                 }
                 is SheetType.Blur -> {
                     timelineState?.clampPlayheadPositionToSelectedClip()
                     EffectSheetContent(
                         type = type,
-                        uiState = EffectUiState.create(block, engine, AppearanceLibraryCategory.Blur),
+                        uiState = EffectUiState.create(designBlock, engine, AppearanceLibraryCategory.Blur),
                     )
                 }
                 is SheetType.Volume -> {
@@ -493,6 +495,13 @@ abstract class EditorUiViewModel(
                     VolumeBottomSheetContent(
                         type = type,
                         uiState = VolumeUiState.create(designBlock, engine),
+                    )
+                }
+                is SheetType.Animation -> {
+                    timelineState?.clampPlayheadPositionToSelectedClip()
+                    AnimationBottomSheetContent(
+                        type = type,
+                        uiState = AnimationUiState.create(designBlock, engine), // todo implement
                     )
                 }
                 else -> {
@@ -572,14 +581,14 @@ abstract class EditorUiViewModel(
                 is AdjustmentSheetContent -> {
                     AdjustmentSheetContent(
                         type = content.type,
-                        uiState = AdjustmentUiState.create(block, engine),
+                        uiState = AdjustmentUiState.create(designBlock, engine),
                     )
                 }
 
                 is EffectSheetContent -> {
                     EffectSheetContent(
                         type = content.type,
-                        uiState = EffectUiState.create(block, engine, content.uiState.libraryCategory),
+                        uiState = EffectUiState.create(designBlock, engine, content.uiState.libraryCategory),
                     )
                 }
 
@@ -606,6 +615,13 @@ abstract class EditorUiViewModel(
                     VolumeBottomSheetContent(
                         type = content.type,
                         uiState = VolumeUiState.create(designBlock, engine),
+                    )
+                }
+
+                is AnimationBottomSheetContent -> {
+                    AnimationBottomSheetContent(
+                        type = content.type,
+                        uiState = AnimationUiState.create(designBlock, engine),
                     )
                 }
 

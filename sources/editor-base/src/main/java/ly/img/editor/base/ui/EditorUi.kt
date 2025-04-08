@@ -72,6 +72,8 @@ import ly.img.editor.base.dock.LibraryReplaceBottomSheetContent
 import ly.img.editor.base.dock.LibraryTabsBottomSheetContent
 import ly.img.editor.base.dock.OptionsBottomSheetContent
 import ly.img.editor.base.dock.options.adjustment.AdjustmentOptionsSheet
+import ly.img.editor.base.dock.options.animation.AnimationBottomSheetContent
+import ly.img.editor.base.dock.options.animation.AnimationSheet
 import ly.img.editor.base.dock.options.crop.CropBottomSheetContent
 import ly.img.editor.base.dock.options.crop.CropSheet
 import ly.img.editor.base.dock.options.effect.EffectSelectionSheet
@@ -542,6 +544,7 @@ fun EditorUi(
                                         )
                                     is VolumeBottomSheetContent -> VolumeSheet(content.uiState, viewModel::send)
                                     is ReorderBottomSheetContent -> ReorderSheet(content.timelineState, viewModel::send)
+                                    is AnimationBottomSheetContent -> AnimationSheet(content.uiState, viewModel::send)
                                     is CustomBottomSheetContent -> content.content(editorScope)
                                     else -> bottomSheetLayout(content, onColorPickerActiveChanged)
                                 }
