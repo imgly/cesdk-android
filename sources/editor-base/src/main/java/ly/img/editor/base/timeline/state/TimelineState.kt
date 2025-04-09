@@ -18,6 +18,7 @@ import ly.img.editor.core.ui.engine.getBackgroundTrack
 import ly.img.editor.core.ui.engine.getCurrentPage
 import ly.img.editor.core.ui.engine.getFillType
 import ly.img.editor.core.ui.engine.getKindEnum
+import ly.img.editor.core.ui.engine.isFillLooping
 import ly.img.editor.core.ui.utils.EPS_DURATION
 import ly.img.editor.core.ui.utils.formatForPlayer
 import ly.img.engine.DesignBlock
@@ -160,19 +161,25 @@ class TimelineState(
 
         val blockType = engine.block.getType(designBlock)
         val fillType = engine.block.getFillType(designBlock)
+        val isLooping = engine.block.isFillLooping(designBlock)
+        val kind = engine.block.getKindEnum(designBlock)
 
         val clipType: ClipType
         var title = ""
 
         when {
-            fillType == FillType.Video -> {
-                clipType = ClipType.Video
-            }
-
             fillType == FillType.Image -> {
-                clipType = when (engine.block.getKindEnum(designBlock)) {
+                clipType = when (kind) {
                     BlockKind.Sticker -> ClipType.Sticker
                     else -> ClipType.Image
+                }
+            }
+
+            fillType == FillType.Video -> {
+                clipType = when (kind) {
+                    BlockKind.AnimatedSticker -> ClipType.Sticker
+                    BlockKind.Gif -> ClipType.Image
+                    else -> ClipType.Video
                 }
             }
 
@@ -244,21 +251,23 @@ class TimelineState(
         var hasLoaded = true
 
         if (clipType == ClipType.Audio || clipType == ClipType.Video) {
-            // The total duration isn't known until the resource has loaded
-            runCatching {
-                engine.block.getAVResourceTotalDuration(trimmableId).seconds
-            }.onSuccess {
-                footageDuration = it
-                hasLoaded = true
-            }.onFailure {
-                footageDuration = duration
-                hasLoaded = false
-                // Currently, engine doesn't trigger an event when the resource is loaded. So, we force load and refresh explicitly
-                // after waiting for it to load.
-                coroutineScope.launch {
-                    runCatching {
-                        engine.block.forceLoadAVResource(trimmableId)
-                        refresh(designBlock, dataSource.findClip(designBlock))
+            if (!isLooping) {
+                // The total duration isn't known until the resource has loaded
+                runCatching {
+                    engine.block.getAVResourceTotalDuration(trimmableId).seconds
+                }.onSuccess {
+                    footageDuration = it
+                    hasLoaded = true
+                }.onFailure {
+                    footageDuration = duration
+                    hasLoaded = false
+                    // Currently, engine doesn't trigger an event when the resource is loaded. So, we force load and refresh explicitly
+                    // after waiting for it to load.
+                    coroutineScope.launch {
+                        runCatching {
+                            engine.block.forceLoadAVResource(trimmableId)
+                            refresh(designBlock, dataSource.findClip(designBlock))
+                        }
                     }
                 }
             }
@@ -292,6 +301,7 @@ class TimelineState(
             volume = volume,
             isInBackgroundTrack = isInBackgroundTrack,
             hasLoaded = hasLoaded,
+            isLooping = isLooping,
             hasAnimation = anyAnimationBlock != null,
         )
 

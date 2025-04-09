@@ -71,6 +71,11 @@ import ly.img.engine.SceneMode
 import ly.img.engine.ShapeType
 
 private const val KIND_STICKER = "sticker"
+private const val KIND_ANIMATED_STICKER = "animatedSticker"
+
+private fun Selection.isAnyKindOfSticker(): Boolean = this.kind == KIND_STICKER || this.kind == KIND_ANIMATED_STICKER
+
+private fun Selection.isNotAnyKindOfSticker() = !this.isAnyKindOfSticker()
 
 /**
  * An extension function for checking whether the [designBlock] is a background track.
@@ -300,7 +305,7 @@ val Button.Id.Companion.adjustments by unsafeLazy {
  * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
  * By default it is updated only when the parent component scope ([InspectorBar.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * By default the value is true when the selected design block has a fill type [FillType.Image] (where kind != "sticker") or [FillType.Video]
+ * By default the value is true when the selected design block has a fill type [FillType.Image] or [FillType.Video] (where kind is not "sticker" and is not "animatedSticker")
  * and an enabled engine scope "appearance/adjustments".
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
@@ -333,8 +338,11 @@ fun Button.Companion.rememberAdjustments(
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             (
-                (editorContext.selection.fillType == FillType.Image && editorContext.selection.kind != KIND_STICKER) ||
-                    editorContext.selection.fillType == FillType.Video
+                editorContext.selection.isNotAnyKindOfSticker() &&
+                    (
+                        (editorContext.selection.fillType == FillType.Image) ||
+                            editorContext.selection.fillType == FillType.Video
+                    )
             ) &&
                 editorContext.engine.block.isAllowedByScope(
                     editorContext.selection.designBlock,
@@ -385,7 +393,7 @@ val Button.Id.Companion.filter by unsafeLazy {
  * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
  * By default it is updated only when the parent component scope ([InspectorBar.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * By default the value is true when the selected design block has a fill type [FillType.Image] (where kind != "sticker") or [FillType.Video]
+ * By default the value is true when the selected design block has a fill type [FillType.Image] or [FillType.Video] (where kind is not "sticker" and is not "animatedSticker")
  * and an enabled engine scope "appearance/filter".
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
@@ -418,8 +426,11 @@ fun Button.Companion.rememberFilter(
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             (
-                (editorContext.selection.fillType == FillType.Image && editorContext.selection.kind != KIND_STICKER) ||
-                    editorContext.selection.fillType == FillType.Video
+                editorContext.selection.isNotAnyKindOfSticker() &&
+                    (
+                        (editorContext.selection.fillType == FillType.Image) ||
+                            editorContext.selection.fillType == FillType.Video
+                    )
             ) &&
                 editorContext.engine.block.isAllowedByScope(
                     editorContext.selection.designBlock,
@@ -470,7 +481,7 @@ val Button.Id.Companion.effect by unsafeLazy {
  * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
  * By default it is updated only when the parent component scope ([InspectorBar.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * * By default the value is true when the selected design block has a fill type [FillType.Image] (where kind != "sticker") or [FillType.Video]
+ * * By default the value is true when the selected design block has a fill type [FillType.Image] or [FillType.Video] (where kind is not "sticker" and is not "animatedSticker")
  * and an enabled engine scope "appearance/effect".
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
@@ -503,8 +514,11 @@ fun Button.Companion.rememberEffect(
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             (
-                (editorContext.selection.fillType == FillType.Image && editorContext.selection.kind != KIND_STICKER) ||
-                    editorContext.selection.fillType == FillType.Video
+                editorContext.selection.isNotAnyKindOfSticker() &&
+                    (
+                        (editorContext.selection.fillType == FillType.Image) ||
+                            editorContext.selection.fillType == FillType.Video
+                    )
             ) &&
                 editorContext.engine.block.isAllowedByScope(
                     editorContext.selection.designBlock,
@@ -555,7 +569,7 @@ val Button.Id.Companion.blur by unsafeLazy {
  * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
  * By default it is updated only when the parent component scope ([InspectorBar.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * By default the value is true when the selected design block has a fill type [FillType.Image] (where kind != "sticker") or [FillType.Video]
+ * By default the value is true when the selected design block has a fill type [FillType.Image] or [FillType.Video] (where kind is not "sticker" and is not "animatedSticker")
  * and an enabled engine scope "appearance/blur".
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
@@ -588,8 +602,11 @@ fun Button.Companion.rememberBlur(
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             (
-                (editorContext.selection.fillType == FillType.Image && editorContext.selection.kind != KIND_STICKER) ||
-                    editorContext.selection.fillType == FillType.Video
+                editorContext.selection.isNotAnyKindOfSticker() &&
+                    (
+                        (editorContext.selection.fillType == FillType.Image) ||
+                            editorContext.selection.fillType == FillType.Video
+                    )
             ) &&
                 editorContext.engine.block.isAllowedByScope(
                     editorContext.selection.designBlock,
@@ -719,7 +736,7 @@ val Button.Id.Companion.crop by unsafeLazy {
  * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
  * By default it is updated only when the parent component scope ([InspectorBar.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * By default the value is true when the selected design block has a fill type [FillType.Image] (where kind != "sticker") or [FillType.Video],
+ * By default the value is true when the selected design block has a fill type [FillType.Image] or [FillType.Video] (where kind is not "sticker" and is not "animatedSticker"),
  * [ly.img.engine.BlockApi.supportsCrop] is true and an enabled engine scope "fill/change".
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
@@ -753,8 +770,11 @@ fun Button.Companion.rememberCrop(
         remember(this) {
             val designBlock = editorContext.selection.designBlock
             (
-                (editorContext.selection.fillType == FillType.Image && editorContext.selection.kind != KIND_STICKER) ||
-                    editorContext.selection.fillType == FillType.Video
+                editorContext.selection.isNotAnyKindOfSticker() &&
+                    (
+                        (editorContext.selection.fillType == FillType.Image) ||
+                            editorContext.selection.fillType == FillType.Video
+                    )
             ) &&
                 editorContext.engine.block.supportsCrop(designBlock) &&
                 editorContext.engine.block.isAllowedByScope(designBlock, "layer/crop")
@@ -1161,8 +1181,8 @@ val Button.Id.Companion.fillStroke by unsafeLazy {
  * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
  * By default it is updated only when the parent component scope ([InspectorBar.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * By default the value is true when the selected design block does not have a fill type [FillType.Image], or has but the kind
- * is not "sticker" and [InspectorBar.FillStrokeButtonScope.fillStrokeIcon] has showFill == true or showStroke == true.
+ * By default the value is true when the selected design block does not have a fill type [FillType.Image] and does not have the kind
+ * "sticker" or "animatedSticker" and [InspectorBar.FillStrokeButtonScope.fillStrokeIcon] has showFill == true or showStroke == true.
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
  * @param exitTransition transition of the button when it exits the parent composable.
@@ -1208,7 +1228,10 @@ fun Button.Companion.rememberFillStroke(
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             val fillStrokeIcon = (this as InspectorBar.FillStrokeButtonScope).editorContext.fillStrokeIcon
-            (editorContext.selection.fillType != FillType.Image || editorContext.selection.kind != KIND_STICKER) &&
+            (
+                editorContext.selection.isNotAnyKindOfSticker() ||
+                    (editorContext.selection.fillType != FillType.Image && editorContext.selection.fillType != FillType.Video)
+            ) &&
                 (fillStrokeIcon.showFill || fillStrokeIcon.showStroke)
         }
     },
@@ -1481,6 +1504,7 @@ fun Button.Companion.rememberReplace(
         remember(this) {
             (
                 editorContext.selection.type == DesignBlockType.Audio ||
+                    editorContext.selection.isNotAnyKindOfSticker() &&
                     (
                         editorContext.selection.type == DesignBlockType.Graphic &&
                             editorContext.selection.fillType == FillType.Image ||
@@ -1500,21 +1524,23 @@ fun Button.Companion.rememberReplace(
     onClick: ButtonScope.() -> Unit = {
         val libraryCategory = when (editorContext.selection.type) {
             DesignBlockType.Audio -> editorContext.assetLibrary.audios
-            DesignBlockType.Graphic ->
-                when (editorContext.selection.fillType) {
-                    FillType.Video -> editorContext.assetLibrary.videos
-                    FillType.Image -> {
-                        when (editorContext.selection.kind) {
-                            KIND_STICKER -> editorContext.assetLibrary.stickers
-                            else -> editorContext.assetLibrary.images
+            DesignBlockType.Graphic -> {
+                when (editorContext.selection.kind) {
+                    KIND_STICKER,
+                    KIND_ANIMATED_STICKER,
+                    -> editorContext.assetLibrary.stickers
+
+                    else -> when (editorContext.selection.fillType) {
+                        FillType.Image -> editorContext.assetLibrary.images
+                        FillType.Video -> editorContext.assetLibrary.videos
+                        else -> {
+                            error(
+                                "Unsupported fillType ${editorContext.selection.fillType} for replace inspector bar button.",
+                            )
                         }
                     }
-                    else -> {
-                        error(
-                            "Unsupported fillType ${editorContext.selection.fillType} for replace inspector bar button.",
-                        )
-                    }
                 }
+            }
             else -> error("Unsupported type ${editorContext.selection.type} for replace inspector bar button.")
         }(editorContext.engine.scene.getMode())
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.LibraryReplace(libraryCategory = libraryCategory)))
@@ -1949,8 +1975,8 @@ val Button.Id.Companion.shape by unsafeLazy {
  * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
  * By default it is updated only when the parent component scope ([InspectorBar.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * By default the value is true when the selected design block does not have a fill type [FillType.Image], or has but the kind
- * is not "sticker", has an enabled engine scope "shape/change", [BlockApi.supportsShape] is true and the [ShapeType] is
+ * By default the value is true when the selected design block does not have a fill type [FillType.Image] and the kind
+ * is not "sticker" or "animatedSticker", has an enabled engine scope "shape/change", [BlockApi.supportsShape] is true and the [ShapeType] is
  * one of the following: [ShapeType.Star], [ShapeType.Polygon], [ShapeType.Line], [ShapeType.Rect].
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
@@ -1983,7 +2009,8 @@ fun Button.Companion.rememberShape(
     visible: @Composable ButtonScope.() -> Boolean = {
         remember(this) {
             val designBlock = editorContext.selection.designBlock
-            (editorContext.selection.fillType != FillType.Image || editorContext.selection.kind != KIND_STICKER) &&
+            editorContext.selection.isNotAnyKindOfSticker() &&
+                (editorContext.selection.fillType != FillType.Image) &&
                 editorContext.engine.block.isAllowedByScope(designBlock, "shape/change") &&
                 run {
                     val shapeType = if (editorContext.engine.block.supportsShape(designBlock)) {

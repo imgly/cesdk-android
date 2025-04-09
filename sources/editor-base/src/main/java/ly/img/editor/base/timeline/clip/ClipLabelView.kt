@@ -28,6 +28,7 @@ import ly.img.editor.core.theme.LocalExtendedColorScheme
 import ly.img.editor.core.theme.surface2
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Lockoutline
+import ly.img.editor.core.ui.iconpack.LoopClip
 import ly.img.editor.core.ui.iconpack.Volumeoff
 import ly.img.editor.core.iconpack.IconPack as CoreIconPack
 
@@ -65,6 +66,9 @@ fun ClipLabelView(
             }
             if (clip.isMuted && (clip.clipType == ClipType.Video || clip.clipType == ClipType.Audio)) {
                 Icon(IconPack.Volumeoff, contentDescription = null)
+            }
+            if (clip.isLooping) {
+                Icon(IconPack.LoopClip, contentDescription = null)
             }
             if (clip.hasAnimation) {
                 Icon(

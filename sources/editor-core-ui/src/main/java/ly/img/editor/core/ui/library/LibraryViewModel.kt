@@ -191,7 +191,6 @@ class LibraryViewModel(
         viewModelScope.launch {
             engine.awaitEngineAndSceneLoad()
             val designBlock = engine.asset.applyAssetSourceAsset(assetSourceType.sourceId, asset) ?: return@launch
-
             if (engine.isSceneModeVideo) {
                 setupAssetForVideo(asset, designBlock, addToBackgroundTrack)
             } else {
@@ -269,6 +268,16 @@ class LibraryViewModel(
     ) {
         viewModelScope.launch {
             engine.awaitEngineAndSceneLoad()
+            // TODO: Setting asset kind and looping should be handled by the engine
+            if (engine.isSceneModeVideo && engine.block.supportsFill(designBlock)) {
+                val fill = engine.block.getFill(designBlock)
+                if (engine.block.supportsPlaybackControl(fill)) {
+                    engine.block.setLooping(fill, looping = asset.getMeta("looping").toBoolean())
+                }
+            }
+            asset.getMeta("kind")?.let { kind ->
+                engine.block.setKind(designBlock, kind = kind)
+            }
             engine.asset.applyAssetSourceAsset(assetSourceType.sourceId, asset, designBlock)
             if (assetType == AssetType.Sticker) {
                 engine.overrideAndRestore(designBlock, Scope.LayerCrop) {
@@ -378,7 +387,6 @@ class LibraryViewModel(
         }
 
         fillBlock?.let { fill ->
-            engine.block.setLooping(fill, false)
             refreshDuration(designBlock, fill, resolvedClipDuration, inBackgroundTrack)
         }
     }
