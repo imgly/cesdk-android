@@ -1,20 +1,22 @@
 package ly.img.editor.base.ui.handler
 
+import ly.img.editor.base.engine.AdjustmentState
 import ly.img.editor.base.engine.EffectGroup
 import ly.img.editor.base.engine.getEffectOrCreateAndAppend
 import ly.img.editor.base.engine.getGroup
 import ly.img.editor.base.engine.removeEffectByType
 import ly.img.editor.base.engine.setBlurType
-import ly.img.editor.base.ui.BlockEvent
-import ly.img.editor.core.library.LibraryCategory
+import ly.img.editor.base.engine.toEngineColor
+import ly.img.editor.base.ui.BlockEvent.OnChangeEffectSettings
+import ly.img.editor.base.ui.BlockEvent.OnReplaceBlurEffect
+import ly.img.editor.base.ui.BlockEvent.OnReplaceColorFilter
+import ly.img.editor.base.ui.BlockEvent.OnReplaceFxEffect
 import ly.img.editor.core.library.data.AssetSourceType
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.library.AppearanceAssetSourceType
-import ly.img.editor.core.ui.library.AppearanceLibraryCategory
 import ly.img.editor.core.ui.library.getMeta
 import ly.img.editor.core.ui.library.getUri
-import ly.img.editor.core.ui.library.state.WrappedAsset
 import ly.img.editor.core.ui.register
 import ly.img.engine.Asset
 import ly.img.engine.BlockApi
@@ -37,49 +39,55 @@ fun EventsHandler.appearanceEvents(
     val engine by inject(engine)
     val block by inject(block)
 
-    register<BlockEvent.OnReplaceEffect> {
-        replaceEffect(
-            engine = engine,
-            block = block,
-            wrappedAsset = it.wrappedAsset,
-            libraryCategory = it.libraryCategory,
-        )
+    register<OnReplaceColorFilter> {
+        replaceFilter(engine.block, it.designBlock, it.assetSourceType, it.asset)
         engine.editor.addUndoStep()
     }
-}
 
-private fun replaceEffect(
-    engine: Engine,
-    block: DesignBlock,
-    wrappedAsset: WrappedAsset?,
-    libraryCategory: LibraryCategory,
-) {
-    val asset = wrappedAsset?.asset
-    when (libraryCategory) {
-        AppearanceLibraryCategory.Filters -> {
-            replaceFilter(
-                blockApi = engine.block,
-                block = block,
-                assetSourceType = wrappedAsset?.assetSourceType,
-                asset = asset,
+    register<OnReplaceFxEffect> {
+        replaceFxEffect(engine.block, it.designBlock, it.effect)
+        engine.editor.addUndoStep()
+    }
+
+    register<OnReplaceBlurEffect> {
+        engine.block.setBlurType(it.designBlock, it.effect)
+        engine.editor.addUndoStep()
+    }
+
+    register<OnChangeEffectSettings> {
+        val filter = when (it.adjustment.type) {
+            is BlurType -> {
+                engine.block.getBlur(block)
+            }
+
+            is EffectType -> {
+                engine.block.getEffectOrCreateAndAppend(block, it.adjustment.type)
+            }
+
+            else -> throw IllegalArgumentException(
+                "Unsupported adjustment type: ${it.adjustment.type}",
             )
         }
-        AppearanceLibraryCategory.FxEffects -> {
-            val effectType = asset?.getMeta("effectType")
-            replaceFxEffect(
-                blockApi = engine.block,
-                block = block,
-                effect = effectType?.let { EffectType.getOrNull(it) },
-            )
+        when (it.value) {
+            is AdjustmentState.Value.Int ->
+                engine.block.setInt(
+                    block = filter,
+                    property = it.adjustment.propertyPath,
+                    value = it.value.value,
+                )
+            is AdjustmentState.Value.Float ->
+                engine.block.setFloat(
+                    block = filter,
+                    property = it.adjustment.propertyPath,
+                    value = it.value.value,
+                )
+            is AdjustmentState.Value.Color ->
+                engine.block.setColor(
+                    block = filter,
+                    property = it.adjustment.propertyPath,
+                    value = it.value.value.toEngineColor(),
+                )
         }
-        AppearanceLibraryCategory.Blur -> {
-            val blurType = asset?.getMeta("blurType")
-            engine.block.setBlurType(
-                designBlock = block,
-                type = blurType?.let { BlurType.getOrNull(it) },
-            )
-        }
-        else -> throw IllegalArgumentException("Unsupported library category: $libraryCategory")
     }
 }
 

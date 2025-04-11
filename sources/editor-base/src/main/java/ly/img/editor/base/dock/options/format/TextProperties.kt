@@ -2,7 +2,7 @@ package ly.img.editor.base.dock.options.format
 
 import androidx.compose.ui.text.font.FontWeight
 import ly.img.editor.base.R
-import ly.img.editor.base.components.PropertyOption
+import ly.img.editor.base.components.Property
 import ly.img.editor.core.ui.iconpack.AutoSize
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Textautoheight
@@ -19,19 +19,19 @@ enum class SizeModeUi {
 
 private val sizeModes = linkedMapOf(
     SizeModeUi.AUTO_SIZE to
-        PropertyOption(
+        Property(
             R.string.ly_img_editor_auto_size,
             SizeModeUi.AUTO_SIZE.name,
             IconPack.AutoSize,
         ),
     SizeModeUi.AUTO_HEIGHT to
-        PropertyOption(
+        Property(
             R.string.ly_img_editor_auto_height,
             SizeModeUi.AUTO_HEIGHT.name,
             IconPack.Textautoheight,
         ),
     SizeModeUi.ABSOLUTE to
-        PropertyOption(
+        Property(
             R.string.ly_img_editor_fixed_size,
             SizeModeUi.ABSOLUTE.name,
             IconPack.Textfixedsize,

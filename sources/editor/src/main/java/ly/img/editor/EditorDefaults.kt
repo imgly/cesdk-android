@@ -266,23 +266,17 @@ object EditorDefaults {
                 }
             } else {
                 eventHandler.send(ShowLoading)
-                runCatching {
-                    engine.block.export(
-                        block = requireNotNull(engine.scene.get()),
-                        mimeType = mimeType,
-                    ) {
-                        scene.getPages().forEach {
-                            block.setScopeEnabled(it, key = "layer/visibility", enabled = true)
-                            block.setVisible(it, visible = true)
-                        }
+                val buffer = engine.block.export(
+                    block = requireNotNull(engine.scene.get()),
+                    mimeType = mimeType,
+                ) {
+                    scene.getPages().forEach {
+                        block.setScopeEnabled(it, key = "layer/visibility", enabled = true)
+                        block.setVisible(it, visible = true)
                     }
-                }.onSuccess { buffer ->
-                    eventHandler.send(HideLoading)
-                    eventHandler.send(ShareFileEvent(writeToTempFile(buffer, mimeType), mimeType.key))
-                }.onFailure {
-                    eventHandler.send(HideLoading)
-                    eventHandler.send(ShowErrorDialogEvent(error = it))
                 }
+                eventHandler.send(HideLoading)
+                eventHandler.send(ShareFileEvent(writeToTempFile(buffer, mimeType), mimeType.key))
             }
         }
     }

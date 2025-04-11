@@ -111,10 +111,10 @@ internal class CameraViewModel(
 
     private val layoutState = LayoutState(cameraMode)
 
-    private var page: DesignBlock = 0
-    private var pixelStreamFill1: DesignBlock = 0
-    private var primaryBlock: DesignBlock = 0
-    private var secondaryBlock: DesignBlock = 0
+    private var page: DesignBlock = -1
+    private var pixelStreamFill1: DesignBlock = -1
+    private var primaryBlock: DesignBlock = -1
+    private var secondaryBlock: DesignBlock = -1
 
     init {
         viewModelScope.launch {

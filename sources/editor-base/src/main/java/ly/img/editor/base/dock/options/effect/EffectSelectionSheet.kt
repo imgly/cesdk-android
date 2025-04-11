@@ -11,9 +11,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import ly.img.editor.base.dock.options.properties.PropertiesSheet
-import ly.img.editor.base.dock.options.properties.PropertyColorPicker
-import ly.img.editor.base.engine.Property
+import ly.img.editor.base.dock.options.fillstroke.ColorPickerSheet
+import ly.img.editor.base.engine.AdjustmentState
+import ly.img.editor.base.engine.EffectAndBlurOptions
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.ui.SheetHeader
@@ -29,56 +29,50 @@ fun EffectSelectionSheet(
     onColorPickerActiveChanged: (active: Boolean) -> Unit,
     onEvent: (EditorEvent) -> Unit,
 ) {
-    var screenState by remember { mutableStateOf<ScreenState>(ScreenState.Main) }
     val listState = rememberLazyListState()
+    var screenState by remember { mutableStateOf<ScreenState>(ScreenState.Main) }
     var assets by remember {
         mutableStateOf<List<WrappedAsset>>(emptyList())
     }
     var selectedAsset by remember {
         mutableStateOf<WrappedAsset?>(null)
     }
-    // SelectableAssetListProvider is required to update title when in AdjustmentPage mode
     SelectableAssetListProvider(uiState.libraryCategory) {
         assets = it
     }
-    LaunchedEffect(assets, uiState.selectedAssetKey) {
-        selectedAsset = assets.firstOrNull { uiState.getAssetKey(it) == uiState.selectedAssetKey }
-    }
-    LaunchedEffect(uiState.selectedAssetKey) {
-        val effect = uiState.effect
-        if ((effect == null || effect.properties.isEmpty()) && screenState !is ScreenState.Main) {
-            // Close adjustments when new effect has no properties.
-            screenState = ScreenState.Main
+    LaunchedEffect(assets, uiState.appliedEffectId) {
+        when {
+            // Close adjustments if the new effect has no adjustments
+            screenState is ScreenState.AdjustmentPage && uiState.adjustments.isEmpty() -> {
+                screenState = ScreenState.Main
+            }
         }
+        selectedAsset = uiState.getSelectedAsset(assets)
     }
     Column {
-        when {
-            screenState is ScreenState.Main -> {
+        when (screenState) {
+            ScreenState.Main -> {
                 SheetHeader(
                     title = stringResource(id = uiState.titleRes),
                     onClose = { onEvent(EditorEvent.Sheet.Close(animate = true)) },
                 )
                 SelectableAssetList(
                     modifier = Modifier.navigationBarsPadding(),
-                    selection = uiState.selectedAssetKey,
-                    selectionKey = { uiState.getAssetKey(it) ?: "" },
+                    selectedAsset = selectedAsset,
                     libraryCategory = uiState.libraryCategory,
                     listState = listState,
                     selectedIcon = {
-                        if (uiState.effect?.properties?.isNotEmpty() == true) {
+                        if (uiState.adjustments.isNotEmpty()) {
                             IconPack.Filteradjustments
                         } else {
                             null
                         }
                     },
                     onAssetSelected = {
-                        BlockEvent.OnReplaceEffect(
-                            wrappedAsset = it,
-                            libraryCategory = uiState.libraryCategory,
-                        ).let(onEvent)
+                        uiState.onAssetSelected(onEvent, it)
                     },
                     onAssetReselected = {
-                        if (uiState.effect != null && uiState.effect.properties.isNotEmpty()) {
+                        if (uiState.adjustments.isNotEmpty()) {
                             screenState = ScreenState.AdjustmentPage
                         }
                     },
@@ -86,35 +80,38 @@ fun EffectSelectionSheet(
                 )
             }
 
-            screenState is ScreenState.AdjustmentPage && uiState.effect != null -> {
-                PropertiesSheet(
-                    title = selectedAsset?.asset?.label ?: "",
-                    designBlockWithProperties = uiState.effect,
+            is ScreenState.AdjustmentPage -> {
+                EffectOptionsSheet(
+                    title = selectedAsset?.asset?.label ?: stringResource(id = uiState.titleRes),
                     onBack = { screenState = ScreenState.Main },
-                    onEvent = onEvent,
-                    onOpenColorPicker = {
+                    openColorPicker = {
                         onColorPickerActiveChanged(true)
-                        screenState = ScreenState.ColorPicker(
-                            property = it.property,
-                        )
+                        screenState = ScreenState.ColorPicker(it)
                     },
+                    onEvent = onEvent,
+                    adjustments = uiState.adjustments,
                 )
             }
 
-            screenState is ScreenState.ColorPicker && uiState.effect != null -> {
-                val localScreenState = screenState as ScreenState.ColorPicker
-                val propertyAndValue = remember(uiState.effect, localScreenState.property) {
-                    uiState.effect.properties.first { it.property == localScreenState.property }
+            is ScreenState.ColorPicker -> {
+                val colorPickerState = screenState as ScreenState.ColorPicker
+                uiState.adjustments.firstOrNull {
+                    it.type == colorPickerState.type
+                }?.let {
+                    ColorPickerSheet(
+                        color = (it.value as AdjustmentState.Value.Color).value,
+                        title = stringResource(id = colorPickerState.type.nameRes),
+                        showOpacity = false,
+                        onBack = {
+                            onColorPickerActiveChanged(false)
+                            screenState = ScreenState.AdjustmentPage
+                        },
+                        onColorChange = { color ->
+                            onEvent(BlockEvent.OnChangeEffectSettings(colorPickerState.type, AdjustmentState.Value.Color(color)))
+                        },
+                        onEvent = onEvent,
+                    )
                 }
-                PropertyColorPicker(
-                    designBlock = uiState.effect.designBlock,
-                    propertyAndValue = propertyAndValue,
-                    onBack = {
-                        onColorPickerActiveChanged(false)
-                        screenState = ScreenState.AdjustmentPage
-                    },
-                    onEvent = onEvent,
-                )
             }
         }
     }
@@ -126,6 +123,6 @@ sealed interface ScreenState {
     data object AdjustmentPage : ScreenState
 
     data class ColorPicker(
-        val property: Property,
+        val type: EffectAndBlurOptions,
     ) : ScreenState
 }

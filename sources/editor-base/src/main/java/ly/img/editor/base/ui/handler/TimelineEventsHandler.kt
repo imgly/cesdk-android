@@ -85,7 +85,7 @@ fun EventsHandler.timelineEvents(
     ) {
         val durationInSeconds = duration.toDouble(DurationUnit.SECONDS)
         engine.block.setDuration(clip.id, durationInSeconds)
-        if (!clip.isLooping && (clip.clipType == ClipType.Audio || clip.clipType == ClipType.Video)) {
+        if (clip.clipType == ClipType.Audio || clip.clipType == ClipType.Video) {
             engine.block.setTrimLength(clip.trimmableId, durationInSeconds)
         }
     }

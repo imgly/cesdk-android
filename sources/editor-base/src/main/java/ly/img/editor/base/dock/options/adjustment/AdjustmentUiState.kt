@@ -1,36 +1,24 @@
 package ly.img.editor.base.dock.options.adjustment
 
-import ly.img.editor.base.engine.DesignBlockWithProperties
-import ly.img.editor.base.engine.combineWithValues
-import ly.img.editor.base.engine.findEffect
-import ly.img.editor.base.engine.getProperties
-import ly.img.engine.DesignBlock
+import ly.img.editor.base.engine.AdjustmentState
+import ly.img.editor.base.engine.EffectAndBlurOptions
+import ly.img.editor.base.ui.Block
 import ly.img.engine.EffectType
 import ly.img.engine.Engine
 
 data class AdjustmentUiState(
-    val designBlockWithProperties: DesignBlockWithProperties,
+    val adjustments: List<AdjustmentState>,
 ) {
-    companion object {
+    companion object Factory {
         fun create(
-            designBlock: DesignBlock,
+            block: Block,
             engine: Engine,
-        ): AdjustmentUiState {
-            // If EffectType.Adjustments effect does not exist yet create and append it
-            val effectDesignBlock = engine.block.findEffect(designBlock, EffectType.Adjustments) ?: run {
-                val effect = engine.block.createEffect(EffectType.Adjustments)
-                engine.block.appendEffect(block = designBlock, effectBlock = effect)
-                effect
-            }
-            return AdjustmentUiState(
-                designBlockWithProperties = DesignBlockWithProperties(
-                    designBlock = effectDesignBlock,
-                    objectType = EffectType.Adjustments,
-                    properties = EffectType.Adjustments
-                        .getProperties()
-                        .combineWithValues(engine, effectDesignBlock),
-                ),
-            )
-        }
+        ): AdjustmentUiState = AdjustmentUiState(
+            EffectAndBlurOptions.getEffectAdjustments(
+                engine = engine,
+                designBlock = block.designBlock,
+                effectType = EffectType.Adjustments,
+            ),
+        )
     }
 }

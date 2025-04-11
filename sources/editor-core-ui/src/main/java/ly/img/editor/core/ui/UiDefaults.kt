@@ -38,9 +38,9 @@ fun Modifier.sheetCardContentModifier(top: Dp = 8.dp) = this
     .padding(top = top, bottom = 0.dp, start = 16.dp, end = 16.dp)
     .navigationBarsPadding()
 
-fun Modifier.sheetScrollableContentModifier() = composed {
+fun Modifier.sheetScrollableContentModifier(top: Dp = 8.dp) = composed {
     this
         .verticalScroll(rememberScrollState())
-        .padding(top = 8.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+        .padding(top = top, bottom = 16.dp, start = 16.dp, end = 16.dp)
         .navigationBarsPadding()
 }

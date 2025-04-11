@@ -20,11 +20,9 @@ data class Clip(
     val allowsSelecting: Boolean = true,
     val trimOffset: Duration = 0.seconds,
     val isMuted: Boolean = false,
-    val isLooping: Boolean = false,
     val volume: Float = 1.0f,
     val isInBackgroundTrack: Boolean = false,
     val hasLoaded: Boolean = false,
-    val hasAnimation: Boolean = false,
 )
 
 enum class ClipType {

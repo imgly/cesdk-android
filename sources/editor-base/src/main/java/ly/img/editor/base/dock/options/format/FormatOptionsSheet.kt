@@ -189,6 +189,7 @@ fun FormatOptionsSheet(
                             if (uiState.hasClippingOption) {
                                 PropertySwitch(
                                     title = stringResource(R.string.ly_img_editor_frame_clipping),
+                                    propertyTextRes = R.string.ly_img_editor_frame_clipping,
                                     isChecked = uiState.isClipped,
                                     onPropertyChange = {
                                         onEvent(BlockEvent.OnChangeClipping(it))

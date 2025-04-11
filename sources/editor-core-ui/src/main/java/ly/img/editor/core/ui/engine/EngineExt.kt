@@ -155,18 +155,6 @@ fun BlockApi.getFillType(designBlock: DesignBlock): FillType? = if (!this.suppor
 }
 
 /**
- * An extension function for getting the isLooping of the [Fill] of the [designBlock].
- * If the block has no fill or supportsPlaybackControl is not given it returns false.
- *
- * @return if the block is looping.
- */
-fun BlockApi.isFillLooping(designBlock: DesignBlock): Boolean = if (this.supportsFill(designBlock)) {
-    this.getFill(designBlock).let { this.supportsPlaybackControl(it) && this.isLooping(it) }
-} else {
-    false
-}
-
-/**
  * An extension function for getting the [Fill] of the [designBlock]. Check the documentation of [Fill] for more information.
  * Note that [Fill] (defined in the editor) does not support all the types defined in [FillType] (defined in the [Engine]).
  * More types will be added over time.

@@ -7,8 +7,6 @@ enum class BlockKind(
     val key: String,
 ) {
     Image("image"),
-    Gif("gif"),
-    AnimatedSticker("animatedSticker"),
     Sticker("sticker"),
     Shape("shape"),
     Video("video"),

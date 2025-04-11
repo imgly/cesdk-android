@@ -3,10 +3,8 @@ package ly.img.editor.core.ui.library
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.AnyComposable
@@ -51,7 +49,7 @@ internal fun AssetLibrary(
         }
     }
 
-    Column(modifier = Modifier.navigationBarsPadding()) {
+    Column {
         LibrarySearchHeader(
             uiState = uiState,
             onLibraryEvent = viewModel::onEvent,

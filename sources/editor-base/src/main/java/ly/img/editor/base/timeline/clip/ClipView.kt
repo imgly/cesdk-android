@@ -207,7 +207,6 @@ fun ClipView(
 
                     fun determineLeadingTrimIconStyle(hasReachedMaxWidth: Boolean? = null): IconStyle {
                         if (!clip.hasLoaded) return IconStyle.Neutral
-                        if (clip.isLooping) return IconStyle.Neutral
                         if (!clip.allowsTrimming) return IconStyle.Left
                         if (hasReachedMaxWidth != null) {
                             return if (hasReachedMaxWidth) IconStyle.Neutral else IconStyle.Left
@@ -217,7 +216,6 @@ fun ClipView(
 
                     fun determineTrailingTrimIconStyle(hasReachedMaxWidth: Boolean? = null): IconStyle {
                         if (!clip.hasLoaded) return IconStyle.Neutral
-                        if (clip.isLooping) return IconStyle.Right
                         if (!clip.allowsTrimming) return IconStyle.Right
                         if (hasReachedMaxWidth != null) {
                             return if (hasReachedMaxWidth) IconStyle.Neutral else IconStyle.Right

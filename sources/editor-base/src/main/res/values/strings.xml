@@ -271,36 +271,4 @@
     <string name="ly_img_editor_filter_blur_radial_x">Point - X</string>
     <string name="ly_img_editor_filter_blur_radial_y">Point - Y</string>
 
-    <string name="ly_img_editor_animation_duration">Duration</string>
-    <string name="ly_img_editor_animation_easing">Easing</string>
-    <string name="ly_img_editor_animation_intensity">Intensity</string>
-    <string name="ly_img_editor_animation_direction">Direction</string>
-    <string name="ly_img_editor_animation_distance">Distance</string>
-    <string name="ly_img_editor_animation_fade">Fade</string>
-    <string name="ly_img_editor_animation_scale">Scale</string>
-    <string name="ly_img_editor_animation_writing_style">Writing Style</string>
-    <string name="ly_img_editor_animation_zoom_intensity">Zoom Intensity</string>
-    <string name="ly_img_editor_animation_easing_linear">Linear</string>
-    <string name="ly_img_editor_animation_easing_smooth_accelerate">Smooth accelerate</string>
-    <string name="ly_img_editor_animation_easing_smooth_decelerate">Smooth decelerate</string>
-    <string name="ly_img_editor_animation_easing_smooth_natural">Smooth natural</string>
-    <string name="ly_img_editor_animation_easing_bounce_away">Bounce away</string>
-    <string name="ly_img_editor_animation_easing_bounce_in">Bounce in</string>
-    <string name="ly_img_editor_animation_easing_bounce_double">Bounce double</string>
-    <string name="ly_img_editor_animation_easing_wiggle_away">Wiggle away</string>
-    <string name="ly_img_editor_animation_easing_wiggle_in">Wiggle in</string>
-    <string name="ly_img_editor_animation_easing_wiggle_double">Wiggle double</string>
-    <string name="ly_img_editor_animation_direction_up">Up</string>
-    <string name="ly_img_editor_animation_direction_right">Right</string>
-    <string name="ly_img_editor_animation_direction_down">Down</string>
-    <string name="ly_img_editor_animation_direction_left">Left</string>
-    <string name="ly_img_editor_animation_direction_clockwise">Clockwise</string>
-    <string name="ly_img_editor_animation_direction_counter_clockwise">Counter Clockwise</string>
-    <string name="ly_img_editor_animation_direction_horizontal">Horizontal</string>
-    <string name="ly_img_editor_animation_direction_vertical">Vertical</string>
-    <string name="ly_img_editor_animation_direction_all">All</string>
-    <string name="ly_img_editor_animation_writing_style_block">Block</string>
-    <string name="ly_img_editor_animation_writing_style_line">Line</string>
-    <string name="ly_img_editor_animation_writing_style_character">Character</string>
-    <string name="ly_img_editor_animation_writing_style_word">Word</string>
 </resources>

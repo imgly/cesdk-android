@@ -125,7 +125,6 @@ class InspectorBar private constructor(
                 add { Button.rememberFillStroke() } // Page, Video, Image, Shape, Text
                 add { Button.rememberVolume() } // Video, Audio
                 add { Button.rememberCrop() } // Video, Image
-                add { Button.rememberAnimation() } // Video, Image, Sticker, Shape, Text
                 add { Button.rememberAdjustments() } // Video, Image
                 add { Button.rememberFilter() } // Video, Image
                 add { Button.rememberEffect() } // Video, Image

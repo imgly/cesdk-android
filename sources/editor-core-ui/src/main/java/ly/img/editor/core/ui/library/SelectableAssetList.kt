@@ -43,82 +43,65 @@ import ly.img.editor.core.ui.iconpack.None
 import ly.img.editor.core.ui.library.components.LibraryImageCard
 import ly.img.editor.core.ui.library.components.asset.SelectableAssetWrapper
 import ly.img.editor.core.ui.library.components.section.LibrarySectionItem
-import ly.img.editor.core.ui.library.state.CategoryLoadState
 import ly.img.editor.core.ui.library.state.WrappedAsset
 import ly.img.editor.core.ui.library.util.AssetLibraryUiConfig
-import ly.img.editor.core.ui.library.util.LibraryEvent
 
 @Composable
 fun SelectableAssetList(
     modifier: Modifier,
-    selection: String?,
-    selectionKey: (WrappedAsset) -> String,
+    selectedAsset: WrappedAsset?,
     libraryCategory: LibraryCategory,
     listState: LazyListState,
     selectedIcon: (WrappedAsset) -> ImageVector?,
     onAssetSelected: (WrappedAsset?) -> Unit,
     onAssetReselected: (WrappedAsset) -> Unit,
     onAssetLongClick: (WrappedAsset?) -> Unit,
-    thumbnail: (WrappedAsset) -> String = { it.asset.getThumbnailUri() },
 ) {
     val viewModel = viewModel<LibraryViewModel>()
-    val uiState = remember(libraryCategory) {
-        viewModel.getAssetLibraryUiState(libraryCategory)
-    }.collectAsState()
-    var isInitialPositionSettled by remember(libraryCategory) {
-        mutableStateOf(false)
-    }
-    LaunchedEffect(libraryCategory) {
-        if (uiState.value.loadState == CategoryLoadState.Idle) {
-            viewModel.onEvent(LibraryEvent.OnFetch(libraryCategory))
-        }
+    val uiState = viewModel.getAssetLibraryUiState(libraryCategory).collectAsState()
+    var selectedAssetIndex by remember {
+        mutableStateOf(0)
     }
 
-    suspend fun centerSelectedItem(
-        index: Int,
-        animate: Boolean = true,
-    ) {
-        val center = listState.layoutInfo.viewportEndOffset / 2
-        val target = listState.layoutInfo.visibleItemsInfo.firstOrNull {
-            it.index == index
-        } ?: run {
-            listState.scrollToItem(index)
-            if (animate) {
-                centerSelectedItem(index = index, animate = false)
-            }
-            return
-        }
-        val childCenter = target.offset + target.size / 2
-        val diff = (childCenter - center).toFloat()
-        if (animate && isInitialPositionSettled) {
-            listState.animateScrollBy(diff)
-        } else {
-            listState.scrollBy(diff)
-            if (isInitialPositionSettled.not()) {
-                isInitialPositionSettled = true
-            }
-        }
-    }
-
-    LaunchedEffect(libraryCategory, selection, uiState.value) {
-        if (uiState.value.loadState != CategoryLoadState.Success) return@LaunchedEffect
-        if (selection == null) {
-            centerSelectedItem(index = 0, animate = true)
+    LaunchedEffect(selectedAsset, uiState.value.sectionItems) {
+        if (selectedAsset == null) {
+            selectedAssetIndex = 0
             return@LaunchedEffect
         }
         var sectionStartIndex = 2 // "None" element + first section spacer
         uiState.value.sectionItems.forEach { section ->
             if (section !is LibrarySectionItem.Content) return@forEach
             val assetIndex = section.wrappedAssets.indexOfFirst { wrappedAsset ->
-                selectionKey(wrappedAsset) == selection
+                wrappedAsset == selectedAsset
             }
             if (assetIndex != -1) {
-                centerSelectedItem(index = sectionStartIndex + assetIndex, animate = true)
+                selectedAssetIndex = sectionStartIndex + assetIndex
                 return@LaunchedEffect
             }
             sectionStartIndex += section.wrappedAssets.size + 1
         }
-        centerSelectedItem(index = sectionStartIndex, animate = true)
+    }
+
+    suspend fun centerSelectedItem(animate: Boolean = true) {
+        val target = listState.layoutInfo.visibleItemsInfo.firstOrNull {
+            it.index == selectedAssetIndex
+        } ?: run {
+            listState.scrollToItem(selectedAssetIndex)
+            centerSelectedItem(animate = false)
+            return
+        }
+        val center = listState.layoutInfo.viewportEndOffset / 2
+        val childCenter = target.offset + target.size / 2
+        val diff = (childCenter - center).toFloat()
+        if (animate) {
+            listState.animateScrollBy(diff)
+        } else {
+            listState.scrollBy(diff)
+        }
+    }
+
+    LaunchedEffect(selectedAssetIndex) {
+        centerSelectedItem()
     }
 
     Surface(
@@ -143,7 +126,7 @@ fun SelectableAssetList(
                             .padding(bottom = 8.dp),
                     ) {
                         SelectableAssetWrapper(
-                            isSelected = selection == null,
+                            isSelected = selectedAsset == null,
                             selectedIcon = null,
                         ) {
                             GradientCard(
@@ -184,19 +167,17 @@ fun SelectableAssetList(
                                     .wrapContentSize()
                                     .padding(bottom = 8.dp),
                             ) {
-                                val isSelected = remember(wrappedAsset, selection, isInitialPositionSettled) {
-                                    isInitialPositionSettled && selectionKey(wrappedAsset) == selection
-                                }
                                 SelectableAssetWrapper(
-                                    isSelected = isSelected,
+                                    isSelected = wrappedAsset == selectedAsset,
                                     selectedIcon = selectedIcon(wrappedAsset),
                                     selectedIconTint = Color.White,
                                 ) {
+                                    val asset = wrappedAsset.asset
                                     LibraryImageCard(
                                         modifier = Modifier.width(80.dp),
-                                        uri = thumbnail(wrappedAsset),
+                                        uri = asset.getThumbnailUri(),
                                         onClick = {
-                                            if (isSelected) {
+                                            if (wrappedAsset == selectedAsset) {
                                                 onAssetReselected(wrappedAsset)
                                             } else {
                                                 onAssetSelected(wrappedAsset)

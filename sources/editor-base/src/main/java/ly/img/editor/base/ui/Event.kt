@@ -6,15 +6,17 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.base.dock.options.format.HorizontalAlignment
 import ly.img.editor.base.dock.options.format.VerticalAlignment
-import ly.img.editor.base.engine.Property
-import ly.img.editor.base.engine.PropertyValue
+import ly.img.editor.base.engine.AdjustmentState
+import ly.img.editor.base.engine.EffectAndBlurOptions
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.event.EditorEvent
-import ly.img.editor.core.library.LibraryCategory
+import ly.img.editor.core.library.data.AssetSourceType
 import ly.img.editor.core.library.data.UploadAssetSourceType
-import ly.img.editor.core.ui.library.state.WrappedAsset
+import ly.img.engine.Asset
 import ly.img.engine.BlendMode
+import ly.img.engine.BlurType
 import ly.img.engine.DesignBlock
+import ly.img.engine.EffectType
 import ly.img.engine.TextCase
 import ly.img.engine.Typeface
 import kotlin.time.Duration
@@ -294,17 +296,25 @@ interface BlockEvent : Event {
     // endregion
 
     // region Adjustments Events
-    data class OnReplaceEffect(
-        val wrappedAsset: WrappedAsset?,
-        val libraryCategory: LibraryCategory,
-    ) : BlockEvent
-    // endregion
-
-    // region Block Property Events
-    data class OnChangeProperty(
+    data class OnReplaceColorFilter(
         val designBlock: DesignBlock,
-        val property: Property,
-        val value: PropertyValue,
+        val assetSourceType: AssetSourceType?,
+        val asset: Asset?,
+    ) : BlockEvent
+
+    data class OnReplaceFxEffect(
+        val designBlock: DesignBlock,
+        val effect: EffectType?,
+    ) : BlockEvent
+
+    data class OnReplaceBlurEffect(
+        val designBlock: DesignBlock,
+        val effect: BlurType?,
+    ) : BlockEvent
+
+    data class OnChangeEffectSettings(
+        val adjustment: EffectAndBlurOptions,
+        val value: AdjustmentState.Value,
     ) : BlockEvent
     // endregion
 
