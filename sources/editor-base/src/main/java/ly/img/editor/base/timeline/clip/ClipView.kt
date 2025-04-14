@@ -206,7 +206,7 @@ fun ClipView(
                     )
 
                     fun determineLeadingTrimIconStyle(hasReachedMaxWidth: Boolean? = null): IconStyle {
-                        if (!clip.hasLoaded) return IconStyle.Neutral
+                        if (!clip.hasLoaded || clip.isLooping) return IconStyle.Neutral
                         if (!clip.allowsTrimming) return IconStyle.Left
                         if (hasReachedMaxWidth != null) {
                             return if (hasReachedMaxWidth) IconStyle.Neutral else IconStyle.Left
@@ -216,7 +216,7 @@ fun ClipView(
 
                     fun determineTrailingTrimIconStyle(hasReachedMaxWidth: Boolean? = null): IconStyle {
                         if (!clip.hasLoaded) return IconStyle.Neutral
-                        if (!clip.allowsTrimming) return IconStyle.Right
+                        if (clip.isLooping || !clip.allowsTrimming) return IconStyle.Right
                         if (hasReachedMaxWidth != null) {
                             return if (hasReachedMaxWidth) IconStyle.Neutral else IconStyle.Right
                         }
@@ -260,7 +260,7 @@ fun ClipView(
                                 val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minClipDuration))
                                 val maxWidth = if (clip.footageDuration != null) {
                                     zoomState.toPx(clip.duration + clip.trimOffset)
-                                } else if (clip.isInBackgroundTrack) {
+                                } else if (clip.isInBackgroundTrack || clip.isLooping) {
                                     Float.POSITIVE_INFINITY
                                 } else {
                                     zoomState.toPx(clip.duration + clip.timeOffset)

@@ -125,18 +125,18 @@ fun FillStrokeOptionsSheet(
                                 }
 
                                 is LinearGradientFill -> {
+                                    val firstColorStop = (fillState.colorStops[0].color as RGBAColor).toComposeColor()
+                                    val secondColorStrop = (fillState.colorStops[1].color as RGBAColor).toComposeColor()
                                     ColorOptions(
                                         enabled = true,
-                                        selectedColor = (fillState.colorStops[0].color as RGBAColor).toComposeColor(),
+                                        selectedColor = firstColorStop,
                                         onNoColorSelected = {
                                             onEvent(BlockEvent.OnDisableFill)
                                         },
                                         allowDisableColor = false,
                                         onColorSelected = {
-                                            onEvent(
-                                                BlockEvent.OnChangeGradientFillColors(0, it),
-                                            )
-                                            if (it != fillState.mainColor) {
+                                            onEvent(BlockEvent.OnChangeGradientFillColors(0, it))
+                                            if (it != firstColorStop) {
                                                 onEvent(BlockEvent.OnChangeFinish)
                                             }
                                         },
@@ -168,18 +168,14 @@ fun FillStrokeOptionsSheet(
                                     Divider(Modifier.padding(horizontal = 16.dp))
                                     ColorOptions(
                                         enabled = true,
-                                        selectedColor = (fillState.colorStops[1].color as RGBAColor).toComposeColor(),
+                                        selectedColor = secondColorStrop,
                                         onNoColorSelected = {
-                                            onEvent(
-                                                BlockEvent.OnDisableFill,
-                                            )
+                                            onEvent(BlockEvent.OnDisableFill)
                                         },
                                         allowDisableColor = false,
                                         onColorSelected = {
-                                            onEvent(
-                                                BlockEvent.OnChangeGradientFillColors(1, it),
-                                            )
-                                            if (it != fillState.mainColor) {
+                                            onEvent(BlockEvent.OnChangeGradientFillColors(1, it))
+                                            if (it != secondColorStrop) {
                                                 onEvent(BlockEvent.OnChangeFinish)
                                             }
                                         },

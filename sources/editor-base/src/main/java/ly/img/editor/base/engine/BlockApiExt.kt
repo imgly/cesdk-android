@@ -10,15 +10,13 @@ import ly.img.engine.FillType
 import ly.img.engine.GradientColorStop
 import kotlin.math.min
 
-const val NoneDesignBlock: DesignBlock = -1
-
 fun BlockApi.setFillType(
     designBlock: DesignBlock,
     fillType: FillType,
 ): DesignBlock {
     val oldFill = if (this.supportsFill(designBlock)) {
         this.getType(block = designBlock)
-        this.getFill(designBlock).takeIf { it != NoneDesignBlock }
+        this.getFill(designBlock).takeIf { isValid(it) }
     } else {
         null
     }
@@ -40,7 +38,7 @@ fun BlockApi.setBlurType(
     type: BlurType?,
 ): DesignBlock? {
     val oldBlur = if (this.supportsBlur(designBlock)) {
-        this.getBlur(designBlock).takeIf { it != NoneDesignBlock }
+        this.getBlur(designBlock).takeIf { isValid(it) }
     } else {
         null
     }

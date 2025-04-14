@@ -18,6 +18,7 @@ import ly.img.editor.core.ui.engine.getBackgroundTrack
 import ly.img.editor.core.ui.engine.getCurrentPage
 import ly.img.editor.core.ui.engine.getFillType
 import ly.img.editor.core.ui.engine.getKindEnum
+import ly.img.editor.core.ui.engine.isFillLooping
 import ly.img.editor.core.ui.utils.EPS_DURATION
 import ly.img.editor.core.ui.utils.formatForPlayer
 import ly.img.engine.DesignBlock
@@ -160,19 +161,25 @@ class TimelineState(
 
         val blockType = engine.block.getType(designBlock)
         val fillType = engine.block.getFillType(designBlock)
+        val isLooping = engine.block.isFillLooping(designBlock)
+        val kind = engine.block.getKindEnum(designBlock)
 
         val clipType: ClipType
         var title = ""
 
         when {
-            fillType == FillType.Video -> {
-                clipType = ClipType.Video
-            }
-
             fillType == FillType.Image -> {
-                clipType = when (engine.block.getKindEnum(designBlock)) {
+                clipType = when (kind) {
                     BlockKind.Sticker -> ClipType.Sticker
                     else -> ClipType.Image
+                }
+            }
+
+            fillType == FillType.Video -> {
+                clipType = when (kind) {
+                    BlockKind.AnimatedSticker -> ClipType.Sticker
+                    BlockKind.Gif -> ClipType.Image
+                    else -> ClipType.Video
                 }
             }
 
@@ -270,7 +277,9 @@ class TimelineState(
         }
 
         val allowsSelecting = engine.block.isAllowedByScope(designBlock, Scope.EditorSelect)
-
+        val anyAnimationBlock = engine.block.getInAnimation(designBlock).takeIf { engine.block.isValid(it) }
+            ?: engine.block.getOutAnimation(designBlock).takeIf { engine.block.isValid(it) }
+            ?: engine.block.getLoopAnimation(designBlock).takeIf { engine.block.isValid(it) }
         val clip = Clip(
             id = designBlock,
             clipType = clipType,
@@ -290,6 +299,8 @@ class TimelineState(
             volume = volume,
             isInBackgroundTrack = isInBackgroundTrack,
             hasLoaded = hasLoaded,
+            isLooping = isLooping,
+            hasAnimation = anyAnimationBlock != null,
         )
 
         // Find which track the clip will go to

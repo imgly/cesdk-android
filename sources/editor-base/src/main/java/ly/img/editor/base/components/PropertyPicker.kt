@@ -34,12 +34,12 @@ import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.utils.ifTrue
 
 @Composable
-fun PropertyPicker(
+fun <T : Any> PropertyPicker(
     title: String,
     @StringRes propertyTextRes: Int,
     enabled: Boolean = true,
-    properties: List<Property>,
-    onPropertyPicked: (String) -> Unit,
+    properties: List<PropertyOption<T>>,
+    onPropertyPicked: (T) -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     Row(
@@ -137,8 +137,8 @@ private fun PropertyItem(
     )
 }
 
-data class Property(
+data class PropertyOption<T : Any>(
     @StringRes val textRes: Int,
-    val value: String,
+    val value: T,
     val icon: ImageVector? = null,
 )
