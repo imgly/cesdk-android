@@ -26,7 +26,7 @@ fun PropertyColorPicker(
             BlockEvent.OnChangeProperty(
                 designBlock = designBlock,
                 property = property,
-                value = PropertyValue.Color(color),
+                newValue = PropertyValue.Color(color),
             ).let { onEvent(it) }
             onEvent(BlockEvent.OnChangeFinish)
         },

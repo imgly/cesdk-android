@@ -304,7 +304,7 @@ interface BlockEvent : Event {
     data class OnChangeProperty(
         val designBlock: DesignBlock,
         val property: Property,
-        val value: PropertyValue,
+        val newValue: PropertyValue,
     ) : BlockEvent
     // endregion
 

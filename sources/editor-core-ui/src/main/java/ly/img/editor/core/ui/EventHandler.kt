@@ -1,5 +1,7 @@
 package ly.img.editor.core.ui
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import ly.img.editor.core.event.EditorEvent
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
@@ -10,15 +12,16 @@ import kotlin.reflect.KProperty
  * @see EventsHandler.register
  */
 class EventsHandler(
+    private val coroutineScope: CoroutineScope,
     register: EventsHandler.() -> Unit,
 ) {
-    private val eventMap = mutableMapOf<KClass<out EditorEvent>, (event: EditorEvent) -> Unit>()
+    private val eventMap = mutableMapOf<KClass<out EditorEvent>, suspend (event: EditorEvent) -> Unit>()
 
     /**
      * handles an event by calling the lambda that was registered for the event type.
      * @param event The event to handle.
      */
-    fun handleEvent(event: EditorEvent) {
+    fun handleEvent(event: EditorEvent) = coroutineScope.launch {
         eventMap[event::class]?.invoke(event)
     }
 
@@ -30,9 +33,9 @@ class EventsHandler(
     @Suppress("UNCHECKED_CAST")
     operator fun <EventType : EditorEvent> set(
         event: KClass<out EventType>,
-        lambda: (event: EventType) -> Unit,
+        lambda: suspend (event: EventType) -> Unit,
     ) {
-        eventMap[event] = lambda as (event: EditorEvent) -> Unit
+        eventMap[event] = lambda as suspend (event: EditorEvent) -> Unit
     }
 
     /**
@@ -42,7 +45,7 @@ class EventsHandler(
      */
     @Suppress("UNCHECKED_CAST")
     infix fun <EventType : EditorEvent> KClass<out EventType>.to(lambda: (event: EventType) -> Unit) {
-        eventMap[this] = lambda as (event: EditorEvent) -> Unit
+        eventMap[this] = lambda as suspend (event: EditorEvent) -> Unit
     }
 
     init {
@@ -55,7 +58,7 @@ class EventsHandler(
  * @param lambda The lambda that will be called when the event is fired.
  * @return The lambda that was passed in.
  */
-inline fun <reified EventType : EditorEvent> EventsHandler.register(noinline lambda: (event: EventType) -> Unit): Any {
+inline fun <reified EventType : EditorEvent> EventsHandler.register(noinline lambda: suspend (event: EventType) -> Unit): Any {
     this[EventType::class] = lambda
     return lambda
 }

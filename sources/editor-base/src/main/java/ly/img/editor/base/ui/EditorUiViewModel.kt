@@ -183,7 +183,7 @@ abstract class EditorUiViewModel(
 
     private var cachedCropSheetType: SheetType? = null
 
-    private val eventHandler = EventsHandler {
+    private val eventHandler = EventsHandler(coroutineScope = viewModelScope) {
         cropEvents(
             engine = ::engine,
             block = ::requireDesignBlockForEvents,

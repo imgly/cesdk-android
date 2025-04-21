@@ -60,22 +60,19 @@ fun PropertiesBlock(
                     onEvent = onEvent,
                 )
 
-                is PropertyValueType.Color -> ColorProperty(
-                    propertyAndValue = it,
-                    onOpenColorPicker = onOpenColorPicker,
-                )
-
                 PropertyValueType.Boolean -> BooleanProperty(
                     designBlock = designBlockWithProperties.designBlock,
                     propertyAndValue = it,
                     onEvent = onEvent,
                 )
 
-                is PropertyValueType.FloatEnum -> FloatEnumProperty(
-                    designBlock = designBlockWithProperties.designBlock,
+                is PropertyValueType.Color -> ColorProperty(
                     propertyAndValue = it,
-                    onEvent = onEvent,
+                    onOpenColorPicker = onOpenColorPicker,
                 )
+
+                is PropertyValueType.String -> { /* no impl for now */ }
+
                 is PropertyValueType.StringEnum -> StringEnumProperty(
                     designBlock = designBlockWithProperties.designBlock,
                     propertyAndValue = it,
@@ -106,7 +103,7 @@ private fun IntProperty(
             BlockEvent.OnChangeProperty(
                 designBlock = designBlock,
                 property = property,
-                value = PropertyValue.Int(newValue.roundToInt()),
+                newValue = PropertyValue.Int(newValue.roundToInt()),
             ).let { onEvent(it) }
         },
         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
@@ -128,7 +125,7 @@ private fun FloatProperty(
             BlockEvent.OnChangeProperty(
                 designBlock = designBlock,
                 property = property,
-                value = PropertyValue.Float(newValue),
+                newValue = PropertyValue.Float(newValue),
             ).let { onEvent(it) }
         },
         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
@@ -154,7 +151,7 @@ private fun DoubleProperty(
             BlockEvent.OnChangeProperty(
                 designBlock = designBlock,
                 property = property,
-                value = PropertyValue.Double(newValue.toDouble()),
+                newValue = PropertyValue.Double(newValue.toDouble()),
             ).let { onEvent(it) }
         },
         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
@@ -209,37 +206,7 @@ private fun BooleanProperty(
                 BlockEvent.OnChangeProperty(
                     designBlock = designBlock,
                     property = property,
-                    value = PropertyValue.Boolean(newValue),
-                ).let { onEvent(it) }
-                onEvent(BlockEvent.OnChangeFinish)
-            },
-        )
-    }
-}
-
-@Composable
-private fun FloatEnumProperty(
-    designBlock: DesignBlock,
-    propertyAndValue: PropertyAndValue,
-    onEvent: (EditorEvent) -> Unit,
-) {
-    val (property, value) = propertyAndValue
-    val options = (property.valueType as PropertyValueType.FloatEnum).options
-    val propertyTextRes = remember(options, value) {
-        options.first { it.value == (value as PropertyValue.Float).value }.textRes
-    }
-    androidx.compose.material3.Card(
-        colors = UiDefaults.cardColors,
-    ) {
-        PropertyPicker(
-            title = stringResource(property.titleRes),
-            propertyTextRes = propertyTextRes,
-            properties = options,
-            onPropertyPicked = { newValue ->
-                BlockEvent.OnChangeProperty(
-                    designBlock = designBlock,
-                    property = property,
-                    value = PropertyValue.Float(newValue),
+                    newValue = PropertyValue.Boolean(newValue),
                 ).let { onEvent(it) }
                 onEvent(BlockEvent.OnChangeFinish)
             },
@@ -269,7 +236,7 @@ private fun StringEnumProperty(
                 BlockEvent.OnChangeProperty(
                     designBlock = designBlock,
                     property = property,
-                    value = PropertyValue.Enum(newValue),
+                    newValue = PropertyValue.Enum(newValue),
                 ).let { onEvent(it) }
                 onEvent(BlockEvent.OnChangeFinish)
             },

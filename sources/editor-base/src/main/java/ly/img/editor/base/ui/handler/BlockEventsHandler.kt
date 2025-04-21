@@ -3,6 +3,7 @@ package ly.img.editor.base.ui.handler
 import ly.img.editor.base.engine.PropertyValue
 import ly.img.editor.base.engine.delete
 import ly.img.editor.base.engine.duplicate
+import ly.img.editor.base.engine.toAssetColor
 import ly.img.editor.base.engine.toEngineColor
 import ly.img.editor.base.ui.BlockEvent.OnBackward
 import ly.img.editor.base.ui.BlockEvent.OnBackwardNonSelected
@@ -21,14 +22,23 @@ import ly.img.editor.base.ui.BlockEvent.ToFront
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register
+import ly.img.engine.AssetBooleanProperty
+import ly.img.engine.AssetColorProperty
+import ly.img.engine.AssetDoubleProperty
+import ly.img.engine.AssetEnumProperty
+import ly.img.engine.AssetFloatProperty
+import ly.img.engine.AssetIntProperty
+import ly.img.engine.AssetStringProperty
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
+import ly.img.engine.UnstableEngineApi
 
 /**
  * Register events related to DesignBlocks.
  * @param engine Lambda returning the engine instance
  * @param block Lambda returning the block instance
  */
+@OptIn(UnstableEngineApi::class)
 @Suppress("NAME_SHADOWING")
 fun EventsHandler.blockEvents(
     engine: () -> Engine,
@@ -96,48 +106,111 @@ fun EventsHandler.blockEvents(
     register<OnChangeOpacity> { engine.block.setOpacity(block, it.opacity) }
 
     register<OnChangeProperty> {
-        when (it.value) {
+        when (it.newValue) {
             is PropertyValue.Int -> {
-                engine.block.setInt(
-                    block = it.designBlock,
-                    property = it.property.key,
-                    value = it.value.value,
-                )
+                it.property.assetData?.let { assetData ->
+                    engine.asset.applyAssetSourceProperty(
+                        sourceId = assetData.sourceId,
+                        asset = assetData.asset,
+                        property = (assetData.assetProperty as AssetIntProperty).copy(value = it.newValue.value),
+                    )
+                } ?: run {
+                    engine.block.setInt(
+                        block = it.designBlock,
+                        property = it.property.key,
+                        value = it.newValue.value,
+                    )
+                }
             }
             is PropertyValue.Float -> {
-                engine.block.setFloat(
-                    block = it.designBlock,
-                    property = it.property.key,
-                    value = it.value.value,
-                )
+                it.property.assetData?.let { assetData ->
+                    engine.asset.applyAssetSourceProperty(
+                        sourceId = assetData.sourceId,
+                        asset = assetData.asset,
+                        property = (assetData.assetProperty as AssetFloatProperty).copy(value = it.newValue.value),
+                    )
+                } ?: run {
+                    engine.block.setFloat(
+                        block = it.designBlock,
+                        property = it.property.key,
+                        value = it.newValue.value,
+                    )
+                }
             }
             is PropertyValue.Double -> {
-                engine.block.setDouble(
-                    block = it.designBlock,
-                    property = it.property.key,
-                    value = it.value.value,
-                )
+                it.property.assetData?.let { assetData ->
+                    engine.asset.applyAssetSourceProperty(
+                        sourceId = assetData.sourceId,
+                        asset = assetData.asset,
+                        property = (assetData.assetProperty as AssetDoubleProperty).copy(value = it.newValue.value),
+                    )
+                } ?: run {
+                    engine.block.setDouble(
+                        block = it.designBlock,
+                        property = it.property.key,
+                        value = it.newValue.value,
+                    )
+                }
             }
             is PropertyValue.Boolean -> {
-                engine.block.setBoolean(
-                    block = it.designBlock,
-                    property = it.property.key,
-                    value = it.value.value,
-                )
+                it.property.assetData?.let { assetData ->
+                    engine.asset.applyAssetSourceProperty(
+                        sourceId = assetData.sourceId,
+                        asset = assetData.asset,
+                        property = (assetData.assetProperty as AssetBooleanProperty).copy(value = it.newValue.value),
+                    )
+                } ?: run {
+                    engine.block.setBoolean(
+                        block = it.designBlock,
+                        property = it.property.key,
+                        value = it.newValue.value,
+                    )
+                }
             }
             is PropertyValue.Color -> {
-                engine.block.setColor(
-                    block = it.designBlock,
-                    property = it.property.key,
-                    value = it.value.value.toEngineColor(),
-                )
+                it.property.assetData?.let { assetData ->
+                    engine.asset.applyAssetSourceProperty(
+                        sourceId = assetData.sourceId,
+                        asset = assetData.asset,
+                        property = (assetData.assetProperty as AssetColorProperty).copy(value = it.newValue.value.toAssetColor()),
+                    )
+                } ?: run {
+                    engine.block.setColor(
+                        block = it.designBlock,
+                        property = it.property.key,
+                        value = it.newValue.value.toEngineColor(),
+                    )
+                }
+            }
+            is PropertyValue.String -> {
+                it.property.assetData?.let { assetData ->
+                    engine.asset.applyAssetSourceProperty(
+                        sourceId = assetData.sourceId,
+                        asset = assetData.asset,
+                        property = (assetData.assetProperty as AssetStringProperty).copy(value = it.newValue.value),
+                    )
+                } ?: run {
+                    engine.block.setString(
+                        block = it.designBlock,
+                        property = it.property.key,
+                        value = it.newValue.value,
+                    )
+                }
             }
             is PropertyValue.Enum -> {
-                engine.block.setEnum(
-                    block = it.designBlock,
-                    property = it.property.key,
-                    value = it.value.value,
-                )
+                it.property.assetData?.let { assetData ->
+                    engine.asset.applyAssetSourceProperty(
+                        sourceId = assetData.sourceId,
+                        asset = assetData.asset,
+                        property = (assetData.assetProperty as AssetEnumProperty).copy(value = it.newValue.value),
+                    )
+                } ?: run {
+                    engine.block.setEnum(
+                        block = it.designBlock,
+                        property = it.property.key,
+                        value = it.newValue.value,
+                    )
+                }
             }
         }
     }

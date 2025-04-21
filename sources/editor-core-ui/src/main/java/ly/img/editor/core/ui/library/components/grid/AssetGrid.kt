@@ -85,37 +85,37 @@ internal fun AssetGrid(
             }
         }
 
+        AssetsLoadState.EmptySearchResult -> {
+            EmptyResultContent(
+                icon = IconPack.Search,
+                text = stringResource(R.string.ly_img_editor_no_elements),
+            )
+        }
+
         AssetsLoadState.EmptyResult -> {
-            if (uiState.searchText.isNotEmpty()) {
-                EmptyResultContent(
-                    icon = IconPack.Search,
-                    text = stringResource(R.string.ly_img_editor_no_elements),
-                )
-            } else {
-                val assetSource = uiState.assetsData.assetSourceType
-                EmptyResultContent(
-                    icon = IconPack.Folder,
-                    text = stringResource(R.string.ly_img_editor_no_elements),
-                    button = if (assetSource is UploadAssetSourceType) {
-                        {
-                            val launcher = rememberLauncherForActivityResult(
-                                contract = ActivityResultContracts.GetContent(),
-                            ) { uri: Uri? ->
-                                uri?.let { onUriPick(assetSource, it) }
-                            }
-                            Button(
-                                onClick = {
-                                    launcher.launch(assetSource.mimeTypeFilter)
-                                },
-                            ) {
-                                Text(text = stringResource(R.string.ly_img_editor_add))
-                            }
+            val assetSource = uiState.assetsData.assetSourceType
+            EmptyResultContent(
+                icon = IconPack.Folder,
+                text = stringResource(R.string.ly_img_editor_no_elements),
+                button = if (assetSource is UploadAssetSourceType) {
+                    {
+                        val launcher = rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.GetContent(),
+                        ) { uri: Uri? ->
+                            uri?.let { onUriPick(assetSource, it) }
                         }
-                    } else {
-                        null
-                    },
-                )
-            }
+                        Button(
+                            onClick = {
+                                launcher.launch(assetSource.mimeTypeFilter)
+                            },
+                        ) {
+                            Text(text = stringResource(R.string.ly_img_editor_add))
+                        }
+                    }
+                } else {
+                    null
+                },
+            )
         }
 
         else -> {

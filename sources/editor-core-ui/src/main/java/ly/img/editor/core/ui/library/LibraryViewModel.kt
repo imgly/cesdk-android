@@ -103,7 +103,7 @@ class LibraryViewModel(
         hashMapOf<LibraryCategory, LibraryCategoryStackData>()
     }
 
-    private val eventHandler = EventsHandler {
+    private val eventHandler = EventsHandler(coroutineScope = viewModelScope) {
         register<OnDispose> {
             onDispose()
         }
@@ -545,10 +545,11 @@ class LibraryViewModel(
                 loadState = CategoryLoadState.LoadingAssets,
             )
         }
+        val searchQuery = uiStateFlow.value.searchText
         runCatching {
             val findAssetsResult = findAssets(
                 sourceId = content.sourceType.sourceId,
-                query = uiStateFlow.value.searchText,
+                query = searchQuery,
                 groups = content.groups,
                 page = assetsData.page,
                 perPage = content.perPage,
@@ -568,7 +569,11 @@ class LibraryViewModel(
                         canPaginate = canPaginate,
                         page = if (canPaginate) assetsData.page + 1 else assetsData.page,
                         assets = assets,
-                        assetsLoadState = if (assets.isEmpty()) AssetsLoadState.EmptyResult else AssetsLoadState.Idle,
+                        assetsLoadState = if (assets.isEmpty()) {
+                            if (searchQuery.isNotEmpty()) AssetsLoadState.EmptySearchResult else AssetsLoadState.EmptyResult
+                        } else {
+                            AssetsLoadState.Idle
+                        },
                     ),
                 )
             }

@@ -40,5 +40,6 @@ enum class AssetsLoadState {
     Paginating,
     Error,
     EmptyResult,
+    EmptySearchResult,
     PaginationError,
 }

@@ -5,148 +5,137 @@ import ly.img.editor.base.components.PropertyOption
 import ly.img.engine.AnimationEasingType
 import ly.img.engine.AnimationType
 
-fun AnimationType.getProperties(designBlockDuration: Double) = buildList {
-    val isTextAnimation = key.endsWith("text")
-    add(duration(designBlockDuration))
-    addAll(getCustomProperties(isTextAnimation = isTextAnimation))
+fun AnimationType.getAvailableProperties() = when (this) {
+    AnimationType.Slide -> listOf(
+        duration,
+        easing,
+        directionEnum(),
+        fade(),
+        writingStyle,
+    )
+    AnimationType.Pan -> listOf(
+        duration,
+        easing,
+        directionEnum(),
+        distance(),
+        fade(),
+        writingStyle,
+    )
+    AnimationType.Fade -> listOf(
+        duration,
+        easing,
+        writingStyle,
+    )
+    AnimationType.Blur -> listOf(
+        duration,
+        easing,
+        fade(),
+        intensity(),
+        writingStyle,
+    )
+    AnimationType.Grow -> listOf(
+        duration,
+        easing,
+        directionPerpendicular(),
+        writingStyle,
+    )
+    AnimationType.Zoom -> listOf(
+        duration,
+        easing,
+        fade(),
+        writingStyle,
+    )
+    AnimationType.Pop -> listOf(
+        duration,
+        writingStyle,
+    )
+    AnimationType.Wipe -> listOf(
+        duration,
+        easing,
+        directionEnum(),
+        writingStyle,
+    )
+    AnimationType.Baseline -> listOf(
+        duration,
+        easing,
+        directionEnum(),
+        writingStyle,
+    )
+    AnimationType.CropZoom -> listOf(
+        duration,
+        easing,
+        fade(),
+        scale(),
+        writingStyle,
+    )
+    AnimationType.Spin -> listOf(
+        duration,
+        easing,
+        directionClock(),
+        fade(),
+        intensity(),
+        writingStyle,
+    )
+    AnimationType.SpinLoop -> listOf(
+        duration,
+        directionClock(),
+    )
+    AnimationType.FadeLoop -> listOf(
+        duration,
+    )
+    AnimationType.BlurLoop -> listOf(
+        duration,
+        intensity(),
+    )
+    AnimationType.PulsatingLoop -> listOf(
+        duration,
+        intensity(),
+    )
+    AnimationType.BreathingLoop -> listOf(
+        duration,
+        intensity(),
+    )
+    AnimationType.JumpLoop -> listOf(
+        duration,
+        directionEnum(),
+        intensity(),
+    )
+    AnimationType.SqueezeLoop -> listOf(
+        duration,
+    )
+    AnimationType.SwayLoop -> listOf(
+        intensity(),
+    )
+    AnimationType.TypewriterText -> listOf(
+        writingStyleShort(),
+    )
+    AnimationType.BlockSwipeText -> listOf(
+        directionEnum(),
+        writingStyle,
+    )
+    AnimationType.SpreadText -> listOf(
+        easing,
+        fade(),
+        intensity(),
+    )
+    AnimationType.MergeText -> listOf(
+        easing,
+        directionEnum(),
+        intensity(),
+    )
+    AnimationType.KenBurns -> listOf(
+        easing,
+        directionEnum(),
+        travelDistance(),
+        zoomIntensity(),
+        fade(),
+    )
 }
 
-private fun AnimationType.getCustomProperties(isTextAnimation: Boolean) = when (this) {
-    AnimationType.Slide -> buildList {
-        add(easing)
-        add(directionRadian())
-        add(fade())
-        if (isTextAnimation) {
-            add(writingStyle)
-        }
-    }
-    AnimationType.Pan -> buildList {
-        add(easing)
-        add(directionRadian())
-        add(distance())
-        add(fade())
-        if (isTextAnimation) {
-            add(writingStyle)
-        }
-    }
-    AnimationType.Fade -> buildList {
-        add(easing)
-        if (isTextAnimation) {
-            add(writingStyle)
-        }
-    }
-    AnimationType.Blur -> buildList {
-        add(easing)
-        add(fade())
-        add(intensity())
-        if (isTextAnimation) {
-            add(writingStyle)
-        }
-    }
-    AnimationType.Grow -> buildList {
-        add(easing)
-        add(directionPerpendicular())
-        if (isTextAnimation) {
-            add(writingStyle)
-        }
-    }
-    AnimationType.Zoom -> buildList {
-        add(easing)
-        add(fade())
-        if (isTextAnimation) {
-            add(writingStyle)
-        }
-    }
-    AnimationType.Pop -> buildList {
-        if (isTextAnimation) {
-            add(writingStyle)
-        }
-    }
-    AnimationType.Wipe -> buildList {
-        add(easing)
-        add(directionEnum())
-        if (isTextAnimation) {
-            add(writingStyle)
-        }
-    }
-    AnimationType.Baseline -> buildList {
-        add(easing)
-        add(directionEnum())
-        if (isTextAnimation) {
-            add(writingStyle)
-        }
-    }
-    AnimationType.CropZoom -> buildList {
-        add(easing)
-        add(fade())
-        add(scale())
-        if (isTextAnimation) {
-            add(writingStyle)
-        }
-    }
-    AnimationType.Spin -> buildList {
-        add(easing)
-        add(directionClock())
-        add(fade())
-        add(intensity())
-        if (isTextAnimation) {
-            add(writingStyle)
-        }
-    }
-    AnimationType.SpinLoop -> buildList {
-        add(directionClock())
-    }
-    AnimationType.FadeLoop -> emptyList()
-    AnimationType.BlurLoop -> buildList {
-        add(intensity())
-    }
-    AnimationType.PulsatingLoop -> buildList {
-        add(intensity())
-    }
-    AnimationType.BreathingLoop -> buildList {
-        add(intensity())
-    }
-    AnimationType.JumpLoop -> buildList {
-        add(directionEnum())
-        add(intensity())
-    }
-    AnimationType.SqueezeLoop -> emptyList()
-    AnimationType.SwayLoop -> buildList {
-        add(intensity())
-    }
-    AnimationType.TypewriterText -> buildList {
-        add(writingStyleShort())
-    }
-    AnimationType.BlockSwipeText -> buildList {
-        add(directionEnum())
-        add(writingStyle)
-    }
-    AnimationType.SpreadText -> buildList {
-        add(easing)
-        add(fade())
-        add(intensity())
-    }
-    AnimationType.MergeText -> buildList {
-        add(easing)
-        add(directionEnum())
-        add(intensity())
-    }
-    AnimationType.KenBurns -> buildList {
-        add(easing)
-        add(directionEnum())
-        add(travelDistance())
-        add(zoomIntensity())
-        add(fade())
-    }
-}
-
-private fun duration(designBlockDuration: Double) = Property(
+private val duration = Property(
     titleRes = R.string.ly_img_editor_animation_duration,
     key = "playback/duration",
-    valueType = PropertyValueType.Double(
-        range = 0.1..designBlockDuration,
-        step = 0.1,
-    ),
+    valueType = PropertyValueType.Double(),
 )
 
 private val easing = Property(
@@ -155,9 +144,9 @@ private val easing = Property(
     valueType = PropertyValueType.StringEnum(
         options = listOf(
             PropertyOption(R.string.ly_img_editor_animation_easing_linear, AnimationEasingType.LINEAR.key),
-            PropertyOption(R.string.ly_img_editor_animation_easing_smooth_accelerate, AnimationEasingType.EASE_IN.key),
-            PropertyOption(R.string.ly_img_editor_animation_easing_smooth_decelerate, AnimationEasingType.EASE_OUT.key),
-            PropertyOption(R.string.ly_img_editor_animation_easing_smooth_natural, AnimationEasingType.EASE_IN_OUT.key),
+            PropertyOption(R.string.ly_img_editor_animation_easing_smooth_accelerate, AnimationEasingType.EASE_IN_QUINT.key),
+            PropertyOption(R.string.ly_img_editor_animation_easing_smooth_decelerate, AnimationEasingType.EASE_OUT_QUINT.key),
+            PropertyOption(R.string.ly_img_editor_animation_easing_smooth_natural, AnimationEasingType.EASE_IN_OUT_QUINT.key),
             PropertyOption(R.string.ly_img_editor_animation_easing_bounce_away, AnimationEasingType.EASE_IN_BACK.key),
             PropertyOption(R.string.ly_img_editor_animation_easing_bounce_in, AnimationEasingType.EASE_OUT_BACK.key),
             PropertyOption(R.string.ly_img_editor_animation_easing_bounce_double, AnimationEasingType.EASE_IN_OUT_BACK.key),
@@ -171,10 +160,7 @@ private val easing = Property(
 private fun AnimationType.intensity() = Property(
     titleRes = R.string.ly_img_editor_animation_intensity,
     key = "$key/intensity",
-    valueType = PropertyValueType.Float(
-        range = 0F..1F,
-        step = 0.01F,
-    ),
+    valueType = PropertyValueType.Int(),
 )
 
 private fun AnimationType.directionEnum() = Property(
@@ -186,19 +172,6 @@ private fun AnimationType.directionEnum() = Property(
             PropertyOption(R.string.ly_img_editor_animation_direction_right, "Right"),
             PropertyOption(R.string.ly_img_editor_animation_direction_down, "Down"),
             PropertyOption(R.string.ly_img_editor_animation_direction_left, "Left"),
-        ),
-    ),
-)
-
-private fun AnimationType.directionRadian() = Property(
-    titleRes = R.string.ly_img_editor_animation_direction,
-    key = "$key/direction",
-    valueType = PropertyValueType.FloatEnum(
-        options = listOf(
-            PropertyOption(R.string.ly_img_editor_animation_direction_up, 3F / 2F * Math.PI.toFloat()),
-            PropertyOption(R.string.ly_img_editor_animation_direction_right, 0F),
-            PropertyOption(R.string.ly_img_editor_animation_direction_down, 1F / 2F * Math.PI.toFloat()),
-            PropertyOption(R.string.ly_img_editor_animation_direction_left, Math.PI.toFloat()),
         ),
     ),
 )
@@ -229,10 +202,7 @@ private fun AnimationType.directionPerpendicular() = Property(
 private fun AnimationType.distance() = Property(
     titleRes = R.string.ly_img_editor_animation_distance,
     key = "$key/distance",
-    valueType = PropertyValueType.Float(
-        range = 0F..1F,
-        step = 0.01F,
-    ),
+    valueType = PropertyValueType.Float(),
 )
 
 private fun AnimationType.fade() = Property(
@@ -244,15 +214,12 @@ private fun AnimationType.fade() = Property(
 private fun AnimationType.scale() = Property(
     titleRes = R.string.ly_img_editor_animation_scale,
     key = "$key/scale",
-    valueType = PropertyValueType.Float(
-        range = 1.1F..2.5F,
-        step = 0.01F,
-    ),
+    valueType = PropertyValueType.Float(),
 )
 
 private val writingStyle = Property(
     titleRes = R.string.ly_img_editor_animation_writing_style,
-    key = "textAnimationWritingStyle",
+    key = "textWritingStyle",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
             PropertyOption(R.string.ly_img_editor_animation_writing_style_block, "Block"),
@@ -277,17 +244,11 @@ private fun AnimationType.writingStyleShort() = Property(
 private fun AnimationType.travelDistance() = Property(
     titleRes = R.string.ly_img_editor_animation_distance,
     key = "$key/travelDistanceRatio",
-    valueType = PropertyValueType.Float(
-        range = 0F..1.25F,
-        step = 0.01F,
-    ),
+    valueType = PropertyValueType.Float(),
 )
 
 private fun AnimationType.zoomIntensity() = Property(
     titleRes = R.string.ly_img_editor_animation_zoom_intensity,
     key = "$key/zoomIntensity",
-    valueType = PropertyValueType.Float(
-        range = -3F..3F,
-        step = 0.01F,
-    ),
+    valueType = PropertyValueType.Float(),
 )
