@@ -52,6 +52,13 @@ open class AssetSourceType(
         }
 
         /**
+         * The default source type for font combinations.
+         */
+        val FontCombinations by lazy {
+            AssetSourceType(sourceId = "ly.img.textComponents")
+        }
+
+        /**
          * The default source type for typeface.
          */
         val Typeface by lazy {

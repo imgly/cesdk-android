@@ -18,6 +18,8 @@
     <string name="ly_img_editor_image_uploads">Image Uploads</string>
     <string name="ly_img_editor_audio_uploads">Audio Uploads</string>
     <string name="ly_img_editor_video_uploads">Video Uploads</string>
+    <string name="ly_img_editor_font_combinations">Font Combinations</string>
+    <string name="ly_img_editor_plain_text">Plain Text</string>
 
     <string name="ly_img_editor_elements">Elements</string>
     <string name="ly_img_editor_videos">Videos</string>
@@ -36,7 +38,8 @@
     <string name="ly_img_editor_blur">Blur</string>
     <string name="ly_img_editor_volume">Volume</string>
     <string name="ly_img_editor_crop">Crop</string>
-    <string name="ly_img_editor_animation">Animation</string>
+    <string name="ly_img_editor_text_animation">Text Animation</string>
+    <string name="ly_img_editor_animations">Animations</string>
     <string name="ly_img_editor_reorder">Reorder</string>
     <string name="ly_img_editor_fill_and_stroke"><![CDATA[Fill & Stroke]]></string>
     <string name="ly_img_editor_fill">Fill</string>
@@ -51,6 +54,7 @@
     <string name="ly_img_editor_select_group">Select Group</string>
     <string name="ly_img_editor_edit">Edit</string>
     <string name="ly_img_editor_format">Format</string>
+    <string name="ly_img_editor_background">Background</string>
 
     <string name="ly_img_editor_choose_video">Choose Video</string>
     <string name="ly_img_editor_take_video">Take Video</string>

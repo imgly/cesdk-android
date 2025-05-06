@@ -123,9 +123,10 @@ class InspectorBar private constructor(
                 add { Button.rememberEditText() } // Text
                 add { Button.rememberFormatText() } // Text
                 add { Button.rememberFillStroke() } // Page, Video, Image, Shape, Text
+                add { Button.rememberTextBackground() } // Text
                 add { Button.rememberVolume() } // Video, Audio
                 add { Button.rememberCrop() } // Video, Image
-                add { Button.rememberAnimation() } // Video, Image, Sticker, Shape, Text
+                add { Button.rememberAnimations() } // Video, Image, Sticker, Shape, Text
                 add { Button.rememberAdjustments() } // Video, Image
                 add { Button.rememberFilter() } // Video, Image
                 add { Button.rememberEffect() } // Video, Image
@@ -376,6 +377,25 @@ class InspectorBar private constructor(
          */
         val EditorContext.fillStrokeIcon: EditorIcon.FillStroke
             get() = requireNotNull(this@FillStrokeButtonScope.fillStrokeIcon)
+    }
+
+    /**
+     * The scope of the [InspectorBar.Button.Companion.rememberTextBackground] button in the inspector bar.
+     *
+     * @param parentScope the scope of the parent component.
+     * @param icon the icon state of the text background button.
+     */
+    @Stable
+    open class TextBackgroundButtonScope(
+        parentScope: EditorScope,
+        private val icon: EditorIcon,
+    ) : ButtonScope(parentScope) {
+        /**
+         * The icon state of the text background button. Used in the [Button.Companion.rememberTextBackground]
+         * button implementation.
+         */
+        val EditorContext.icon: EditorIcon
+            get() = this@TextBackgroundButtonScope.icon
     }
 
     /**

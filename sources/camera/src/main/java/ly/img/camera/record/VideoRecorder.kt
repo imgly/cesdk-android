@@ -18,7 +18,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 
 internal class VideoRecorder(
-    private val videoCapture: VideoCapture<Recorder>,
+    private val videoCaptureProvider: () -> VideoCapture<Recorder>,
 ) {
     private var recording: Recording? = null
 
@@ -31,7 +31,7 @@ internal class VideoRecorder(
         val videoFile = createFile(context)
         val fileOutputOptions = FileOutputOptions.Builder(videoFile).build()
 
-        recording = videoCapture.output
+        recording = videoCaptureProvider().output
             .prepareRecording(context, fileOutputOptions)
             .asPersistentRecording()
             .withAudioEnabled()

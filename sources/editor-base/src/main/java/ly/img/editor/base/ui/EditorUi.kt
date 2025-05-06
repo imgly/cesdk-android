@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.requiredWidth
@@ -83,6 +84,8 @@ import ly.img.editor.base.dock.options.layer.LayerOptionsSheet
 import ly.img.editor.base.dock.options.reorder.ReorderBottomSheetContent
 import ly.img.editor.base.dock.options.reorder.ReorderSheet
 import ly.img.editor.base.dock.options.shapeoptions.ShapeOptionsSheet
+import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheet
+import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheetContent
 import ly.img.editor.base.dock.options.volume.VolumeBottomSheetContent
 import ly.img.editor.base.dock.options.volume.VolumeSheet
 import ly.img.editor.base.engine.EngineCanvasView
@@ -96,6 +99,7 @@ import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.R
 import ly.img.editor.core.component.EditorComponent
+import ly.img.editor.core.compose.rememberLastValue
 import ly.img.editor.core.engine.EngineRenderTarget
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.navbar.SystemNavBar
@@ -139,20 +143,26 @@ fun EditorUi(
     val bottomSheetContent by viewModel.bottomSheetContent.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var timelineExpanded by remember { mutableStateOf(true) }
-    var hideTimeline: Boolean by remember { mutableStateOf(false) }
 
     var sheetStyle by remember(bottomSheetContent?.type) { mutableStateOf(bottomSheetContent?.type?.style) }
-    val bottomSheetState = remember(sheetStyle) {
+    val bottomSheetState = rememberLastValue<ModalBottomSheetState>(sheetStyle) {
         val internalSheetStyle = sheetStyle
         val initialValue = when {
             internalSheetStyle == null -> ModalBottomSheetValue.Hidden
             internalSheetStyle.isHalfExpandingEnabled && internalSheetStyle.isHalfExpandedInitially -> ModalBottomSheetValue.HalfExpanded
             else -> ModalBottomSheetValue.Expanded
         }
-        ModalBottomSheetState(
-            initialValue = if (sheetStyle?.animateInitialValue == true) ModalBottomSheetValue.Hidden else initialValue,
-            isSkipHalfExpanded = sheetStyle?.isHalfExpandingEnabled?.not() ?: true,
-        )
+        if (isValueSet) {
+            ModalBottomSheetState(
+                swipeableState = lastValue.swipeableState,
+                isSkipHalfExpanded = sheetStyle?.isHalfExpandingEnabled?.not() ?: true,
+            )
+        } else {
+            ModalBottomSheetState(
+                initialValue = if (sheetStyle?.animateInitialValue == true) ModalBottomSheetValue.Hidden else initialValue,
+                isSkipHalfExpanded = sheetStyle?.isHalfExpandingEnabled?.not() ?: true,
+            )
+        }
     }
 
     BackHandler(true) {
@@ -165,18 +175,6 @@ fun EditorUi(
     }
     LaunchedEffect(bottomSheetContent?.type) {
         if (bottomSheetContent == null && bottomSheetState.isVisible) bottomSheetState.snapTo(ModalBottomSheetValue.Hidden)
-        if (bottomSheetContent != null &&
-            bottomSheetContent !is LibraryReplaceBottomSheetContent &&
-            bottomSheetContent !is LibraryTabsBottomSheetContent &&
-            bottomSheetContent !is LibraryAddBottomSheetContent &&
-            timelineExpanded
-        ) {
-            hideTimeline = true
-            timelineExpanded = false
-        } else if (bottomSheetContent == null && hideTimeline) {
-            hideTimeline = false
-            timelineExpanded = true
-        }
         val sheetContent = bottomSheetContent
         if (sheetContent != null && sheetStyle?.animateInitialValue == true) {
             if (sheetContent.isHalfExpandingEnabled && sheetContent.isInitialExpandHalf) {
@@ -266,11 +264,13 @@ fun EditorUi(
         launch {
             snapshotFlow { swipeableState.offset }.collectLatest { offset ->
                 if (offset == null) return@collectLatest
+                if (swipeableState.maxOffset == 0F) return@collectLatest
                 val bottomSheetHeight =
                     ((swipeableState.maxOffset - offset).coerceAtMost(0.7f * swipeableState.maxOffset) - navigationBarHeightPx)
                         .coerceAtLeast(0F)
-                val bottomSheetHeightInDp = (bottomSheetHeight / oneDpInPx)
-                viewModel.send(Event.OnBottomSheetHeightChange(bottomSheetHeightInDp, showTimeline = timelineExpanded))
+                val bottomSheetHeightInDp = bottomSheetHeight / oneDpInPx
+                val bottomSheetMaxHeightInDp = (swipeableState.contentHeight - navigationBarHeightPx).coerceAtLeast(0F) / oneDpInPx
+                viewModel.send(Event.OnBottomSheetHeightChange(bottomSheetHeightInDp, bottomSheetMaxHeightInDp))
             }
         }
     }
@@ -304,10 +304,6 @@ fun EditorUi(
                 }
 
                 is SingleEvent.ChangeSheetState -> {
-                    if (it.state == ModalBottomSheetValue.Hidden && hideTimeline) {
-                        hideTimeline = false
-                        timelineExpanded = true
-                    }
                     uiScope.launch {
                         if (it.animate) {
                             bottomSheetState.animateTo(it.state)
@@ -425,7 +421,10 @@ fun EditorUi(
                                                 animateInitialValue = false,
                                             )
                                         } else {
-                                            content.type.style.copy(animateInitialValue = false)
+                                            val isHalfExpandingEnabled = bottomSheetState.currentValue == ModalBottomSheetValue.HalfExpanded
+                                            content.type.style.copy(
+                                                isHalfExpandingEnabled = isHalfExpandingEnabled,
+                                            )
                                         }
                                     }
                                 }
@@ -528,9 +527,9 @@ fun EditorUi(
                                     is LayerBottomSheetContent -> LayerOptionsSheet(content.uiState, viewModel::send)
                                     is FillStrokeBottomSheetContent ->
                                         FillStrokeOptionsSheet(
-                                            content.uiState,
-                                            onColorPickerActiveChanged,
-                                            viewModel::send,
+                                            uiState = content.uiState,
+                                            onColorPickerActiveChanged = onColorPickerActiveChanged,
+                                            onEvent = viewModel::send,
                                         )
                                     is OptionsBottomSheetContent -> ShapeOptionsSheet(content.uiState, viewModel::send)
                                     is FormatBottomSheetContent -> FormatOptionsSheet(content.uiState, viewModel::send)
@@ -538,13 +537,18 @@ fun EditorUi(
                                     is AdjustmentSheetContent -> AdjustmentOptionsSheet(content.uiState, viewModel::send)
                                     is EffectSheetContent ->
                                         EffectSelectionSheet(
-                                            content.uiState,
-                                            onColorPickerActiveChanged,
-                                            viewModel::send,
+                                            uiState = content.uiState,
+                                            onColorPickerActiveChanged = onColorPickerActiveChanged,
+                                            onEvent = viewModel::send,
                                         )
                                     is VolumeBottomSheetContent -> VolumeSheet(content.uiState, viewModel::send)
                                     is ReorderBottomSheetContent -> ReorderSheet(content.timelineState, viewModel::send)
                                     is AnimationBottomSheetContent -> AnimationSheet(content.uiState, viewModel::send)
+                                    is TextBackgroundBottomSheetContent -> TextBackgroundBottomSheet(
+                                        uiState = content.uiState,
+                                        onColorPickerActiveChanged = onColorPickerActiveChanged,
+                                        onEvent = viewModel::send,
+                                    )
                                     is CustomBottomSheetContent -> content.content(editorScope)
                                     else -> bottomSheetLayout(content, onColorPickerActiveChanged)
                                 }
@@ -611,15 +615,10 @@ fun EditorUi(
                             Column(
                                 Modifier
                                     .fillMaxWidth()
+                                    .heightIn(max = uiState.timelineMaxHeightInDp.dp)
                                     .align(Alignment.BottomStart)
                                     .onSizeChanged {
-                                        viewModel.send(
-                                            Event.OnUpdateBottomInset(
-                                                it.height / oneDpInPx,
-                                                zoom = !hideTimeline,
-                                                isExpanding = timelineExpanded,
-                                            ),
-                                        )
+                                        viewModel.send(Event.OnTimelineHeightChange(it.height / oneDpInPx))
                                     },
                             ) {
                                 uiState.timelineState?.let { timelineState ->

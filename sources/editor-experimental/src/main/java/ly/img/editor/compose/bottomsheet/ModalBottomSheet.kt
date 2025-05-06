@@ -36,10 +36,12 @@ import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -50,6 +52,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.collapse
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.dismiss
@@ -59,6 +62,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
@@ -143,19 +147,33 @@ class ModalBottomSheetState
             ),
     )
     constructor(
-        initialValue: ModalBottomSheetValue,
+        val swipeableState: SwipeableV2State<ModalBottomSheetValue>,
         internal val animationSpec: AnimationSpec<Float> = SwipeableDefaults.AnimationSpec,
         internal val isSkipHalfExpanded: Boolean = false,
-        confirmStateChange: (ModalBottomSheetValue) -> Boolean,
     ) {
-        val swipeableState =
-            SwipeableV2State(
+
+        constructor(
+            initialValue: ModalBottomSheetValue,
+            animationSpec: AnimationSpec<Float> = SwipeableDefaults.AnimationSpec,
+            isSkipHalfExpanded: Boolean,
+            confirmStateChange: (ModalBottomSheetValue) -> Boolean,
+        ) : this (
+            swipeableState = SwipeableV2State(
                 initialValue = initialValue,
                 animationSpec = animationSpec,
                 confirmValueChange = confirmStateChange,
                 positionalThreshold = PositionalThreshold,
-                velocityThreshold = VelocityThreshold,
-            )
+            ),
+            animationSpec = animationSpec,
+            isSkipHalfExpanded = isSkipHalfExpanded
+        ) {
+            if (isSkipHalfExpanded) {
+                require(initialValue != HalfExpanded) {
+                    "The initial value must not be set to HalfExpanded if skipHalfExpanded is set to" +
+                        " true."
+                }
+            }
+        }
 
         val currentValue: ModalBottomSheetValue
             get() = swipeableState.currentValue
@@ -171,15 +189,6 @@ class ModalBottomSheetState
 
         internal val hasHalfExpandedState: Boolean
             get() = swipeableState.hasAnchorForValue(HalfExpanded)
-
-        init {
-            if (isSkipHalfExpanded) {
-                require(initialValue != HalfExpanded) {
-                    "The initial value must not be set to HalfExpanded if skipHalfExpanded is set to" +
-                        " true."
-                }
-            }
-        }
 
         /**
          * Show the bottom sheet with animation and suspend until it's shown. If the sheet is taller
@@ -393,13 +402,20 @@ fun ModalBottomSheetLayout(
                             )
                         },
                     )
+                    .onSizeChanged { sheetState.swipeableState.contentHeight = it.height }
                     .offset {
-                        IntOffset(
-                            0,
-                            sheetState.swipeableState
-                                .requireOffset()
-                                .roundToInt(),
-                        )
+                        // Could not use Modifier.animateContentSize in the content of modal bottom sheet due to
+                        // https://stackoverflow.com/questions/70527258/android-compose-modalbottomsheetlayout-jumps-on-content-size-change.
+                        // Bugfix is quite simple: in case the y offset is calculated wrongly, so that there's a gap below
+                        // the content of the sheet (which causes items behind sheet being visible + shadow visible), then we ignore
+                        // swipeableState.offset information and set offset in a way that the sheet is glued to the bottom of the screen.
+                        val yOffset = sheetState.swipeableState
+                            .requireOffset()
+                            .roundToInt()
+                        val finalYOffset = if (yOffset + sheetState.swipeableState.contentHeight < fullHeight.toInt()) {
+                            fullHeight.toInt() - sheetState.swipeableState.contentHeight
+                        } else yOffset
+                        IntOffset(0, finalYOffset)
                     }
                     .swipeableV2(
                         state = sheetState.swipeableState,
