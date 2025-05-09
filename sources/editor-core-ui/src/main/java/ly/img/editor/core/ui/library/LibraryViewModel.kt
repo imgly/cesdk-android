@@ -105,7 +105,7 @@ class LibraryViewModel(
 
     private val eventHandler = EventsHandler(coroutineScope = viewModelScope) {
         register<OnDispose> {
-            onDispose(it.libraryCategories)
+            onDispose()
         }
         register<OnDrillDown> {
             onDrillDown(it.libraryCategory, it.expandContent)
@@ -190,9 +190,7 @@ class LibraryViewModel(
     ) {
         viewModelScope.launch {
             engine.awaitEngineAndSceneLoad()
-            // TODO: propagate error to UI instead of silencing it
-            val designBlock =
-                runCatching { engine.asset.applyAssetSourceAsset(assetSourceType.sourceId, asset) }.getOrNull() ?: return@launch
+            val designBlock = engine.asset.applyAssetSourceAsset(assetSourceType.sourceId, asset) ?: return@launch
             if (engine.isSceneModeVideo) {
                 setupAssetForVideo(asset, designBlock, addToBackgroundTrack)
             } else {
@@ -450,8 +448,8 @@ class LibraryViewModel(
         }
     }
 
-    private fun onDispose(libraryCategories: List<LibraryCategory>) {
-        libraryCategories.forEach {
+    private fun onDispose() {
+        libraryStackDataMapping.keys.forEach {
             // clear search
             onSearchTextChange("", it, debounce = false, force = true)
             // get out of search mode
@@ -557,7 +555,7 @@ class LibraryViewModel(
                 perPage = content.perPage,
             )
             val canPaginate = findAssetsResult.nextPage > 0
-            val resultAssets = findAssetsResult.assets.mapNotNull {
+            val resultAssets = findAssetsResult.assets.map {
                 createWrappedAsset(
                     asset = it,
                     assetSourceType = content.sourceType,
@@ -681,11 +679,8 @@ class LibraryViewModel(
                                 }.getOrNull() ?: Int.MAX_VALUE
                                 findResult.assets.map { asset -> source to asset }
                             }
-                            ?.filterNot { (source, _) ->
-                                section.excludeSourceTypes?.contains(source) == true
-                            }
                             ?.take(section.count)
-                            ?.mapNotNull { (source, asset) ->
+                            ?.map { (source, asset) ->
                                 createWrappedAsset(asset, source, section.assetType)
                             }?.let { wrappedAssets ->
                                 LibrarySectionItem.Content(
@@ -733,11 +728,8 @@ class LibraryViewModel(
         asset: Asset,
         assetSourceType: AssetSourceType,
         assetType: AssetType,
-    ): WrappedAsset? = when {
-        // Filter none items as we display ourselves.
-        // Note that asset sources are not consistent, meaning not all sources have none item.
-        asset.meta?.get("type") == "none" -> null
-        assetType == AssetType.Text -> WrappedAsset.TextAsset(
+    ): WrappedAsset = if (assetType == AssetType.Text) {
+        WrappedAsset.TextAsset(
             asset = asset,
             assetSourceType = assetSourceType,
             assetType = assetType,
@@ -745,7 +737,8 @@ class LibraryViewModel(
                 ?.let { typefaceProvider.provideTypeface(engine, it) }
                 ?.let { fontDataMapper.getFontData(it, asset.getMeta("fontWeight")?.toInt()) },
         )
-        else -> WrappedAsset.GenericAsset(
+    } else {
+        WrappedAsset.GenericAsset(
             asset = asset,
             assetType = assetType,
             assetSourceType = assetSourceType,

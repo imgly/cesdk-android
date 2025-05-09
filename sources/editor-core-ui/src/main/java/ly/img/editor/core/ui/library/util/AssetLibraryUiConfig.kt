@@ -41,7 +41,7 @@ internal object AssetLibraryUiConfig {
 
     fun assetGridColumns(assetType: AssetType) = when (assetType) {
         AssetType.Image, AssetType.Video, AssetType.Gallery, AssetType.Filter,
-        AssetType.Effect, AssetType.Blur, AssetType.Animation,
+        AssetType.Effect, AssetType.Blur,
         -> 3
         AssetType.Audio, AssetType.Text, AssetType.Typeface -> 1
         AssetType.Shape, AssetType.Sticker -> 4

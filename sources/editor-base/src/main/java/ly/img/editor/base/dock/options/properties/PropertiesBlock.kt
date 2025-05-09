@@ -13,15 +13,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ly.img.editor.base.components.PropertyPicker
 import ly.img.editor.base.components.PropertySlider
 import ly.img.editor.base.components.PropertySwitch
-import ly.img.editor.base.components.SectionHeader
 import ly.img.editor.base.components.colorpicker.ColorPickerButton
-import ly.img.editor.base.dock.options.fillstroke.ColorOptions
 import ly.img.editor.base.engine.DesignBlockWithProperties
 import ly.img.editor.base.engine.PropertyAndValue
 import ly.img.editor.base.engine.PropertyValue
@@ -70,10 +67,8 @@ fun PropertiesBlock(
                 )
 
                 is PropertyValueType.Color -> ColorProperty(
-                    designBlock = designBlockWithProperties.designBlock,
                     propertyAndValue = it,
                     onOpenColorPicker = onOpenColorPicker,
-                    onEvent = onEvent,
                 )
 
                 is PropertyValueType.String -> { /* no impl for now */ }
@@ -165,74 +160,11 @@ private fun DoubleProperty(
 
 @Composable
 private fun ColorProperty(
-    designBlock: DesignBlock,
-    propertyAndValue: PropertyAndValue,
-    onOpenColorPicker: (PropertyAndValue) -> Unit,
-    onEvent: (EditorEvent) -> Unit,
-) {
-    val valueType = propertyAndValue.property.valueType as PropertyValueType.Color
-    if (valueType.colorPalette == null) {
-        ColorPropertyWithPickerOnly(
-            propertyAndValue = propertyAndValue,
-            onOpenColorPicker = onOpenColorPicker,
-        )
-    } else {
-        ColorPropertyWithListAndPicker(
-            designBlock = designBlock,
-            colors = valueType.colorPalette,
-            propertyAndValue = propertyAndValue,
-            onOpenColorPicker = onOpenColorPicker,
-            onEvent = onEvent,
-        )
-    }
-}
-
-@Composable
-private fun ColorPropertyWithListAndPicker(
-    designBlock: DesignBlock,
-    colors: List<Color>,
-    propertyAndValue: PropertyAndValue,
-    onOpenColorPicker: (PropertyAndValue) -> Unit,
-    onEvent: (EditorEvent) -> Unit,
-) {
-    val (property, value) = propertyAndValue
-    val currentColor = (value as PropertyValue.Color).value ?: Color.Black
-    SectionHeader(text = property.titleRes)
-    androidx.compose.material3.Card(
-        colors = UiDefaults.cardColors,
-    ) {
-        ColorOptions(
-            enabled = value.value != null,
-            selectedColor = currentColor,
-            onNoColorSelected = {
-                BlockEvent.OnChangeProperty(
-                    designBlock = designBlock,
-                    property = property,
-                    newValue = PropertyValue.Color(null),
-                ).let { onEvent(it) }
-                onEvent(BlockEvent.OnChangeFinish)
-            },
-            onColorSelected = { newValue ->
-                BlockEvent.OnChangeProperty(
-                    designBlock = designBlock,
-                    property = property,
-                    newValue = PropertyValue.Color(newValue),
-                ).let { onEvent(it) }
-                onEvent(BlockEvent.OnChangeFinish)
-            },
-            openColorPicker = { onOpenColorPicker(propertyAndValue) },
-            colors = colors,
-        )
-    }
-}
-
-@Composable
-private fun ColorPropertyWithPickerOnly(
     propertyAndValue: PropertyAndValue,
     onOpenColorPicker: (PropertyAndValue) -> Unit,
 ) {
     val (property, value) = propertyAndValue
-    val currentColor = (value as PropertyValue.Color).value ?: Color.Black
+    val currentColor = (value as PropertyValue.Color).value
     Card(
         colors = UiDefaults.cardColorsExperimental,
         onClick = { onOpenColorPicker(propertyAndValue) },

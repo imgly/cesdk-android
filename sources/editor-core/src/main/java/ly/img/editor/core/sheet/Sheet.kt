@@ -185,16 +185,6 @@ interface SheetType {
     class Animation(
         override val style: SheetStyle = SheetStyle(),
     ) : SheetType
-
-    /**
-     * A sheet that is used to control the background color and shape of text block.
-     *
-     * @param style the style that should be used to display the sheet.
-     * Default value is the default [SheetStyle].
-     */
-    class TextBackground(
-        override val style: SheetStyle = SheetStyle(),
-    ) : SheetType
 }
 
 /**

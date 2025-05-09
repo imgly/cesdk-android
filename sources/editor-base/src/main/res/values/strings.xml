@@ -271,9 +271,6 @@
     <string name="ly_img_editor_filter_blur_radial_x">Point - X</string>
     <string name="ly_img_editor_filter_blur_radial_y">Point - Y</string>
 
-    <string name="ly_img_editor_animation_in">In</string>
-    <string name="ly_img_editor_animation_loop">Loop</string>
-    <string name="ly_img_editor_animation_out">Out</string>
     <string name="ly_img_editor_animation_duration">Duration</string>
     <string name="ly_img_editor_animation_easing">Easing</string>
     <string name="ly_img_editor_animation_intensity">Intensity</string>
@@ -306,9 +303,4 @@
     <string name="ly_img_editor_animation_writing_style_line">Line</string>
     <string name="ly_img_editor_animation_writing_style_character">Character</string>
     <string name="ly_img_editor_animation_writing_style_word">Word</string>
-
-    <string name="ly_img_editor_text_background_color">Color</string>
-    <string name="ly_img_editor_text_vertical_padding">Vertical Padding</string>
-    <string name="ly_img_editor_text_horizontal_padding">Horizontal Padding</string>
-    <string name="ly_img_editor_text_corner_radius">Corner Radius</string>
 </resources>

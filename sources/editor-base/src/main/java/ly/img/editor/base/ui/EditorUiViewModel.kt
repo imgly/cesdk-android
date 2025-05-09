@@ -49,8 +49,6 @@ import ly.img.editor.base.dock.options.format.createFormatUiState
 import ly.img.editor.base.dock.options.layer.createLayerUiState
 import ly.img.editor.base.dock.options.reorder.ReorderBottomSheetContent
 import ly.img.editor.base.dock.options.shapeoptions.createShapeOptionsUiState
-import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheetContent
-import ly.img.editor.base.dock.options.textBackground.TextBackgroundUiState
 import ly.img.editor.base.dock.options.volume.VolumeBottomSheetContent
 import ly.img.editor.base.dock.options.volume.VolumeUiState
 import ly.img.editor.base.engine.CROP_EDIT_MODE
@@ -72,7 +70,6 @@ import ly.img.editor.base.migration.EditorMigrationHelper
 import ly.img.editor.base.sheet.LibraryAddToBackgroundTrackSheetType
 import ly.img.editor.base.sheet.LibraryTabsSheetType
 import ly.img.editor.base.timeline.state.TimelineState
-import ly.img.editor.base.ui.handler.animationEvents
 import ly.img.editor.base.ui.handler.appearanceEvents
 import ly.img.editor.base.ui.handler.blockEvents
 import ly.img.editor.base.ui.handler.blockFillEvents
@@ -115,11 +112,9 @@ import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
 import ly.img.engine.FillType
 import ly.img.engine.GlobalScope
-import ly.img.engine.SceneMode
 import ly.img.engine.UnstableEngineApi
 import java.io.File
 import kotlin.math.abs
-import kotlin.math.max
 
 abstract class EditorUiViewModel(
     private val onCreate: suspend EditorScope.() -> Unit,
@@ -175,8 +170,6 @@ abstract class EditorUiViewModel(
     val externalEvent = externalEventChannel.receiveAsFlow()
 
     private var bottomSheetHeight: Float = 0F
-    private var timelineHeight: Float = 0F
-    private var timelineFullHeight: Float = 0F
     private var closingSheetContent: BottomSheetContent? = null
     private val _bottomSheetContent = MutableStateFlow<BottomSheetContent?>(null)
     val bottomSheetContent = _bottomSheetContent.asStateFlow()
@@ -234,9 +227,6 @@ abstract class EditorUiViewModel(
         )
         editorEvents()
         extraEvents()
-        animationEvents(
-            engine = ::engine,
-        )
     }
 
     protected open fun EventsHandler.extraEvents() = Unit
@@ -260,9 +250,9 @@ abstract class EditorUiViewModel(
         }
         register<Event.OnKeyboardClose> { onKeyboardClose() }
         register<Event.OnLoadScene> { loadScene(it.height, it.insets, it.inPortraitMode) }
+        register<Event.OnUpdateBottomInset> { onUpdateBottomInset(it.bottomInset, it.zoom, it.isExpanding) }
         register<Event.EnableHistory> { event -> _publicState.update { it.copy(isHistoryEnabled = event.enable) } }
-        register<Event.OnBottomSheetHeightChange> { onBottomSheetHeightChange(it.sheetHeightInDp, it.sheetMaxHeightInDp) }
-        register<Event.OnTimelineHeightChange> { onTimelineHeightChange(it.timelineHeightInDp) }
+        register<Event.OnBottomSheetHeightChange> { onBottomSheetHeightChange(it.heightInDp, it.showTimeline) }
         register<Event.OnKeyboardHeightChange> { onKeyboardHeightChange(it.heightInDp) }
         register<Event.OnPause> { if (engine.isSceneModeVideo) timelineState?.playerState?.pause() }
         register<Event.OnPage> { setPage(it.page) }
@@ -511,14 +501,7 @@ abstract class EditorUiViewModel(
                     timelineState?.clampPlayheadPositionToSelectedClip()
                     AnimationBottomSheetContent(
                         type = type,
-                        uiState = AnimationUiState.create(designBlock, engine),
-                    )
-                }
-                is SheetType.TextBackground -> {
-                    timelineState?.clampPlayheadPositionToSelectedClip()
-                    TextBackgroundBottomSheetContent(
-                        type = type,
-                        uiState = TextBackgroundUiState.create(designBlock, engine, editor.colorPalette),
+                        uiState = AnimationUiState.create(designBlock, engine), // todo implement
                     )
                 }
                 else -> {
@@ -642,13 +625,6 @@ abstract class EditorUiViewModel(
                     )
                 }
 
-                is TextBackgroundBottomSheetContent -> {
-                    TextBackgroundBottomSheetContent(
-                        type = content.type,
-                        uiState = TextBackgroundUiState.create(designBlock, engine, editor.colorPalette),
-                    )
-                }
-
                 else -> {
                     content
                 }
@@ -691,7 +667,10 @@ abstract class EditorUiViewModel(
         else -> false
     }
 
-    protected fun setBottomSheetContent(function: suspend (BottomSheetContent?) -> BottomSheetContent?) = viewModelScope.launch {
+    private var lastKnownBottomInsetBeforeSheetOp = 0f
+
+    protected fun setBottomSheetContent(function: (BottomSheetContent?) -> BottomSheetContent?) {
+        val currentInsetsBottom = _publicState.value.canvasInsets.bottom
         val oldBottomSheetContent = bottomSheetContent.value
         val newValue = function(oldBottomSheetContent)
         if (newValue == null && oldBottomSheetContent != null && bottomSheetHeight > 0F) {
@@ -699,6 +678,11 @@ abstract class EditorUiViewModel(
             closingSheetContent = _bottomSheetContent.value
         }
         _bottomSheetContent.value = newValue
+        if (newValue == null) {
+            lastKnownBottomInsetBeforeSheetOp = 0f
+        } else if (oldBottomSheetContent == null) {
+            lastKnownBottomInsetBeforeSheetOp = currentInsetsBottom
+        }
         _publicState.update { it.copy(activeSheet = newValue?.type) }
     }
 
@@ -732,6 +716,7 @@ abstract class EditorUiViewModel(
         val isConfigChange = !firstLoad
         firstLoad = false
         if (isConfigChange) {
+            lastKnownBottomInset = 0f
             setViewMode(publicState.value.viewMode)
         } else {
             if (engine.scene.get() == null) {
@@ -864,9 +849,10 @@ abstract class EditorUiViewModel(
 
     private fun onBottomSheetHeightChange(
         heightInDp: Float,
-        sheetMaxHeightInDp: Float,
+        showTimeline: Boolean,
     ) {
         if (publicState.value.viewMode !is EditorViewMode.Edit || !_isSceneLoaded.value) return
+        bottomSheetHeight = heightInDp
         val closingSheetContent = this.closingSheetContent
         if (heightInDp == 0F && closingSheetContent != null) {
             this.closingSheetContent = null
@@ -876,35 +862,7 @@ abstract class EditorUiViewModel(
         // we don't want to change zoom level for floating sheets
         if (bottomSheetContent?.isFloating == true) return
         if (closingSheetContent?.isFloating == true) return
-
-        bottomSheetHeight = heightInDp
-        if (timelineFullHeight > sheetMaxHeightInDp && bottomSheetContent != null) {
-            _uiState.update {
-                it.copy(
-                    timelineMaxHeightInDp =
-                        sheetMaxHeightInDp + ((timelineFullHeight - sheetMaxHeightInDp) * (1 - heightInDp / sheetMaxHeightInDp)),
-                )
-            }
-        } else if (engine.scene.getZoomLevel() == fitToPageZoomLevel) {
-            _uiState.update {
-                it.copy(timelineMaxHeightInDp = Float.MAX_VALUE)
-            }
-            zoom(max(heightInDp, timelineHeight))
-        }
-    }
-
-    private fun onTimelineHeightChange(timelineHeight: Float) {
-        if (engine.scene.getMode() == SceneMode.DESIGN) {
-            return
-        }
-        this.timelineHeight = when {
-            this.bottomSheetContent.value != null -> timelineHeight
-            this.closingSheetContent == null -> timelineHeight.also { this.timelineFullHeight = it }
-            else -> timelineFullHeight
-        }
-        if (engine.scene.getZoomLevel() == fitToPageZoomLevel) {
-            zoom(max(bottomSheetHeight, timelineHeight))
-        }
+        zoom(heightInDp, showTimeline)
     }
 
     private fun onKeyboardClose() {
@@ -990,11 +948,37 @@ abstract class EditorUiViewModel(
         }
     }
 
-    private fun zoom(bottomInset: Float) {
+    private fun zoom(
+        bottomInset: Float,
+        showTimeline: Boolean = false,
+    ) {
         val realBottomInset = bottomInset + verticalPageInset
         if (realBottomInset <= defaultInsets.bottom && _publicState.value.canvasInsets.bottom == defaultInsets.bottom) return
-        val coercedBottomInset = defaultInsets.bottom
+        val coercedBottomInset = if (showTimeline && engine.isSceneModeVideo) lastKnownBottomInsetBeforeSheetOp else defaultInsets.bottom
         zoom(defaultInsets.copy(bottom = realBottomInset.coerceAtLeast(coercedBottomInset)))
+    }
+
+    // FIXME: Saving the last known bottom inset is needed because currently there are excessive re-composition
+    // An ideal fix would be to get rid of the unnecessary recompositions so this function isn't called unnecessarily
+    private var lastKnownBottomInset = 0f
+
+    private fun onUpdateBottomInset(
+        bottomInset: Float,
+        zoom: Boolean,
+        isExpanding: Boolean,
+    ) {
+        if (bottomInset != lastKnownBottomInset) {
+            lastKnownBottomInset = bottomInset
+            val realBottomInset = bottomInset + verticalPageInset
+            uiInsets = if (isExpanding) {
+                uiInsets.copy(bottom = realBottomInset.coerceAtLeast(lastKnownBottomInsetBeforeSheetOp))
+            } else {
+                uiInsets.copy(bottom = realBottomInset)
+            }
+            if (zoom) {
+                zoom(zoomToPage = true)
+            }
+        }
     }
 
     private var zoomJob: Job? = null
@@ -1231,6 +1215,9 @@ abstract class EditorUiViewModel(
             merge(engine.block.onSelectionChanged()).filter { _isSceneLoaded.value }.collect {
                 val block = getSelectedBlock()?.let { createBlock(it, engine) }
                 val oldBlock = getBlockForEvents()?.designBlock
+                if (oldBlock != null && block == null) {
+                    zoom(clampOnly = true)
+                }
                 // Even if the block is the same, this will update the fill/stroke color in the dock option
                 setSelectedBlock(block)
                 if (oldBlock != block?.designBlock) {

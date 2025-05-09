@@ -9,28 +9,21 @@ import androidx.compose.runtime.remember
  */
 @Suppress("UNCHECKED_CAST")
 class RememberLastScope<T : Any?> {
+    private var isValueSet: Boolean = false
+
     @PublishedApi
     internal var internalLastValue: T? = null
         set(value) {
             field = value
-            _isValueSet = true
+            isValueSet = true
         }
-
-    private var _isValueSet: Boolean = false
-
-    /**
-     * Whether rememberLastValue block has returned value before.
-     */
-    val isValueSet: Boolean
-        get() = _isValueSet
 
     /**
      * Last value, that was returned by calculation block in [rememberLastValue]. Note that accessing this property will throw
      * an exception if calculation block has not returned any value before.
-     * Use [isValueSet] to check if value was set before.
      */
     val lastValue: T
-        get() = if (_isValueSet.not()) {
+        get() = if (isValueSet.not()) {
             error(
                 "lastValue is accessed before returning a value in rememberLastValue block. " +
                     "Make sure to provide at least one value before accessing lastValue.",

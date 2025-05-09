@@ -1,8 +1,6 @@
 package ly.img.editor.core.library
 
 import androidx.annotation.StringRes
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
 import ly.img.editor.core.R
 import ly.img.editor.core.library.LibraryCategory.Companion.sourceTypes
 import ly.img.editor.core.library.data.AssetSourceType
@@ -13,7 +11,6 @@ import ly.img.editor.core.library.data.UploadAssetSourceType
  * [LibraryContent.Sections] and [LibraryContent.Grid]. Sections are used to render preview sections vertically while Grid is used to render assets in a grid view.
  * Each section can be recursively expanded into another [LibraryContent.Sections] or into [LibraryContent.Grid].
  */
-@Stable
 sealed interface LibraryContent {
     /**
      * First subtype of [LibraryContent]. It is used to vertically render preview [sections].
@@ -21,7 +18,6 @@ sealed interface LibraryContent {
      * @param titleRes the string resource of the content's title. It will be rendered on top of the content.
      * @param sections the list of sections that are rendered vertically.
      */
-    @Immutable
     data class Sections(
         @StringRes val titleRes: Int,
         val sections: List<Section>,
@@ -37,7 +33,6 @@ sealed interface LibraryContent {
      * @param perPage the number of elements that should loaded on each page.
      * @param assetType the type of assets in this source.
      */
-    @Immutable
     data class Grid(
         @StringRes val titleRes: Int,
         val sourceType: AssetSourceType,
@@ -52,7 +47,6 @@ sealed interface LibraryContent {
      * @param titleRes the string resource of the section's title. It will be rendered on top of the section. If null, the header will not
      * be rendered.
      * @param sourceTypes the list of sources that are used to load the assets. It should contain at least 1 source.
-     * @param excludeSourceTypes the list of sources to be excluded from preview. Note that these will not be excluded from the total count.
      * @param groups the list of groups that are used to filter the elements of the asset source. Note that it can be set to a
      * non-null value only in case [sourceTypes] contains a single source. If null, no filtering will occur and all the assets of
      * [sourceTypes] will be displayed. Check [ly.img.engine.AssetSource.getGroups] for more information.
@@ -70,11 +64,9 @@ sealed interface LibraryContent {
      * (i.e. each item of [sourceTypes] as a separate section) before displaying the final grid. Check [LibraryCategory.getElements]
      * for an example of recursion.
      */
-    @Immutable
     data class Section(
         @StringRes val titleRes: Int? = null,
         val sourceTypes: List<AssetSourceType>,
-        val excludeSourceTypes: List<AssetSourceType>? = null,
         val groups: List<String>? = null,
         val addGroupedSubSections: Boolean = false,
         val showUpload: Boolean = sourceTypes.size == 1 && sourceTypes[0] is UploadAssetSourceType,
@@ -182,19 +174,6 @@ sealed interface LibraryContent {
                         assetType = AssetType.Text,
                         expandContent = null,
                     ),
-                ),
-            )
-        }
-
-        /**
-         * The default content for displaying text assets along with font combinations.
-         */
-        val TextWithFontCombinations by lazy {
-            Text.copy(
-                sections = Text.sections.map { it.copy(titleRes = R.string.ly_img_editor_plain_text) } + Section(
-                    titleRes = R.string.ly_img_editor_font_combinations,
-                    sourceTypes = listOf(AssetSourceType.FontCombinations),
-                    assetType = AssetType.Image,
                 ),
             )
         }

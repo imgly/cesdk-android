@@ -8,7 +8,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.Dp
-import ly.img.editor.compose.animation_core.animateContentSize
 import ly.img.editor.core.component.data.Height
 import ly.img.editor.core.sheet.SheetStyle
 import ly.img.editor.core.ui.utils.ifTrue
@@ -18,8 +17,8 @@ inline fun Sheet(
     style: SheetStyle,
     crossinline content: @Composable () -> Unit,
 ) {
-    BoxWithConstraints(Modifier.animateContentSize()) {
-        val maxHeight = remember(this.maxHeight, style) {
+    BoxWithConstraints {
+        val maxHeight = remember(style) {
             when (val maxHeight = style.maxHeight) {
                 is Height.Exactly -> maxHeight.size
                 is Height.Fraction -> this.maxHeight * maxHeight.fraction

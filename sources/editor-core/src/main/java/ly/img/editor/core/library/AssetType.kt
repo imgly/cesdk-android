@@ -15,5 +15,4 @@ enum class AssetType {
     Filter,
     Effect,
     Blur,
-    Animation,
 }
