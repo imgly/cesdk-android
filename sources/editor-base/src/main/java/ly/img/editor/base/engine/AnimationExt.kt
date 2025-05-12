@@ -104,26 +104,32 @@ fun AnimationType.getAvailableProperties() = when (this) {
         duration,
     )
     AnimationType.SwayLoop -> listOf(
+        duration,
         intensity(),
     )
     AnimationType.TypewriterText -> listOf(
+        duration,
         writingStyleShort(),
     )
     AnimationType.BlockSwipeText -> listOf(
+        duration,
         directionEnum(),
         writingStyle,
     )
     AnimationType.SpreadText -> listOf(
+        duration,
         easing,
         fade(),
         intensity(),
     )
     AnimationType.MergeText -> listOf(
+        duration,
         easing,
         directionEnum(),
         intensity(),
     )
     AnimationType.KenBurns -> listOf(
+        duration,
         easing,
         directionEnum(),
         travelDistance(),

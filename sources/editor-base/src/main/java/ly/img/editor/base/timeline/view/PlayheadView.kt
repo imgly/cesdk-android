@@ -25,8 +25,13 @@ fun PlayheadView(
             .width(3.dp),
     ) {
         drawRoundRect(color = outlineColor, cornerRadius = cornerRadius, alpha = 0.24f)
-        inset(1.dp.roundToPx().toFloat()) {
-            drawRoundRect(color = color, cornerRadius = cornerRadius)
+        val inset = 1.dp.roundToPx().toFloat()
+        // When sheets are open, timeline max height may become 0.
+        // However, insets are not allowed to be more than the height. That is why this check is applied.
+        if (size.height - 2 * inset >= 0) {
+            inset(inset) {
+                drawRoundRect(color = color, cornerRadius = cornerRadius)
+            }
         }
     }
 }

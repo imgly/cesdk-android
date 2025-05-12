@@ -35,10 +35,24 @@ data class PropertyAndValue(
 
 data class Property(
     @StringRes val titleRes: Int,
-    val key: String,
+    val keys: List<String>,
     val valueType: PropertyValueType,
+    val combineStrategy: PropertyValueCombineStrategy,
     val assetData: PropertyAssetData? = null,
-)
+) {
+    constructor(
+        titleRes: Int,
+        key: String,
+        valueType: PropertyValueType,
+        assetData: PropertyAssetData? = null,
+    ) : this(
+        titleRes = titleRes,
+        keys = listOf(key),
+        valueType = valueType,
+        combineStrategy = PropertyValueCombineStrategy.First,
+        assetData = assetData,
+    )
+}
 
 data class PropertyAssetData(
     val sourceId: String,
@@ -47,33 +61,70 @@ data class PropertyAssetData(
 )
 
 sealed interface PropertyValue {
+    fun compare(other: PropertyValue): kotlin.Int?
+
     data class Int(
         val value: kotlin.Int,
-    ) : PropertyValue
+    ) : PropertyValue {
+        override fun compare(other: PropertyValue): kotlin.Int? = (other as? Int)?.value?.let { value.compareTo(it) }
+    }
 
     data class Double(
         val value: kotlin.Double,
-    ) : PropertyValue
+    ) : PropertyValue {
+        override fun compare(other: PropertyValue): kotlin.Int? = (other as? Double)?.value?.let { value.compareTo(it) }
+    }
 
     data class Float(
         val value: kotlin.Float,
-    ) : PropertyValue
+    ) : PropertyValue {
+        override fun compare(other: PropertyValue): kotlin.Int? = (other as? Float)?.value?.let { value.compareTo(it) }
+    }
 
     data class Boolean(
         val value: kotlin.Boolean,
-    ) : PropertyValue
+    ) : PropertyValue {
+        override fun compare(other: PropertyValue): kotlin.Int? = (other as? Boolean)?.value?.let { value.compareTo(it) }
+    }
 
     data class Color(
-        val value: androidx.compose.ui.graphics.Color,
-    ) : PropertyValue
+        val value: androidx.compose.ui.graphics.Color?,
+    ) : PropertyValue {
+        override fun compare(other: PropertyValue): kotlin.Int? = null
+    }
 
     data class String(
         val value: kotlin.String,
-    ) : PropertyValue
+    ) : PropertyValue {
+        override fun compare(other: PropertyValue): kotlin.Int? = null
+    }
 
     data class Enum(
         val value: kotlin.String,
-    ) : PropertyValue
+    ) : PropertyValue {
+        override fun compare(other: PropertyValue): kotlin.Int? = null
+    }
+}
+
+sealed interface PropertyValueCombineStrategy {
+    fun combine(
+        property: Property,
+        values: List<PropertyValue>,
+    ): PropertyValue
+
+    data object First : PropertyValueCombineStrategy {
+        override fun combine(
+            property: Property,
+            values: List<PropertyValue>,
+        ) = values.first()
+    }
+
+    data object Min : PropertyValueCombineStrategy {
+        override fun combine(
+            property: Property,
+            values: List<PropertyValue>,
+        ) = values.minWith { a, b -> a.compare(b) ?: 0 }
+    }
 }
 
 sealed interface PropertyValueType {
@@ -99,7 +150,10 @@ sealed interface PropertyValueType {
     data object Boolean : PropertyValueType
 
     @Immutable
-    data object Color : PropertyValueType
+    data class Color(
+        val enabledPropertyKey: kotlin.String? = null,
+        val colorPalette: List<androidx.compose.ui.graphics.Color>? = null,
+    ) : PropertyValueType
 
     @Immutable
     data object String : PropertyValueType
@@ -117,7 +171,7 @@ fun List<AssetProperty>.toPropertyAndValueList(
     availableProperties: List<Property>,
 ): List<PropertyAndValue> = this.mapNotNull { assetProperty ->
     val property = availableProperties
-        .firstOrNull { it.key.endsWith(assetProperty.property) } ?: return@mapNotNull null
+        .firstOrNull { it.keys.first().endsWith(assetProperty.property) } ?: return@mapNotNull null
     PropertyAndValue(
         property = property.getUpdatedProperty(sourceId, asset, assetProperty),
         value = assetProperty.getValue(engine),
@@ -173,6 +227,14 @@ private fun AssetColor.toComposeColor(engine: Engine): androidx.compose.ui.graph
     is AssetColor.SpotColor -> representation.toComposeColor(engine)
 }
 
+fun Property.combineWithValue(
+    engine: Engine,
+    designBlock: DesignBlock,
+): PropertyAndValue = PropertyAndValue(
+    property = this,
+    value = this.getValue(engine, designBlock),
+)
+
 fun List<Property>.combineWithValues(
     engine: Engine,
     designBlock: DesignBlock,
@@ -187,29 +249,33 @@ private fun Property.getValue(
     engine: Engine,
     designBlock: DesignBlock,
 ): PropertyValue = when (valueType) {
-    is PropertyValueType.Int -> {
-        PropertyValue.Int(engine.block.getInt(designBlock, key))
+    is PropertyValueType.Int -> keys.map {
+        PropertyValue.Int(engine.block.getInt(designBlock, it))
     }
-    is PropertyValueType.Float -> {
-        PropertyValue.Float(engine.block.getFloat(designBlock, key))
+    is PropertyValueType.Float -> keys.map {
+        PropertyValue.Float(engine.block.getFloat(designBlock, it))
     }
-    is PropertyValueType.Double -> {
-        PropertyValue.Double(engine.block.getDouble(designBlock, key))
+    is PropertyValueType.Double -> keys.map {
+        PropertyValue.Double(engine.block.getDouble(designBlock, it))
     }
-    is PropertyValueType.Boolean -> {
-        PropertyValue.Boolean(engine.block.getBoolean(designBlock, key))
+    is PropertyValueType.Boolean -> keys.map {
+        PropertyValue.Boolean(engine.block.getBoolean(designBlock, it))
     }
-    is PropertyValueType.Color -> {
-        PropertyValue.Color(engine.block.getColor(designBlock, key).toRGBColor(engine).toComposeColor())
+    is PropertyValueType.Color -> keys.map {
+        if (valueType.enabledPropertyKey != null && engine.block.getBoolean(designBlock, valueType.enabledPropertyKey).not()) {
+            PropertyValue.Color(null)
+        } else {
+            PropertyValue.Color(engine.block.getColor(designBlock, it).toRGBColor(engine).toComposeColor())
+        }
     }
-    is PropertyValueType.String -> {
-        PropertyValue.String(engine.block.getString(designBlock, key))
+    is PropertyValueType.String -> keys.map {
+        PropertyValue.String(engine.block.getString(designBlock, it))
     }
-    is PropertyValueType.StringEnum -> {
-        val engineValue = engine.block.getEnum(designBlock, key)
+    is PropertyValueType.StringEnum -> keys.map {
+        val engineValue = engine.block.getEnum(designBlock, it)
         val value = valueType.options
             .firstOrNull { it.value == engineValue }
             ?: valueType.options[0]
         PropertyValue.Enum(value.value)
     }
-}
+}.let { combineStrategy.combine(this, it) }

@@ -62,7 +62,7 @@ internal class CameraViewModel(
 
     private var reactionVideoIsPlaying = false
 
-    private val previewUseCase = Preview
+    private val previewBuilder = Preview
         .Builder()
         .setResolutionSelector(
             ResolutionSelector
@@ -77,16 +77,15 @@ internal class CameraViewModel(
                     ),
                 ).setAspectRatioStrategy(AspectRatioStrategy.RATIO_16_9_FALLBACK_AUTO_STRATEGY)
                 .build(),
-        ).build()
+        )
 
-    private val videoCaptureUseCase = VideoCapture
+    private val videoCaptureBuilder = VideoCapture
         .Builder(Recorder.Builder().build())
         .setMirrorMode(MIRROR_MODE_ON_FRONT_ONLY)
-        .build()
 
     val cameraState = CameraState(
-        previewUseCase = previewUseCase,
-        videoCaptureUseCase = videoCaptureUseCase,
+        previewBuilder = previewBuilder,
+        videoCaptureBuilder = videoCaptureBuilder,
         startWithFrontCamera = cameraMode is CameraMode.Reaction,
     )
 
@@ -94,7 +93,7 @@ internal class CameraViewModel(
         maxDuration = cameraConfiguration.maxTotalDuration,
         allowExceedingMaxDuration = cameraConfiguration.allowExceedingMaxDuration,
         coroutineScope = viewModelScope,
-        videoRecorder = VideoRecorder(videoCaptureUseCase),
+        videoRecorder = VideoRecorder { cameraState.videoCaptureUseCase },
     )
 
     var cameraLayoutMode by mutableStateOf(
@@ -207,7 +206,7 @@ internal class CameraViewModel(
     }
 
     fun setCameraPreview() {
-        engine.setCameraPreview(pixelStreamFill1, previewUseCase, mirrored = cameraState.showFrontCamera) {
+        engine.setCameraPreview(pixelStreamFill1, cameraState.previewUseCase, mirrored = cameraState.showFrontCamera) {
             engine.block.setVisible(primaryBlock, true)
             cameraState.isReady = true
         }
@@ -216,7 +215,7 @@ internal class CameraViewModel(
     fun toggleCamera() {
         engine.block.setVisible(primaryBlock, false)
         cameraState.toggleCamera()
-        engine.setCameraPreview(pixelStreamFill1, previewUseCase, mirrored = cameraState.showFrontCamera) {
+        engine.setCameraPreview(pixelStreamFill1, cameraState.previewUseCase, mirrored = cameraState.showFrontCamera) {
             engine.block.setVisible(primaryBlock, true)
         }
     }

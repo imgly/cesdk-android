@@ -175,6 +175,12 @@ class SwipeableV2State<T>(
         private set
 
     /**
+     * The current height of the content in swipeable sheet.
+     */
+    var contentHeight: Int by mutableStateOf(0)
+        internal set
+
+    /**
      * The target value. This is the closest value to the current offset (taking into account
      * positional thresholds). If no interactions like animations or drags are in progress, this
      * will be the current value.

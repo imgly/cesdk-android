@@ -13,6 +13,7 @@ data class EditorUiViewState(
     val allowEditorInteraction: Boolean = false,
     val selectedBlock: Block? = null,
     val isEditingText: Boolean = false,
+    val timelineMaxHeightInDp: Float = Float.MAX_VALUE,
     val timelineState: TimelineState? = null,
     val pageCount: Int = 0,
     val isSceneLoaded: Boolean = false,

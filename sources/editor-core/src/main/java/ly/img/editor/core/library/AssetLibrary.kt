@@ -1,6 +1,8 @@
 package ly.img.editor.core.library
 
 import ly.img.editor.core.library.LibraryCategory.Companion.sourceTypes
+import ly.img.editor.core.library.LibraryContent.Section
+import ly.img.editor.core.library.data.AssetSourceType
 import ly.img.engine.SceneMode
 
 /**
@@ -61,6 +63,7 @@ data class AssetLibrary(
          * @param videos the videos category that is used in the tabs and the [videos].
          * @param audios the audios category that is used in the tabs and the [audios].
          * @param text the text category that is used in the tabs and the [text].
+         * @param textAndTextComponents the text category along with text components.
          * @param shapes the shapes category that is used in the tabs and the [shapes].
          * @param stickers the stickers category that is used in the tabs and the [stickers].
          * @param overlays the overlays category.
@@ -73,6 +76,7 @@ data class AssetLibrary(
             videos: LibraryCategory = LibraryCategory.Video,
             audios: LibraryCategory = LibraryCategory.Audio,
             text: LibraryCategory = LibraryCategory.Text,
+            textAndTextComponents: LibraryCategory = createTextWithTextComponentsCategory(text = text),
             shapes: LibraryCategory = LibraryCategory.Shapes,
             stickers: LibraryCategory = LibraryCategory.Stickers,
             overlays: LibraryCategory = createOverlaysCategory(videos = videos, images = images),
@@ -85,6 +89,7 @@ data class AssetLibrary(
                 videos = videos,
                 audios = audios,
                 text = text,
+                textAndTextComponents = textAndTextComponents,
                 shapes = shapes,
                 stickers = stickers,
             )
@@ -96,7 +101,7 @@ data class AssetLibrary(
                             Tab.IMAGES -> images
                             Tab.VIDEOS -> if (sceneMode == SceneMode.VIDEO) videos else null
                             Tab.AUDIOS -> if (sceneMode == SceneMode.VIDEO) audios else null
-                            Tab.TEXT -> text
+                            Tab.TEXT -> if (sceneMode == SceneMode.VIDEO) text else textAndTextComponents
                             Tab.SHAPES -> shapes
                             Tab.STICKERS -> stickers
                         }
@@ -106,12 +111,28 @@ data class AssetLibrary(
                 images = { images },
                 videos = { videos },
                 audios = { audios },
-                text = { text },
+                text = { if (it == SceneMode.VIDEO) text else textAndTextComponents },
                 shapes = { shapes },
                 stickers = { stickers },
                 overlays = { overlays },
                 clips = { clips },
                 stickersAndShapes = { stickersAndShapes },
+            )
+        }
+
+        private fun createTextWithTextComponentsCategory(text: LibraryCategory): LibraryCategory {
+            require(text.content is LibraryContent.Sections)
+            return text.copy(
+                content = text.content.copy(
+                    sections =
+                        text.content.sections.map {
+                            it.copy(titleRes = it.titleRes ?: ly.img.editor.core.R.string.ly_img_editor_plain_text)
+                        } + Section(
+                            titleRes = ly.img.editor.core.R.string.ly_img_editor_font_combinations,
+                            sourceTypes = listOf(AssetSourceType.TextComponents),
+                            assetType = AssetType.TextComponent,
+                        ),
+                ),
             )
         }
 
