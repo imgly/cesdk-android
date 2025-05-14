@@ -33,6 +33,7 @@ data class FormatUiState(
     @StringRes val sizeModeRes: Int,
     val isArrangeResizeAllowed: Boolean,
     val availableWeights: List<FontData>,
+    val subFamily: String,
 )
 
 internal fun createFormatUiState(
@@ -41,6 +42,14 @@ internal fun createFormatUiState(
 ): FormatUiState {
     val typeface = runCatching { engine.block.getTypeface(designBlock) }.getOrNull()
     val sizeMode = engine.block.getHeightMode(designBlock)
+
+    val fontWeight = engine.block.getTextFontWeights(designBlock).firstOrNull() ?: FontWeight.NORMAL
+    val fontStyle = engine.block.getTextFontStyles(designBlock).firstOrNull() ?: FontStyle.NORMAL
+
+    val currentFont = typeface?.fonts?.firstOrNull {
+        it.weight == fontWeight && it.style == fontStyle
+    }
+
     return FormatUiState(
         libraryCategory = TypefaceLibraryCategory,
         fontFamily = typeface?.name ?: "Default",
@@ -81,7 +90,7 @@ internal fun createFormatUiState(
         isArrangeResizeAllowed = engine.block.isAllowedByScope(designBlock, Scope.LayerResize),
         casing = engine.block.getTextCases(designBlock).firstOrNull() ?: TextCase.NORMAL,
         paragraphSpacing = engine.block.getFloat(designBlock, "text/paragraphSpacing"),
-        fontFamilyWeight = engine.block.getTextFontWeights(designBlock).firstOrNull() ?: FontWeight.NORMAL,
+        fontFamilyWeight = fontWeight,
         availableWeights = typeface?.fonts?.sortedBy { it.weight.value + if (it.style == FontStyle.ITALIC) 1000 else 0 }?.map {
             FontData(
                 typeface = typeface,
@@ -89,8 +98,10 @@ internal fun createFormatUiState(
                 weight = androidx.compose.ui.text.font
                     .FontWeight(it.weight.value),
                 style = it.style,
+                subFamily = it.subFamily,
             )
         } ?: emptyList(),
-        fontFamilyStyle = engine.block.getTextFontStyles(designBlock).firstOrNull() ?: FontStyle.NORMAL,
+        fontFamilyStyle = fontStyle,
+        subFamily = currentFont?.subFamily ?: "",
     )
 }
