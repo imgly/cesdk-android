@@ -152,6 +152,7 @@ fun Engine.delete(designBlock: DesignBlock) {
  * @return true if the [designBlock] can be moved, false otherwise.
  */
 fun Engine.isMoveAllowed(designBlock: DesignBlock): Boolean = block.isAllowedByScope(designBlock, Scope.EditorAdd) &&
+    !isGrouped(designBlock) &&
     !block.isParentBackgroundTrack(designBlock)
 
 /**
@@ -160,7 +161,8 @@ fun Engine.isMoveAllowed(designBlock: DesignBlock): Boolean = block.isAllowedByS
  *
  * @return true if the [designBlock] can be duplicated, false otherwise.
  */
-fun Engine.isDuplicateAllowed(designBlock: DesignBlock): Boolean = block.isAllowedByScope(designBlock, Scope.LifecycleDuplicate)
+fun Engine.isDuplicateAllowed(designBlock: DesignBlock): Boolean =
+    block.isAllowedByScope(designBlock, Scope.LifecycleDuplicate) && !isGrouped(designBlock)
 
 /**
  * An extension function for checking whether the [designBlock] can be deleted.
@@ -168,7 +170,19 @@ fun Engine.isDuplicateAllowed(designBlock: DesignBlock): Boolean = block.isAllow
  *
  * @return true if the [designBlock] can be deleted, false otherwise.
  */
-fun Engine.isDeleteAllowed(designBlock: DesignBlock): Boolean = block.isAllowedByScope(designBlock, Scope.LifecycleDestroy)
+fun Engine.isDeleteAllowed(designBlock: DesignBlock): Boolean =
+    block.isAllowedByScope(designBlock, Scope.LifecycleDestroy) && !isGrouped(designBlock)
+
+/**
+ * An extension function for checking whether the [designBlock] is part of a group.
+ * IMPORTANT! When modifying this function also modify similar function in InspectorBarExt.kt.
+ *
+ * @return true if the [designBlock] is part of a group, false otherwise.
+ */
+fun Engine.isGrouped(designBlock: DesignBlock): Boolean {
+    val parent = block.getParent(designBlock) ?: return false
+    return DesignBlockType.get(block.getType(parent)) == DesignBlockType.Group
+}
 
 fun Engine.getFillColor(designBlock: DesignBlock): Color? {
     if (!block.supportsFill(designBlock)) return null

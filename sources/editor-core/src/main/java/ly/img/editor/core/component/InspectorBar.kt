@@ -46,7 +46,6 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -58,6 +57,7 @@ import ly.img.editor.core.LocalEditorScope
 import ly.img.editor.core.R
 import ly.img.editor.core.component.EditorComponent.ListBuilder.Companion.modify
 import ly.img.editor.core.component.InspectorBar.Companion.remember
+import ly.img.editor.core.component.InspectorBar.Item
 import ly.img.editor.core.component.data.EditorIcon
 import ly.img.editor.core.component.data.Nothing
 import ly.img.editor.core.component.data.Selection
@@ -123,10 +123,9 @@ class InspectorBar private constructor(
                 add { Button.rememberEditText() } // Text
                 add { Button.rememberFormatText() } // Text
                 add { Button.rememberFillStroke() } // Page, Video, Image, Shape, Text
-                add { Button.rememberTextBackground() } // Text
                 add { Button.rememberVolume() } // Video, Audio
                 add { Button.rememberCrop() } // Video, Image
-                add { Button.rememberAnimations() } // Video, Image, Sticker, Shape, Text
+                add { Button.rememberAnimation() } // Video, Image, Sticker, Shape, Text
                 add { Button.rememberAdjustments() } // Video, Image
                 add { Button.rememberFilter() } // Video, Image
                 add { Button.rememberEffect() } // Video, Image
@@ -210,7 +209,6 @@ class InspectorBar private constructor(
     open class Scope(
         parentScope: EditorScope,
         private val selection: Selection?,
-        private val editMode: String,
     ) : EditorScope() {
         override val impl: EditorContext = parentScope.editorContext
 
@@ -226,9 +224,6 @@ class InspectorBar private constructor(
          */
         val EditorContext.selection: Selection
             get() = requireNotNull(this@Scope.selection)
-
-        val EditorContext.editMode: String
-            get() = this@Scope.editMode
     }
 
     override fun toString(): String = "$`_`InspectorBar(id=$id)"
@@ -381,25 +376,6 @@ class InspectorBar private constructor(
          */
         val EditorContext.fillStrokeIcon: EditorIcon.FillStroke
             get() = requireNotNull(this@FillStrokeButtonScope.fillStrokeIcon)
-    }
-
-    /**
-     * The scope of the [InspectorBar.Button.Companion.rememberTextBackground] button in the inspector bar.
-     *
-     * @param parentScope the scope of the parent component.
-     * @param icon the icon state of the text background button.
-     */
-    @Stable
-    open class TextBackgroundButtonScope(
-        parentScope: EditorScope,
-        private val icon: EditorIcon,
-    ) : ButtonScope(parentScope) {
-        /**
-         * The icon state of the text background button. Used in the [Button.Companion.rememberTextBackground]
-         * button implementation.
-         */
-        val EditorContext.icon: EditorIcon
-            get() = this@TextBackgroundButtonScope.icon
     }
 
     /**
@@ -620,7 +596,7 @@ class InspectorBar private constructor(
             get() = LocalEditorScope.current.run {
                 fun getSelectedDesignBlock(): DesignBlock? = editorContext.engine.block.findAllSelected().firstOrNull()
 
-                val initialSelection = remember { getSelectedDesignBlock()?.let { Selection.getDefault(editorContext.engine, it) } }
+                val initial = remember { getSelectedDesignBlock()?.let { Selection.getDefault(editorContext.engine, it) } }
                 val selection by remember(this) {
                     editorContext.engine.block.onSelectionChanged()
                         .flatMapLatest {
@@ -634,16 +610,9 @@ class InspectorBar private constructor(
                                 .map { Selection.getDefault(editorContext.engine, selectedDesignBlock) }
                                 .onStart { emit(Selection.getDefault(editorContext.engine, selectedDesignBlock)) }
                         }
-                }.collectAsState(initial = initialSelection)
-                val initialEditMode = remember { editorContext.engine.editor.getEditMode() }
-                val editMode by remember(this) {
-                    editorContext.engine.editor.onStateChanged()
-                        .map { editorContext.engine.editor.getEditMode() }
-                        .distinctUntilChanged()
-                        .onStart { emit(editorContext.engine.editor.getEditMode()) }
-                }.collectAsState(initial = initialEditMode)
-                remember(this, selection, editMode) {
-                    Scope(parentScope = this, selection = selection, editMode = editMode)
+                }.collectAsState(initial = initial)
+                remember(this, selection) {
+                    Scope(parentScope = this, selection = selection)
                 }
             }
 
@@ -925,7 +894,7 @@ class InspectorBar private constructor(
          * observe changes from the [Engine].
          * By default [defaultScope] is used.
          * @param visible whether the inspector bar should be visible based on the [Engine]'s current state.
-         * Default value is true if a block is selected and the edit mode is not "Crop".
+         * Default value is always true.
          * @param enterTransition transition of the inspector bar when it enters the parent composable.
          * Default value is [defaultEnterTransition].
          * @param exitTransition transition of the inspector bar when it exits the parent composable.
@@ -954,7 +923,7 @@ class InspectorBar private constructor(
         @Composable
         fun remember(
             scope: Scope = defaultScope,
-            visible: @Composable Scope.() -> Boolean = { editorContext.safeSelection != null && editorContext.editMode != "Crop" },
+            visible: @Composable Scope.() -> Boolean = { editorContext.safeSelection != null },
             enterTransition: @Composable Scope.() -> EnterTransition = defaultEnterTransition,
             exitTransition: @Composable Scope.() -> ExitTransition = defaultExitTransition,
             decoration: @Composable Scope.(content: @Composable () -> Unit) -> Unit = { DefaultDecoration { it() } },

@@ -195,7 +195,8 @@ class CanvasMenu private constructor(
 
         private val _canSelectionMove by lazy {
             val selection = selection ?: return@lazy false
-            editorContext.engine.block.isAllowedByScope(selection.designBlock, "editor/add") &&
+            _isSelectionInGroup.not() &&
+                editorContext.engine.block.isAllowedByScope(selection.designBlock, "editor/add") &&
                 run {
                     selection.parentDesignBlock?.let {
                         DesignBlockType.get(editorContext.engine.block.getType(it)) == DesignBlockType.Track &&
@@ -959,7 +960,7 @@ class CanvasMenu private constructor(
          * observe changes from the [Engine].
          * By default [defaultScope] is used.
          * @param visible whether the canvas menu should be visible.
-         * By default the value is true when touch is not active, no sheet is displayed currently, a design block is selected,
+         * By default the value is true when touch is not active, no sheet is displayed currently, a design block is selected, it is not part of a group,
          * selected design block does not have a type [DesignBlockType.Audio] or [DesignBlockType.Page] and the keyboard is not visible.
          * In addition, selected design block should be visible at current playback time and containing scene should be on pause if design block is selected in a video scene.
          * @param enterTransition transition of the canvas menu when it enters the parent composable.
@@ -988,6 +989,7 @@ class CanvasMenu private constructor(
                     editorState.isTouchActive.not() &&
                         editorState.activeSheet == null &&
                         editorContext.safeSelection != null &&
+                        editorContext.isSelectionInGroup.not() &&
                         editorContext.selection.type != DesignBlockType.Page &&
                         editorContext.selection.type != DesignBlockType.Audio &&
                         editorContext.engine.editor.getEditMode() != "Text" &&

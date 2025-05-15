@@ -1,7 +1,6 @@
 package ly.img.editor.core.library
 
 import androidx.annotation.StringRes
-import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.vector.ImageVector
 import ly.img.editor.core.R
 import ly.img.editor.core.iconpack.IconPack
@@ -31,7 +30,6 @@ import ly.img.engine.SceneMode
  * @param isHalfExpandedInitially whether bottom sheet should open half expanded or fully expanded first.
  * @param content the content of the category. Check the documentation of [LibraryContent] for more information.
  */
-@Immutable
 data class LibraryCategory(
     @StringRes val tabTitleRes: Int,
     val tabSelectedIcon: ImageVector,
@@ -50,7 +48,6 @@ data class LibraryCategory(
             videos: LibraryCategory = Video,
             audios: LibraryCategory = Audio,
             text: LibraryCategory = Text,
-            textAndTextComponents: LibraryCategory = TextAndTextComponents,
             shapes: LibraryCategory = Shapes,
             stickers: LibraryCategory = Stickers,
         ): LibraryCategory {
@@ -121,11 +118,9 @@ data class LibraryCategory(
                         }
 
                         text.apply {
-                            val content = if (!isSceneModeVideo) textAndTextComponents.content else content
                             LibraryContent.Section(
                                 titleRes = R.string.ly_img_editor_text,
                                 sourceTypes = content.sourceTypes,
-                                excludedPreviewSourceTypes = listOf(AssetSourceType.TextComponents),
                                 assetType = AssetType.Text,
                                 expandContent = content,
                             ).let(::add)
@@ -199,19 +194,6 @@ data class LibraryCategory(
                 tabUnselectedIcon = IconPack.TextFields,
                 isHalfExpandedInitially = true,
                 content = LibraryContent.Text,
-            )
-        }
-
-        /**
-         * The default library category for text assets with text components.
-         */
-        val TextAndTextComponents by lazy {
-            LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_text,
-                tabSelectedIcon = IconPack.TextFields,
-                tabUnselectedIcon = IconPack.TextFields,
-                isHalfExpandedInitially = true,
-                content = LibraryContent.TextAndTextComponents,
             )
         }
 

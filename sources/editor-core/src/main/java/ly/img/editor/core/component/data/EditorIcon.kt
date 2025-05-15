@@ -26,7 +26,7 @@ sealed interface EditorIcon {
      */
     @Stable
     data class Colors(
-        val colors: List<Color?>,
+        val colors: List<Color>,
     ) : EditorIcon {
         init {
             require(colors.isNotEmpty()) {
@@ -39,7 +39,7 @@ sealed interface EditorIcon {
          *
          * @param color the color that should be displayed in a circle.
          */
-        constructor(color: Color?) : this(listOf(color))
+        constructor(color: Color) : this(listOf(color))
     }
 
     /**

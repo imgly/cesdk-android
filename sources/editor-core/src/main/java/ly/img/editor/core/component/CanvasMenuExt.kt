@@ -24,6 +24,7 @@ import ly.img.editor.core.iconpack.Delete
 import ly.img.editor.core.iconpack.Duplicate
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.iconpack.SendBackward
+import ly.img.engine.DesignBlockType
 
 /**
  * The id of the canvas menu button returned by [CanvasMenu.Button.Companion.rememberBringForward].
@@ -203,7 +204,8 @@ val Button.Id.Companion.duplicate by unsafeLazy {
  * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
  * By default it is updated both when the parent component scope ([CanvasMenu.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * By default the value is true when the selected design block has an enabled engine scope "lifecycle/duplicate".
+ * By default the value is true when the selected design block is not in a [DesignBlockType.Group]
+ * and has an enabled engine scope "lifecycle/duplicate".
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
  * @param exitTransition transition of the button when it exits the parent composable.
@@ -233,7 +235,8 @@ fun Button.Companion.rememberDuplicate(
         }
     },
     visible: @Composable ButtonScope.() -> Boolean = {
-        editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/duplicate")
+        editorContext.isSelectionInGroup.not() &&
+            editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/duplicate")
     },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
@@ -281,7 +284,8 @@ val Button.Id.Companion.delete by unsafeLazy {
  * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
  * By default it is updated both when the parent component scope ([CanvasMenu.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * By default the value is true when the selected design block has an enabled engine scope "lifecycle/destroy".
+ * By default the value is true when the selected design block is not in a [DesignBlockType.Group]
+ * and has an enabled engine scope "lifecycle/destroy".
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
  * @param exitTransition transition of the button when it exits the parent composable.
@@ -311,7 +315,8 @@ fun Button.Companion.rememberDelete(
         }
     },
     visible: @Composable ButtonScope.() -> Boolean = {
-        editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/destroy")
+        editorContext.isSelectionInGroup.not() &&
+            editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/destroy")
     },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
