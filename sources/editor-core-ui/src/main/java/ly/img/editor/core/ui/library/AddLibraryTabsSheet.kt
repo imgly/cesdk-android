@@ -104,7 +104,7 @@ fun AddLibraryTabsSheet(
 
     DisposableEffect(Unit) {
         onDispose {
-            viewModel.onEvent(LibraryEvent.OnDispose)
+            viewModel.onEvent(LibraryEvent.OnDispose(tabItems))
         }
     }
 }

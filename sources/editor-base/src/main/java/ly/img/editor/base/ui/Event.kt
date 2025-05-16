@@ -13,6 +13,7 @@ import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.library.state.WrappedAsset
+import ly.img.engine.Asset
 import ly.img.engine.BlendMode
 import ly.img.engine.DesignBlock
 import ly.img.engine.TextCase
@@ -79,19 +80,17 @@ interface Event : EditorEvent {
 
     object OnResetZoom : Event
 
-    data class OnUpdateBottomInset(
-        val bottomInset: Float,
-        val zoom: Boolean,
-        val isExpanding: Boolean,
-    ) : Event
-
     data class EnableHistory(
         val enable: Boolean,
     ) : Event
 
     data class OnBottomSheetHeightChange(
-        val heightInDp: Float,
-        val showTimeline: Boolean,
+        val sheetHeightInDp: Float,
+        val sheetMaxHeightInDp: Float,
+    ) : Event
+
+    data class OnTimelineHeightChange(
+        val timelineHeightInDp: Float,
     ) : Event
 
     data class OnPage(
@@ -297,6 +296,13 @@ interface BlockEvent : Event {
     data class OnReplaceEffect(
         val wrappedAsset: WrappedAsset?,
         val libraryCategory: LibraryCategory,
+    ) : BlockEvent
+    // endregion
+
+    // region Animations Events
+    data class OnReplaceAnimation(
+        val sourceId: String,
+        val asset: Asset,
     ) : BlockEvent
     // endregion
 

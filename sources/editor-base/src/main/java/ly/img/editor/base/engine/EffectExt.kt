@@ -457,12 +457,12 @@ fun EffectType.getProperties() = when (this) {
         Property(
             key = "$key/fromColor",
             titleRes = R.string.ly_img_editor_filter_recolor_from_color,
-            valueType = PropertyValueType.Color,
+            valueType = PropertyValueType.Color(),
         ),
         Property(
             key = "$key/toColor",
             titleRes = R.string.ly_img_editor_filter_recolor_to_color,
-            valueType = PropertyValueType.Color,
+            valueType = PropertyValueType.Color(),
         ),
         Property(
             key = "$key/colorMatch",
@@ -493,7 +493,7 @@ fun EffectType.getProperties() = when (this) {
         Property(
             key = "$key/fromColor",
             titleRes = R.string.ly_img_editor_filter_green_screen_from_color,
-            valueType = PropertyValueType.Color,
+            valueType = PropertyValueType.Color(),
         ),
         Property(
             key = "$key/colorMatch",

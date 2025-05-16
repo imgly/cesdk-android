@@ -21,7 +21,9 @@ sealed interface LibraryEvent : EditorEvent {
         val debounce: Boolean = false,
     ) : LibraryEvent
 
-    data object OnDispose : LibraryEvent
+    data class OnDispose(
+        val libraryCategories: List<LibraryCategory>,
+    ) : LibraryEvent
 
     data class OnPopStack(
         val libraryCategory: LibraryCategory,

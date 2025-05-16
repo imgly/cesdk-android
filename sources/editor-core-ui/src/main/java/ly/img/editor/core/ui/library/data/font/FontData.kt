@@ -10,4 +10,5 @@ data class FontData(
     val uri: Uri,
     val weight: FontWeight,
     val style: FontStyle,
+    val subFamily: String,
 )

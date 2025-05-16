@@ -112,13 +112,7 @@ fun FormatOptionsSheet(
                             }
 
                             PropertyLink(
-                                value = stringResource(
-                                    getWeightStringResource(
-                                        androidx.compose.ui.text.font
-                                            .FontWeight(uiState.fontFamilyWeight.value),
-                                        uiState.fontFamilyStyle,
-                                    ),
-                                ),
+                                value = uiState.subFamily,
                             ) {
                                 screenState = ScreenState.SelectFontWeight
                             }
@@ -281,7 +275,7 @@ fun FormatOptionsSheet(
                     selectedFontFamily = uiState.fontFamily,
                     selectedWeight = uiState.fontFamilyWeight,
                     selectedStyle = uiState.fontFamilyStyle,
-                    labelMap = { stringResource(it.getWeightStringResource()) },
+                    labelMap = { it.subFamily },
                     onSelectFont = { fontData ->
                         onEvent(BlockEvent.OnChangeFont(fontData.uri, fontData.typeface))
                     },
@@ -322,6 +316,7 @@ fun DefaultPreview() {
             fontFamilyStyle = FontStyle.NORMAL,
             hasClippingOption = true,
             isClipped = true,
+            subFamily = "Regular",
         ),
         onEvent = {},
     )
