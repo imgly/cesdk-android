@@ -76,23 +76,7 @@ fun EngineConfiguration.Companion.rememberForPhoto(
         EditorDefaults.onCreateFromImage(editorContext.engine, imageUri, editorContext.eventHandler, imageSize)
     },
     onExport = {
-        EditorDefaults.run {
-            val engine = editorContext.engine
-            val eventHandler = editorContext.eventHandler
-            eventHandler.send(ShowLoading)
-            val blob = engine.block.export(
-                block = requireNotNull(engine.scene.get()),
-                mimeType = MimeType.PNG,
-            )
-            val tempFile = writeToTempFile(blob, mimeType = MimeType.PNG)
-            eventHandler.send(HideLoading)
-            eventHandler.send(
-                ShareFileEvent(
-                    file = tempFile,
-                    mimeType = MimeType.PNG.key,
-                ),
-            )
-        }
+        EditorDefaults.onExport(editorContext.engine, editorContext.eventHandler, MimeType.PNG)
     },
 )
 

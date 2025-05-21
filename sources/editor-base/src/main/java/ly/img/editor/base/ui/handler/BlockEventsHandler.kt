@@ -5,7 +5,6 @@ import ly.img.editor.base.engine.PropertyValue
 import ly.img.editor.base.engine.PropertyValueType
 import ly.img.editor.base.engine.delete
 import ly.img.editor.base.engine.duplicate
-import ly.img.editor.base.engine.toAssetColor
 import ly.img.editor.base.engine.toEngineColor
 import ly.img.editor.base.ui.BlockEvent.OnBackward
 import ly.img.editor.base.ui.BlockEvent.OnBackwardNonSelected
@@ -193,7 +192,7 @@ private suspend fun onChangeProperty(
                 engine.asset.applyAssetSourceProperty(
                     sourceId = assetData.sourceId,
                     asset = assetData.asset,
-                    property = (assetData.assetProperty as AssetColorProperty).copy(value = requireNotNull(newValue.value).toAssetColor()),
+                    property = (assetData.assetProperty as AssetColorProperty).copy(value = requireNotNull(newValue.value).toEngineColor()),
                 )
             } ?: run {
                 val enabledPropertyKey = (property.valueType as PropertyValueType.Color).enabledPropertyKey

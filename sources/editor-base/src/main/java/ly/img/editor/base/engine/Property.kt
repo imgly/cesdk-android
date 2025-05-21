@@ -7,7 +7,6 @@ import ly.img.editor.core.ui.engine.toComposeColor
 import ly.img.editor.core.ui.engine.toRGBColor
 import ly.img.engine.Asset
 import ly.img.engine.AssetBooleanProperty
-import ly.img.engine.AssetColor
 import ly.img.engine.AssetColorProperty
 import ly.img.engine.AssetDoubleProperty
 import ly.img.engine.AssetEnumProperty
@@ -212,19 +211,9 @@ private fun AssetProperty.getValue(engine: Engine): PropertyValue = when (this) 
     is AssetFloatProperty -> PropertyValue.Float(value)
     is AssetDoubleProperty -> PropertyValue.Double(value)
     is AssetBooleanProperty -> PropertyValue.Boolean(value)
-    is AssetColorProperty -> PropertyValue.Color(value = value.toComposeColor(engine))
+    is AssetColorProperty -> PropertyValue.Color(value = value.toRGBColor(engine).toComposeColor())
     is AssetStringProperty -> PropertyValue.String(value)
     is AssetEnumProperty -> PropertyValue.Enum(value)
-}
-
-private fun AssetColor.toComposeColor(engine: Engine): androidx.compose.ui.graphics.Color = when (this) {
-    is AssetColor.RGB -> {
-        Color.fromRGBA(r = r, g = g, b = b).toComposeColor()
-    }
-    is AssetColor.CMYK -> {
-        Color.fromCMYK(c = c, m = m, y = y, k = k).toRGBColor(engine).toComposeColor()
-    }
-    is AssetColor.SpotColor -> representation.toComposeColor(engine)
 }
 
 fun Property.combineWithValue(

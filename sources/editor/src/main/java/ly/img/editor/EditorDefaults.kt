@@ -60,6 +60,7 @@ import ly.img.editor.core.ui.iconpack.Cloudalertoutline
 import ly.img.editor.core.ui.iconpack.Erroroutline
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.WifiCancel
+import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
@@ -127,6 +128,7 @@ object EditorDefaults {
         val pages = engine.scene.getPages()
         require(pages.size == 1) { "No image found." }
         val page = pages[0]
+        engine.block.setContentFillMode(page, ContentFillMode.CROP)
         engine.block.setFill(page, engine.block.getFill(graphicBlock))
         engine.block.destroy(graphicBlock)
         size?.let {
@@ -267,7 +269,7 @@ object EditorDefaults {
             } else {
                 eventHandler.send(ShowLoading)
                 runCatching {
-                    engine.block.export(
+                    val buffer = engine.block.export(
                         block = requireNotNull(engine.scene.get()),
                         mimeType = mimeType,
                     ) {
@@ -276,9 +278,10 @@ object EditorDefaults {
                             block.setVisible(it, visible = true)
                         }
                     }
-                }.onSuccess { buffer ->
+                    writeToTempFile(buffer, mimeType)
+                }.onSuccess { file ->
                     eventHandler.send(HideLoading)
-                    eventHandler.send(ShareFileEvent(writeToTempFile(buffer, mimeType), mimeType.key))
+                    eventHandler.send(ShareFileEvent(file, mimeType.key))
                 }.onFailure {
                     eventHandler.send(HideLoading)
                     eventHandler.send(ShowErrorDialogEvent(error = it))

@@ -1,6 +1,5 @@
 package ly.img.editor.base.engine
 
-import ly.img.engine.AssetColor
 import ly.img.engine.Color
 import ly.img.engine.RGBAColor
 import kotlin.math.roundToInt
@@ -19,12 +18,6 @@ fun ComposeColor.toEngineColor(): RGBAColor = Color.fromRGBA(
     g = this.green,
     b = this.blue,
     a = this.alpha,
-)
-
-fun ComposeColor.toAssetColor(): AssetColor = AssetColor.RGB(
-    r = this.red,
-    g = this.green,
-    b = this.blue,
 )
 
 /**

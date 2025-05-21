@@ -266,21 +266,7 @@ class EngineConfiguration private constructor(
                 EditorDefaults.onCreateFromImage(engine, imageUri, eventHandler, imageSize)
             },
             onExport = { engine, eventHandler ->
-                EditorDefaults.run {
-                    eventHandler.send(ShowLoading)
-                    val blob = engine.block.export(
-                        block = requireNotNull(engine.scene.get()),
-                        mimeType = MimeType.PNG,
-                    )
-                    val tempFile = writeToTempFile(blob, mimeType = MimeType.PNG)
-                    eventHandler.send(HideLoading)
-                    eventHandler.send(
-                        ShareFileEvent(
-                            file = tempFile,
-                            mimeType = MimeType.PNG.key,
-                        ),
-                    )
-                }
+                EditorDefaults.onExport(engine, eventHandler, MimeType.PNG)
             },
         )
 

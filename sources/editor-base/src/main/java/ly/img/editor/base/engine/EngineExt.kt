@@ -14,7 +14,6 @@ import ly.img.editor.core.ui.engine.getStackOrNull
 import ly.img.editor.core.ui.engine.overrideAndRestore
 import ly.img.editor.core.ui.engine.toRGBColor
 import ly.img.engine.BlendMode
-import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
@@ -176,8 +175,6 @@ fun Engine.getFillColor(designBlock: DesignBlock): Color? {
         .toRGBColor(this)
         .toComposeColor()
 }
-
-fun Engine.canResetCrop(designBlock: DesignBlock) = block.getContentFillMode(designBlock) == ContentFillMode.CROP
 
 fun Engine.zoomToPage(
     pageIndex: Int,

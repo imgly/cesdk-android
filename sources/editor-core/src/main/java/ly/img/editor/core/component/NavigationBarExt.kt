@@ -1069,7 +1069,7 @@ val Button.Id.Companion.togglePagesMode by unsafeLazy {
  * and when you want to observe changes from the [Engine].
  * By default the scope is updated only when the parent component scope ([NavigationBar.scope], accessed via [LocalEditorScope]) is updated.
  * @param visible whether the button should be visible.
- * Default value is always true.
+ * Default value the value is true if the scene contains a stack, false otherwise.
  * @param enterTransition transition of the button when it enters the parent composable.
  * Default value is always no enter transition.
  * @param exitTransition transition of the button when it exits the parent composable.
@@ -1096,7 +1096,11 @@ fun Button.Companion.rememberTogglePagesMode(
     scope: ButtonScope = LocalEditorScope.current.run {
         remember(this) { ButtonScope(parentScope = this) }
     },
-    visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
+    visible: @Composable ButtonScope.() -> Boolean = {
+        remember(this) {
+            editorContext.engine.block.findByType(DesignBlockType.Stack).isNotEmpty()
+        }
+    },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = {
