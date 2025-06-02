@@ -6,6 +6,7 @@ import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register
+import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
 
@@ -29,7 +30,10 @@ fun EventsHandler.cropEvents(
     ) {
         val cropRotationRadians = angle * (Math.PI.toFloat() / 180f)
         engine.block.setCropRotation(block, cropRotationRadians)
-        engine.block.adjustCropToFillFrame(block, scaleRatio)
+        val contentFillMode = engine.block.getContentFillMode(block)
+        if (contentFillMode == ContentFillMode.CROP) {
+            engine.block.adjustCropToFillFrame(block, scaleRatio)
+        }
         if (addUndo) {
             engine.editor.addUndoStep()
         }
@@ -37,6 +41,9 @@ fun EventsHandler.cropEvents(
 
     register<BlockEvent.OnResetCrop> {
         engine.block.resetCrop(block)
+        if (engine.block.supportsContentFillMode(block)) {
+            engine.block.setContentFillMode(block, ContentFillMode.CROP)
+        }
         engine.editor.addUndoStep()
     }
     register<BlockEvent.OnFlipCropHorizontal> {

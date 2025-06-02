@@ -147,6 +147,9 @@ abstract class EditorUiViewModel(
     private var canvasHeight = 0f
 
     private var isStraighteningOrRotating = false
+    private var initCropTranslationX = 0f
+    private var initCropTranslationY = 0f
+    private var isCropReset = false
 
     private val isExporting = MutableStateFlow(false)
 
@@ -544,6 +547,9 @@ abstract class EditorUiViewModel(
         if (event is BlockEvent && bottomSheetContent.value is CropBottomSheetContent && event != BlockEvent.OnResetCrop) {
             isStraighteningOrRotating = true
         }
+        if (event is BlockEvent.OnResetCrop) {
+            isCropReset = true
+        }
         eventHandler.handleEvent(event)
         // Do not fully send internal events to customer just yet. Over time we will expose more and more events.
         if (event !is Event) {
@@ -618,11 +624,16 @@ abstract class EditorUiViewModel(
                 is CropBottomSheetContent -> {
                     val useOldScaleRatio = isStraighteningOrRotating
                     isStraighteningOrRotating = false
+                    if (isCropReset) {
+                        setInitCropValues(designBlock)
+                    }
                     CropBottomSheetContent(
                         type = content.type,
                         uiState = createCropUiState(
                             designBlock,
                             engine,
+                            initCropTranslationX,
+                            initCropTranslationY,
                             if (useOldScaleRatio) content.uiState.cropScaleRatio else null,
                         ),
                     )
@@ -1184,7 +1195,9 @@ abstract class EditorUiViewModel(
                 when (editMode) {
                     TEXT_EDIT_MODE -> send(EditorEvent.Sheet.Close(animate = false))
                     CROP_EDIT_MODE -> {
+                        val block = engine.block.findAllSelected().single()
                         engine.editor.setSettingEnum("touch/pinchAction", TOUCH_ACTION_SCALE)
+                        setInitCropValues(block)
                         // no need to send EditorEvent.Sheet.Open here
                         setBottomSheetContent {
                             /**
@@ -1194,7 +1207,7 @@ abstract class EditorUiViewModel(
                             cachedCropSheetType = null // reset to default value
                             CropBottomSheetContent(
                                 type = type,
-                                uiState = createCropUiState(engine.block.findAllSelected().single(), engine),
+                                uiState = createCropUiState(block, engine, initCropTranslationX, initCropTranslationY),
                             )
                         }
                     }
@@ -1223,6 +1236,13 @@ abstract class EditorUiViewModel(
                 isKeyboardShowing.update { showKeyboard }
             }
         }
+    }
+
+    private fun setInitCropValues(block: DesignBlock) {
+        isStraighteningOrRotating = false
+        isCropReset = false
+        initCropTranslationX = engine.block.getCropTranslationX(block)
+        initCropTranslationY = engine.block.getCropTranslationY(block)
     }
 
     private fun observeSelectedBlock() {

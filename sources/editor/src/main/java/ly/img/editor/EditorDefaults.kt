@@ -148,8 +148,7 @@ object EditorDefaults {
         val scene = checkNotNull(engine.scene.get())
         onSceneCreated(scene, this)
         launch {
-            val baseUri = Uri.parse("https://cdn.img.ly/assets/v3")
-            engine.addDefaultAssetSources(baseUri = baseUri)
+            engine.addDefaultAssetSources()
             val defaultTypeface = TypefaceProvider().provideTypeface(engine, "Roboto")
             requireNotNull(defaultTypeface)
             engine.asset.addSource(TextAssetSource(engine, defaultTypeface))
@@ -158,7 +157,6 @@ object EditorDefaults {
             engine.addDemoAssetSources(
                 sceneMode = engine.scene.getMode(),
                 withUploadAssetSources = true,
-                baseUri = Uri.parse("https://cdn.img.ly/assets/demo/v2"),
             )
         }
         coroutineContext[Job]?.invokeOnCompletion {

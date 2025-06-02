@@ -610,7 +610,7 @@ class CanvasMenu private constructor(
     ) : ItemScope(parentScope)
 
     /**
-     * A component that represents a button in the [CanvasMenu].
+     * A component that represents a divider in the [CanvasMenu].
      *
      * @param id the id of the button.
      * Note that it is highly recommended that every unique [EditorComponent] has a unique id.
