@@ -21,5 +21,5 @@ dependencies {
 
     compileOnly(project(":camera-core"))
 
-    implementation findProject(":editor-debug-menu") ?: project(":editor-debug-menu-dummy")
+    implementation project(":editor-debug-menu-dummy")
 }
