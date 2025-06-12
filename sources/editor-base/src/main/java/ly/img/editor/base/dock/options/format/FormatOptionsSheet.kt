@@ -112,7 +112,7 @@ fun FormatOptionsSheet(
                             }
 
                             PropertyLink(
-                                value = uiState.subFamily,
+                                value = getSubFamilyString(uiState.subFamily),
                             ) {
                                 screenState = ScreenState.SelectFontWeight
                             }
@@ -275,7 +275,7 @@ fun FormatOptionsSheet(
                     selectedFontFamily = uiState.fontFamily,
                     selectedWeight = uiState.fontFamilyWeight,
                     selectedStyle = uiState.fontFamilyStyle,
-                    labelMap = { it.subFamily },
+                    labelMap = { getSubFamilyString(it.subFamily) },
                     onSelectFont = { fontData ->
                         onEvent(BlockEvent.OnChangeFont(fontData.uri, fontData.typeface))
                     },

@@ -119,6 +119,26 @@
     <string name="ly_img_editor_fixed_size">Fixed Size</string>
     <string name="ly_img_editor_font_size">Font Size</string>
 
+    <string name="ly_img_editor_subfamily_thin">Thin</string>
+    <string name="ly_img_editor_subfamily_extralight">ExtraLight</string>
+    <string name="ly_img_editor_subfamily_light">Light</string>
+    <string name="ly_img_editor_subfamily_regular">Regular</string>
+    <string name="ly_img_editor_subfamily_medium">Medium</string>
+    <string name="ly_img_editor_subfamily_semibold">SemiBold</string>
+    <string name="ly_img_editor_subfamily_bold">Bold</string>
+    <string name="ly_img_editor_subfamily_extrabold">ExtraBold</string>
+    <string name="ly_img_editor_subfamily_black">Black</string>
+
+    <string name="ly_img_editor_subfamily_thin_italic">Thin Italic</string>
+    <string name="ly_img_editor_subfamily_extralight_italic">ExtraLight Italic</string>
+    <string name="ly_img_editor_subfamily_light_italic">Light Italic</string>
+    <string name="ly_img_editor_subfamily_italic">Italic</string>
+    <string name="ly_img_editor_subfamily_medium_italic">Medium Italic</string>
+    <string name="ly_img_editor_subfamily_semibold_italic">SemiBold Italic</string>
+    <string name="ly_img_editor_subfamily_bold_italic">Bold Italic</string>
+    <string name="ly_img_editor_subfamily_extrabold_italic">ExtraBold Italic</string>
+    <string name="ly_img_editor_subfamily_black_italic">Black Italic</string>
+
     <string name="ly_img_editor_sides">Sides</string>
     <string name="ly_img_editor_round_corners">Round Corners</string>
     <string name="ly_img_editor_line_width">Line Width</string>
