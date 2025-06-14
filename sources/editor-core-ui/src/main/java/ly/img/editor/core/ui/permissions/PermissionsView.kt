@@ -9,18 +9,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,7 +31,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
-import kotlinx.coroutines.launch
 import ly.img.editor.core.theme.LocalExtendedColorScheme
 import ly.img.editor.core.ui.R
 import ly.img.editor.core.ui.iconpack.Check
@@ -46,6 +46,7 @@ import ly.img.editor.core.ui.utils.lifecycle.LifecycleEventEffect
 fun PermissionsView(
     requestOnlyCameraPermission: Boolean = false,
     onAllPermissionsGranted: () -> Unit,
+    onClose: () -> Unit,
 ) {
     CompositionLocalProvider(
         LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
@@ -68,9 +69,24 @@ fun PermissionsView(
 
     val context = LocalContext.current
     val permissionManager = remember { PermissionManager(context) }
-    val coroutineScope = rememberCoroutineScope()
     var isCameraPermissionGranted by remember { mutableStateOf(context.hasCameraPermission()) }
     var isMicPermissionGranted by remember { mutableStateOf(context.hasMicPermission()) }
+    var currentRequestedPermission: String? by remember { mutableStateOf(null) }
+    var showSettingsDialog by remember { mutableStateOf(false) }
+
+    if (showSettingsDialog) {
+        fun dismissDialog() {
+            showSettingsDialog = false
+            currentRequestedPermission = null
+        }
+        currentRequestedPermission?.let {
+            SettingsDialog(
+                permission = it,
+                onDismissRequest = ::dismissDialog,
+                onConfirmClick = permissionManager::openAppSettings,
+            )
+        }
+    }
 
     fun refresh() {
         isMicPermissionGranted = context.hasMicPermission()
@@ -84,6 +100,9 @@ fun PermissionsView(
         contract = ActivityResultContracts.RequestPermission(),
     ) {
         // refresh() is already being handled below.
+        currentRequestedPermission?.let {
+            showSettingsDialog = permissionManager.shouldOpenSettings(it)
+        }
     }
 
     // The user could enable the permissions from settings
@@ -92,15 +111,8 @@ fun PermissionsView(
     }
 
     fun requestPermission(permission: String) {
-        coroutineScope.launch {
-            val status = permissionManager.checkPermission(permission)
-            when (status) {
-                PermissionStatus.DENIED_CAN_REQUEST, PermissionStatus.DENIED_FIRST_TIME -> permissionLauncher.launch(permission)
-                PermissionStatus.DENIED_DONT_ASK -> permissionManager.openAppSettings()
-                else -> {
-                }
-            }
-        }
+        currentRequestedPermission = permission
+        permissionLauncher.launch(permission)
     }
 
     PermissionButton(
@@ -121,6 +133,15 @@ fun PermissionsView(
             text = R.string.ly_img_camera_permission_mic,
             isPermissionGranted = isMicPermissionGranted,
         )
+    }
+    Spacer(modifier = Modifier.height(16.dp))
+    TextButton(
+        onClick = onClose,
+        colors = ButtonDefaults.textButtonColors(
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        ),
+    ) {
+        Text(text = stringResource(R.string.ly_img_camera_permission_cancel))
     }
 }
 
@@ -151,4 +172,54 @@ private fun PermissionButton(
         Spacer(modifier = Modifier.width(8.dp))
         Text(text = stringResource(text))
     }
+}
+
+@Composable
+private fun SettingsDialog(
+    permission: String,
+    onDismissRequest: () -> Unit,
+    onConfirmClick: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = {
+            Text(
+                text = stringResource(
+                    when (permission) {
+                        Manifest.permission.CAMERA -> R.string.ly_img_camera_permission_missing_camera_dialog_title
+                        Manifest.permission.RECORD_AUDIO -> R.string.ly_img_camera_permission_missing_mic_dialog_title
+                        else -> throw IllegalArgumentException()
+                    },
+                ),
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(
+                    when (permission) {
+                        Manifest.permission.CAMERA -> R.string.ly_img_camera_permission_missing_camera_dialog_text
+                        Manifest.permission.RECORD_AUDIO -> R.string.ly_img_camera_permission_missing_mic_dialog_text
+                        else -> throw IllegalArgumentException()
+                    },
+                ),
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onConfirmClick()
+                    onDismissRequest()
+                },
+            ) {
+                Text(stringResource(R.string.ly_img_camera_permission_missing_confirm_text))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismissRequest,
+            ) {
+                Text(stringResource(R.string.ly_img_camera_permission_missing_dismiss_text))
+            }
+        },
+    )
 }

@@ -28,7 +28,10 @@ internal fun SetupView(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         when {
-            !hasRequiredPermissions -> PermissionsView(onAllPermissionsGranted = onAllPermissionsGranted)
+            !hasRequiredPermissions -> PermissionsView(
+                onAllPermissionsGranted = onAllPermissionsGranted,
+                onClose = onClose,
+            )
             isLoading ->
                 CircularProgressIndicator(
                     modifier = Modifier.size(36.dp),

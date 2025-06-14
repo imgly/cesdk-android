@@ -1256,7 +1256,7 @@ fun Button.Companion.rememberPreviousPage(
     `_`: Nothing = nothing,
 ): NavigationBar.Custom<ButtonScope> {
     require(text != null || contentDescription != null) {
-        "Content description must be provided when invoking NavigationBar.Button.rememberPostcardNavigateToDesign with icon only."
+        "Content description must be provided when invoking NavigationBar.Button.rememberPreviousPage with icon only."
     }
     return NavigationBar.Custom.remember(
         id = Button.Id.previousPage,
@@ -1369,7 +1369,7 @@ fun Button.Companion.rememberNextPage(
     `_`: Nothing = nothing,
 ): NavigationBar.Custom<ButtonScope> {
     require(text != null || contentDescription != null) {
-        "Content description must be provided when calling NavigationBar.Button.rememberPostcardNavigateToWrite with icon only."
+        "Content description must be provided when calling NavigationBar.Button.rememberNextPage with icon only."
     }
     return NavigationBar.Custom.remember(
         id = Button.Id.nextPage,

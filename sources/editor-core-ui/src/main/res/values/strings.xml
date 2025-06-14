@@ -4,4 +4,14 @@
     <string name="ly_img_camera_permission_text">Please allow the camera to have access.</string>
     <string name="ly_img_camera_permission_camera">Allow camera</string>
     <string name="ly_img_camera_permission_mic">Allow microphone</string>
+    <string name="ly_img_camera_permission_cancel">Cancel</string>
+
+    <string name="ly_img_camera_permission_missing_camera_dialog_title">Camera permission needed</string>
+    <string name="ly_img_camera_permission_missing_camera_dialog_text">To use the camera, please enable camera access for this app in your Settings under \"Permissions\".</string>
+
+    <string name="ly_img_camera_permission_missing_mic_dialog_title">Microphone permission needed</string>
+    <string name="ly_img_camera_permission_missing_mic_dialog_text">To record audio, please enable microphone access for this app in your Settings under \"Permissions\".</string>
+
+    <string name="ly_img_camera_permission_missing_confirm_text">Settings</string>
+    <string name="ly_img_camera_permission_missing_dismiss_text">Cancel</string>
 </resources>

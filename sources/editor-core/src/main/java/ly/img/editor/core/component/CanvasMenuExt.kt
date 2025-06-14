@@ -2,11 +2,19 @@ package ly.img.editor.core.component
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.LocalEditorScope
 import ly.img.editor.core.R
@@ -24,6 +32,7 @@ import ly.img.editor.core.iconpack.Delete
 import ly.img.editor.core.iconpack.Duplicate
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.iconpack.SendBackward
+import ly.img.engine.DesignBlockType
 
 /**
  * The id of the canvas menu button returned by [CanvasMenu.Button.Companion.rememberBringForward].
@@ -342,3 +351,88 @@ fun Button.Companion.rememberDelete(
     contentDescription = contentDescription,
     `_` = `_`,
 )
+
+/**
+ * The id of the canvas menu button returned by [CanvasMenu.Button.Companion.rememberSelectGroup].
+ */
+val Button.Id.Companion.selectGroup by unsafeLazy {
+    EditorComponentId("ly.img.component.canvasMenu.button.selectGroup")
+}
+
+/**
+ * A composable helper function that creates and remembers a [CanvasMenu.Button] that selects the group design block that
+ * contains the currently selected design block via [EditorEvent.Selection.SelectGroup].
+ *
+ * @param scope the scope of this component. Every new value will trigger recomposition of all functions with
+ * signature @Composable Scope.() -> {}.
+ * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
+ * By default it is updated only when the parent component scope ([InspectorBar.scope], accessed via [LocalEditorScope]) is updated.
+ * @param visible whether the button should be visible.
+ * By default the value is true when the selected design block is part of a [DesignBlockType.Group].
+ * @param enterTransition transition of the button when it enters the parent composable.
+ * Default value is always no enter transition.
+ * @param exitTransition transition of the button when it exits the parent composable.
+ * Default value is always no exit transition.
+ * @param decoration decoration of the button. Useful when you want to add custom background, foreground, shadow, paddings etc.
+ * Default value is always no decoration.
+ * @param text the text content of the button as a string. If null then text is not rendered.
+ * Default value is always [R.string.ly_img_editor_select_group].
+ * @param tint the tint color of the content. If null then no tint is applied.
+ * Default value is null.
+ * @param enabled whether the button is enabled.
+ * Default value is always true.
+ * @param onClick the callback that is invoked when the button is clicked.
+ * By default [EditorEvent.Selection.SelectGroup] is invoked.
+ * @return a button that will be displayed in the canvas menu.
+ */
+@Composable
+fun Button.Companion.rememberSelectGroup(
+    scope: ButtonScope = (LocalEditorScope.current as CanvasMenu.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
+    visible: @Composable ButtonScope.() -> Boolean = {
+        remember(this) {
+            editorContext.isSelectionInGroup
+        }
+    },
+    enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
+    exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
+    decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
+    text: @Composable ButtonScope.() -> String = { stringResource(R.string.ly_img_editor_select_group) },
+    tint: (@Composable ButtonScope.() -> Color)? = null,
+    enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
+    onClick: ButtonScope.() -> Unit = {
+        editorContext.eventHandler.send(EditorEvent.Selection.SelectGroup())
+    },
+    `_`: Nothing = nothing,
+): CanvasMenu.Custom<ButtonScope> = CanvasMenu.Custom.remember(
+    id = Button.Id.selectGroup,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+) {
+    decoration(this) {
+        val tintColor = tint?.invoke(this) ?: MaterialTheme.colorScheme.onSecondaryContainer
+        Button(
+            modifier = Modifier.padding(horizontal = 4.dp),
+            colors =
+                ButtonDefaults.textButtonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = tintColor,
+                    disabledContainerColor = Color.Transparent,
+                    disabledContentColor = tintColor.copy(alpha = tintColor.alpha * 0.5F),
+                ),
+            onClick = { onClick(this) },
+            enabled = enabled(this),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+        ) {
+            Text(
+                text = text(this@remember),
+                style = MaterialTheme.typography.labelMedium,
+            )
+        }
+    }
+}

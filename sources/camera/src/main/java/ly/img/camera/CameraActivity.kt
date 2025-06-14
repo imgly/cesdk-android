@@ -88,9 +88,7 @@ open class CameraActivity : ComponentActivity() {
                             hasRequiredPermissions = hasRequiredPermissions,
                             isLoading = initResult == null,
                             error = initResult?.exceptionOrNull(),
-                            onClose = {
-                                finish()
-                            },
+                            onClose = ::finish,
                             onAllPermissionsGranted = {
                                 hasRequiredPermissions = true
                             },

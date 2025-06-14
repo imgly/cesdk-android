@@ -103,6 +103,8 @@ class CanvasMenu private constructor(
              */
             @Composable
             fun remember(): HorizontalListBuilder<Item<*>> = HorizontalListBuilder.remember {
+                add { Button.rememberSelectGroup() }
+                add { Divider.remember(visible = { editorContext.isSelectionInGroup }) }
                 add { Button.rememberBringForward() }
                 add { Button.rememberSendBackward() }
                 add { Divider.remember(visible = { editorContext.canSelectionMove }) }
@@ -848,6 +850,7 @@ class CanvasMenu private constructor(
          * By default, the following items are added to the canvas menu. Each item also contains information for which design
          * block type, fill and kind the item is shown:
          *
+         * - CanvasMenu.Button.rememberSelectGroup
          * - CanvasMenu.Button.rememberBringForward
          * - CanvasMenu.Button.rememberSendBackward
          * - CanvasMenu.Divider.remember
@@ -935,12 +938,15 @@ class CanvasMenu private constructor(
          *                     onClick = {}
          *                 )
          *             }
+         *             add { CanvasMenu.Button.rememberSelectGroup() }
+         *             add { CanvasMenu.Divider.remember(visible = { editorContext.isSelectionInGroup }) }
          *             add { CanvasMenu.Button.rememberSendBackward() }
          *             add {
          *                 CanvasMenu.Button.rememberBringForward(
          *                     vectorIcon = { IconPack.PlayBox },
          *                 )
          *             }
+         *             add { CanvasMenu.Divider.remember(visible = { editorContext.canSelectionMove }) }
          *             add {
          *                 CanvasMenu.Button.rememberDuplicate(
          *                     visible = { counter % 2 == 0 }

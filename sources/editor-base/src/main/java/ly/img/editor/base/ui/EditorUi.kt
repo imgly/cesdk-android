@@ -687,10 +687,16 @@ fun EditorUi(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                PermissionsView(requestOnlyCameraPermission = true) {
-                    showCameraPermissionsView = false
-                    launchContract()
-                }
+                PermissionsView(
+                    requestOnlyCameraPermission = true,
+                    onAllPermissionsGranted = {
+                        showCameraPermissionsView = false
+                        launchContract()
+                    },
+                    onClose = {
+                        showCameraPermissionsView = false
+                    },
+                )
             }
             BackHandler(showCameraPermissionsView) {
                 showCameraPermissionsView = false
