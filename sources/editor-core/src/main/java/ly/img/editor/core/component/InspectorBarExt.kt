@@ -719,7 +719,12 @@ fun Button.Companion.rememberCrop(
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
-        editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Crop()))
+        val mode = if (editorContext.selection.type == DesignBlockType.Page) {
+            SheetType.Crop.Mode.PageCrop
+        } else {
+            SheetType.Crop.Mode.Element
+        }
+        editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Crop(mode = mode)))
     },
     contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,

@@ -164,10 +164,26 @@
     <string name="ly_img_editor_stroke_color">Stroke Color</string>
     <string name="ly_img_editor_hue">Hue</string>
 
-    <string name="ly_img_editor_straighten">Straighten</string>
+    <string name="ly_img_editor_resize">Resize</string>
+    <string name="ly_img_editor_aspect_lock">Resize proportionally</string>
+    <string name="ly_img_editor_straighten">Rotate</string>
     <string name="ly_img_editor_reset">Reset</string>
     <string name="ly_img_editor_rotate">Rotate 90°</string>
     <string name="ly_img_editor_flip">Flip</string>
+
+    <string name="ly_img_editor_fill_mode_crop">Crop</string>
+    <string name="ly_img_editor_fill_mode_cover">Cover</string>
+    <string name="ly_img_editor_fill_mode_contain">Fit</string>
+
+    <string name="ly_img_editor_unit_inch">Inch</string>
+    <string name="ly_img_editor_unit_dpi_value_name">Resolution</string>
+    <string name="ly_img_editor_unit_pixel_scale_value_name">Pixel Scale</string>
+    <string name="ly_img_editor_unit_pixel">Pixel</string>
+    <string name="ly_img_editor_unit_millimeter">Millimeter</string>
+
+    <string name="ly_img_editor_unit_width">Width (%1$s)</string>
+    <string name="ly_img_editor_unit_height">Height (%1$s)</string>
+    <string name="ly_img_editor_unit_title">Unit</string>
 
     <string name="ly_img_editor_add_audio">Add Audio</string>
     <string name="ly_img_editor_add_clip">Add Clip</string>

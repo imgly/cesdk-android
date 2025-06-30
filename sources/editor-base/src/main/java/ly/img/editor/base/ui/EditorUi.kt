@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -131,7 +132,6 @@ fun EditorUi(
     onEvent: EditorScope.(Parcelable, EditorEvent) -> Parcelable,
     canvasOverlay: @Composable BoxScope.(PaddingValues) -> Unit,
     bottomSheetLayout: @Composable ColumnScope.(BottomSheetContent, (Boolean) -> Unit) -> Unit = { _, _ -> },
-    pagesOverlay: @Composable BoxScope.(PaddingValues) -> Unit = {},
     viewModel: EditorUiViewModel,
     close: (Throwable?) -> Unit,
 ) {
@@ -659,10 +659,25 @@ fun EditorUi(
                         }
                     }
                 }
-            }
-            contentPadding?.let {
-                Box {
-                    pagesOverlay(it)
+                contentPadding?.let {
+                    Box {
+                        EditorPagesUi(
+                            modifier = Modifier
+                                .statusBarsPadding()
+                                .padding(top = it.calculateTopPadding(), bottom = it.calculateBottomPadding() + 84.dp)
+                                .fillMaxSize(),
+                            state = uiState.pagesState,
+                            onEvent = viewModel::send,
+                        )
+                        EditorPagesDock(
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .systemBarsPadding()
+                                .height(84.dp),
+                            state = uiState.pagesState,
+                            onEvent = viewModel::send,
+                        )
+                    }
                 }
             }
         }

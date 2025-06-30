@@ -50,6 +50,19 @@ fun Engine.addOutline(
     block.setScopeEnabled(outline, Scope.EditorSelect, false)
 }
 
+internal fun Engine.updateOutlineSize(
+    name: String = OUTLINE_BLOCK_NAME,
+    parent: DesignBlock,
+) {
+    val outline = block.findByName(name).firstOrNull() ?: return
+    val width = block.getWidth(parent)
+    val height = block.getHeight(parent)
+    block.setHeightMode(outline, SizeMode.ABSOLUTE)
+    block.setHeight(outline, height)
+    block.setWidthMode(outline, SizeMode.ABSOLUTE)
+    block.setWidth(outline, width)
+}
+
 fun Engine.showOutline(
     show: Boolean,
     name: String = OUTLINE_BLOCK_NAME,
