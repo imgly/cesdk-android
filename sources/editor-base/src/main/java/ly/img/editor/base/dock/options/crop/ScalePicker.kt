@@ -6,7 +6,6 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.width
@@ -30,7 +29,6 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,17 +58,16 @@ fun ScalePicker(
     highlightNormalTickColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
     highlightSpecialTickColor: Color = MaterialTheme.colorScheme.primary,
     highlightScaleColor: Color = MaterialTheme.colorScheme.primary,
-    valuePrefix: String = "",
 ) {
     BoxWithConstraints(
-        modifier = modifier.requiredHeight(48.dp),
+        modifier = modifier.requiredHeight(44.dp),
     ) {
         val textStyle = TextStyle(
             fontFamily = FontFamily.Default,
             fontWeight = FontWeight.Medium,
-            letterSpacing = 0.35.sp,
-            lineHeight = 16.sp,
-            fontSize = 11.sp,
+            letterSpacing = 0.1.sp,
+            lineHeight = 20.sp,
+            fontSize = 14.sp,
         )
 
         val rangeStart = remember(valueRange) {
@@ -93,7 +90,7 @@ fun ScalePicker(
         }
 
         val roundedCurrentValue = currentValue.roundToInt()
-        val textToDraw = if (valuePrefix.isEmpty()) "$roundedCurrentValue°" else "$valuePrefix $roundedCurrentValue°"
+        val textToDraw = "$roundedCurrentValue°"
 
         var snapState by remember {
             mutableStateOf(SnapState.Disarmed)
@@ -204,8 +201,7 @@ fun ScalePicker(
             ),
             modifier = Modifier
                 .align(Alignment.Center)
-                // to make the number look centre-ish / account for the °
-                .offset(x = 1.5.dp, y = (-4).dp)
+                .offset(x = 1.5.dp) // to make the number look centre-ish / account for the °
                 .paddingFromBaseline(bottom = scaleHeight + 2.dp),
         )
     }
@@ -240,18 +236,4 @@ enum class RangeInclusionType {
 private enum class SnapState {
     Armed,
     Disarmed,
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun ScalePickerPreview() {
-    ScalePicker(
-        value = 0f,
-        valueRange = -30f..30f,
-        onValueChange = {},
-        modifier = Modifier.padding(16.dp),
-        tickStep = 1,
-        specialTickStep = 5,
-        valuePrefix = "Angle",
-    )
 }

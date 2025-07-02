@@ -74,8 +74,8 @@ class PhotoUiViewModel(
     override fun onPreCreate() {
         super.onPreCreate()
         engine.editor.setSettingBoolean(keypath = "page/allowCropInteraction", value = true)
-        engine.editor.setSettingBoolean(keypath = "page/allowMoveInteraction", value = true)
-        engine.editor.setSettingBoolean(keypath = "page/allowResizeInteraction", value = true)
+        engine.editor.setSettingBoolean(keypath = "page/allowMoveInteraction", value = false)
+        engine.editor.setSettingBoolean(keypath = "page/allowResizeInteraction", value = false)
         engine.editor.setSettingBoolean(keypath = "page/restrictResizeInteractionToFixedAspectRatio", value = false)
         engine.editor.setSettingBoolean(keypath = "page/allowRotateInteraction", value = false)
     }
@@ -89,13 +89,13 @@ class PhotoUiViewModel(
             Scope.AppearanceEffect,
             Scope.AppearanceBlur,
             Scope.LayerCrop,
-            Scope.LayerMove,
-            Scope.LayerResize,
         ).forEach {
             engine.block.setScopeEnabled(page, it, enabled = true)
         }
         listOf(
             Scope.EditorSelect,
+            Scope.LayerMove,
+            Scope.LayerResize,
             Scope.LayerRotate,
         ).forEach {
             engine.block.setScopeEnabled(page, it, enabled = false)

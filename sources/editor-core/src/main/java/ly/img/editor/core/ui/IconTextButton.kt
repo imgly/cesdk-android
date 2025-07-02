@@ -3,13 +3,9 @@ package ly.img.editor.core.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -18,11 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ly.img.editor.core.component.data.EditorIcon
-import ly.img.editor.core.iconpack.IconPack
-import ly.img.editor.core.iconpack.TextFields
 
 /**
  * A composable function that renders a button with [icon] and [text], positioned vertically.
@@ -81,63 +74,6 @@ fun IconTextButton(
 }
 
 /**
- * A composable function that renders a button with [icon] and [text], positioned horizontally.
- *
- * @param onClick the callback that is invoked when the button is clicked.
- * @param modifier the [Modifier] to be applied to this button.
- * @param icon the icon that should be rendered.
- * @param text the text that should be rendered.
- * @param enabled whether the button is enabled.
- * @param contentPadding the content padding of the button.
- * @param tint the tint color of the button.
- */
-@Composable
-fun IconTextRowButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    icon: (@Composable () -> Unit)? = null,
-    text: (@Composable () -> Unit)? = null,
-    enabled: Boolean = true,
-    contentPadding: PaddingValues = PaddingValues(vertical = 10.dp, horizontal = 4.dp),
-    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-) {
-    if (text == null) {
-        IconButton(
-            onClick = onClick,
-            enabled = enabled,
-            colors = IconButtonDefaults.iconButtonColors(
-                contentColor = tint,
-                disabledContentColor = tint.copy(alpha = tint.alpha * 0.38F),
-            ),
-            modifier = modifier.padding(contentPadding),
-        ) {
-            icon?.invoke()
-        }
-    } else {
-        Button(
-            modifier = modifier,
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = tint,
-                disabledContentColor = tint.copy(alpha = tint.alpha * 0.5F),
-            ),
-            onClick = onClick,
-            enabled = enabled,
-            contentPadding = contentPadding,
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier,
-            ) {
-                icon?.invoke()
-                Spacer(Modifier.width(8.dp))
-                text()
-            }
-        }
-    }
-}
-
-/**
  * A composable function that renders a button with [editorIcon] and [text], positioned vertically.
  *
  * @param onClick the callback that is invoked when the button is clicked.
@@ -176,69 +112,5 @@ fun IconTextButton(
         onClick = onClick,
         contentPadding = contentPadding,
         tint = tint,
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    IconTextRowButton(
-        icon = {
-            Icon(IconPack.TextFields, contentDescription = null)
-        },
-        text = {
-            Text("Test")
-        },
-        enabled = true,
-        onClick = {
-        },
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewDisabled() {
-    IconTextButton(
-        icon = {
-            Icon(IconPack.TextFields, contentDescription = null)
-        },
-        text = {
-            Text("Test")
-        },
-        enabled = false,
-        onClick = {
-        },
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultRowButtonPreview() {
-    IconTextButton(
-        icon = {
-            Icon(IconPack.TextFields, contentDescription = null)
-        },
-        text = {
-            Text("Test")
-        },
-        enabled = true,
-        onClick = {
-        },
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewRowButtonDisabled() {
-    IconTextRowButton(
-        icon = {
-            Icon(IconPack.TextFields, contentDescription = null)
-        },
-        text = {
-            Text("Test")
-        },
-        enabled = false,
-        onClick = {
-        },
     )
 }

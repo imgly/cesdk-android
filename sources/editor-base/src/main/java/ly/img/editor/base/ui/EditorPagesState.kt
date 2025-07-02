@@ -10,8 +10,6 @@ import ly.img.editor.core.component.data.EditorIcon
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.iconpack.Delete
 import ly.img.editor.core.iconpack.Duplicate
-import ly.img.editor.core.iconpack.Resize
-import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.state.EditorViewMode
 import ly.img.editor.core.ui.iconpack.Addpage
 import ly.img.editor.core.ui.iconpack.Edit
@@ -159,12 +157,6 @@ private fun createEditorPagesState(
                 actions = listOf(BlockEvent.OnDuplicateNonSelected(selectedPageBlock)),
             ).let(::add)
         }
-        EditorPagesState.DockOption(
-            titleRes = CoreR.string.ly_img_editor_resize,
-            icon = EditorIcon.Vector(CoreIconPack.Resize),
-            enabled = true,
-            actions = listOf(EditorEvent.Sheet.Open(SheetType.ResizeAll())),
-        ).let(::add)
         if (pages.size > 1 && engine.isDeleteAllowed(selectedPageBlock)) {
             EditorPagesState.DockOption(
                 titleRes = CoreR.string.ly_img_editor_delete,

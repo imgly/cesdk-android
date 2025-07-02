@@ -3,7 +3,6 @@ package ly.img.editor.core.sheet
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import ly.img.editor.core.EditorScope
-import ly.img.editor.core.R
 import ly.img.editor.core.component.data.Height
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.sheet.SheetType.Custom
@@ -122,106 +121,10 @@ interface SheetType {
      *
      * @param style the style that should be used to display the sheet.
      * Default value is the default [SheetStyle].
-     * @param mode controls which crop options are available.
      */
-    open class Crop(
+    class Crop(
         override val style: SheetStyle = SheetStyle(),
-        val mode: Mode,
-    ) : SheetType {
-        /**
-         * Configuration of the different crop and resize modes.
-         *
-         * Each flag enables or disables certain controls of the [Crop] sheet.
-         *
-         * @property titleRes String resource used as the title of the sheet.
-         * @property hasCropAsset whether the sheet should show crop assets.
-         * @property hasPageAsset whether page assets can be selected.
-         * @property hasResetButton whether a reset button is displayed.
-         * @property hasResizeOption whether resize controls are available.
-         * @property applyOnAllPages if `true`, changes apply to all pages.
-         * @property hasRotateOptions whether rotation controls are visible.
-         * @property hasContentFillMode whether content fill mode can be changed.
-         */
-        interface Mode {
-            val titleRes: Int
-            val hasCropAsset: Boolean
-            val hasPageAsset: Boolean
-            val hasResetButton: Boolean
-            var hasResizeOption: Boolean
-            val applyOnAllPages: Boolean
-            val hasRotateOptions: Boolean
-            val hasContentFillMode: Boolean
-
-            /** Default mode for cropping image or video fills. */
-            data object ImageCrop : Mode {
-                override val titleRes = R.string.ly_img_editor_crop
-
-                override val hasCropAsset: Boolean = true
-                override val hasPageAsset: Boolean = true
-
-                override val hasResetButton: Boolean = true
-                override var hasResizeOption: Boolean = true
-                override val applyOnAllPages: Boolean = false
-                override val hasRotateOptions: Boolean = true
-                override val hasContentFillMode: Boolean = true
-            }
-
-            /** Used when cropping the current page image fill. */
-            data object PageCrop : Mode {
-                override val titleRes = R.string.ly_img_editor_crop
-
-                override val hasCropAsset: Boolean = false
-                override val hasPageAsset: Boolean = true
-
-                override val hasResetButton: Boolean = true
-                override var hasResizeOption: Boolean = true
-                override val applyOnAllPages: Boolean = false
-                override val hasRotateOptions: Boolean = true
-                override val hasContentFillMode: Boolean = true
-            }
-
-            /** Crops the currently selected design element. */
-            data object Element : Mode {
-                override val titleRes = R.string.ly_img_editor_crop
-
-                override val hasCropAsset: Boolean = true
-                override val hasPageAsset: Boolean = false
-
-                override val hasResetButton: Boolean = true
-                override var hasResizeOption: Boolean = false
-                override val applyOnAllPages: Boolean = false
-                override val hasRotateOptions: Boolean = true
-                override val hasContentFillMode: Boolean = true
-            }
-
-            /** Resizes all pages of the design. */
-            data object ResizeAll : Mode {
-                override val titleRes = R.string.ly_img_editor_resize
-
-                override val hasCropAsset: Boolean = false
-                override val hasPageAsset: Boolean = true
-
-                override val hasResetButton: Boolean = false
-                override var hasResizeOption: Boolean = true
-                override val applyOnAllPages: Boolean = true
-                override val hasRotateOptions: Boolean = false
-                override val hasContentFillMode: Boolean = false
-            }
-        }
-    }
-
-    /**
-     * A sheet that is used to crop design blocks with image and video fills.
-     *
-     * @param style the style that should be used to display the sheet.
-     * Default value is the default [SheetStyle].
-     */
-    class ResizeAll(
-        override val style: SheetStyle = SheetStyle(),
-    ) : Crop(
-            style = style,
-            mode = Mode.ResizeAll,
-        )
+    ) : SheetType
 
     /**
      * A sheet that is used to control the layering of design blocks.

@@ -100,22 +100,9 @@ fun <T : Any> PropertyPicker(
 }
 
 @Composable
-fun PropertyItem(
+private fun PropertyItem(
     checked: Boolean,
     @StringRes textRes: Int,
-    icon: ImageVector? = null,
-    onClick: () -> Unit,
-) = PropertyItem(
-    checked = checked,
-    text = stringResource(textRes),
-    icon = icon,
-    onClick = onClick,
-)
-
-@Composable
-fun PropertyItem(
-    checked: Boolean,
-    text: String,
     icon: ImageVector? = null,
     onClick: () -> Unit,
 ) {
@@ -129,7 +116,7 @@ fun PropertyItem(
             leadingIconColor = contentColor,
             trailingIconColor = contentColor,
         ),
-        text = { Text(text) },
+        text = { Text(stringResource(textRes)) },
         onClick = onClick,
         leadingIcon = {
             if (checked) {

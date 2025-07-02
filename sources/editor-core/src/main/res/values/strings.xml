@@ -2,7 +2,6 @@
 <resources>
     <string name="ly_img_editor_close">Close</string>
     <string name="ly_img_editor_back">Back</string>
-    <string name="ly_img_editor_apply">Apply</string>
     <string name="ly_img_editor_cancel">Cancel</string>
     <string name="ly_img_editor_delete">Delete</string>
 
@@ -39,7 +38,6 @@
     <string name="ly_img_editor_blur">Blur</string>
     <string name="ly_img_editor_volume">Volume</string>
     <string name="ly_img_editor_crop">Crop</string>
-    <string name="ly_img_editor_resize">Resize</string>
     <string name="ly_img_editor_text_animation">Text Animation</string>
     <string name="ly_img_editor_animations">Animations</string>
     <string name="ly_img_editor_reorder">Reorder</string>

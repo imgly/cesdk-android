@@ -15,9 +15,7 @@ import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.library.state.WrappedAsset
 import ly.img.engine.Asset
 import ly.img.engine.BlendMode
-import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
-import ly.img.engine.DesignUnit
 import ly.img.engine.TextCase
 import ly.img.engine.Typeface
 import kotlin.time.Duration
@@ -319,24 +317,7 @@ interface BlockEvent : Event {
     // region Crop Events
     object OnFlipCropHorizontal : BlockEvent
 
-    data class OnReplaceCropPreset(
-        val wrappedAsset: WrappedAsset?,
-        val applyOnAllPages: Boolean = false,
-    ) : BlockEvent
-
-    data class OnChangeFillMode(
-        val contentFillMode: ContentFillMode,
-    ) : BlockEvent
-
     object OnResetCrop : BlockEvent
-
-    data class OnChangePageSize(
-        val width: Float,
-        val height: Float,
-        val unit: DesignUnit,
-        val unitValue: Float,
-        val applyOnAllPages: Boolean = false,
-    ) : BlockEvent
 
     data class OnCropRotate(
         val scaleRatio: Float,

@@ -68,7 +68,6 @@ import ly.img.engine.MimeType
 import ly.img.engine.SceneMode
 import ly.img.engine.addDefaultAssetSources
 import ly.img.engine.addDemoAssetSources
-import okio.IOException
 import java.io.File
 import java.nio.ByteBuffer
 import java.util.UUID
@@ -129,7 +128,6 @@ object EditorDefaults {
         require(pages.size == 1) { "No image found." }
         val page = pages[0]
         engine.block.setFill(page, engine.block.getFill(graphicBlock))
-        engine.block.setScopeEnabled(page, key = "layer/visibility", enabled = true)
         engine.block.destroy(graphicBlock)
         size?.let {
             engine.block.setWidth(page, size.width)
@@ -370,13 +368,8 @@ object EditorDefaults {
                 engineException = state.error,
                 eventHandler = eventHandler,
             )
-        } else if (state.error is IOException) {
-            NoInternetDialog(eventHandler = eventHandler)
         } else if (state.error != null) {
-            ErrorDialog(
-                engineException = EngineException(message = state.error.toString() ?: "Unknown error"),
-                eventHandler = eventHandler,
-            )
+            NoInternetDialog(eventHandler = eventHandler)
         }
         if (state.showCloseConfirmationDialog) {
             CloseConfirmationDialog(eventHandler = eventHandler)

@@ -42,7 +42,6 @@ import ly.img.editor.base.dock.options.adjustment.AdjustmentUiState
 import ly.img.editor.base.dock.options.animation.AnimationBottomSheetContent
 import ly.img.editor.base.dock.options.animation.AnimationUiState
 import ly.img.editor.base.dock.options.crop.CropBottomSheetContent
-import ly.img.editor.base.dock.options.crop.createAllPageResizeUiState
 import ly.img.editor.base.dock.options.crop.createCropUiState
 import ly.img.editor.base.dock.options.effect.EffectUiState
 import ly.img.editor.base.dock.options.fillstroke.FillStrokeUiState
@@ -67,7 +66,6 @@ import ly.img.editor.base.engine.resetHistory
 import ly.img.editor.base.engine.setFillType
 import ly.img.editor.base.engine.showOutline
 import ly.img.editor.base.engine.showPage
-import ly.img.editor.base.engine.updateOutlineSize
 import ly.img.editor.base.engine.zoomToPage
 import ly.img.editor.base.engine.zoomToSelectedText
 import ly.img.editor.base.migration.EditorMigrationHelper
@@ -109,7 +107,6 @@ import ly.img.editor.core.ui.engine.getScene
 import ly.img.editor.core.ui.engine.isSceneModeVideo
 import ly.img.editor.core.ui.engine.overrideAndRestore
 import ly.img.editor.core.ui.library.AppearanceLibraryCategory
-import ly.img.editor.core.ui.library.CropAssetSourceType
 import ly.img.editor.core.ui.library.LibraryViewModel
 import ly.img.editor.core.ui.library.util.LibraryEvent
 import ly.img.editor.core.ui.register
@@ -181,7 +178,6 @@ abstract class EditorUiViewModel(
     val externalEvent = externalEventChannel.receiveAsFlow()
 
     private var bottomSheetHeight: Float = 0F
-    private var currentSheetMaxHeight: Float = 0F
     private var timelineHeight: Float = 0F
     private var timelineFullHeight: Float = 0F
     private var closingSheetContent: BottomSheetContent? = null
@@ -195,36 +191,12 @@ abstract class EditorUiViewModel(
     private val thumbnailGenerationJobs: MutableMap<DesignBlock, Job?> = mutableMapOf()
     private var pagesSessionId = 0
 
-    protected open val defaultCropSheetType = SheetType.Crop(mode = SheetType.Crop.Mode.Element)
-    private var currentCropSheetType: SheetType.Crop? = null
+    private var cachedCropSheetType: SheetType? = null
 
     private val eventHandler = EventsHandler(coroutineScope = viewModelScope) {
         cropEvents(
             engine = ::engine,
-            block = { checkNotNull(getBlockForEvents()?.designBlock ?: editor.engine.scene.getCurrentPage()) },
-            bewarePageState = @OptIn(UnstableEngineApi::class) { wrap ->
-                val currentPage = pageIndex.value
-                // Temporarily disable camera clamping as otherwise the page carousel breaks
-                // while resizing as we cannot batch update the sizes for all pages.
-                // Do not temporarily disable the page carousel because this leads to
-                // visual bugs.
-                // It is enabled again by the zoom update.
-                if (engine.scene.isCameraZoomClampingEnabled(engine.getScene())) {
-                    engine.scene.disableCameraZoomClamping()
-                }
-                if (engine.scene.isCameraPositionClampingEnabled(engine.getScene())) {
-                    engine.scene.disableCameraPositionClamping()
-                }
-                wrap()
-                if (pageIndex.value != currentPage) {
-                    pageIndex.update { currentPage }
-                }
-                val firstPage = engine.scene.getPages().firstOrNull()
-                if (firstPage != null) {
-                    engine.updateOutlineSize(parent = firstPage)
-                }
-                zoom(max(bottomSheetHeight, timelineHeight))
-            },
+            block = ::requireDesignBlockForEvents,
         )
         blockEvents(
             engine = ::engine,
@@ -320,7 +292,6 @@ abstract class EditorUiViewModel(
         register<EditorEvent.Navigation.ToPreviousPage> { setPage(pageIndex.value - 1) }
         register<EditorEvent.Export.Start> { exportScene() }
         register<EditorEvent.Export.Cancel> { exportJob?.cancel() }
-        @Suppress("DEPRECATION")
         register<EditorEvent.CancelExport> { exportJob?.cancel() }
         register<EditorEvent.SetViewMode> { setViewMode(it.viewMode) }
         register<EditorEvent.Sheet.Open> { openSheet(it.type) }
@@ -418,9 +389,7 @@ abstract class EditorUiViewModel(
     }
 
     protected open fun openSheet(type: SheetType) {
-        val eventBlock = getBlockForEvents()
-        val hasEventBlock = eventBlock != null
-        val block by lazy { requireNotNull(eventBlock) }
+        val block by lazy { requireNotNull(getBlockForEvents()) }
         val designBlock by lazy {
             block.designBlock
         }
@@ -492,47 +461,13 @@ abstract class EditorUiViewModel(
                         uiState = FillStrokeUiState.create(block, engine, editor.colorPalette),
                     )
                 }
-
-                is SheetType.ResizeAll -> {
-                    currentCropSheetType = type
-                    CropBottomSheetContent(
-                        type = type,
-                        uiState = createAllPageResizeUiState(
-                            engine = engine,
-                            initCropTranslationX = initCropTranslationX,
-                            initCropTranslationY = initCropTranslationY,
-                            pageAssetSourceIds = CropAssetSourceType.Page.sourceId,
-                        ),
-                    )
-                }
-
                 is SheetType.Crop -> {
                     timelineState?.clampPlayheadPositionToSelectedClip()
-                    currentCropSheetType = type
-                    if (hasEventBlock) {
-                        engine.block.setScopeEnabled(designBlock, Scope.EditorSelect, enabled = true)
-                        engine.block.setSelected(designBlock, selected = true)
-                        engine.editor.setEditMode(CROP_EDIT_MODE)
-                        null
-                    } else {
-                        val page = editor.engine.scene.getCurrentPage()
-                        if (page != null) {
-                            CropBottomSheetContent(
-                                type = type,
-                                uiState = createCropUiState(
-                                    page,
-                                    engine,
-                                    cropMode = type.mode,
-                                    pageAssetSourceId = CropAssetSourceType.Page.sourceId,
-                                    cropAssetSourceId = CropAssetSourceType.Crop.sourceId,
-                                    initCropTranslationX = initCropTranslationX,
-                                    initCropTranslationY = initCropTranslationY,
-                                ),
-                            )
-                        } else {
-                            null
-                        }
-                    }
+                    cachedCropSheetType = type
+                    engine.block.setScopeEnabled(designBlock, Scope.EditorSelect, enabled = true)
+                    engine.block.setSelected(designBlock, selected = true)
+                    engine.editor.setEditMode(CROP_EDIT_MODE)
+                    null
                 }
                 is SheetType.Reorder -> {
                     ReorderBottomSheetContent(
@@ -642,119 +577,91 @@ abstract class EditorUiViewModel(
 
     protected open fun updateBottomSheetUiState() {
         _bottomSheetContent.value ?: return
-        val block = getBlockForEvents()
-        val designBlock = block?.designBlock
+        val block = getBlockForEvents() ?: return
+        val designBlock = block.designBlock
         // In the case when a block is deleted, the block is unselected after receiving the delete event
-        if (bottomSheetContent.value is CropBottomSheetContent && designBlock == null) {
-            setBottomSheetContent { content ->
-                val currentCropSheetType = currentCropSheetType ?: defaultCropSheetType
-                if (content is CropBottomSheetContent) {
+        if (!engine.block.isValid(designBlock)) return
+        setBottomSheetContent { content ->
+            when (content) {
+                is LayerBottomSheetContent ->
+                    LayerBottomSheetContent(
+                        type = content.type,
+                        uiState = createLayerUiState(designBlock, engine),
+                    )
+                is OptionsBottomSheetContent ->
+                    OptionsBottomSheetContent(
+                        type = content.type,
+                        uiState = createShapeOptionsUiState(designBlock, engine),
+                    )
+
+                is FillStrokeBottomSheetContent -> {
+                    FillStrokeBottomSheetContent(
+                        type = content.type,
+                        uiState = FillStrokeUiState.create(block, engine, editor.colorPalette),
+                    )
+                }
+
+                is AdjustmentSheetContent -> {
+                    AdjustmentSheetContent(
+                        type = content.type,
+                        uiState = AdjustmentUiState.create(designBlock, engine),
+                    )
+                }
+
+                is EffectSheetContent -> {
+                    EffectSheetContent(
+                        type = content.type,
+                        uiState = EffectUiState.create(designBlock, engine, content.uiState.libraryCategory),
+                    )
+                }
+
+                is FormatBottomSheetContent ->
+                    FormatBottomSheetContent(
+                        type = content.type,
+                        uiState = createFormatUiState(designBlock, engine),
+                    )
+
+                is CropBottomSheetContent -> {
                     val useOldScaleRatio = isStraighteningOrRotating
                     isStraighteningOrRotating = false
+                    if (isCropReset) {
+                        setInitCropValues(designBlock)
+                    }
                     CropBottomSheetContent(
                         type = content.type,
                         uiState = createCropUiState(
-                            engine.getScene(),
+                            designBlock,
                             engine,
                             initCropTranslationX,
                             initCropTranslationY,
                             if (useOldScaleRatio) content.uiState.cropScaleRatio else null,
-                            cropMode = currentCropSheetType.mode,
-                            pageAssetSourceId = CropAssetSourceType.Page.sourceId,
-                            cropAssetSourceId = CropAssetSourceType.Crop.sourceId,
                         ),
                     )
-                } else {
-                    null
                 }
-            }
-        } else if (designBlock != null && engine.block.isValid(designBlock)) {
-            setBottomSheetContent { content ->
-                when (content) {
-                    is LayerBottomSheetContent ->
-                        LayerBottomSheetContent(
-                            type = content.type,
-                            uiState = createLayerUiState(designBlock, engine),
-                        )
-                    is OptionsBottomSheetContent ->
-                        OptionsBottomSheetContent(
-                            type = content.type,
-                            uiState = createShapeOptionsUiState(designBlock, engine),
-                        )
 
-                    is FillStrokeBottomSheetContent -> {
-                        FillStrokeBottomSheetContent(
-                            type = content.type,
-                            uiState = FillStrokeUiState.create(block, engine, editor.colorPalette),
-                        )
-                    }
+                is VolumeBottomSheetContent -> {
+                    VolumeBottomSheetContent(
+                        type = content.type,
+                        uiState = VolumeUiState.create(designBlock, engine),
+                    )
+                }
 
-                    is AdjustmentSheetContent -> {
-                        AdjustmentSheetContent(
-                            type = content.type,
-                            uiState = AdjustmentUiState.create(designBlock, engine),
-                        )
-                    }
+                is AnimationBottomSheetContent -> {
+                    AnimationBottomSheetContent(
+                        type = content.type,
+                        uiState = AnimationUiState.create(designBlock, engine),
+                    )
+                }
 
-                    is EffectSheetContent -> {
-                        EffectSheetContent(
-                            type = content.type,
-                            uiState = EffectUiState.create(designBlock, engine, content.uiState.libraryCategory),
-                        )
-                    }
+                is TextBackgroundBottomSheetContent -> {
+                    TextBackgroundBottomSheetContent(
+                        type = content.type,
+                        uiState = TextBackgroundUiState.create(designBlock, engine, editor.colorPalette),
+                    )
+                }
 
-                    is FormatBottomSheetContent ->
-                        FormatBottomSheetContent(
-                            type = content.type,
-                            uiState = createFormatUiState(designBlock, engine),
-                        )
-
-                    is CropBottomSheetContent -> {
-                        val currentCropSheetType = currentCropSheetType ?: defaultCropSheetType
-                        val useOldScaleRatio = isStraighteningOrRotating
-                        isStraighteningOrRotating = false
-                        if (isCropReset) {
-                            setInitCropValues(designBlock)
-                        }
-                        CropBottomSheetContent(
-                            type = content.type,
-                            uiState = createCropUiState(
-                                designBlock,
-                                engine,
-                                initCropTranslationX,
-                                initCropTranslationY,
-                                if (useOldScaleRatio) content.uiState.cropScaleRatio else null,
-                                cropMode = currentCropSheetType.mode,
-                                pageAssetSourceId = CropAssetSourceType.Page.sourceId,
-                                cropAssetSourceId = CropAssetSourceType.Crop.sourceId,
-                            ),
-                        )
-                    }
-
-                    is VolumeBottomSheetContent -> {
-                        VolumeBottomSheetContent(
-                            type = content.type,
-                            uiState = VolumeUiState.create(designBlock, engine),
-                        )
-                    }
-
-                    is AnimationBottomSheetContent -> {
-                        AnimationBottomSheetContent(
-                            type = content.type,
-                            uiState = AnimationUiState.create(designBlock, engine),
-                        )
-                    }
-
-                    is TextBackgroundBottomSheetContent -> {
-                        TextBackgroundBottomSheetContent(
-                            type = content.type,
-                            uiState = TextBackgroundUiState.create(designBlock, engine, editor.colorPalette),
-                        )
-                    }
-
-                    else -> {
-                        content
-                    }
+                else -> {
+                    content
                 }
             }
         }
@@ -800,7 +707,6 @@ abstract class EditorUiViewModel(
         val newValue = function(oldBottomSheetContent)
         if (newValue == null && oldBottomSheetContent != null && bottomSheetHeight > 0F) {
             // Means it is closing
-            currentCropSheetType = null
             closingSheetContent = _bottomSheetContent.value
         }
         _bottomSheetContent.value = newValue
@@ -808,7 +714,6 @@ abstract class EditorUiViewModel(
     }
 
     private fun onSheetClosed() {
-        currentCropSheetType = null
         setBottomSheetContent { null }
         if (engine.isEngineRunning().not()) return
         if (engine.editor.getEditMode() == CROP_EDIT_MODE) {
@@ -1298,19 +1203,11 @@ abstract class EditorUiViewModel(
                             /**
                              * Think about making default crop type configurable by customer.
                              */
-                            val type = currentCropSheetType ?: defaultCropSheetType
-                            val selection = engine.block.findAllSelected().single()
+                            val type = cachedCropSheetType ?: SheetType.Crop()
+                            cachedCropSheetType = null // reset to default value
                             CropBottomSheetContent(
                                 type = type,
-                                uiState = createCropUiState(
-                                    selection,
-                                    engine,
-                                    cropMode = type.mode,
-                                    pageAssetSourceId = CropAssetSourceType.Page.sourceId,
-                                    cropAssetSourceId = CropAssetSourceType.Crop.sourceId,
-                                    initCropTranslationX = initCropTranslationX,
-                                    initCropTranslationY = initCropTranslationY,
-                                ),
+                                uiState = createCropUiState(block, engine, initCropTranslationX, initCropTranslationY),
                             )
                         }
                     }
@@ -1386,9 +1283,6 @@ abstract class EditorUiViewModel(
                 if (_uiState.value.pagesState != null) {
                     updateEditorPagesState()
                 }
-                if (bottomSheetContent.value is CropBottomSheetContent) {
-                    zoom(max(bottomSheetHeight, timelineHeight))
-                }
             }
         }
     }
@@ -1415,10 +1309,6 @@ abstract class EditorUiViewModel(
     }
 
     private fun setEditMode(viewMode: EditorViewMode.Edit): Job {
-        if (viewMode != publicState.value.viewMode) {
-            // Close any open bottom sheet
-            setBottomSheetContent { null }
-        }
         _publicState.update { state -> state.copy(viewMode = viewMode) }
         _uiState.update { it.copy(pagesState = null) }
         // Cancel all thumb generation jobs
@@ -1429,10 +1319,6 @@ abstract class EditorUiViewModel(
     }
 
     private fun setPreviewMode(viewMode: EditorViewMode.Preview) {
-        if (viewMode != publicState.value.viewMode) {
-            // Close any open bottom sheet
-            setBottomSheetContent { null }
-        }
         _publicState.update { state -> state.copy(viewMode = viewMode) }
         send(EditorEvent.Sheet.Close(animate = false))
         engine.editor.setGlobalScope(Scope.EditorSelect, GlobalScope.DENY)
@@ -1441,10 +1327,6 @@ abstract class EditorUiViewModel(
     }
 
     private fun setPagesMode(viewMode: EditorViewMode.Pages) {
-        if (viewMode != publicState.value.viewMode) {
-            // Close any open bottom sheet
-            setBottomSheetContent { null }
-        }
         _publicState.update { state -> state.copy(viewMode = viewMode) }
         engine.deselectAllBlocks()
         updateEditorPagesState()
