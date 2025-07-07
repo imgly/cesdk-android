@@ -1,5 +1,6 @@
 package ly.img.editor.apparel
 
+import ly.img.editor.base.engine.addOutline
 import ly.img.editor.base.engine.showOutline
 import ly.img.editor.base.engine.zoomToBackdrop
 import ly.img.editor.base.ui.EditorUiViewModel
@@ -24,6 +25,13 @@ class ApparelUiViewModel(
         libraryViewModel = libraryViewModel,
     ) {
     val uiState = baseUiState
+
+    override fun onSceneLoaded() {
+        super.onSceneLoaded()
+        val scene = engine.scene.get() ?: return
+        engine.addOutline(scene, engine.getPage(pageIndex.value))
+        engine.showOutline(false)
+    }
 
     override fun enterEditMode() {
         pageSetup()

@@ -1,5 +1,6 @@
 package ly.img.editor.base.engine
 
+import android.R.attr.name
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.core.ui.engine.BlockKind
@@ -30,24 +31,26 @@ fun Engine.addOutline(
     designBlock: DesignBlock,
     parent: DesignBlock,
 ) {
-    val outline = block.create(DesignBlockType.Graphic)
-    block.setShape(outline, block.createShape(ShapeType.Rect))
-    val width = block.getWidth(parent)
-    val height = block.getHeight(parent)
-    block.setName(outline, OUTLINE_BLOCK_NAME)
-    block.setHeightMode(outline, SizeMode.ABSOLUTE)
-    block.setHeight(outline, height)
-    block.setWidthMode(outline, SizeMode.ABSOLUTE)
-    block.setWidth(outline, width)
-    block.appendChild(designBlock, outline)
+    block.findByName(OUTLINE_BLOCK_NAME).firstOrNull() ?: run {
+        val outline = block.create(DesignBlockType.Graphic)
+        block.setShape(outline, block.createShape(ShapeType.Rect))
+        val width = block.getWidth(parent)
+        val height = block.getHeight(parent)
+        block.setName(outline, OUTLINE_BLOCK_NAME)
+        block.setHeightMode(outline, SizeMode.ABSOLUTE)
+        block.setHeight(outline, height)
+        block.setWidthMode(outline, SizeMode.ABSOLUTE)
+        block.setWidth(outline, width)
+        block.appendChild(designBlock, outline)
 
-    block.setFillEnabled(outline, false)
-    block.setStrokeEnabled(outline, true)
-    block.setStrokeColor(outline, Color.White.toEngineColor())
-    block.setStrokeStyle(outline, StrokeStyle.DOTTED)
-    block.setStrokeWidth(outline, 1.0f)
-    block.setBlendMode(outline, BlendMode.DIFFERENCE)
-    block.setScopeEnabled(outline, Scope.EditorSelect, false)
+        block.setFillEnabled(outline, false)
+        block.setStrokeEnabled(outline, true)
+        block.setStrokeColor(outline, Color.White.toEngineColor())
+        block.setStrokeStyle(outline, StrokeStyle.DOTTED)
+        block.setStrokeWidth(outline, 1.0f)
+        block.setBlendMode(outline, BlendMode.DIFFERENCE)
+        block.setScopeEnabled(outline, Scope.EditorSelect, false)
+    }
 }
 
 fun Engine.showOutline(
