@@ -103,6 +103,7 @@ class NavigationBar private constructor(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState()),
+                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = horizontalArrangement(),
                 ) {
                     Items(data)
@@ -159,7 +160,6 @@ class NavigationBar private constructor(
 
     /**
      * A component that represents an item that can be rendered in the navigation bar.
-     * The only limitation is that the component must have a maximum height of 64.dp.
      */
     abstract class Item<Scope : ItemScope> : EditorComponent<Scope>() {
         /**

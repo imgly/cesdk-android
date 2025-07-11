@@ -1,5 +1,6 @@
 package ly.img.editor.core.library
 
+import ly.img.editor.core.R
 import ly.img.editor.core.library.LibraryCategory.Companion.sourceTypes
 import ly.img.editor.core.library.LibraryContent.Section
 import ly.img.editor.core.library.data.AssetSourceType
@@ -126,9 +127,9 @@ data class AssetLibrary(
                 content = text.content.copy(
                     sections =
                         text.content.sections.map {
-                            it.copy(titleRes = it.titleRes ?: ly.img.editor.core.R.string.ly_img_editor_plain_text)
+                            it.copy(titleRes = it.titleRes ?: R.string.ly_img_editor_asset_library_section_plain_text)
                         } + Section(
-                            titleRes = ly.img.editor.core.R.string.ly_img_editor_font_combinations,
+                            titleRes = R.string.ly_img_editor_asset_library_section_font_combinations,
                             sourceTypes = listOf(AssetSourceType.TextComponents),
                             assetType = AssetType.TextComponent,
                         ),

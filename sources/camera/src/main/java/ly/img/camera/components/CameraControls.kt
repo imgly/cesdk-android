@@ -15,7 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ly.img.camera.R
+import ly.img.camera.core.R
 import ly.img.editor.core.theme.LocalExtendedColorScheme
 import ly.img.editor.core.ui.iconpack.FlashOff
 import ly.img.editor.core.ui.iconpack.FlashOn
@@ -51,7 +51,7 @@ internal fun CameraControls(
                     ) {
                         Icon(
                             if (isFlashOn) IconPack.FlashOn else IconPack.FlashOff,
-                            contentDescription = stringResource(R.string.ly_img_camera_toggle_flash),
+                            contentDescription = stringResource(R.string.ly_img_camera_button_toggle_flash),
                         )
                     }
                 }
@@ -63,7 +63,7 @@ internal fun CameraControls(
                     ) {
                         Icon(
                             IconPack.Switchsplitscreen,
-                            contentDescription = stringResource(R.string.ly_img_camera_swap_positions),
+                            contentDescription = stringResource(R.string.ly_img_camera_button_swap_positions),
                         )
                     }
                 }
@@ -74,7 +74,7 @@ internal fun CameraControls(
                 ) {
                     Icon(
                         IconPack.FlipCamera,
-                        contentDescription = stringResource(R.string.ly_img_camera_flip_camera),
+                        contentDescription = stringResource(R.string.ly_img_camera_button_flip_camera),
                     )
                 }
             }

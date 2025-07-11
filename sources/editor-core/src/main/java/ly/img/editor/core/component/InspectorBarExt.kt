@@ -121,7 +121,7 @@ val Button.Id.Companion.reorder by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.ReorderHorizontally].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_reorder].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_reorder].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -153,7 +153,7 @@ fun Button.Companion.rememberReorder(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.ReorderHorizontally },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_reorder) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_reorder) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -203,7 +203,7 @@ val Button.Id.Companion.animations by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.Animation].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_animations].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_animations].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -234,7 +234,7 @@ fun Button.Companion.rememberAnimations(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Animation },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_animations) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_animations) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -284,7 +284,7 @@ val Button.Id.Companion.adjustments by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.Adjustments].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_adjustments].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_adjustments].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -314,7 +314,7 @@ fun Button.Companion.rememberAdjustments(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Adjustments },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_adjustments) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_adjustments) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -364,7 +364,7 @@ val Button.Id.Companion.filter by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.Filter].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_filter].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_filter].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -394,7 +394,7 @@ fun Button.Companion.rememberFilter(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Filter },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_filter) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_filter) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -444,7 +444,7 @@ val Button.Id.Companion.effect by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.Effect].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_effect].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_effect].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -474,7 +474,7 @@ fun Button.Companion.rememberEffect(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Effect },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_effect) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_effect) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -524,7 +524,7 @@ val Button.Id.Companion.blur by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.Blur].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_blur].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_blur].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -554,7 +554,7 @@ fun Button.Companion.rememberBlur(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Blur },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_blur) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_blur) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -604,7 +604,7 @@ val Button.Id.Companion.volume by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.VolumeHigh].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_volume].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_volume].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -633,7 +633,7 @@ fun Button.Companion.rememberVolume(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.VolumeHigh },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_volume) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_volume) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -683,7 +683,7 @@ val Button.Id.Companion.crop by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.CropRotate].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_crop].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_crop].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -715,7 +715,7 @@ fun Button.Companion.rememberCrop(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.CropRotate },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_crop) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_crop) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -771,7 +771,7 @@ val Button.Id.Companion.duplicate by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.Duplicate].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_duplicate].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_duplicate].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -800,7 +800,7 @@ fun Button.Companion.rememberDuplicate(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Duplicate },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_duplicate) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_duplicate) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -851,7 +851,7 @@ val Button.Id.Companion.layer by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.LayersOutline].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_layer].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_layer].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -888,7 +888,7 @@ fun Button.Companion.rememberLayer(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.LayersOutline },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_layer) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_layer) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -939,7 +939,7 @@ val Button.Id.Companion.split by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.Split].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_split].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_split].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -968,7 +968,7 @@ fun Button.Companion.rememberSplit(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Split },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_split) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_split) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -992,7 +992,7 @@ fun Button.Companion.rememberSplit(
     `_` = `_`,
 )
 
-private fun ly.img.engine.Color.toComposeColor(engine: Engine): Color {
+internal fun ly.img.engine.Color.toComposeColor(engine: Engine): Color {
     val rgbaEngineColor = this as? RGBAColor
         ?: engine.editor.convertColorToColorSpace(this, ColorSpace.SRGB) as RGBAColor
     return Color(
@@ -1004,77 +1004,92 @@ private fun ly.img.engine.Color.toComposeColor(engine: Engine): Color {
 }
 
 /**
+ * An extension function that returns [FillType] of the design block.
+ *
+ * @param designBlock the design block that is queried.
+ */
+private fun BlockApi.getFillType(designBlock: DesignBlock): FillType? = if (!this.supportsFill(designBlock)) {
+    null
+} else {
+    FillType.get(this.getType(this.getFill(designBlock)))
+}
+
+/**
+ * An extension function that returns [Fill] of the design block.
+ *
+ * @param designBlock the design block that is queried.
+ */
+internal fun Engine.getFill(designBlock: DesignBlock): Fill? = if (!block.supportsFill(designBlock)) {
+    null
+} else {
+    when (block.getFillType(designBlock)) {
+        FillType.Color -> {
+            val rgbaColor = if (DesignBlockType.getOrNull(block.getType(designBlock)) == DesignBlockType.Text) {
+                block.getTextColors(designBlock).first()
+            } else {
+                block.getColor(designBlock, "fill/solid/color")
+            }
+            SolidFill(rgbaColor.toComposeColor(this))
+        }
+
+        FillType.LinearGradient -> {
+            val fill = block.getFill(designBlock)
+            LinearGradientFill(
+                startPointX = block.getFloat(fill, "fill/gradient/linear/startPointX"),
+                startPointY = block.getFloat(fill, "fill/gradient/linear/startPointY"),
+                endPointX = block.getFloat(fill, "fill/gradient/linear/endPointX"),
+                endPointY = block.getFloat(fill, "fill/gradient/linear/endPointY"),
+                colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+            )
+        }
+
+        FillType.RadialGradient -> {
+            val fill = block.getFill(designBlock)
+            RadialGradientFill(
+                centerX = block.getFloat(fill, "fill/gradient/radial/centerPointX"),
+                centerY = block.getFloat(fill, "fill/gradient/radial/centerPointY"),
+                radius = block.getFloat(fill, "fill/gradient/radial/radius"),
+                colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+            )
+        }
+
+        FillType.ConicalGradient -> {
+            val fill = block.getFill(designBlock)
+            ConicalGradientFill(
+                centerX = block.getFloat(fill, "fill/gradient/conical/centerPointX"),
+                centerY = block.getFloat(fill, "fill/gradient/conical/centerPointY"),
+                colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+            )
+        }
+
+        // Image fill and Video fill are not supported yet
+        else -> null
+    }
+}
+
+/**
+ * An extension function that returns stroke color of the design block.
+ *
+ * @param designBlock the design block that is queried.
+ */
+internal fun Engine.getStrokeColor(designBlock: DesignBlock): Color? {
+    if (!block.supportsStroke(designBlock)) return null
+    return block.getColor(designBlock, "stroke/color").toComposeColor(this)
+}
+
+/**
  * An extension function that constructs [EditorIcon.FillStroke] icon from [designBlock] based on
  * the engine state.
  *
  * @param designBlock the design block to construct the icon from.
  */
 private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon.FillStroke {
-    fun BlockApi.getFillType(designBlock: DesignBlock): FillType? = if (!this.supportsFill(designBlock)) {
-        null
-    } else {
-        FillType.get(this.getType(this.getFill(designBlock)))
-    }
-
     fun BlockApi.hasColorOrGradientFill(designBlock: DesignBlock): Boolean {
         val fillType = getFillType(designBlock)
         return fillType == FillType.Color ||
             fillType == FillType.LinearGradient ||
             fillType == FillType.RadialGradient ||
             fillType == FillType.ConicalGradient
-    }
-
-    fun Engine.getFill(designBlock: DesignBlock): Fill? = if (!block.supportsFill(designBlock)) {
-        null
-    } else {
-        when (block.getFillType(designBlock)) {
-            FillType.Color -> {
-                val rgbaColor = if (DesignBlockType.getOrNull(block.getType(designBlock)) == DesignBlockType.Text) {
-                    block.getTextColors(designBlock).first()
-                } else {
-                    block.getColor(designBlock, "fill/solid/color")
-                }
-                SolidFill(rgbaColor.toComposeColor(this))
-            }
-
-            FillType.LinearGradient -> {
-                val fill = block.getFill(designBlock)
-                LinearGradientFill(
-                    startPointX = block.getFloat(fill, "fill/gradient/linear/startPointX"),
-                    startPointY = block.getFloat(fill, "fill/gradient/linear/startPointY"),
-                    endPointX = block.getFloat(fill, "fill/gradient/linear/endPointX"),
-                    endPointY = block.getFloat(fill, "fill/gradient/linear/endPointY"),
-                    colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
-                )
-            }
-
-            FillType.RadialGradient -> {
-                val fill = block.getFill(designBlock)
-                RadialGradientFill(
-                    centerX = block.getFloat(fill, "fill/gradient/radial/centerPointX"),
-                    centerY = block.getFloat(fill, "fill/gradient/radial/centerPointY"),
-                    radius = block.getFloat(fill, "fill/gradient/radial/radius"),
-                    colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
-                )
-            }
-
-            FillType.ConicalGradient -> {
-                val fill = block.getFill(designBlock)
-                ConicalGradientFill(
-                    centerX = block.getFloat(fill, "fill/gradient/conical/centerPointX"),
-                    centerY = block.getFloat(fill, "fill/gradient/conical/centerPointY"),
-                    colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
-                )
-            }
-
-            // Image fill and Video fill are not supported yet
-            else -> null
-        }
-    }
-
-    fun Engine.getStrokeColor(designBlock: DesignBlock): Color? {
-        if (!block.supportsStroke(designBlock)) return null
-        return block.getColor(designBlock, "stroke/color").toComposeColor(this)
     }
 
     val showFill = block.supportsFill(designBlock) &&
@@ -1175,11 +1190,11 @@ fun Button.Companion.rememberFillStroke(
         val textResId = remember(this) {
             val fillStrokeIcon = (this as InspectorBar.FillStrokeButtonScope).editorContext.fillStrokeIcon
             if (fillStrokeIcon.showFill && fillStrokeIcon.showStroke) {
-                R.string.ly_img_editor_fill_and_stroke
+                R.string.ly_img_editor_inspector_bar_button_fill_and_stroke
             } else if (fillStrokeIcon.showFill) {
-                R.string.ly_img_editor_fill
+                R.string.ly_img_editor_inspector_bar_button_fill
             } else {
-                R.string.ly_img_editor_stroke
+                R.string.ly_img_editor_inspector_bar_button_stroke
             }
         }
         stringResource(textResId)
@@ -1240,7 +1255,7 @@ val Button.Id.Companion.moveAsClip by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.AsClip].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_attach_background].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_move_as_clip].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -1272,7 +1287,7 @@ fun Button.Companion.rememberMoveAsClip(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.AsClip },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_attach_background) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_move_as_clip) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -1323,7 +1338,7 @@ val Button.Id.Companion.moveAsOverlay by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.AsOverlay].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_detach_background].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_move_as_overlay].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -1355,7 +1370,7 @@ fun Button.Companion.rememberMoveAsOverlay(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.AsOverlay },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_detach_background) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_move_as_overlay) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -1409,7 +1424,7 @@ val Button.Id.Companion.replace by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.Replace].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_replace].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_replace].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -1447,7 +1462,7 @@ fun Button.Companion.rememberReplace(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Replace },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_replace) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_replace) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -1518,7 +1533,7 @@ val Button.Id.Companion.enterGroup by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.GroupEnter].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_enter_group].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_enter_group].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -1546,7 +1561,7 @@ fun Button.Companion.rememberEnterGroup(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.GroupEnter },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_enter_group) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_enter_group) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -1596,7 +1611,7 @@ val Button.Id.Companion.selectGroup by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.SelectGroup].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_select_group].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_select_group].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -1625,7 +1640,7 @@ fun Button.Companion.rememberSelectGroup(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.SelectGroup },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_select_group) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_select_group) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -1676,7 +1691,7 @@ val Button.Id.Companion.delete by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.Delete].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_delete].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_delete].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is [androidx.compose.material3.ColorScheme.error].
  * @param enabled whether the button is enabled.
@@ -1705,7 +1720,7 @@ fun Button.Companion.rememberDelete(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Delete },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_delete) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_delete) },
     tint: (@Composable ButtonScope.() -> Color)? = { MaterialTheme.colorScheme.error },
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -1756,7 +1771,7 @@ val Button.Id.Companion.editText by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.Keyboard].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_edit].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_edit_text].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -1785,7 +1800,7 @@ fun Button.Companion.rememberEditText(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Keyboard },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_edit) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_edit_text) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -1835,7 +1850,7 @@ val Button.Id.Companion.formatText by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.Typeface].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_format].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_format_text].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -1864,7 +1879,7 @@ fun Button.Companion.rememberFormatText(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Typeface },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_format) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_format_text) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -1918,7 +1933,7 @@ val Button.Id.Companion.shape by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.ShapeIcon].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_shape].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_shape].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -1958,7 +1973,7 @@ fun Button.Companion.rememberShape(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.ShapeIcon },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_shape) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_shape) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -2009,7 +2024,7 @@ val Button.Id.Companion.textBackground by unsafeLazy {
  * @param icon the icon content of the button. If null then icon is not rendered.
  * Default value is an [EditorIcon], which is built based on [InspectorBar.TextBackgroundButtonScope].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_background].
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_text_background].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -2064,7 +2079,7 @@ fun Button.Companion.rememberTextBackground(
         val editorIcon = (this as InspectorBar.TextBackgroundButtonScope).editorContext.icon
         EditorIcon(icon = editorIcon)
     },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_background) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_text_background) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {

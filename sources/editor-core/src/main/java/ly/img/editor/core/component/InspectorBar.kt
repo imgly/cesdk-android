@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Icon
@@ -172,6 +171,7 @@ class InspectorBar private constructor(
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
                         .then(animationModifier),
+                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = horizontalArrangement(),
                 ) {
                     Items(data)
@@ -264,7 +264,6 @@ class InspectorBar private constructor(
 
     /**
      * A component that represents an item that can be rendered in the inspector bar.
-     * The only limitation is that the component must have a maximum height of 64.dp.
      */
     abstract class Item<Scope : ItemScope> : EditorComponent<Scope>() {
         /**
@@ -275,7 +274,7 @@ class InspectorBar private constructor(
 
         @Composable
         final override fun Scope.Content(animatedVisibilityScope: AnimatedVisibilityScope?) {
-            Box(modifier = Modifier.sizeIn(maxHeight = 64.dp)) {
+            Box {
                 ItemContent()
             }
         }
@@ -744,7 +743,10 @@ class InspectorBar private constructor(
                                 modifier = Modifier.size(40.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Icon(IconPack.Close, contentDescription = stringResource(id = R.string.ly_img_editor_close))
+                                Icon(
+                                    imageVector = IconPack.Close,
+                                    contentDescription = stringResource(id = R.string.ly_img_editor_inspector_bar_button_close),
+                                )
                             }
                         }
                         content()

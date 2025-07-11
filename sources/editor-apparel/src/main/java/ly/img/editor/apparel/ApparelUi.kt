@@ -1,18 +1,13 @@
 package ly.img.editor.apparel
 
 import android.os.Parcelable
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ly.img.editor.base.components.LibraryButton
 import ly.img.editor.base.ui.EditorUi
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.engine.EngineRenderTarget
@@ -29,6 +24,7 @@ fun ApparelUi(
     renderTarget: EngineRenderTarget,
     editorScope: EditorScope,
     onCreate: suspend EditorScope.() -> Unit,
+    onLoaded: suspend EditorScope.() -> Unit,
     onExport: suspend EditorScope.() -> Unit,
     onUpload: suspend EditorScope.(AssetDefinition, UploadAssetSourceType) -> AssetDefinition,
     onClose: suspend EditorScope.(Boolean) -> Unit,
@@ -51,6 +47,7 @@ fun ApparelUi(
     val viewModel = viewModel {
         ApparelUiViewModel(
             onCreate = onCreate,
+            onLoaded = onLoaded,
             onExport = onExport,
             onClose = onClose,
             onError = onError,
@@ -67,16 +64,6 @@ fun ApparelUi(
         editorScope = editorScope,
         editorContext = editorContext,
         onEvent = onEvent,
-        canvasOverlay = {
-            if (!uiState.isInPreviewMode) {
-                LibraryButton(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(16.dp),
-                    onEvent = viewModel::send,
-                )
-            }
-        },
         viewModel = viewModel,
         close = close,
     )

@@ -98,7 +98,7 @@ private fun SeeAllButton(
             contentDescription = null,
         )
         Text(
-            text = stringResource(R.string.ly_img_editor_see_all),
+            text = stringResource(R.string.ly_img_editor_asset_library_button_see_all),
             style = MaterialTheme.typography.labelLarge,
         )
     }

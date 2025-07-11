@@ -1,7 +1,7 @@
 package ly.img.editor.base.engine
 
-import ly.img.editor.base.R
 import ly.img.editor.base.components.PropertyOption
+import ly.img.editor.core.R
 import ly.img.engine.AnimationEasingType
 import ly.img.engine.AnimationType
 
@@ -139,122 +139,122 @@ fun AnimationType.getAvailableProperties() = when (this) {
 }
 
 private val duration = Property(
-    titleRes = R.string.ly_img_editor_animation_duration,
+    titleRes = R.string.ly_img_editor_sheet_animations_label_duration,
     key = "playback/duration",
     valueType = PropertyValueType.Double(),
 )
 
 private val easing = Property(
-    titleRes = R.string.ly_img_editor_animation_easing,
+    titleRes = R.string.ly_img_editor_sheet_animations_label_easing,
     key = "animationEasing",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
-            PropertyOption(R.string.ly_img_editor_animation_easing_linear, AnimationEasingType.LINEAR.key),
-            PropertyOption(R.string.ly_img_editor_animation_easing_smooth_accelerate, AnimationEasingType.EASE_IN_QUINT.key),
-            PropertyOption(R.string.ly_img_editor_animation_easing_smooth_decelerate, AnimationEasingType.EASE_OUT_QUINT.key),
-            PropertyOption(R.string.ly_img_editor_animation_easing_smooth_natural, AnimationEasingType.EASE_IN_OUT_QUINT.key),
-            PropertyOption(R.string.ly_img_editor_animation_easing_bounce_away, AnimationEasingType.EASE_IN_BACK.key),
-            PropertyOption(R.string.ly_img_editor_animation_easing_bounce_in, AnimationEasingType.EASE_OUT_BACK.key),
-            PropertyOption(R.string.ly_img_editor_animation_easing_bounce_double, AnimationEasingType.EASE_IN_OUT_BACK.key),
-            PropertyOption(R.string.ly_img_editor_animation_easing_wiggle_away, AnimationEasingType.EASE_IN_SPRING.key),
-            PropertyOption(R.string.ly_img_editor_animation_easing_wiggle_in, AnimationEasingType.EASE_OUT_SPRING.key),
-            PropertyOption(R.string.ly_img_editor_animation_easing_wiggle_double, AnimationEasingType.EASE_IN_OUT_SPRING.key),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_linear, AnimationEasingType.LINEAR.key),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_smooth_accelerate, AnimationEasingType.EASE_IN_QUINT.key),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_smooth_decelerate, AnimationEasingType.EASE_OUT_QUINT.key),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_smooth_natural, AnimationEasingType.EASE_IN_OUT_QUINT.key),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_bounce_away, AnimationEasingType.EASE_IN_BACK.key),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_bounce_in, AnimationEasingType.EASE_OUT_BACK.key),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_bounce_double, AnimationEasingType.EASE_IN_OUT_BACK.key),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_away, AnimationEasingType.EASE_IN_SPRING.key),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_in, AnimationEasingType.EASE_OUT_SPRING.key),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_double, AnimationEasingType.EASE_IN_OUT_SPRING.key),
         ),
     ),
 )
 
 private fun AnimationType.intensity() = Property(
-    titleRes = R.string.ly_img_editor_animation_intensity,
+    titleRes = R.string.ly_img_editor_sheet_animations_label_intensity,
     key = "$key/intensity",
     valueType = PropertyValueType.Int(),
 )
 
 private fun AnimationType.directionEnum() = Property(
-    titleRes = R.string.ly_img_editor_animation_direction,
+    titleRes = R.string.ly_img_editor_sheet_animations_label_direction,
     key = "$key/direction",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
-            PropertyOption(R.string.ly_img_editor_animation_direction_up, "Up"),
-            PropertyOption(R.string.ly_img_editor_animation_direction_right, "Right"),
-            PropertyOption(R.string.ly_img_editor_animation_direction_down, "Down"),
-            PropertyOption(R.string.ly_img_editor_animation_direction_left, "Left"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_up, "Up"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_right, "Right"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_down, "Down"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_left, "Left"),
         ),
     ),
 )
 
 private fun AnimationType.directionClock() = Property(
-    titleRes = R.string.ly_img_editor_animation_direction,
+    titleRes = R.string.ly_img_editor_sheet_animations_label_direction,
     key = "$key/direction",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
-            PropertyOption(R.string.ly_img_editor_animation_direction_clockwise, "Clockwise"),
-            PropertyOption(R.string.ly_img_editor_animation_direction_counter_clockwise, "CounterClockwise"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_clockwise, "Clockwise"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_counter_clockwise, "CounterClockwise"),
         ),
     ),
 )
 
 private fun AnimationType.directionPerpendicular() = Property(
-    titleRes = R.string.ly_img_editor_animation_direction,
+    titleRes = R.string.ly_img_editor_sheet_animations_label_direction,
     key = "$key/direction",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
-            PropertyOption(R.string.ly_img_editor_animation_direction_horizontal, "Horizontal"),
-            PropertyOption(R.string.ly_img_editor_animation_direction_vertical, "Vertical"),
-            PropertyOption(R.string.ly_img_editor_animation_direction_all, "All"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_horizontal, "Horizontal"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_vertical, "Vertical"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_all, "All"),
         ),
     ),
 )
 
 private fun AnimationType.distance() = Property(
-    titleRes = R.string.ly_img_editor_animation_distance,
+    titleRes = R.string.ly_img_editor_sheet_animations_label_distance,
     key = "$key/distance",
     valueType = PropertyValueType.Float(),
 )
 
 private fun AnimationType.fade() = Property(
-    titleRes = R.string.ly_img_editor_animation_fade,
+    titleRes = R.string.ly_img_editor_sheet_animations_label_fade,
     key = "$key/fade",
     valueType = PropertyValueType.Boolean,
 )
 
 private fun AnimationType.scale() = Property(
-    titleRes = R.string.ly_img_editor_animation_scale,
+    titleRes = R.string.ly_img_editor_sheet_animations_label_scale,
     key = "$key/scale",
     valueType = PropertyValueType.Float(),
 )
 
 private val writingStyle = Property(
-    titleRes = R.string.ly_img_editor_animation_writing_style,
+    titleRes = R.string.ly_img_editor_sheet_animations_label_writing_style,
     key = "textWritingStyle",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
-            PropertyOption(R.string.ly_img_editor_animation_writing_style_block, "Block"),
-            PropertyOption(R.string.ly_img_editor_animation_writing_style_line, "Line"),
-            PropertyOption(R.string.ly_img_editor_animation_writing_style_character, "Character"),
-            PropertyOption(R.string.ly_img_editor_animation_writing_style_word, "Word"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_writing_style_option_block, "Block"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_writing_style_option_line, "Line"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_writing_style_option_character, "Character"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_writing_style_option_word, "Word"),
         ),
     ),
 )
 
 private fun AnimationType.writingStyleShort() = Property(
-    titleRes = R.string.ly_img_editor_animation_writing_style,
+    titleRes = R.string.ly_img_editor_sheet_animations_label_writing_style,
     key = "$key/writingStyle",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
-            PropertyOption(R.string.ly_img_editor_animation_writing_style_character, "Character"),
-            PropertyOption(R.string.ly_img_editor_animation_writing_style_word, "Word"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_writing_style_option_character, "Character"),
+            PropertyOption(R.string.ly_img_editor_sheet_animations_writing_style_option_word, "Word"),
         ),
     ),
 )
 
 private fun AnimationType.travelDistance() = Property(
-    titleRes = R.string.ly_img_editor_animation_distance,
+    titleRes = R.string.ly_img_editor_sheet_animations_label_distance,
     key = "$key/travelDistanceRatio",
     valueType = PropertyValueType.Float(),
 )
 
 private fun AnimationType.zoomIntensity() = Property(
-    titleRes = R.string.ly_img_editor_animation_zoom_intensity,
+    titleRes = R.string.ly_img_editor_sheet_animations_label_zoom_intensity,
     key = "$key/zoomIntensity",
     valueType = PropertyValueType.Float(),
 )

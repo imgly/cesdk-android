@@ -6,8 +6,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import ly.img.editor.base.R
 import ly.img.editor.base.components.ToggleIconButton
+import ly.img.editor.core.R
 import ly.img.editor.core.ui.iconpack.Capitalizecasing
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Lowercasing
@@ -30,10 +30,10 @@ fun TextCaseButton(
         },
     ) {
         val contentDescription = when (casing) {
-            TextCase.NORMAL -> stringResource(R.string.ly_img_editor_letter_casing_none)
-            TextCase.UPPER_CASE -> stringResource(R.string.ly_img_editor_letter_casing_uppercase)
-            TextCase.LOWER_CASE -> stringResource(R.string.ly_img_editor_letter_casing_lowercase)
-            TextCase.TITLE_CASE -> stringResource(R.string.ly_img_editor_letter_casing_capitalize)
+            TextCase.NORMAL -> stringResource(R.string.ly_img_editor_sheet_format_text_letter_case_option_none)
+            TextCase.UPPER_CASE -> stringResource(R.string.ly_img_editor_sheet_format_text_letter_case_option_uppercase)
+            TextCase.LOWER_CASE -> stringResource(R.string.ly_img_editor_sheet_format_text_letter_case_option_lowercase)
+            TextCase.TITLE_CASE -> stringResource(R.string.ly_img_editor_sheet_format_text_letter_case_option_title_case)
         }
 
         Icon(

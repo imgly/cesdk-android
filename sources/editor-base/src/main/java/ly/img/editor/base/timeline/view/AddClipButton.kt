@@ -15,9 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ly.img.editor.base.R
 import ly.img.editor.base.sheet.LibraryAddToBackgroundTrackSheetType
 import ly.img.editor.base.ui.Event
+import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.iconpack.AddCameraBackground
 import ly.img.editor.core.iconpack.AddGalleryBackground
@@ -41,7 +41,7 @@ fun AddClipButton(
         modifier = modifier.zIndex(-1f),
     ) {
         TimelineButton(
-            id = R.string.ly_img_editor_add_clip,
+            id = R.string.ly_img_editor_timeline_button_add_clip,
             containerColor = MaterialTheme.colorScheme.surface3,
         ) {
             showClipMenu = true
@@ -58,7 +58,7 @@ fun AddClipButton(
             callback = null
 
             ClipMenuItem(
-                textResourceId = ly.img.editor.core.R.string.ly_img_editor_camera,
+                textResourceId = R.string.ly_img_editor_timeline_add_clip_option_camera,
                 icon = IconPack.AddCameraBackground,
             ) {
                 showClipMenu = false
@@ -70,7 +70,7 @@ fun AddClipButton(
                 libraryViewModel.onEvent(event)
             }
             ClipMenuItem(
-                textResourceId = ly.img.editor.core.R.string.ly_img_editor_gallery,
+                textResourceId = R.string.ly_img_editor_timeline_add_clip_option_gallery,
                 icon = IconPack.AddGalleryBackground,
             ) {
                 galleryLauncher.launch(GalleryMimeType.All)
@@ -81,7 +81,7 @@ fun AddClipButton(
             Spacer(modifier = Modifier.height(8.dp))
 
             ClipMenuItem(
-                textResourceId = R.string.ly_img_editor_library,
+                textResourceId = R.string.ly_img_editor_timeline_add_clip_option_library,
                 icon = IconPack.LibraryElements,
             ) {
                 showClipMenu = false

@@ -36,9 +36,17 @@ import ly.img.engine.MimeType
  * and engine. Normally, you should create/load a scene as well as prepare asset sources in this block.
  * We recommend that you check the availability of the scene before creating/loading a new scene since a recreated scene may already
  * exist if the callback is invoked after a process recreation.
+ * In addition to scene creation, it is highly recommended to register all the asset sources in this callback.
  * Note that the "create" coroutine job will survive configuration changes and will be cancelled only if the editor is closed or the process is killed
  * when in the background.
  * Check [EditorDefaults.onCreate] for an example implementation.
+ * @param onLoaded the callback that is invoked when the editor is loaded and ready to be used.
+ * The callback is invoked right after [onCreate] when launching the editor for the first time.
+ * In case the process is recreated, [onCreate] is skipped (as scene already exists) and [onLoaded] is called immediately.
+ * The callback is not invoked after configuration changes.
+ * It is best to register callbacks, collect flows returned by the engine and apply editor settings in this callback.
+ * Note that the "load" coroutine job will survive configuration changes and will be cancelled only if the editor is closed or the process is killed
+ * when in the background.
  * @param onExport the callback that is invoked when the export button is clicked.
  * You may want to call one of the following functions in this callback: [ly.img.engine.BlockApi.export],
  * [ly.img.engine.BlockApi.exportWithColorMask], [ly.img.engine.BlockApi.exportVideo]. When the job is done, you can interact with
@@ -66,26 +74,14 @@ import ly.img.engine.MimeType
 class EngineConfiguration private constructor(
     val license: String,
     val userId: String? = null,
-    val baseUri: Uri = defaultBaseUri,
-    val renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
+    val baseUri: Uri,
+    val renderTarget: EngineRenderTarget,
     val onCreate: suspend EditorScope.() -> Unit,
-    val onExport: suspend EditorScope.() -> Unit = {
-        EditorDefaults.onExport(editorContext.engine, editorContext.eventHandler)
-    },
-    val onUpload: suspend EditorScope.(
-        AssetDefinition,
-        UploadAssetSourceType,
-    ) -> AssetDefinition = { asset, _ -> asset },
-    val onClose: suspend EditorScope.(Boolean) -> Unit = { hasUnsavedChanges ->
-        if (hasUnsavedChanges) {
-            editorContext.eventHandler.send(ShowCloseConfirmationDialogEvent)
-        } else {
-            editorContext.eventHandler.send(EditorEvent.CloseEditor())
-        }
-    },
-    val onError: suspend EditorScope.(Throwable) -> Unit = { error ->
-        editorContext.eventHandler.send(ShowErrorDialogEvent(error))
-    },
+    val onLoaded: suspend EditorScope.() -> Unit,
+    val onExport: suspend EditorScope.() -> Unit,
+    val onUpload: suspend EditorScope.(AssetDefinition, UploadAssetSourceType) -> AssetDefinition,
+    val onClose: suspend EditorScope.(Boolean) -> Unit,
+    val onError: suspend EditorScope.(Throwable) -> Unit,
     private val `_`: Nothing = nothing,
 ) {
     override fun toString(): String = "$`_`EngineConfiguration(" +
@@ -166,6 +162,13 @@ class EngineConfiguration private constructor(
          * Note that the "create" coroutine job will survive configuration changes and will be cancelled only if the editor is closed or the process is killed
          * when in the background.
          * Check [EditorDefaults.onCreate] for an example implementation.
+         * @param onLoaded the callback that is invoked when the editor is loaded and ready to be used.
+         * The callback is invoked right after [onCreate] when launching the editor for the first time.
+         * In case the process is recreated, [onCreate] is skipped (as scene already exists) and [onLoaded] is called immediately.
+         * The callback is not invoked after configuration changes.
+         * It is best to register callbacks, collect flows returned by the engine and apply editor settings in this callback.
+         * Note that the "load" coroutine job will survive configuration changes and will be cancelled only if the editor is closed or the process is killed
+         * when in the background.
          * @param onExport the callback that is invoked when the export button is clicked.
          * You may want to call one of the following functions in this callback: [ly.img.engine.BlockApi.export],
          * [ly.img.engine.BlockApi.exportWithColorMask], [ly.img.engine.BlockApi.exportVideo]. When the job is done, you can interact with
@@ -197,6 +200,7 @@ class EngineConfiguration private constructor(
             baseUri: Uri = defaultBaseUri,
             renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
             onCreate: suspend EditorScope.() -> Unit,
+            onLoaded: suspend EditorScope.() -> Unit = {},
             onExport: suspend EditorScope.() -> Unit = {
                 EditorDefaults.onExport(editorContext.engine, editorContext.eventHandler)
             },
@@ -224,6 +228,7 @@ class EngineConfiguration private constructor(
                     baseUri = baseUri,
                     renderTarget = renderTarget,
                     onCreate = onCreate,
+                    onLoaded = onLoaded,
                     onExport = onExport,
                     onUpload = onUpload,
                     onClose = onClose,
@@ -356,6 +361,7 @@ class EngineConfiguration private constructor(
         baseUri = baseUri,
         renderTarget = renderTarget,
         onCreate = { onCreate(editorContext.engine, editorContext.eventHandler) },
+        onLoaded = {},
         onExport = { onExport(editorContext.engine, editorContext.eventHandler) },
         onUpload = { asset, uploadAssetSourceType ->
             onUpload(asset, editorContext.engine, editorContext.eventHandler, uploadAssetSourceType)

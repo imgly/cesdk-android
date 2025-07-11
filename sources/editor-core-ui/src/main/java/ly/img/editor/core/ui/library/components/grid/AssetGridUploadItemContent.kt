@@ -21,11 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ly.img.editor.core.R
+import ly.img.editor.core.iconpack.IconPack
+import ly.img.editor.core.iconpack.Plus
 import ly.img.editor.core.library.AssetType
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.GradientCard
-import ly.img.editor.core.ui.iconpack.Add
-import ly.img.editor.core.ui.iconpack.IconPack
 
 @Composable
 internal fun AssetGridUploadItemContent(
@@ -40,13 +40,13 @@ internal fun AssetGridUploadItemContent(
     }
     if (assetType == AssetType.Audio) {
         ListItem(
-            headlineContent = { Text(stringResource(R.string.ly_img_editor_add)) },
+            headlineContent = { Text(stringResource(R.string.ly_img_editor_asset_library_button_add)) },
             leadingContent = {
                 GradientCard(Modifier.size(56.dp)) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         Icon(
                             modifier = Modifier.align(Alignment.Center),
-                            imageVector = IconPack.Add,
+                            imageVector = IconPack.Plus,
                             contentDescription = null,
                         )
                     }
@@ -69,12 +69,12 @@ internal fun AssetGridUploadItemContent(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Icon(
-                    imageVector = IconPack.Add,
+                    imageVector = IconPack.Plus,
                     contentDescription = null,
                 )
                 Text(
                     modifier = Modifier.padding(vertical = 2.dp),
-                    text = stringResource(R.string.ly_img_editor_add),
+                    text = stringResource(R.string.ly_img_editor_asset_library_button_add),
                     style = MaterialTheme.typography.titleSmall,
                 )
             }

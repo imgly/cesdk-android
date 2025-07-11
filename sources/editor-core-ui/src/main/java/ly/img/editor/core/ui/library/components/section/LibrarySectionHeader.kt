@@ -25,9 +25,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ly.img.editor.core.R
 import ly.img.editor.core.iconpack.AddCameraBackground
+import ly.img.editor.core.iconpack.Plus
 import ly.img.editor.core.library.LibraryContent
 import ly.img.editor.core.library.data.UploadAssetSourceType
-import ly.img.editor.core.ui.iconpack.Add
 import ly.img.editor.core.ui.iconpack.Arrowright
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Photolibraryoutline
@@ -73,7 +73,7 @@ internal fun LibrarySectionHeader(
                 onClick = { onDrillDown(item.expandContent) },
             ) {
                 val countText = item.count?.let { count ->
-                    if (count > 999) stringResource(id = R.string.ly_img_editor_more_count) else count.toString()
+                    if (count > 999) stringResource(id = R.string.ly_img_editor_asset_library_button_more) else count.toString()
                 } ?: ""
                 Text(
                     text = countText,
@@ -107,9 +107,9 @@ private fun UploadButton(
                 }
             },
         ) {
-            Icon(IconPack.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+            Icon(CoreIconPack.Plus, contentDescription = null, modifier = Modifier.size(18.dp))
             Text(
-                text = stringResource(R.string.ly_img_editor_add),
+                text = stringResource(R.string.ly_img_editor_asset_library_button_add),
                 modifier = Modifier.padding(start = 8.dp),
                 style = MaterialTheme.typography.labelLarge,
             )
@@ -124,13 +124,21 @@ private fun UploadButton(
             ) {
                 val isVideoMimeType = mimeTypeFilter.isVideoMimeType()
                 ClipMenuItem(
-                    textResourceId = if (isVideoMimeType) R.string.ly_img_editor_choose_video else R.string.ly_img_editor_choose_photo,
+                    textResourceId = if (isVideoMimeType) {
+                        R.string.ly_img_editor_asset_library_button_choose_video
+                    } else {
+                        R.string.ly_img_editor_asset_library_button_choose_photo
+                    },
                     icon = if (isVideoMimeType) IconPack.Videolibraryoutline else IconPack.Photolibraryoutline,
                 ) {
                     launchGetContent(mimeTypeFilter, uploadAssetSource)
                 }
                 ClipMenuItem(
-                    textResourceId = if (isVideoMimeType) R.string.ly_img_editor_take_video else R.string.ly_img_editor_take_photo,
+                    textResourceId = if (isVideoMimeType) {
+                        R.string.ly_img_editor_asset_library_button_take_video
+                    } else {
+                        R.string.ly_img_editor_asset_library_button_take_photo
+                    },
                     icon = CoreIconPack.AddCameraBackground,
                     onClick = {
                         showUploadMenu = false

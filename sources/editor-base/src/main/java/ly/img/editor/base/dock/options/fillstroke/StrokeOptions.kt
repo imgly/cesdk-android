@@ -12,13 +12,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ly.img.editor.base.R
 import ly.img.editor.base.components.PropertyPicker
 import ly.img.editor.base.components.SectionHeader
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.base.ui.Event
+import ly.img.editor.core.R
 import ly.img.editor.core.ui.UiDefaults
-import ly.img.editor.core.R as CoreR
 
 @Composable
 fun StrokeOptions(
@@ -26,7 +25,7 @@ fun StrokeOptions(
     onEvent: (Event) -> Unit,
     openColorPicker: () -> Unit,
 ) {
-    SectionHeader(stringResource(CoreR.string.ly_img_editor_stroke))
+    SectionHeader(stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_stroke))
     Card(
         colors = UiDefaults.cardColors,
     ) {
@@ -65,14 +64,14 @@ fun StrokeOptions(
             )
             Divider(Modifier.padding(horizontal = 16.dp))
             PropertyPicker(
-                title = stringResource(R.string.ly_img_editor_style),
+                title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_style),
                 propertyTextRes = uiState.strokeStyleRes,
                 properties = strokeStylePropertiesList,
                 onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokeStyle(it)) },
             )
             Divider(Modifier.padding(horizontal = 16.dp))
             PropertyPicker(
-                title = stringResource(R.string.ly_img_editor_position),
+                title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_position),
                 propertyTextRes = uiState.strokePositionRes,
                 enabled = uiState.isStrokePositionEnabled,
                 properties = strokePositionPropertiesList,
@@ -80,7 +79,7 @@ fun StrokeOptions(
             )
             Divider(Modifier.padding(horizontal = 16.dp))
             PropertyPicker(
-                title = stringResource(R.string.ly_img_editor_join),
+                title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_join),
                 propertyTextRes = uiState.strokeJoinRes,
                 properties = strokeJoinPropertiesList,
                 enabled = uiState.isStrokeJointEnabled,

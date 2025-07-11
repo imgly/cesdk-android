@@ -49,7 +49,7 @@ fun AnimationSheet(
         when {
             screenState is ScreenState.Main -> {
                 SheetHeader(
-                    title = stringResource(id = R.string.ly_img_editor_animations),
+                    title = stringResource(id = R.string.ly_img_editor_sheet_animations_title),
                     onClose = { onEvent(EditorEvent.Sheet.Close(animate = true)) },
                 )
                 AnimationCategory(

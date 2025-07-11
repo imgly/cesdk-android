@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<resources>
+    <string name="ly_img_camera_button_close">Close</string>
+    <string name="ly_img_camera_button_continue">Continue</string>
+    <string name="ly_img_camera_button_delete_last_recording">Delete</string>
+    <string name="ly_img_camera_button_flip_camera">Flip Camera</string>
+    <string name="ly_img_camera_button_reaction">Reaction</string>
+    <string name="ly_img_camera_button_swap_positions">Swap Positions</string>
+    <string name="ly_img_camera_button_timer">Timer</string>
+    <string name="ly_img_camera_button_toggle_flash">Toggle Flash</string>
+    <string name="ly_img_camera_dialog_delete_last_recording_button_confirm">Delete</string>
+    <string name="ly_img_camera_dialog_delete_last_recording_button_dismiss">Cancel</string>
+    <string name="ly_img_camera_dialog_delete_last_recording_text">Deleting the last recording cannot be undone.</string>
+    <string name="ly_img_camera_dialog_delete_last_recording_title">Delete last recording?</string>
+    <string name="ly_img_camera_dialog_delete_recordings_button_confirm">Delete all</string>
+    <string name="ly_img_camera_dialog_delete_recordings_button_dismiss">Cancel</string>
+    <string name="ly_img_camera_dialog_delete_recordings_text">Deleting all recordings cannot be undone.</string>
+    <string name="ly_img_camera_dialog_delete_recordings_title">Close and delete all recordings?</string>
+    <string name="ly_img_camera_dialog_video_error_button_confirm">Retry</string>
+    <string name="ly_img_camera_dialog_video_error_button_dismiss">Close</string>
+    <string name="ly_img_camera_dialog_video_error_text">The internet connection appears to be offline.</string>
+    <string name="ly_img_camera_dialog_video_error_title">Failed to load video</string>
+    <string name="ly_img_camera_error_button_close">Close</string>
+    <string name="ly_img_camera_error_title">Cannot connect to service</string>
+    <string name="ly_img_camera_label_recording_limit">Recording limit is %s</string>
+    <string name="ly_img_camera_layout_option_horizontal">Horizontal</string>
+    <string name="ly_img_camera_layout_option_vertical">Vertical</string>
+    <string name="ly_img_camera_timer_option_10">10 seconds</string>
+    <string name="ly_img_camera_timer_option_3">3 seconds</string>
+    <string name="ly_img_camera_timer_option_off">Off</string>
+</resources>

@@ -42,13 +42,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.flow.MutableStateFlow
-import ly.img.editor.base.R
 import ly.img.editor.base.dock.BottomSheetContent
 import ly.img.editor.base.dock.CustomBottomSheetContent
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.compose.bottomsheet.ModalBottomSheetState
 import ly.img.editor.compose.bottomsheet.ModalBottomSheetValue
 import ly.img.editor.compose.bottomsheet.SwipeableDefaults
+import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.iconpack.Resize
 import ly.img.editor.core.sheet.SheetType
@@ -102,7 +102,7 @@ fun CropSheet(
                         Icon(IconPack.Reset, contentDescription = null, modifier = Modifier.size(18.dp))
                     },
                     text = {
-                        Text(stringResource(R.string.ly_img_editor_reset))
+                        Text(stringResource(R.string.ly_img_editor_sheet_crop_button_reset))
                     },
                     enabled = uiState.canResetCrop,
                     onClick = {
@@ -130,10 +130,10 @@ fun CropSheet(
                         modifier = Modifier.align(Alignment.Bottom),
                         onClick = { onEvent(BlockEvent.OnFlipCropHorizontal) },
                     ) {
-                        Icon(IconPack.Flip, contentDescription = stringResource(R.string.ly_img_editor_flip))
+                        Icon(IconPack.Flip, contentDescription = stringResource(R.string.ly_img_editor_sheet_crop_button_flip))
                     }
                     ScalePicker(
-                        valuePrefix = stringResource(R.string.ly_img_editor_straighten),
+                        valuePrefix = stringResource(R.string.ly_img_editor_sheet_crop_label_straighten),
                         value = uiState.straightenAngle,
                         valueRange = -45f..45f,
                         // Use +-44.999 as bound to guarantee that `decomposedDegrees` is stable and thus
@@ -156,7 +156,10 @@ fun CropSheet(
                         modifier = Modifier.align(Alignment.Bottom),
                         onClick = { onEvent(BlockEvent.OnCropRotate(uiState.cropScaleRatio)) },
                     ) {
-                        Icon(IconPack.Rotate90degreesccwoutline, contentDescription = stringResource(R.string.ly_img_editor_rotate))
+                        Icon(
+                            IconPack.Rotate90degreesccwoutline,
+                            contentDescription = stringResource(R.string.ly_img_editor_sheet_crop_button_rotate_90),
+                        )
                     }
                 }
             }
@@ -419,12 +422,12 @@ fun SheetPreview(mode: SheetType.Crop.Mode = SheetType.Crop.Mode.ImageCrop) {
                             dpi = 1,
                             pixelScaleFactor = 1f,
                             unit = DesignUnitEntry(
-                                titleRes = R.string.ly_img_editor_unit_inch,
+                                titleRes = R.string.ly_img_editor_dialog_resize_unit_option_inch,
                                 native = DesignUnit.INCH,
                                 values = listOf(72f, 150f, 300f, 600f, 1200f, 2400f),
                                 defaultValue = 300f,
                                 valueSuffix = " dpi",
-                                unitValueNameRes = R.string.ly_img_editor_unit_dpi_value_name,
+                                unitValueNameRes = R.string.ly_img_editor_dialog_resize_label_resolution,
                                 unitSuffix = "inch",
                             ),
                         ),

@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import ly.img.camera.core.R
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Warning
 import ly.img.engine.EngineException
@@ -34,7 +35,7 @@ internal fun ErrorView(
         Spacer(modifier = Modifier.height(24.dp))
         val errorMessage = if (error is EngineException) error.message else null
         Text(
-            text = errorMessage ?: stringResource(ly.img.editor.core.R.string.ly_img_editor_error_text),
+            text = errorMessage ?: stringResource(R.string.ly_img_camera_error_title),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
         )
@@ -43,6 +44,6 @@ internal fun ErrorView(
     FilledTonalButton(
         onClick = onClose,
     ) {
-        Text(text = stringResource(ly.img.editor.core.R.string.ly_img_editor_close))
+        Text(text = stringResource(R.string.ly_img_camera_error_button_close))
     }
 }

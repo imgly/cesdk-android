@@ -1,19 +1,15 @@
 package ly.img.editor.design
 
 import android.os.Parcelable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ly.img.editor.base.ui.EditorUi
 import ly.img.editor.core.EditorScope
-import ly.img.editor.core.component.EditorComponent
 import ly.img.editor.core.engine.EngineRenderTarget
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.library.data.UploadAssetSourceType
@@ -28,6 +24,7 @@ fun DesignUi(
     renderTarget: EngineRenderTarget,
     editorScope: EditorScope,
     onCreate: suspend EditorScope.() -> Unit,
+    onLoaded: suspend EditorScope.() -> Unit,
     onExport: suspend EditorScope.() -> Unit,
     onUpload: suspend EditorScope.(AssetDefinition, UploadAssetSourceType) -> AssetDefinition,
     onClose: suspend EditorScope.(Boolean) -> Unit,
@@ -50,6 +47,7 @@ fun DesignUi(
     val viewModel = viewModel {
         DesignUiViewModel(
             onCreate = onCreate,
+            onLoaded = onLoaded,
             onExport = onExport,
             onClose = onClose,
             onError = onError,
@@ -68,15 +66,6 @@ fun DesignUi(
         editorContext = editorContext,
         onEvent = onEvent,
         close = close,
-        canvasOverlay = {
-            if (uiState.isSceneLoaded) {
-                editorContext.dock?.let {
-                    Box(modifier = Modifier.align(Alignment.BottomStart)) {
-                        EditorComponent(component = it(editorScope))
-                    }
-                }
-            }
-        },
         viewModel = viewModel,
     )
 }

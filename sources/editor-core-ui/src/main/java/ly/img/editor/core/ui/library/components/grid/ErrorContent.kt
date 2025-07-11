@@ -31,13 +31,13 @@ internal fun ErrorContent(onRetryClick: () -> Unit) {
         ) {
             Icon(IconPack.Erroroutline, contentDescription = null)
             Text(
-                stringResource(R.string.ly_img_editor_error_text),
+                stringResource(R.string.ly_img_editor_asset_library_label_error),
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
             )
         }
         Button(onClick = onRetryClick) {
-            Text(text = stringResource(R.string.ly_img_editor_retry))
+            Text(text = stringResource(R.string.ly_img_editor_asset_library_button_retry))
         }
     }
 }

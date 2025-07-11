@@ -68,6 +68,8 @@ class TextAssetSource(
         )
     }
 
+    override suspend fun fetchAsset(id: String): Asset? = assets.find { it.id == id }
+
     override suspend fun applyAsset(asset: Asset): DesignBlock? {
         val textBlock = engine.asset.defaultApplyAsset(asset) ?: return null
         engine.block.setString(textBlock, "text/text", asset.label ?: "Text")
