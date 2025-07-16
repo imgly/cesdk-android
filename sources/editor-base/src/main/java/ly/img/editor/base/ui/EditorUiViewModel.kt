@@ -890,8 +890,8 @@ abstract class EditorUiViewModel(
                     if (engine.scene.get() == null) {
                         onPreCreate()
                         // Make sure to set all settings before calling `onCreate` so that the consumer can change them if needed!
-                        onCreate(editorScope)
                     }
+                    onCreate(editorScope)
                     onSceneLoaded()
                     initiallySetEditorSelectGlobalScope = engine.editor.getGlobalScope(Scope.EditorSelect)
                     requireNotNull(engine.scene.get()) { "onCreate body must contain scene creation." }

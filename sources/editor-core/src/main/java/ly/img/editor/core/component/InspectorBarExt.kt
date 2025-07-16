@@ -91,7 +91,7 @@ private fun Engine.isBackgroundTrack(designBlock: DesignBlock): Boolean =
  * @param selection the selection that is queried.
  * @return true if the [selection] can be moved, false otherwise.
  */
-private fun Engine.isMoveAllowed(selection: Selection): Boolean = block.isAllowedByScope(selection.designBlock, "editor/add") &&
+private fun Engine.isMoveAllowed(selection: Selection): Boolean = block.isAllowedByScope(selection.designBlock, "layer/move") &&
     selection.parentDesignBlock?.let { !isBackgroundTrack(it) } ?: true
 
 /**

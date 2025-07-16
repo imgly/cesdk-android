@@ -153,7 +153,7 @@ fun Engine.delete(designBlock: DesignBlock) {
  *
  * @return true if the [designBlock] can be moved, false otherwise.
  */
-fun Engine.isMoveAllowed(designBlock: DesignBlock): Boolean = block.isAllowedByScope(designBlock, Scope.EditorAdd) &&
+fun Engine.isMoveAllowed(designBlock: DesignBlock): Boolean = block.isAllowedByScope(designBlock, Scope.LayerMove) &&
     !block.isParentBackgroundTrack(designBlock)
 
 /**
