@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ly.img.camera.core.R
 import ly.img.camera.record.components.TimecodeView
+import ly.img.editor.core.R
 import ly.img.editor.core.iconpack.Close
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.theme.LocalExtendedColorScheme
@@ -43,7 +43,7 @@ internal fun Toolbar(
             Icon(
                 IconPack.Close,
                 tint = LocalExtendedColorScheme.current.white,
-                contentDescription = stringResource(R.string.ly_img_camera_button_close),
+                contentDescription = stringResource(R.string.ly_img_editor_close),
             )
         }
 

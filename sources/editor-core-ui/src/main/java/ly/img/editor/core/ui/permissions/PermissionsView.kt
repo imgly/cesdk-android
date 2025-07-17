@@ -31,8 +31,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
-import ly.img.editor.core.R
 import ly.img.editor.core.theme.LocalExtendedColorScheme
+import ly.img.editor.core.ui.R
 import ly.img.editor.core.ui.iconpack.Check
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Mic
@@ -59,11 +59,7 @@ fun PermissionsView(
         Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = stringResource(
-                if (requestOnlyCameraPermission) {
-                    R.string.ly_img_editor_permission_view_title_camera
-                } else {
-                    R.string.ly_img_editor_permission_view_title_camera_and_microphone
-                },
+                if (requestOnlyCameraPermission) R.string.ly_img_camera_permission_text else R.string.ly_img_camera_mic_permission_text,
             ),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
@@ -124,7 +120,7 @@ fun PermissionsView(
             requestPermission(permission = Manifest.permission.CAMERA)
         },
         icon = IconPack.Photocameraoutline,
-        text = R.string.ly_img_editor_permission_view_button_camera,
+        text = R.string.ly_img_camera_permission_camera,
         isPermissionGranted = isCameraPermissionGranted,
     )
     if (!requestOnlyCameraPermission) {
@@ -134,7 +130,7 @@ fun PermissionsView(
                 requestPermission(permission = Manifest.permission.RECORD_AUDIO)
             },
             icon = IconPack.Mic,
-            text = R.string.ly_img_editor_permission_view_button_microphone,
+            text = R.string.ly_img_camera_permission_mic,
             isPermissionGranted = isMicPermissionGranted,
         )
     }
@@ -145,7 +141,7 @@ fun PermissionsView(
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         ),
     ) {
-        Text(text = stringResource(R.string.ly_img_editor_permission_view_button_cancel))
+        Text(text = stringResource(R.string.ly_img_camera_permission_cancel))
     }
 }
 
@@ -190,8 +186,8 @@ private fun SettingsDialog(
             Text(
                 text = stringResource(
                     when (permission) {
-                        Manifest.permission.CAMERA -> R.string.ly_img_editor_dialog_permission_camera_title
-                        Manifest.permission.RECORD_AUDIO -> R.string.ly_img_editor_dialog_permission_microphone_title
+                        Manifest.permission.CAMERA -> R.string.ly_img_camera_permission_missing_camera_dialog_title
+                        Manifest.permission.RECORD_AUDIO -> R.string.ly_img_camera_permission_missing_mic_dialog_title
                         else -> throw IllegalArgumentException()
                     },
                 ),
@@ -201,8 +197,8 @@ private fun SettingsDialog(
             Text(
                 text = stringResource(
                     when (permission) {
-                        Manifest.permission.CAMERA -> R.string.ly_img_editor_dialog_permission_camera_text
-                        Manifest.permission.RECORD_AUDIO -> R.string.ly_img_editor_dialog_permission_microphone_text
+                        Manifest.permission.CAMERA -> R.string.ly_img_camera_permission_missing_camera_dialog_text
+                        Manifest.permission.RECORD_AUDIO -> R.string.ly_img_camera_permission_missing_mic_dialog_text
                         else -> throw IllegalArgumentException()
                     },
                 ),
@@ -215,30 +211,14 @@ private fun SettingsDialog(
                     onDismissRequest()
                 },
             ) {
-                Text(
-                    text = stringResource(
-                        when (permission) {
-                            Manifest.permission.CAMERA -> R.string.ly_img_editor_dialog_permission_camera_button_confirm
-                            Manifest.permission.RECORD_AUDIO -> R.string.ly_img_editor_dialog_permission_microphone_button_confirm
-                            else -> throw IllegalArgumentException()
-                        },
-                    ),
-                )
+                Text(stringResource(R.string.ly_img_camera_permission_missing_confirm_text))
             }
         },
         dismissButton = {
             TextButton(
                 onClick = onDismissRequest,
             ) {
-                Text(
-                    text = stringResource(
-                        when (permission) {
-                            Manifest.permission.CAMERA -> R.string.ly_img_editor_dialog_permission_camera_button_dismiss
-                            Manifest.permission.RECORD_AUDIO -> R.string.ly_img_editor_dialog_permission_microphone_button_dismiss
-                            else -> throw IllegalArgumentException()
-                        },
-                    ),
-                )
+                Text(stringResource(R.string.ly_img_camera_permission_missing_dismiss_text))
             }
         },
     )

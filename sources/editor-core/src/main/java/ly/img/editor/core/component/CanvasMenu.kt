@@ -197,7 +197,7 @@ class CanvasMenu private constructor(
 
         private val _canSelectionMove by lazy {
             val selection = selection ?: return@lazy false
-            editorContext.engine.block.isAllowedByScope(selection.designBlock, "layer/move") &&
+            editorContext.engine.block.isAllowedByScope(selection.designBlock, "editor/add") &&
                 run {
                     selection.parentDesignBlock?.let {
                         DesignBlockType.get(editorContext.engine.block.getType(it)) == DesignBlockType.Track &&

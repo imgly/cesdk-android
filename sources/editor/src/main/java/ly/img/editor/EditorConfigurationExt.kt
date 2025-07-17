@@ -194,9 +194,6 @@ fun EditorConfiguration.Companion.rememberForPhoto(
  * Note that the overlay is edge-to-edge, therefore it is your responsibility to draw over system bars too.
  * If null, then the overlay will not be rendered.
  * By default [EditorDefaults.Overlay] is used to handle the composable callback.
- * @param dock the configuration object of the dock that is displayed as horizontal list of items at the bottom of the editor.
- * If null, then dock will not be rendered.
- * By default [ly.img.editor.core.component.Dock.Companion.rememberForApparel] is used to handle the composable callback.
  * @param inspectorBar the configuration object of the inspector bar that is displayed as horizontal list of items at the
  * bottom of the editor when a design block is selected.
  * If null, then the inspector bar will not be rendered.
@@ -222,7 +219,6 @@ fun EditorConfiguration.Companion.rememberForApparel(
     overlay: (@Composable (EditorScope.(EditorUiState) -> Unit))? = { state ->
         EditorDefaults.Overlay(state = state, eventHandler = editorContext.eventHandler)
     },
-    dock: (@Composable EditorScope.() -> Dock)? = { Dock.rememberForApparel() },
     inspectorBar: (@Composable EditorScope.() -> InspectorBar)? = { InspectorBar.remember() },
     canvasMenu: (@Composable EditorScope.() -> CanvasMenu)? = { CanvasMenu.remember() },
     navigationBar: (@Composable EditorScope.() -> NavigationBar)? = { NavigationBar.rememberForApparel() },
@@ -234,7 +230,6 @@ fun EditorConfiguration.Companion.rememberForApparel(
     colorPalette = colorPalette,
     onEvent = onEvent,
     overlay = overlay,
-    dock = dock,
     inspectorBar = inspectorBar,
     canvasMenu = canvasMenu,
     navigationBar = navigationBar,
@@ -268,9 +263,6 @@ fun EditorConfiguration.Companion.rememberForApparel(
  * Note that the overlay is edge-to-edge, therefore it is your responsibility to draw over system bars too.
  * If null, then the overlay will not be rendered.
  * By default [EditorDefaults.Overlay] is used to handle the composable callback.
- * @param dock the configuration object of the dock that is displayed as horizontal list of items at the bottom of the editor.
- * If null, then dock will not be rendered.
- * By default [ly.img.editor.core.component.Dock.Companion.rememberForPostcard] is used to handle the composable callback.
  * @param inspectorBar the configuration object of the inspector bar that is displayed as horizontal list of items at the
  * bottom of the editor when a design block is selected.
  * If null, then the inspector bar will not be rendered.
@@ -296,7 +288,6 @@ fun EditorConfiguration.Companion.rememberForPostcard(
     overlay: (@Composable (EditorScope.(EditorUiState) -> Unit))? = { state ->
         EditorDefaults.Overlay(state = state, eventHandler = editorContext.eventHandler)
     },
-    dock: (@Composable EditorScope.() -> Dock)? = { Dock.rememberForPostcard() },
     inspectorBar: (@Composable EditorScope.() -> InspectorBar)? = { InspectorBar.remember() },
     canvasMenu: (@Composable EditorScope.() -> CanvasMenu)? = { CanvasMenu.remember() },
     navigationBar: (@Composable EditorScope.() -> NavigationBar)? = { NavigationBar.rememberForPostcard() },
@@ -308,7 +299,6 @@ fun EditorConfiguration.Companion.rememberForPostcard(
     colorPalette = colorPalette,
     onEvent = onEvent,
     overlay = overlay,
-    dock = dock,
     inspectorBar = inspectorBar,
     canvasMenu = canvasMenu,
     navigationBar = navigationBar,

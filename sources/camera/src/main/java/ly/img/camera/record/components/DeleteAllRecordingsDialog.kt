@@ -7,7 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import ly.img.camera.core.R
+import ly.img.editor.core.R
 
 @Composable
 internal fun DeleteAllRecordingsDialog(
@@ -19,14 +19,14 @@ internal fun DeleteAllRecordingsDialog(
         title = {
             Text(
                 text = stringResource(
-                    R.string.ly_img_camera_dialog_delete_recordings_title,
+                    ly.img.camera.R.string.ly_img_camera_delete_recordings_dialog_title,
                 ),
             )
         },
         text = {
             Text(
                 text = stringResource(
-                    R.string.ly_img_camera_dialog_delete_recordings_text,
+                    ly.img.camera.R.string.ly_img_camera_delete_recordings_dialog_text,
                 ),
             )
         },
@@ -37,14 +37,14 @@ internal fun DeleteAllRecordingsDialog(
                     contentColor = MaterialTheme.colorScheme.error,
                 ),
             ) {
-                Text(stringResource(R.string.ly_img_camera_dialog_delete_recordings_button_confirm))
+                Text(stringResource(ly.img.camera.R.string.ly_img_camera_delete_recordings_dialog_confirm_text))
             }
         },
         dismissButton = {
             TextButton(
                 onClick = onDismiss,
             ) {
-                Text(stringResource(R.string.ly_img_camera_dialog_delete_recordings_button_dismiss))
+                Text(stringResource(R.string.ly_img_editor_cancel))
             }
         },
     )

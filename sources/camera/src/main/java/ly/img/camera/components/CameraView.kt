@@ -31,9 +31,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import ly.img.camera.CameraViewModel
+import ly.img.camera.R
 import ly.img.camera.components.sidemenu.SideMenu
 import ly.img.camera.core.CaptureVideo
-import ly.img.camera.core.R
 import ly.img.camera.preview.CameraEnginePreview
 import ly.img.camera.record.RecordingManager
 import ly.img.camera.record.Timer
@@ -160,7 +160,7 @@ internal fun BoxScope.CameraView(
                 Shadowed {
                     Text(
                         text = stringResource(
-                            id = R.string.ly_img_camera_label_recording_limit,
+                            id = R.string.ly_img_camera_recording_limit,
                             recordingManager.state.maxDuration.formatForClip(),
                         ),
                         style = MaterialTheme.typography.titleMedium,

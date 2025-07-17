@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ly.img.camera.core.R
 import ly.img.editor.compose.foundation.clickable
 import ly.img.editor.core.theme.LocalExtendedColorScheme
 import ly.img.editor.core.ui.iconpack.Arrowrightbig
@@ -31,7 +30,7 @@ internal fun NextButton(
     CompositionLocalProvider(LocalContentColor provides extendedColorScheme.black) {
         Icon(
             imageVector = IconPack.Arrowrightbig,
-            contentDescription = stringResource(R.string.ly_img_camera_button_continue),
+            contentDescription = stringResource(ly.img.editor.core.R.string.ly_img_editor_close),
             modifier = modifier
                 .size(56.dp)
                 .clip(shape)

@@ -7,8 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import ly.img.camera.R
 import ly.img.camera.components.sidemenu.SideMenuItem
-import ly.img.camera.core.R
 
 @Composable
 internal fun LayoutMenuItem(
@@ -24,8 +24,8 @@ internal fun LayoutMenuItem(
 
         SideMenuItem(
             imageVector = layoutMode.icon,
-            contentDescription = R.string.ly_img_camera_button_reaction,
-            label = R.string.ly_img_camera_button_reaction,
+            contentDescription = R.string.ly_img_camera_reaction,
+            label = R.string.ly_img_camera_reaction,
             checked = true,
             expanded = expanded,
             enabled = enabled,

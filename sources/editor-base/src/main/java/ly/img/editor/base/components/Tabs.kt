@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -39,15 +40,14 @@ fun <T : Any> Tabs(
             val selected = index == selectedIndex
             Box(
                 modifier = Modifier
+                    .widthIn(min = 80.dp)
                     .height(40.dp)
                     .clip(CircleShape)
                     .background(color = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
                     .clickable { onTabSelected(item.data, index) },
             ) {
                 Text(
-                    modifier = Modifier
-                        .padding(horizontal = 24.dp)
-                        .align(Alignment.Center),
+                    modifier = Modifier.align(Alignment.Center),
                     text = stringResource(item.titleRes),
                     style = MaterialTheme.typography.labelLarge,
                     color = if (selected) {

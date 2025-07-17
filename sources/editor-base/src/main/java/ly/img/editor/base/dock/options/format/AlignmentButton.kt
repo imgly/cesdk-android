@@ -3,8 +3,8 @@ package ly.img.editor.base.dock.options.format
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
+import ly.img.editor.base.R
 import ly.img.editor.base.components.ToggleIconButton
-import ly.img.editor.core.R
 import ly.img.editor.core.ui.iconpack.Formataligncenter
 import ly.img.editor.core.ui.iconpack.Formatalignleft
 import ly.img.editor.core.ui.iconpack.Formatalignright
@@ -36,12 +36,14 @@ fun <T : Alignment> AlignmentButton(
                 VerticalAlignment.Top -> IconPack.Verticalaligntop
             },
             contentDescription = when (alignment) {
-                HorizontalAlignment.Left -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_horizontal_option_left)
-                HorizontalAlignment.Center -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_horizontal_option_center)
-                HorizontalAlignment.Right -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_horizontal_option_right)
-                VerticalAlignment.Bottom -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_vertical_option_bottom)
-                VerticalAlignment.Center -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_vertical_option_center)
-                VerticalAlignment.Top -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_vertical_option_top)
+                HorizontalAlignment.Left -> stringResource(R.string.ly_img_editor_align_left)
+                HorizontalAlignment.Center, VerticalAlignment.Center ->
+                    stringResource(
+                        R.string.ly_img_editor_align_center,
+                    )
+                HorizontalAlignment.Right -> stringResource(R.string.ly_img_editor_align_right)
+                VerticalAlignment.Top -> stringResource(R.string.ly_img_editor_align_top)
+                VerticalAlignment.Bottom -> stringResource(R.string.ly_img_editor_align_bottom)
             },
         )
     }

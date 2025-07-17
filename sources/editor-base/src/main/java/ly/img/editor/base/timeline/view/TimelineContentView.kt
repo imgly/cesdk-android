@@ -24,13 +24,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ly.img.editor.base.R
 import ly.img.editor.base.components.scrollbar.LazyColumnScrollbar
 import ly.img.editor.base.components.scrollbar.RowScrollbar
 import ly.img.editor.base.components.scrollbar.ScrollbarSettings
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.timeline.track.TrackView
-import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.iconpack.AddAudio
 import ly.img.editor.core.iconpack.IconPack
@@ -113,7 +113,7 @@ fun TimelineContentView(
                             }
 
                             TimelineButton(
-                                id = R.string.ly_img_editor_timeline_button_add_audio,
+                                id = R.string.ly_img_editor_add_audio,
                                 icon = IconPack.AddAudio,
                                 modifier = Modifier
                                     .offset {

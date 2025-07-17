@@ -43,11 +43,12 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ly.img.editor.base.R
 import ly.img.editor.compose.foundation.gestures.detectTapGestures
-import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.event.EditorEventHandler
 import ly.img.editor.core.library.data.TextAssetSource
@@ -141,29 +142,29 @@ object EditorDefaults {
         eventHandler: EditorEventHandler,
         onSceneCreated: suspend (DesignBlock, CoroutineScope) -> Unit,
         createScene: suspend (CoroutineScope) -> Unit,
-    ) {
-        coroutineScope {
-            // Loading is guaranteed to be showing here, no need to send eventHandler.send(ShowLoading)
-            if (engine.scene.get() == null) {
-                createScene(this)
-            }
-            val scene = checkNotNull(engine.scene.get())
-            onSceneCreated(scene, this)
-            launch {
-                engine.addDefaultAssetSources()
-                val defaultTypeface = TypefaceProvider().provideTypeface(engine, "Roboto")
-                requireNotNull(defaultTypeface)
-                engine.asset.addSource(TextAssetSource(engine, defaultTypeface))
-            }
-            launch {
-                engine.addDemoAssetSources(
-                    sceneMode = engine.scene.getMode(),
-                    withUploadAssetSources = true,
-                )
-            }
+    ) = coroutineScope {
+        // Loading is guaranteed to be showing here, no need to send eventHandler.send(ShowLoading)
+        if (engine.scene.get() == null) {
+            createScene(this)
         }
-        eventHandler.send(HideLoading)
-        eventHandler.send(OnSceneLoaded())
+        val scene = checkNotNull(engine.scene.get())
+        onSceneCreated(scene, this)
+        launch {
+            engine.addDefaultAssetSources()
+            val defaultTypeface = TypefaceProvider().provideTypeface(engine, "Roboto")
+            requireNotNull(defaultTypeface)
+            engine.asset.addSource(TextAssetSource(engine, defaultTypeface))
+        }
+        launch {
+            engine.addDemoAssetSources(
+                sceneMode = engine.scene.getMode(),
+                withUploadAssetSources = true,
+            )
+        }
+        coroutineContext[Job]?.invokeOnCompletion {
+            eventHandler.send(HideLoading)
+            eventHandler.send(OnSceneLoaded())
+        }
     }
 
     /**
@@ -413,10 +414,10 @@ object EditorDefaults {
                 Icon(IconPack.WifiCancel, contentDescription = null)
             },
             title = {
-                Text(text = stringResource(R.string.ly_img_editor_dialog_no_internet_title))
+                Text(text = stringResource(R.string.ly_img_editor_error_internet_title))
             },
             text = {
-                Text(text = stringResource(R.string.ly_img_editor_dialog_no_internet_text))
+                Text(text = stringResource(R.string.ly_img_editor_error_internet_text))
             },
             confirmButton = {
                 TextButton(
@@ -425,7 +426,7 @@ object EditorDefaults {
                         eventHandler.send(EditorEvent.CloseEditor(EditorException(EditorException.Code.NO_INTERNET)))
                     },
                 ) {
-                    Text(stringResource(R.string.ly_img_editor_dialog_no_internet_button_confirm))
+                    Text(stringResource(R.string.ly_img_editor_dismiss))
                 }
             },
             properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
@@ -446,7 +447,7 @@ object EditorDefaults {
         AlertDialog(
             onDismissRequest = { },
             title = {
-                Text(text = stringResource(R.string.ly_img_editor_dialog_error_title))
+                Text(text = stringResource(R.string.ly_img_editor_engine_error_dialog_title))
             },
             text = {
                 Text(text = engineException.message ?: "")
@@ -458,7 +459,7 @@ object EditorDefaults {
                         eventHandler.send(EditorEvent.CloseEditor(engineException))
                     },
                 ) {
-                    Text(stringResource(R.string.ly_img_editor_dialog_error_confirm_text))
+                    Text(stringResource(R.string.ly_img_editor_dismiss))
                 }
             },
             properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
@@ -478,10 +479,10 @@ object EditorDefaults {
                 Icon(IconPack.Cloudalertoutline, contentDescription = null)
             },
             title = {
-                Text(text = stringResource(R.string.ly_img_editor_dialog_close_confirm_title))
+                Text(text = stringResource(R.string.ly_img_editor_unsaved_changes_dialog_title))
             },
             text = {
-                Text(text = stringResource(R.string.ly_img_editor_dialog_close_confirm_text))
+                Text(text = stringResource(R.string.ly_img_editor_unsaved_changes_dialog_text))
             },
             confirmButton = {
                 TextButton(
@@ -490,14 +491,14 @@ object EditorDefaults {
                         eventHandler.send(EditorEvent.CloseEditor())
                     },
                 ) {
-                    Text(stringResource(R.string.ly_img_editor_dialog_close_confirm_button_confirm))
+                    Text(stringResource(R.string.ly_img_editor_exit))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { eventHandler.send(DismissCloseConfirmationDialogEvent) },
                 ) {
-                    Text(stringResource(R.string.ly_img_editor_dialog_close_confirm_button_dismiss))
+                    Text(stringResource(ly.img.editor.core.R.string.ly_img_editor_cancel))
                 }
             },
         )
@@ -550,9 +551,9 @@ object EditorDefaults {
                             is VideoExportStatus.Loading -> {
                                 var showCancelDialog by remember { mutableStateOf(false) }
                                 VideoStatusOverlayContent(
-                                    titleRes = R.string.ly_img_editor_dialog_export_progress_title,
-                                    textRes = R.string.ly_img_editor_dialog_export_progress_text,
-                                    buttonText = R.string.ly_img_editor_dialog_export_progress_button_dismiss,
+                                    headlineText = R.string.ly_img_editor_export_progress_headline,
+                                    labelText = R.string.ly_img_editor_export_progress_label,
+                                    buttonText = ly.img.editor.core.R.string.ly_img_editor_cancel,
                                     buttonColor = MaterialTheme.colorScheme.error,
                                     onClick = {
                                         showCancelDialog = true
@@ -583,10 +584,10 @@ object EditorDefaults {
                                             )
                                         },
                                         title = {
-                                            Text(text = stringResource(R.string.ly_img_editor_dialog_export_cancel_title))
+                                            Text(text = stringResource(R.string.ly_img_editor_export_cancel_dialog_title))
                                         },
                                         text = {
-                                            Text(text = stringResource(R.string.ly_img_editor_dialog_export_error_text))
+                                            Text(text = stringResource(R.string.ly_img_editor_export_cancel_dialog_text))
                                         },
                                         confirmButton = {
                                             TextButton(
@@ -599,7 +600,7 @@ object EditorDefaults {
                                                     contentColor = MaterialTheme.colorScheme.onErrorContainer,
                                                 ),
                                             ) {
-                                                Text(stringResource(R.string.ly_img_editor_dialog_export_cancel_button_confirm))
+                                                Text(stringResource(R.string.ly_img_editor_export_cancel_dialog_confirm_text))
                                             }
                                         },
                                         dismissButton = {
@@ -608,7 +609,7 @@ object EditorDefaults {
                                                     showCancelDialog = false
                                                 },
                                             ) {
-                                                Text(stringResource(R.string.ly_img_editor_dialog_export_cancel_button_dismiss))
+                                                Text(stringResource(R.string.ly_img_editor_export_cancel_dialog_dismiss_text))
                                             }
                                         },
                                     )
@@ -617,9 +618,9 @@ object EditorDefaults {
 
                             VideoExportStatus.Error -> {
                                 VideoStatusOverlayContent(
-                                    titleRes = R.string.ly_img_editor_dialog_export_error_title,
-                                    textRes = R.string.ly_img_editor_dialog_export_error_text,
-                                    buttonText = R.string.ly_img_editor_dialog_export_error_button_dismiss,
+                                    headlineText = R.string.ly_img_editor_export_error_headline,
+                                    labelText = R.string.ly_img_editor_export_error_label,
+                                    buttonText = ly.img.editor.core.R.string.ly_img_editor_close,
                                     onClick = {
                                         eventHandler.send(DismissVideoExportEvent)
                                     },
@@ -636,9 +637,9 @@ object EditorDefaults {
 
                             is VideoExportStatus.Success -> {
                                 VideoStatusOverlayContent(
-                                    titleRes = R.string.ly_img_editor_dialog_export_success_title,
-                                    textRes = R.string.ly_img_editor_dialog_export_error_text,
-                                    buttonText = R.string.ly_img_editor_dialog_export_error_button_dismiss,
+                                    headlineText = R.string.ly_img_editor_export_success_headline,
+                                    labelText = R.string.ly_img_editor_export_success_label,
+                                    buttonText = ly.img.editor.core.R.string.ly_img_editor_close,
                                     onClick = {
                                         eventHandler.send(ShareFileEvent(status.file, status.mimeType))
                                     },
@@ -664,8 +665,8 @@ object EditorDefaults {
 
     @Composable
     private fun VideoStatusOverlayContent(
-        @StringRes titleRes: Int,
-        @StringRes textRes: Int,
+        @StringRes headlineText: Int,
+        @StringRes labelText: Int,
         @StringRes buttonText: Int,
         buttonColor: Color = MaterialTheme.colorScheme.primary,
         onClick: () -> Unit,
@@ -675,14 +676,14 @@ object EditorDefaults {
         mainContent()
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = stringResource(titleRes),
+            text = stringResource(headlineText),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = stringResource(textRes),
+            text = stringResource(labelText),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

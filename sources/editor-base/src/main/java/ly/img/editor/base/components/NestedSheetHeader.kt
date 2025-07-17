@@ -36,10 +36,7 @@ fun NestedSheetHeader(
             modifier = Modifier.padding(horizontal = 4.dp),
             onClick = onBack,
         ) {
-            Icon(
-                imageVector = CoreIconPack.ArrowBack,
-                contentDescription = stringResource(coreR.string.ly_img_editor_sheet_button_back),
-            )
+            Icon(CoreIconPack.ArrowBack, contentDescription = stringResource(coreR.string.ly_img_editor_back))
         }
         Text(
             text = title,
@@ -50,10 +47,7 @@ fun NestedSheetHeader(
             modifier = Modifier.padding(horizontal = 4.dp),
             onClick = onClose,
         ) {
-            Icon(
-                imageVector = IconPack.Expandmore,
-                contentDescription = stringResource(coreR.string.ly_img_editor_sheet_button_close),
-            )
+            Icon(IconPack.Expandmore, contentDescription = stringResource(coreR.string.ly_img_editor_close))
         }
     }
 }

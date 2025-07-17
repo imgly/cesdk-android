@@ -20,15 +20,15 @@ data class FillStrokeUiState(
             showStroke: Boolean,
         ) = when {
             showFill && showStroke -> {
-                R.string.ly_img_editor_sheet_fill_stroke_title_fill_stroke
+                R.string.ly_img_editor_fill_and_stroke
             }
 
             showFill -> {
-                R.string.ly_img_editor_sheet_fill_stroke_title_fill
+                R.string.ly_img_editor_fill
             }
 
             showStroke -> {
-                R.string.ly_img_editor_sheet_fill_stroke_title_stroke
+                R.string.ly_img_editor_stroke
             }
 
             else -> {

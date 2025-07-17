@@ -40,11 +40,11 @@ import ly.img.editor.compose.animation_core.tween
 import ly.img.editor.compose.material3.Card
 import ly.img.editor.compose.material3.CardDefaults
 import ly.img.editor.core.event.EditorEvent
-import ly.img.editor.core.iconpack.IconPack
-import ly.img.editor.core.iconpack.Plus
 import ly.img.editor.core.state.EditorViewMode
 import ly.img.editor.core.theme.surface1
 import ly.img.editor.core.theme.surface3
+import ly.img.editor.core.ui.iconpack.Add
+import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.utils.animateItemPlacement as animateGridItem
 
 private const val DOUBLE_CLICK_DELAY = 200L
@@ -227,7 +227,7 @@ fun EditorPagesUi(
                                             .align(Alignment.Center)
                                             .background(color = MaterialTheme.colorScheme.surface3, shape = shape)
                                             .padding(8.dp),
-                                        imageVector = IconPack.Plus,
+                                        imageVector = IconPack.Add,
                                         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
                                         contentDescription = null,
                                     )

@@ -7,12 +7,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import ly.img.editor.base.R
 import ly.img.editor.base.components.PropertySlider
 import ly.img.editor.base.ui.BlockEvent
-import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.ui.SheetHeader
 import ly.img.editor.core.ui.sheetScrollableContentModifier
+import ly.img.editor.core.R as CoreR
 
 @Composable
 fun ShapeOptionsSheet(
@@ -21,7 +22,7 @@ fun ShapeOptionsSheet(
 ) {
     Column {
         SheetHeader(
-            title = stringResource(R.string.ly_img_editor_sheet_shape_title),
+            title = stringResource(CoreR.string.ly_img_editor_shape),
             onClose = { onEvent(EditorEvent.Sheet.Close(animate = true)) },
         )
 
@@ -31,7 +32,7 @@ fun ShapeOptionsSheet(
             when (uiState) {
                 is PolygonShapeOptionsUiState -> {
                     PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_sheet_shape_label_sides),
+                        title = stringResource(R.string.ly_img_editor_sides),
                         value = uiState.sides,
                         onValueChange = { onEvent(BlockEvent.OnChangePolygonSides(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
@@ -40,7 +41,7 @@ fun ShapeOptionsSheet(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_sheet_shape_label_round_corners),
+                        title = stringResource(R.string.ly_img_editor_round_corners),
                         value = uiState.cornerRadius,
                         onValueChange = { onEvent(BlockEvent.OnChangePolygonCornerRadius(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
@@ -50,7 +51,7 @@ fun ShapeOptionsSheet(
 
                 is LineShapeOptionsUiState -> {
                     PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_sheet_shape_label_line_width),
+                        title = stringResource(R.string.ly_img_editor_line_width),
                         value = uiState.width,
                         onValueChange = { onEvent(BlockEvent.OnChangeLineWidth(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
@@ -60,7 +61,7 @@ fun ShapeOptionsSheet(
 
                 is StarShapeOptionsUiState -> {
                     PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_sheet_shape_label_points),
+                        title = stringResource(R.string.ly_img_editor_points),
                         value = uiState.points,
                         onValueChange = { onEvent(BlockEvent.OnChangeStarPoints(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
@@ -69,7 +70,7 @@ fun ShapeOptionsSheet(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_sheet_shape_label_inner_diameter),
+                        title = stringResource(R.string.ly_img_editor_inner_diameter),
                         value = uiState.innerDiameter,
                         onValueChange = { onEvent(BlockEvent.OnChangeStarInnerDiameter(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
@@ -79,15 +80,15 @@ fun ShapeOptionsSheet(
 
                 is RectShapeUiState -> {
                     PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_sheet_shape_label_round_corners),
+                        title = stringResource(R.string.ly_img_editor_round_corners),
                         value = uiState.cornerRadiusTopLeft,
                         onValueChange = {
                             onEvent(
                                 BlockEvent.OnChangeRectCornerRadius(
-                                    topLeft = it,
-                                    topRight = it,
-                                    bottomLeft = it,
-                                    bottomRight = it,
+                                    it,
+                                    it,
+                                    it,
+                                    it,
                                 ),
                             )
                         },

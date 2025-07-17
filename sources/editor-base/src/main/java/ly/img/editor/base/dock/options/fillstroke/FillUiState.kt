@@ -1,8 +1,8 @@
 package ly.img.editor.base.dock.options.fillstroke
 
 import androidx.compose.ui.graphics.Color
+import ly.img.editor.base.R
 import ly.img.editor.base.ui.Block
-import ly.img.editor.core.R
 import ly.img.editor.core.component.data.Fill
 import ly.img.editor.core.ui.engine.BlockType
 import ly.img.editor.core.ui.engine.getFill
@@ -37,13 +37,13 @@ internal fun createFillUiState(
 }
 
 private fun getFillTypeRes(fillType: FillType?): Int = if (fillType == null) {
-    R.string.ly_img_editor_sheet_fill_stroke_type_option_none
+    R.string.ly_img_editor_fill_none
 } else {
     when (fillType) {
-        FillType.Color -> R.string.ly_img_editor_sheet_fill_stroke_type_option_solid
-        FillType.RadialGradient -> R.string.ly_img_editor_sheet_fill_stroke_type_option_gradient_radial
-        FillType.LinearGradient -> R.string.ly_img_editor_sheet_fill_stroke_type_option_gradient_linear
-        FillType.ConicalGradient -> R.string.ly_img_editor_sheet_fill_stroke_type_option_gradient_conical
+        FillType.Color -> R.string.ly_img_editor_fill_solid
+        FillType.RadialGradient -> R.string.ly_img_editor_fill_type_gradient_radial
+        FillType.LinearGradient -> R.string.ly_img_editor_fill_type_gradient_linear
+        FillType.ConicalGradient -> R.string.ly_img_editor_fill_type_gradient_conical
         else -> throw IllegalArgumentException("Unknown fill type: $fillType")
     }
 }

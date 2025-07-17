@@ -11,8 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import ly.img.camera.R
 import ly.img.camera.components.sidemenu.SideMenuItem
-import ly.img.camera.core.R
 import ly.img.camera.record.Timer
 
 @Composable
@@ -28,8 +28,8 @@ internal fun TimerMenuItem(
 
         SideMenuItem(
             imageVector = timer.icon,
-            contentDescription = R.string.ly_img_camera_button_timer,
-            label = if (timer != Timer.Off) timer.label else R.string.ly_img_camera_button_timer,
+            contentDescription = R.string.ly_img_camera_timer,
+            label = if (timer != Timer.Off) timer.label else R.string.ly_img_camera_timer,
             checked = isTimerSelected || timer != Timer.Off,
             expanded = expanded,
             onClick = {

@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import ly.img.editor.base.R
 import ly.img.editor.base.components.ActionRow
 import ly.img.editor.base.components.CardButton
 import ly.img.editor.base.components.CheckedTextRow
@@ -32,7 +33,6 @@ import ly.img.editor.base.components.NestedSheetHeader
 import ly.img.editor.base.components.PropertyLink
 import ly.img.editor.base.components.PropertySlider
 import ly.img.editor.base.ui.BlockEvent
-import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.iconpack.BringForward
 import ly.img.editor.core.iconpack.Delete
@@ -45,6 +45,7 @@ import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Sendtoback
 import ly.img.editor.core.ui.sheetCardContentModifier
 import ly.img.editor.core.ui.sheetScrollableContentModifier
+import ly.img.editor.core.R as CoreR
 import ly.img.editor.core.iconpack.IconPack as CoreIconPack
 
 @Composable
@@ -60,7 +61,7 @@ fun LayerOptionsSheet(
         }
         Column {
             NestedSheetHeader(
-                title = stringResource(R.string.ly_img_editor_sheet_layer_label_blend_mode),
+                title = stringResource(R.string.ly_img_editor_blendmode),
                 onBack = { selectBlendMode = false },
                 onClose = { onEvent(EditorEvent.Sheet.Close(animate = true)) },
             )
@@ -89,7 +90,7 @@ fun LayerOptionsSheet(
     } else {
         Column {
             SheetHeader(
-                title = stringResource(id = R.string.ly_img_editor_inspector_bar_button_layer),
+                title = stringResource(id = CoreR.string.ly_img_editor_layer),
                 onClose = { onEvent(EditorEvent.Sheet.Close(animate = true)) },
             )
 
@@ -98,7 +99,7 @@ fun LayerOptionsSheet(
             ) {
                 if (uiState.opacity != null) {
                     PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_sheet_layer_label_opacity),
+                        title = stringResource(R.string.ly_img_editor_opacity),
                         value = uiState.opacity,
                         onValueChange = { onEvent(BlockEvent.OnChangeOpacity(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
@@ -111,7 +112,7 @@ fun LayerOptionsSheet(
                         colors = UiDefaults.cardColors,
                     ) {
                         PropertyLink(
-                            title = stringResource(id = R.string.ly_img_editor_sheet_layer_label_blend_mode),
+                            title = stringResource(id = R.string.ly_img_editor_blendmode),
                             value = stringResource(id = uiState.blendMode),
                         ) {
                             selectBlendMode = true
@@ -127,40 +128,32 @@ fun LayerOptionsSheet(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         CardButton(
-                            text = stringResource(R.string.ly_img_editor_sheet_layer_button_bring_to_front),
+                            text = stringResource(R.string.ly_img_editor_bring_to_front),
                             icon = IconPack.Bringtofront,
                             modifier = Modifier.weight(1f),
                             enabled = uiState.canBringForward,
                             onClick = { onEvent(BlockEvent.ToFront) },
                         )
                         CardButton(
-                            text = stringResource(R.string.ly_img_editor_sheet_layer_button_bring_forward),
+                            text = stringResource(CoreR.string.ly_img_editor_bring_forward),
                             icon = CoreIconPack.BringForward,
                             modifier = Modifier.weight(1f),
                             enabled = uiState.canBringForward,
                             onClick = { onEvent(BlockEvent.OnForward) },
                         )
-                    }
-                    Row(
-                        modifier = Modifier
-                            .padding(top = 8.dp)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
                         CardButton(
-                            text = stringResource(R.string.ly_img_editor_sheet_layer_button_send_to_back),
-                            icon = IconPack.Sendtoback,
-                            modifier = Modifier.weight(1f),
-                            enabled = uiState.canSendBackward,
-                            onClick = { onEvent(BlockEvent.ToBack) },
-                        )
-                        CardButton(
-                            text = stringResource(R.string.ly_img_editor_sheet_layer_button_send_backward),
+                            text = stringResource(CoreR.string.ly_img_editor_send_backward),
                             icon = CoreIconPack.SendBackward,
                             modifier = Modifier.weight(1f),
                             enabled = uiState.canSendBackward,
                             onClick = { onEvent(BlockEvent.OnBackward) },
+                        )
+                        CardButton(
+                            text = stringResource(R.string.ly_img_editor_send_to_back),
+                            icon = IconPack.Sendtoback,
+                            modifier = Modifier.weight(1f),
+                            enabled = uiState.canSendBackward,
+                            onClick = { onEvent(BlockEvent.ToBack) },
                         )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
@@ -174,7 +167,7 @@ fun LayerOptionsSheet(
                     ) {
                         if (isDuplicateAllowed) {
                             ActionRow(
-                                text = stringResource(R.string.ly_img_editor_sheet_layer_button_duplicate),
+                                text = stringResource(CoreR.string.ly_img_editor_duplicate),
                                 icon = CoreIconPack.Duplicate,
                                 onClick = { onEvent(BlockEvent.OnDuplicate) },
                             )
@@ -187,7 +180,7 @@ fun LayerOptionsSheet(
                                 LocalContentColor provides MaterialTheme.colorScheme.error,
                             ) {
                                 ActionRow(
-                                    text = stringResource(R.string.ly_img_editor_sheet_layer_button_delete),
+                                    text = stringResource(CoreR.string.ly_img_editor_delete),
                                     icon = CoreIconPack.Delete,
                                     onClick = { onEvent(BlockEvent.OnDelete) },
                                 )

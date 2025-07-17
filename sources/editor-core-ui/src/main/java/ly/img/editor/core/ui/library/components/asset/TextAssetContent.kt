@@ -17,9 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ly.img.editor.compose.foundation.combinedClickable
 import ly.img.editor.core.R
-import ly.img.editor.core.iconpack.IconPack
-import ly.img.editor.core.iconpack.Plus
 import ly.img.editor.core.theme.surface3
+import ly.img.editor.core.ui.iconpack.Add
+import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.library.getMeta
 import ly.img.editor.core.ui.library.state.WrappedAsset
 import ly.img.editor.core.ui.utils.fontFamily
@@ -53,8 +53,8 @@ internal fun TextAssetContent(
                     .size(24.dp),
             ) {
                 Icon(
-                    imageVector = IconPack.Plus,
-                    contentDescription = stringResource(id = R.string.ly_img_editor_asset_library_button_add),
+                    imageVector = IconPack.Add,
+                    contentDescription = stringResource(id = R.string.ly_img_editor_add),
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .size(16.dp)

@@ -24,8 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import ly.img.editor.base.R
 import ly.img.editor.base.components.SectionHeader
-import ly.img.editor.core.R
 import ly.img.editor.core.ui.ColorButton
 
 @Composable
@@ -56,7 +56,7 @@ fun ColorPicker(
         )
 
         Spacer(Modifier.height(16.dp))
-        SectionHeader(text = stringResource(R.string.ly_img_editor_sheet_color_picker_label_hue))
+        SectionHeader(text = stringResource(R.string.ly_img_editor_hue))
         Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             HueSlider(
                 modifier = Modifier.weight(1f),
@@ -78,7 +78,7 @@ fun ColorPicker(
         Spacer(Modifier.height(16.dp))
 
         if (showOpacity) {
-            SectionHeader(text = stringResource(R.string.ly_img_editor_sheet_color_picker_label_opacity))
+            SectionHeader(text = stringResource(R.string.ly_img_editor_opacity))
             Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 OpacitySlider(
                     modifier = Modifier.weight(1f),

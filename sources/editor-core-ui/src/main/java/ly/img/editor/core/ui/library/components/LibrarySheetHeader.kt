@@ -114,12 +114,7 @@ internal fun LibrarySearchHeader(
                         .fillMaxWidth(),
                     textFieldValue = textFieldValue,
                     placeholder = {
-                        Text(
-                            stringResource(
-                                R.string.ly_img_editor_asset_library_label_search_placeholder,
-                                stringResource(id = uiState.titleRes),
-                            ),
-                        )
+                        Text(stringResource(R.string.ly_img_editor_search_placeholder, stringResource(id = uiState.titleRes)))
                     },
                     onSearch = {
                         onLibraryEvent(LibraryEvent.OnEnterSearchMode(enter = false, uiState.libraryCategory))
@@ -134,10 +129,7 @@ internal fun LibrarySearchHeader(
                                 onLibraryEvent(LibraryEvent.OnEnterSearchMode(enter = false, uiState.libraryCategory))
                             },
                         ) {
-                            Icon(
-                                imageVector = CoreIconPack.ArrowBack,
-                                contentDescription = stringResource(R.string.ly_img_editor_asset_library_button_back),
-                            )
+                            Icon(CoreIconPack.ArrowBack, contentDescription = stringResource(R.string.ly_img_editor_back))
                         }
                     },
                     trailingIcon = {
@@ -148,10 +140,7 @@ internal fun LibrarySearchHeader(
                                     onLibraryEvent(LibraryEvent.OnSearchTextChange("", uiState.libraryCategory))
                                 },
                             ) {
-                                Icon(
-                                    imageVector = CoreIconPack.Close,
-                                    contentDescription = stringResource(R.string.ly_img_editor_asset_library_button_search_clear),
-                                )
+                                Icon(CoreIconPack.Close, contentDescription = stringResource(R.string.ly_img_editor_search_clear))
                             }
                         }
                     },
@@ -176,8 +165,8 @@ internal fun LibrarySearchHeader(
                                 },
                             ) {
                                 Icon(
-                                    imageVector = CoreIconPack.ArrowBack,
-                                    contentDescription = stringResource(R.string.ly_img_editor_asset_library_button_back),
+                                    CoreIconPack.ArrowBack,
+                                    contentDescription = stringResource(R.string.ly_img_editor_back),
                                 )
                             }
                         }
@@ -206,8 +195,8 @@ internal fun LibrarySearchHeader(
                                         Modifier.size(InputChipDefaults.IconSize),
                                     ) {
                                         Icon(
-                                            imageVector = CoreIconPack.Close,
-                                            contentDescription = stringResource(R.string.ly_img_editor_asset_library_button_search_clear),
+                                            CoreIconPack.Close,
+                                            contentDescription = stringResource(R.string.ly_img_editor_search_clear),
                                         )
                                     }
                                 },
@@ -221,10 +210,7 @@ internal fun LibrarySearchHeader(
                                         onLibraryEvent(LibraryEvent.OnEnterSearchMode(enter = true, uiState.libraryCategory))
                                     },
                                 ) {
-                                    Icon(
-                                        imageVector = IconPack.Search,
-                                        contentDescription = stringResource(id = R.string.ly_img_editor_asset_library_button_search),
-                                    )
+                                    Icon(IconPack.Search, contentDescription = stringResource(id = R.string.ly_img_editor_search))
                                 }
                             }
                         }
@@ -236,7 +222,7 @@ internal fun LibrarySearchHeader(
             onClick = onBack,
             Modifier.padding(end = 4.dp),
         ) {
-            Icon(IconPack.Expandmore, contentDescription = stringResource(id = R.string.ly_img_editor_asset_library_button_back))
+            Icon(IconPack.Expandmore, contentDescription = stringResource(id = R.string.ly_img_editor_back))
         }
     }
 }

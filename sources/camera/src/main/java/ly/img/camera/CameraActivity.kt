@@ -28,7 +28,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ly.img.camera.components.CameraView
 import ly.img.camera.components.TOOLBAR_HEIGHT
-import ly.img.camera.core.R
 import ly.img.camera.setup.CameraEngineInitializer
 import ly.img.camera.setup.SetupView
 import ly.img.camera.util.SingleEvent
@@ -122,10 +121,10 @@ open class CameraActivity : ComponentActivity() {
                     AlertDialog(
                         onDismissRequest = { },
                         title = {
-                            Text(text = stringResource(R.string.ly_img_camera_dialog_video_error_title))
+                            Text(text = stringResource(R.string.ly_img_camera_video_error_title))
                         },
                         text = {
-                            Text(text = stringResource(R.string.ly_img_camera_dialog_video_error_text))
+                            Text(text = stringResource(R.string.ly_img_camera_video_error_text))
                         },
                         confirmButton = {
                             TextButton(
@@ -134,7 +133,7 @@ open class CameraActivity : ComponentActivity() {
                                     finish()
                                 },
                             ) {
-                                Text(stringResource(R.string.ly_img_camera_dialog_video_error_button_dismiss))
+                                Text(stringResource(R.string.ly_img_camera_video_error_dismiss))
                             }
                         },
                         properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),

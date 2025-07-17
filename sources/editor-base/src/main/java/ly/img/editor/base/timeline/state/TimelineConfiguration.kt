@@ -4,12 +4,6 @@ import androidx.compose.ui.unit.dp
 import kotlin.time.Duration.Companion.seconds
 
 object TimelineConfiguration {
-    var addClipOptions: List<AddClipOption> = listOf(
-        AddClipOption.Camera,
-        AddClipOption.Gallery,
-        AddClipOption.Library,
-    )
-
     val minClipDuration = 1.seconds
 
     val clipHeight = 40.dp

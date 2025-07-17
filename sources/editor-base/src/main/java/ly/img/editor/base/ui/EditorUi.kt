@@ -10,8 +10,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -51,6 +53,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import kotlinx.coroutines.FlowPreview
@@ -60,6 +63,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import ly.img.editor.base.components.EditingTextCard
 import ly.img.editor.base.dock.AdjustmentSheetContent
+import ly.img.editor.base.dock.BottomSheetContent
 import ly.img.editor.base.dock.CustomBottomSheetContent
 import ly.img.editor.base.dock.EffectSheetContent
 import ly.img.editor.base.dock.FillStrokeBottomSheetContent
@@ -78,12 +82,6 @@ import ly.img.editor.base.dock.options.effect.EffectSelectionSheet
 import ly.img.editor.base.dock.options.fillstroke.FillStrokeOptionsSheet
 import ly.img.editor.base.dock.options.format.FormatOptionsSheet
 import ly.img.editor.base.dock.options.layer.LayerOptionsSheet
-import ly.img.editor.base.dock.options.postcard.colors.PostcardColorsBottomSheetContent
-import ly.img.editor.base.dock.options.postcard.colors.PostcardColorsSheet
-import ly.img.editor.base.dock.options.postcard.font.PostcardGreetingFontBottomSheetContent
-import ly.img.editor.base.dock.options.postcard.font.PostcardGreetingFontSheet
-import ly.img.editor.base.dock.options.postcard.size.PostcardGreetingSizeBottomSheetContent
-import ly.img.editor.base.dock.options.postcard.size.PostcardGreetingSizeSheet
 import ly.img.editor.base.dock.options.reorder.ReorderBottomSheetContent
 import ly.img.editor.base.dock.options.reorder.ReorderSheet
 import ly.img.editor.base.dock.options.shapeoptions.ShapeOptionsSheet
@@ -100,6 +98,7 @@ import ly.img.editor.compose.bottomsheet.ModalBottomSheetValue
 import ly.img.editor.compose.bottomsheet.rememberModalBottomSheetState
 import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
+import ly.img.editor.core.R
 import ly.img.editor.core.component.EditorComponent
 import ly.img.editor.core.compose.rememberLastValue
 import ly.img.editor.core.engine.EngineRenderTarget
@@ -131,6 +130,8 @@ fun EditorUi(
     editorScope: EditorScope,
     editorContext: EditorContext,
     onEvent: EditorScope.(Parcelable, EditorEvent) -> Parcelable,
+    canvasOverlay: @Composable BoxScope.(PaddingValues) -> Unit,
+    bottomSheetLayout: @Composable ColumnScope.(BottomSheetContent, (Boolean) -> Unit) -> Unit = { _, _ -> },
     viewModel: EditorUiViewModel,
     close: (Throwable?) -> Unit,
 ) {
@@ -386,6 +387,7 @@ fun EditorUi(
     Box(modifier = Modifier.background(colorScheme.surface)) {
         ModalBottomSheetLayout(
             sheetState = scrimBottomSheetState,
+            dismissContentDescription = stringResource(id = R.string.ly_img_editor_close),
             sheetContent = {
                 anyComposable?.Content()
             },
@@ -402,6 +404,7 @@ fun EditorUi(
             ModalBottomSheetLayout(
                 sheetState = bottomSheetState,
                 modifier = Modifier.statusBarsPadding(),
+                dismissContentDescription = stringResource(id = R.string.ly_img_editor_close),
                 sheetElevation = sheetElevation,
                 sheetContent = {
                     val content = bottomSheetContent
@@ -546,23 +549,8 @@ fun EditorUi(
                                         onColorPickerActiveChanged = onColorPickerActiveChanged,
                                         onEvent = viewModel::send,
                                     )
-                                    is PostcardGreetingFontBottomSheetContent ->
-                                        PostcardGreetingFontSheet(
-                                            uiState = content.uiState,
-                                            onEvent = viewModel::send,
-                                        )
-                                    is PostcardGreetingSizeBottomSheetContent ->
-                                        PostcardGreetingSizeSheet(
-                                            uiState = content.uiState,
-                                            onEvent = viewModel::send,
-                                        )
-                                    is PostcardColorsBottomSheetContent ->
-                                        PostcardColorsSheet(
-                                            uiState = content.uiState,
-                                            onColorPickerActiveChanged = onColorPickerActiveChanged,
-                                            onEvent = viewModel::send,
-                                        )
                                     is CustomBottomSheetContent -> content.content(editorScope)
+                                    else -> bottomSheetLayout(content, onColorPickerActiveChanged)
                                 }
                                 Spacer(Modifier.height(8.dp))
                             }
@@ -643,8 +631,8 @@ fun EditorUi(
                                         onEvent = viewModel::send,
                                     )
                                 }
-                                editorContext.dock?.let {
-                                    EditorComponent(component = it(editorScope))
+                                Box {
+                                    canvasOverlay(paddingValues)
                                 }
                             }
 

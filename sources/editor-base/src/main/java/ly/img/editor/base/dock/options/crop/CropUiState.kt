@@ -1,6 +1,6 @@
 package ly.img.editor.base.dock.options.crop
 
-import ly.img.editor.core.R
+import ly.img.editor.base.R
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.ui.engine.getPage
 import ly.img.editor.core.ui.engine.getScene
@@ -101,31 +101,31 @@ private const val SCENE_PIXEL_SCALE_FACTOR = "scene/pixelScaleFactor"
 
 private val UNIT_ENTRIES: List<DesignUnitEntry> = listOf(
     DesignUnitEntry(
-        titleRes = R.string.ly_img_editor_dialog_resize_unit_option_inch,
+        titleRes = R.string.ly_img_editor_unit_inch,
         native = DesignUnit.INCH,
         values = listOf(72f, 150f, 300f, 600f, 1200f, 2400f),
         unitSuffix = "inch",
         defaultValue = 300f,
         valueSuffix = " dpi",
-        unitValueNameRes = R.string.ly_img_editor_dialog_resize_label_resolution,
+        unitValueNameRes = R.string.ly_img_editor_unit_dpi_value_name,
     ),
     DesignUnitEntry(
-        titleRes = R.string.ly_img_editor_dialog_resize_unit_option_millimeter,
+        titleRes = R.string.ly_img_editor_unit_millimeter,
         native = DesignUnit.MILLIMETER,
         values = listOf(72f, 150f, 300f, 600f, 1200f, 2400f),
         unitSuffix = "mm",
         defaultValue = 300f,
         valueSuffix = " dpi",
-        unitValueNameRes = R.string.ly_img_editor_dialog_resize_label_resolution,
+        unitValueNameRes = R.string.ly_img_editor_unit_dpi_value_name,
     ),
     DesignUnitEntry(
-        titleRes = R.string.ly_img_editor_dialog_resize_unit_option_pixel,
+        titleRes = R.string.ly_img_editor_unit_pixel,
         native = DesignUnit.PIXEL,
         unitSuffix = "px",
         values = listOf(0.5f, 1f, 1.5f, 2f, 3f, 4f),
         defaultValue = 1f,
         valueSuffix = "×",
-        unitValueNameRes = R.string.ly_img_editor_dialog_resize_label_pixel_scale,
+        unitValueNameRes = R.string.ly_img_editor_unit_pixel_scale_value_name,
     ),
 )
 
@@ -142,9 +142,9 @@ data class CropUiState(
     val resizeState: ResizeUiState,
 ) {
     fun contentFillModeTextRes(mode: ContentFillMode) = when (mode) {
-        ContentFillMode.CROP -> R.string.ly_img_editor_sheet_crop_fill_mode_option_crop
-        ContentFillMode.COVER -> R.string.ly_img_editor_sheet_crop_fill_mode_option_cover
-        ContentFillMode.CONTAIN -> R.string.ly_img_editor_sheet_crop_fill_mode_option_fit
+        ContentFillMode.CROP -> R.string.ly_img_editor_fill_mode_crop
+        ContentFillMode.COVER -> R.string.ly_img_editor_fill_mode_cover
+        ContentFillMode.CONTAIN -> R.string.ly_img_editor_fill_mode_contain
     }
 
     fun contentFillModeIcon(mode: ContentFillMode) = when (mode) {

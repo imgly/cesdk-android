@@ -15,7 +15,7 @@ fun AdjustmentOptionsSheet(
 ) {
     Column {
         SheetHeader(
-            title = stringResource(id = R.string.ly_img_editor_sheet_adjustments_title),
+            title = stringResource(id = R.string.ly_img_editor_adjustments),
             onClose = { onEvent(EditorEvent.Sheet.Close(animate = true)) },
         )
         PropertiesBlock(

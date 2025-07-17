@@ -1,11 +1,11 @@
 package ly.img.editor.base.ui.handler
 
+import ly.img.editor.base.R
 import ly.img.editor.base.timeline.clip.Clip
 import ly.img.editor.base.timeline.clip.ClipType
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.ui.BlockEvent
-import ly.img.editor.core.R
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.engine.BlockKind
 import ly.img.editor.core.ui.engine.Scope
@@ -138,14 +138,14 @@ fun EventsHandler.timelineEvents(
         val absoluteEndTime = absoluteStartTime + originalClipDuration
 
         if (playheadPosition < absoluteStartTime || playheadPosition > absoluteEndTime) {
-            showError(R.string.ly_img_editor_timeline_error_split_out_of_range)
+            showError(R.string.ly_img_editor_error_split_out_of_range)
             return@register
         }
 
         if (playheadPosition < absoluteStartTime + minClipDuration ||
             (playheadPosition > absoluteEndTime - minClipDuration)
         ) {
-            showError(R.string.ly_img_editor_timeline_error_split_short_duration)
+            showError(R.string.ly_img_editor_error_split_short_duration)
             return@register
         }
 

@@ -21,9 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import ly.img.editor.base.R
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
-import ly.img.editor.core.R
 import ly.img.editor.core.ui.iconpack.Expandmore
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Pause
@@ -78,9 +78,9 @@ fun PlayerHeader(
                     modifier = Modifier.size(36.dp),
                     imageVector = if (isPlaying) IconPack.Pause else IconPack.Play,
                     contentDescription = if (isPlaying) {
-                        stringResource(R.string.ly_img_editor_timeline_button_pause)
+                        stringResource(R.string.ly_img_editor_pause)
                     } else {
-                        stringResource(R.string.ly_img_editor_timeline_button_play)
+                        stringResource(R.string.ly_img_editor_play)
                     },
                 )
             }
@@ -97,7 +97,7 @@ fun PlayerHeader(
             ) {
                 Icon(
                     if (isLooping) IconPack.Repeat else IconPack.RepeatOff,
-                    contentDescription = stringResource(R.string.ly_img_editor_timeline_button_loop),
+                    contentDescription = stringResource(R.string.ly_img_editor_loop),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -113,7 +113,7 @@ fun PlayerHeader(
                     .align(Alignment.CenterEnd)
                     .padding(horizontal = 4.dp),
             ) {
-                Icon(IconPack.Expandmore, contentDescription = stringResource(R.string.ly_img_editor_timeline_button_hide_timeline))
+                Icon(IconPack.Expandmore, contentDescription = stringResource(ly.img.editor.core.R.string.ly_img_editor_close))
             }
         } else {
             TextButton(
@@ -127,7 +127,7 @@ fun PlayerHeader(
             ) {
                 Icon(IconPack.Timeline, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(
-                    text = stringResource(R.string.ly_img_editor_timeline_button_show_timeline),
+                    text = stringResource(R.string.ly_img_editor_timeline),
                     modifier = Modifier.padding(start = 8.dp),
                     style = MaterialTheme.typography.labelLarge,
                 )

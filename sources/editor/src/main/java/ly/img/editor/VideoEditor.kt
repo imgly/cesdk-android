@@ -40,7 +40,6 @@ fun VideoEditor(
                 renderTarget = engineConfiguration.renderTarget,
                 editorScope = editorScope,
                 onCreate = engineConfiguration.onCreate,
-                onLoaded = engineConfiguration.onLoaded,
                 onExport = engineConfiguration.onExport,
                 onUpload = engineConfiguration.onUpload,
                 onClose = engineConfiguration.onClose,

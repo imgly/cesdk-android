@@ -322,7 +322,7 @@ val ItemContent: @Composable ItemContentPayload.() -> Unit = {
                 .width(88.dp)
                 .padding(start = 4.dp, end = 4.dp),
             textAlign = TextAlign.Center,
-            text = wrappedAsset?.asset?.label ?: stringResource(R.string.ly_img_editor_asset_library_label_none),
+            text = wrappedAsset?.asset?.label ?: stringResource(R.string.ly_img_editor_remove),
             style = MaterialTheme.typography.labelMedium,
         )
     }

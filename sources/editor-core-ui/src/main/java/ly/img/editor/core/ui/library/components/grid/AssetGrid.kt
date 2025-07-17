@@ -88,7 +88,7 @@ internal fun AssetGrid(
         AssetsLoadState.EmptySearchResult -> {
             EmptyResultContent(
                 icon = IconPack.Search,
-                text = stringResource(R.string.ly_img_editor_asset_library_label_empty),
+                text = stringResource(R.string.ly_img_editor_no_elements),
             )
         }
 
@@ -96,7 +96,7 @@ internal fun AssetGrid(
             val assetSource = uiState.assetsData.assetSourceType
             EmptyResultContent(
                 icon = IconPack.Folder,
-                text = stringResource(R.string.ly_img_editor_asset_library_label_empty),
+                text = stringResource(R.string.ly_img_editor_no_elements),
                 button = if (assetSource is UploadAssetSourceType) {
                     {
                         val launcher = rememberLauncherForActivityResult(
@@ -109,7 +109,7 @@ internal fun AssetGrid(
                                 launcher.launch(assetSource.mimeTypeFilter)
                             },
                         ) {
-                            Text(text = stringResource(R.string.ly_img_editor_asset_library_button_add))
+                            Text(text = stringResource(R.string.ly_img_editor_add))
                         }
                     }
                 } else {

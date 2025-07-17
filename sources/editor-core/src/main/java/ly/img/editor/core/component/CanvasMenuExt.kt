@@ -69,7 +69,7 @@ val Button.Id.Companion.bringForward by unsafeLazy {
  * By default [EditorEvent.Selection.BringForward] is invoked.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
  * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
- * Default value is always [R.string.ly_img_editor_canvas_menu_button_bring_forward].
+ * Default value is always [R.string.ly_img_editor_bring_forward].
  * @return a button that will be displayed in the canvas menu.
  */
 @Composable
@@ -96,7 +96,7 @@ fun Button.Companion.rememberBringForward(
         editorContext.eventHandler.send(EditorEvent.Selection.BringForward())
     },
     contentDescription: (@Composable ButtonScope.() -> String)? = {
-        stringResource(R.string.ly_img_editor_canvas_menu_button_bring_forward)
+        stringResource(R.string.ly_img_editor_bring_forward)
     },
     `_`: Nothing = nothing,
 ): Button = remember(
@@ -150,7 +150,7 @@ val Button.Id.Companion.sendBackward by unsafeLazy {
  * By default [EditorEvent.Selection.SendBackward] is invoked.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
  * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
- * Default value is always [R.string.ly_img_editor_canvas_menu_button_send_backward].
+ * Default value is always [R.string.ly_img_editor_send_backward].
  * @return a button that will be displayed in the canvas menu.
  */
 @Composable
@@ -177,7 +177,7 @@ fun Button.Companion.rememberSendBackward(
         editorContext.eventHandler.send(EditorEvent.Selection.SendBackward())
     },
     contentDescription: (@Composable ButtonScope.() -> String)? = {
-        stringResource(R.string.ly_img_editor_canvas_menu_button_send_backward)
+        stringResource(R.string.ly_img_editor_send_backward)
     },
     `_`: Nothing = nothing,
 ): Button = remember(
@@ -231,7 +231,7 @@ val Button.Id.Companion.duplicate by unsafeLazy {
  * By default [EditorEvent.Selection.Duplicate] is invoked.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
  * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
- * Default value is always [R.string.ly_img_editor_canvas_menu_button_duplicate].
+ * Default value is always [R.string.ly_img_editor_duplicate].
  * @return a button that will be displayed in the canvas menu.
  */
 @Composable
@@ -255,7 +255,7 @@ fun Button.Companion.rememberDuplicate(
         editorContext.eventHandler.send(EditorEvent.Selection.Duplicate())
     },
     contentDescription: (@Composable ButtonScope.() -> String)? = {
-        stringResource(R.string.ly_img_editor_canvas_menu_button_duplicate)
+        stringResource(R.string.ly_img_editor_duplicate)
     },
     `_`: Nothing = nothing,
 ): Button = remember(
@@ -309,7 +309,7 @@ val Button.Id.Companion.delete by unsafeLazy {
  * By default [EditorEvent.Selection.Delete] is invoked.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
  * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
- * Default value is always [R.string.ly_img_editor_canvas_menu_button_delete].
+ * Default value is always [R.string.ly_img_editor_delete].
  * @return a button that will be displayed in the canvas menu.
  */
 @Composable
@@ -333,7 +333,7 @@ fun Button.Companion.rememberDelete(
         editorContext.eventHandler.send(EditorEvent.Selection.Delete())
     },
     contentDescription: (@Composable ButtonScope.() -> String)? = {
-        stringResource(R.string.ly_img_editor_canvas_menu_button_delete)
+        stringResource(R.string.ly_img_editor_delete)
     },
     `_`: Nothing = nothing,
 ): Button = remember(
@@ -376,7 +376,7 @@ val Button.Id.Companion.selectGroup by unsafeLazy {
  * @param decoration decoration of the button. Useful when you want to add custom background, foreground, shadow, paddings etc.
  * Default value is always no decoration.
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_canvas_menu_button_select_group].
+ * Default value is always [R.string.ly_img_editor_select_group].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -400,7 +400,7 @@ fun Button.Companion.rememberSelectGroup(
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
-    text: @Composable ButtonScope.() -> String = { stringResource(R.string.ly_img_editor_canvas_menu_button_select_group) },
+    text: @Composable ButtonScope.() -> String = { stringResource(R.string.ly_img_editor_select_group) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {

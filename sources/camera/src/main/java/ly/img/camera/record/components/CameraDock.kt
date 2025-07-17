@@ -22,7 +22,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ly.img.camera.components.Shadowed
 import ly.img.camera.core.CameraConfiguration
-import ly.img.camera.core.R
 import ly.img.camera.preview.CameraState
 import ly.img.camera.record.RecordingManager
 import ly.img.editor.core.theme.LocalExtendedColorScheme
@@ -63,7 +62,7 @@ internal fun CameraDock(
                     Icon(
                         IconPack.Backspace,
                         contentDescription = stringResource(
-                            R.string.ly_img_camera_button_delete_last_recording,
+                            ly.img.camera.R.string.ly_img_camera_delete_last_recording,
                         ),
                     )
                 }

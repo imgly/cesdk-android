@@ -4,21 +4,6 @@ android {
     namespace = 'ly.img.editor.core'
 }
 
-def UBQ_ROOT_DIR = "${project.projectDir}/../../../.."
-def updateLocalizationTask = tasks.register("updateLocalizationFiles", Exec) {
-    workingDir = UBQ_ROOT_DIR
-    executable "python3"
-    ignoreExitValue = true
-    args = [
-        "scripts/localization/android/generate_localization.py",
-        "scripts/localization/mobile-editor.tsv",
-        "apps/cesdk_android/sources/editor-core/src/main/res",
-        "ly_img_editor_"
-    ]
-}
-tasks.named("preBuild").configure { dependsOn(updateLocalizationTask) }
-tasks.named("build").configure { dependsOn(updateLocalizationTask) }
-
 dependencies {
     api libs.cesdk.engine
     api libs.androidx.activity

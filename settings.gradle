@@ -24,7 +24,6 @@ dependencyResolutionManagement {
 rootProject.name = "CE.SDK Android"
 if (file("smoke-tests-app").exists()) {
     include ':smoke-tests-app'
-    include ':ubq-source-dummy'
 }
 new File(rootDir, "sources").listFiles().each {
     if (it.isDirectory() && it.name.startsWith("editor") || it.name.startsWith("camera")) {

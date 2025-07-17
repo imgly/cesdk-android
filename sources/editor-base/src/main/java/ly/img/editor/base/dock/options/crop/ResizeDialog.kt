@@ -36,11 +36,11 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import ly.img.editor.base.R
 import ly.img.editor.base.components.PropertyItem
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.compose.foundation.focusable
 import ly.img.editor.compose.material3.InputChip
-import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.LockClose
@@ -106,7 +106,7 @@ fun ResizeDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp, bottom = 24.dp, start = 8.dp, end = 8.dp),
-                text = stringResource(R.string.ly_img_editor_dialog_resize_title),
+                text = stringResource(R.string.ly_img_editor_resize),
                 // fontSize = 24.sp,
                 style = MaterialTheme.typography.headlineSmall,
             )
@@ -118,7 +118,7 @@ fun ResizeDialog(
             selected = isAspectRatioLocked,
             label = {
                 Text(
-                    text = stringResource(R.string.ly_img_editor_dialog_resize_button_resize_proportionally),
+                    text = stringResource(R.string.ly_img_editor_aspect_lock),
                     style = MaterialTheme.typography.labelMedium,
                     color = if (isAspectRatioLocked) {
                         MaterialTheme.colorScheme.onSecondaryContainer
@@ -171,7 +171,7 @@ fun ResizeDialog(
                 label = {
                     Text(
                         stringResource(
-                            R.string.ly_img_editor_dialog_resize_label_width,
+                            R.string.ly_img_editor_unit_width,
                             unit.unitSuffix,
                         ),
                     )
@@ -193,7 +193,7 @@ fun ResizeDialog(
                 label = {
                     Text(
                         stringResource(
-                            R.string.ly_img_editor_dialog_resize_label_height,
+                            R.string.ly_img_editor_unit_height,
                             unit.unitSuffix,
                         ),
                     )
@@ -213,7 +213,7 @@ fun ResizeDialog(
                     value = stringResource(unit.titleRes),
                     onValueChange = {},
                     singleLine = true,
-                    label = { Text(stringResource(R.string.ly_img_editor_dialog_resize_label_unit)) },
+                    label = { Text(stringResource(R.string.ly_img_editor_unit_title)) },
                     readOnly = true,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -314,7 +314,7 @@ fun ResizeDialog(
                 onClick = onClose,
                 modifier = Modifier.weight(1f),
             ) {
-                Text(stringResource(R.string.ly_img_editor_dialog_resize_button_dismiss))
+                Text(stringResource(ly.img.editor.core.R.string.ly_img_editor_cancel))
             }
 
             fun hasChanges(): Boolean = (
@@ -336,7 +336,7 @@ fun ResizeDialog(
                 modifier = Modifier.weight(1f),
                 enabled = hasChanges(),
             ) {
-                Text(stringResource(R.string.ly_img_editor_dialog_resize_button_confirm))
+                Text(stringResource(ly.img.editor.core.R.string.ly_img_editor_apply))
             }
         }
     }
@@ -361,12 +361,12 @@ fun DefaultPreview() {
                     dpi = 1,
                     pixelScaleFactor = 1f,
                     unit = DesignUnitEntry(
-                        titleRes = R.string.ly_img_editor_dialog_resize_unit_option_inch,
+                        titleRes = R.string.ly_img_editor_unit_inch,
                         native = DesignUnit.INCH,
                         values = listOf(72f, 150f, 300f, 600f, 1200f, 2400f),
                         defaultValue = 300f,
                         valueSuffix = " dpi",
-                        unitValueNameRes = R.string.ly_img_editor_dialog_resize_label_resolution,
+                        unitValueNameRes = R.string.ly_img_editor_unit_dpi_value_name,
                         unitSuffix = "inch",
                     ),
                 ),

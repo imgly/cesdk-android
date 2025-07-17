@@ -18,14 +18,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ly.img.editor.base.timeline.state.TimelineConfiguration
-import ly.img.editor.core.iconpack.IconPack
-import ly.img.editor.core.iconpack.Plus
+import ly.img.editor.core.ui.iconpack.Add
+import ly.img.editor.core.ui.iconpack.IconPack
 
 @Composable
 fun TimelineButton(
     @StringRes id: Int,
     modifier: Modifier = Modifier,
-    icon: ImageVector = IconPack.Plus,
+    icon: ImageVector = IconPack.Add,
     containerColor: Color = Color.Transparent,
     onClick: () -> Unit,
 ) {

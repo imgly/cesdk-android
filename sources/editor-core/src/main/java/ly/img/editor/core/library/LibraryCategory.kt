@@ -56,14 +56,14 @@ data class LibraryCategory(
         ): LibraryCategory {
             val isSceneModeVideo = sceneMode == SceneMode.VIDEO
             return LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_elements,
+                tabTitleRes = R.string.ly_img_editor_elements,
                 tabSelectedIcon = IconPack.LibraryElements,
                 tabUnselectedIcon = IconPack.LibraryElementsOutline,
                 content = LibraryContent.Sections(
-                    titleRes = R.string.ly_img_editor_asset_library_title_elements,
+                    titleRes = R.string.ly_img_editor_elements,
                     sections = buildList {
                         LibraryContent.Section(
-                            titleRes = R.string.ly_img_editor_asset_library_section_gallery,
+                            titleRes = R.string.ly_img_editor_gallery,
                             sourceTypes = buildList {
                                 add(AssetSourceType.ImageUploads)
                                 if (isSceneModeVideo) {
@@ -73,16 +73,16 @@ data class LibraryCategory(
                             showUpload = false,
                             assetType = AssetType.Gallery,
                             expandContent = LibraryContent.Sections(
-                                titleRes = R.string.ly_img_editor_asset_library_section_gallery,
+                                titleRes = R.string.ly_img_editor_gallery,
                                 sections = buildList {
                                     LibraryContent.Section(
-                                        titleRes = R.string.ly_img_editor_asset_library_section_image_uploads,
+                                        titleRes = R.string.ly_img_editor_image_uploads,
                                         sourceTypes = listOf(AssetSourceType.ImageUploads),
                                         assetType = AssetType.Image,
                                     ).let(::add)
                                     if (isSceneModeVideo) {
                                         LibraryContent.Section(
-                                            titleRes = R.string.ly_img_editor_asset_library_section_video_uploads,
+                                            titleRes = R.string.ly_img_editor_video_uploads,
                                             sourceTypes = listOf(AssetSourceType.VideoUploads),
                                             assetType = AssetType.Video,
                                         ).let(::add)
@@ -94,7 +94,7 @@ data class LibraryCategory(
                         if (isSceneModeVideo) {
                             videos.apply {
                                 LibraryContent.Section(
-                                    titleRes = R.string.ly_img_editor_asset_library_section_videos,
+                                    titleRes = R.string.ly_img_editor_videos,
                                     sourceTypes = content.sourceTypes,
                                     assetType = AssetType.Video,
                                     expandContent = content,
@@ -102,7 +102,7 @@ data class LibraryCategory(
                             }
                             audios.apply {
                                 LibraryContent.Section(
-                                    titleRes = R.string.ly_img_editor_asset_library_section_audio,
+                                    titleRes = R.string.ly_img_editor_audio,
                                     sourceTypes = content.sourceTypes,
                                     count = 3,
                                     assetType = AssetType.Audio,
@@ -113,7 +113,7 @@ data class LibraryCategory(
 
                         images.apply {
                             LibraryContent.Section(
-                                titleRes = R.string.ly_img_editor_asset_library_section_images,
+                                titleRes = R.string.ly_img_editor_images,
                                 sourceTypes = content.sourceTypes,
                                 assetType = AssetType.Image,
                                 expandContent = content,
@@ -123,7 +123,7 @@ data class LibraryCategory(
                         text.apply {
                             val content = if (!isSceneModeVideo) textAndTextComponents.content else content
                             LibraryContent.Section(
-                                titleRes = R.string.ly_img_editor_asset_library_section_text,
+                                titleRes = R.string.ly_img_editor_text,
                                 sourceTypes = content.sourceTypes,
                                 excludedPreviewSourceTypes = listOf(AssetSourceType.TextComponents),
                                 assetType = AssetType.Text,
@@ -133,7 +133,7 @@ data class LibraryCategory(
 
                         shapes.apply {
                             LibraryContent.Section(
-                                titleRes = R.string.ly_img_editor_asset_library_section_shapes,
+                                titleRes = R.string.ly_img_editor_shapes,
                                 sourceTypes = content.sourceTypes,
                                 assetType = AssetType.Shape,
                                 expandContent = content,
@@ -142,7 +142,7 @@ data class LibraryCategory(
 
                         stickers.apply {
                             LibraryContent.Section(
-                                titleRes = R.string.ly_img_editor_asset_library_title_stickers,
+                                titleRes = R.string.ly_img_editor_stickers,
                                 sourceTypes = content.sourceTypes,
                                 assetType = AssetType.Sticker,
                                 expandContent = content,
@@ -158,7 +158,7 @@ data class LibraryCategory(
          */
         val Video by lazy {
             LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_videos,
+                tabTitleRes = R.string.ly_img_editor_videos,
                 tabSelectedIcon = IconPack.PlayBox,
                 tabUnselectedIcon = IconPack.PlayBoxOutline,
                 content = LibraryContent.Video,
@@ -170,7 +170,7 @@ data class LibraryCategory(
          */
         val Audio by lazy {
             LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_audio,
+                tabTitleRes = R.string.ly_img_editor_audio,
                 tabSelectedIcon = IconPack.Music,
                 tabUnselectedIcon = IconPack.Music,
                 content = LibraryContent.Audio,
@@ -182,7 +182,7 @@ data class LibraryCategory(
          */
         val Images by lazy {
             LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_images,
+                tabTitleRes = R.string.ly_img_editor_images,
                 tabSelectedIcon = IconPack.Image,
                 tabUnselectedIcon = IconPack.ImageOutline,
                 content = LibraryContent.Images,
@@ -194,7 +194,7 @@ data class LibraryCategory(
          */
         val Text by lazy {
             LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_text,
+                tabTitleRes = R.string.ly_img_editor_text,
                 tabSelectedIcon = IconPack.TextFields,
                 tabUnselectedIcon = IconPack.TextFields,
                 isHalfExpandedInitially = true,
@@ -207,7 +207,7 @@ data class LibraryCategory(
          */
         val TextAndTextComponents by lazy {
             LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_text,
+                tabTitleRes = R.string.ly_img_editor_text,
                 tabSelectedIcon = IconPack.TextFields,
                 tabUnselectedIcon = IconPack.TextFields,
                 isHalfExpandedInitially = true,
@@ -220,7 +220,7 @@ data class LibraryCategory(
          */
         val Shapes by lazy {
             LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_shapes,
+                tabTitleRes = R.string.ly_img_editor_shapes,
                 tabSelectedIcon = IconPack.Shapes,
                 tabUnselectedIcon = IconPack.ShapesOutline,
                 content = LibraryContent.Shapes,
@@ -232,7 +232,7 @@ data class LibraryCategory(
          */
         val Stickers by lazy {
             LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_stickers,
+                tabTitleRes = R.string.ly_img_editor_stickers,
                 tabSelectedIcon = IconPack.StickerEmoji,
                 tabUnselectedIcon = IconPack.StickerEmojiOutline,
                 content = LibraryContent.Stickers,
@@ -244,7 +244,7 @@ data class LibraryCategory(
          */
         val Overlays by lazy {
             LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_overlays,
+                tabTitleRes = R.string.ly_img_editor_overlays,
                 tabSelectedIcon = IconPack.PlayBox,
                 tabUnselectedIcon = IconPack.PlayBoxOutline,
                 content = LibraryContent.Overlays,
@@ -256,7 +256,7 @@ data class LibraryCategory(
          */
         val Clips by lazy {
             LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_clips,
+                tabTitleRes = R.string.ly_img_editor_clips,
                 tabSelectedIcon = IconPack.PlayBox,
                 tabUnselectedIcon = IconPack.PlayBoxOutline,
                 content = LibraryContent.Clips,
@@ -268,7 +268,7 @@ data class LibraryCategory(
          */
         val StickersAndShapes by lazy {
             LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_stickers_and_shapes,
+                tabTitleRes = R.string.ly_img_editor_stickers,
                 tabSelectedIcon = IconPack.StickerEmoji,
                 tabUnselectedIcon = IconPack.StickerEmojiOutline,
                 content = LibraryContent.StickersAndShapes,

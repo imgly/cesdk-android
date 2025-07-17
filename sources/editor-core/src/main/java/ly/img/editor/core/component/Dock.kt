@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Icon
@@ -106,7 +107,6 @@ class Dock private constructor(
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = horizontalArrangement(),
-                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Items(data)
                 }
@@ -162,6 +162,7 @@ class Dock private constructor(
 
     /**
      * A component that represents an item that can be rendered in the dock.
+     * The only limitation is that the component must have a maximum height of 64.dp.
      */
     abstract class Item<Scope : ItemScope> : EditorComponent<Scope>() {
         /**
@@ -172,7 +173,7 @@ class Dock private constructor(
 
         @Composable
         final override fun Scope.Content(animatedVisibilityScope: AnimatedVisibilityScope?) {
-            Box {
+            Box(modifier = Modifier.sizeIn(maxHeight = 64.dp)) {
                 ItemContent()
             }
         }
