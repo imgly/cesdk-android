@@ -131,9 +131,9 @@ data class EffectUiState(
                 }
             }
             val titleRes = when (libraryCategory) {
-                AppearanceLibraryCategory.FxEffects -> R.string.ly_img_editor_effect
-                AppearanceLibraryCategory.Filters -> R.string.ly_img_editor_filter
-                AppearanceLibraryCategory.Blur -> R.string.ly_img_editor_blur
+                AppearanceLibraryCategory.FxEffects -> R.string.ly_img_editor_sheet_effect_title
+                AppearanceLibraryCategory.Filters -> R.string.ly_img_editor_sheet_filter_title
+                AppearanceLibraryCategory.Blur -> R.string.ly_img_editor_sheet_blur_title
                 else -> throw IllegalArgumentException("Unsupported library category: $libraryCategory")
             }
             return EffectUiState(

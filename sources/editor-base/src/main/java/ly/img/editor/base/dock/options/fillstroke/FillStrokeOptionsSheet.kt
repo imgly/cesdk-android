@@ -16,12 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ly.img.editor.base.R
 import ly.img.editor.base.components.PropertyPicker
 import ly.img.editor.base.components.SectionHeader
 import ly.img.editor.base.dock.options.crop.RangeInclusionType
 import ly.img.editor.base.dock.options.crop.ScalePicker
 import ly.img.editor.base.ui.BlockEvent
+import ly.img.editor.core.R
 import ly.img.editor.core.component.data.GradientFill
 import ly.img.editor.core.component.data.LinearGradientFill
 import ly.img.editor.core.component.data.SolidFill
@@ -31,7 +31,6 @@ import ly.img.editor.core.ui.UiDefaults
 import ly.img.editor.core.ui.engine.toComposeColor
 import ly.img.editor.core.ui.sheetScrollableContentModifier
 import ly.img.engine.RGBAColor
-import ly.img.editor.core.R as CoreR
 
 @Composable
 fun FillStrokeOptionsSheet(
@@ -56,14 +55,14 @@ fun FillStrokeOptionsSheet(
                     Modifier.sheetScrollableContentModifier(),
                 ) {
                     if (uiState.fillUiState != null) {
-                        SectionHeader(stringResource(CoreR.string.ly_img_editor_fill))
+                        SectionHeader(stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_fill))
                         Card(
                             colors = UiDefaults.cardColors,
                         ) {
                             val fillState = uiState.fillUiState.fillState.takeIf { uiState.fillUiState.isFillEnabled }
                             if (uiState.fillUiState.supportFillTypes) {
                                 PropertyPicker(
-                                    title = stringResource(R.string.ly_img_editor_type),
+                                    title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_type),
                                     propertyTextRes = uiState.fillUiState.fillTypeRes,
                                     properties = fillTypePropertiesList,
                                     onPropertyPicked = {
@@ -240,9 +239,9 @@ fun FillStrokeOptionsSheet(
                         id = if (screenState ==
                             ScreenState.StrokeColorPicker
                         ) {
-                            R.string.ly_img_editor_stroke_color
+                            R.string.ly_img_editor_sheet_fill_stroke_color_picker_title_stroke
                         } else {
-                            R.string.ly_img_editor_fill_color
+                            R.string.ly_img_editor_sheet_fill_stroke_color_picker_title_fill
                         },
                     ),
                     onBack = {

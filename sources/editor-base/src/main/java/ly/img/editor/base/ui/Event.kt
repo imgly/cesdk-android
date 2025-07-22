@@ -9,6 +9,7 @@ import ly.img.editor.base.dock.options.format.VerticalAlignment
 import ly.img.editor.base.engine.Property
 import ly.img.editor.base.engine.PropertyValue
 import ly.img.editor.core.EditorScope
+import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.library.data.UploadAssetSourceType
@@ -112,6 +113,24 @@ interface Event : EditorEvent {
     data class OnPagesModePageBind(
         val page: EditorPagesState.Page,
         val pageHeight: Int,
+    ) : Event
+
+    @UnstableEditorApi
+    data class OnPostcardGreetingTypefaceChange(
+        val designBlock: DesignBlock,
+        val typeface: Typeface,
+    ) : Event
+
+    @UnstableEditorApi
+    data class OnPostcardGreetingSizeChange(
+        val designBlock: DesignBlock,
+        val size: Float,
+    ) : Event
+
+    @UnstableEditorApi
+    data class OnPostcardColorChange(
+        val name: String,
+        val color: Color,
     ) : Event
 }
 

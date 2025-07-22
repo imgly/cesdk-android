@@ -3,9 +3,9 @@ package ly.img.editor.base.ui
 import android.graphics.Bitmap
 import androidx.annotation.StringRes
 import androidx.compose.material3.MaterialTheme
-import ly.img.editor.base.R
 import ly.img.editor.base.engine.isDeleteAllowed
 import ly.img.editor.base.engine.isDuplicateAllowed
+import ly.img.editor.core.R
 import ly.img.editor.core.component.data.EditorIcon
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.iconpack.Delete
@@ -20,7 +20,6 @@ import ly.img.editor.core.ui.iconpack.Movedown
 import ly.img.editor.core.ui.iconpack.Moveup
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
-import ly.img.editor.core.R as CoreR
 import ly.img.editor.core.iconpack.IconPack as CoreIconPack
 
 data class EditorPagesState(
@@ -125,7 +124,7 @@ private fun createEditorPagesState(
     val selectedPageBlock = selectedPage.block
     val dockOptions = buildList {
         EditorPagesState.DockOption(
-            titleRes = CoreR.string.ly_img_editor_edit,
+            titleRes = R.string.ly_img_editor_pages_view_mode_dock_button_edit,
             icon = EditorIcon.Vector(IconPack.Edit),
             enabled = true,
             actions = listOf(
@@ -134,40 +133,40 @@ private fun createEditorPagesState(
             ),
         ).let(::add)
         EditorPagesState.DockOption(
-            titleRes = R.string.ly_img_editor_move_up,
+            titleRes = R.string.ly_img_editor_pages_view_mode_dock_button_move_up,
             icon = EditorIcon.Vector(IconPack.Moveup),
             enabled = selectedPageIndex != 0,
             actions = listOf(BlockEvent.OnBackwardNonSelected(selectedPageBlock)),
         ).let(::add)
         EditorPagesState.DockOption(
-            titleRes = R.string.ly_img_editor_move_down,
+            titleRes = R.string.ly_img_editor_pages_view_mode_dock_button_move_down,
             icon = EditorIcon.Vector(IconPack.Movedown),
             enabled = selectedPageIndex != pages.lastIndex,
             actions = listOf(BlockEvent.OnForwardNonSelected(selectedPageBlock)),
         ).let(::add)
         EditorPagesState.DockOption(
-            titleRes = R.string.ly_img_editor_add_page,
+            titleRes = R.string.ly_img_editor_pages_view_mode_dock_button_add_page,
             icon = EditorIcon.Vector(IconPack.Addpage),
             enabled = true,
             actions = listOf(Event.OnAddPage(index = selectedPageIndex + 1)),
         ).let(::add)
         if (engine.isDuplicateAllowed(selectedPageBlock)) {
             EditorPagesState.DockOption(
-                titleRes = CoreR.string.ly_img_editor_duplicate,
+                titleRes = R.string.ly_img_editor_pages_view_mode_dock_button_duplicate,
                 icon = EditorIcon.Vector(CoreIconPack.Duplicate),
                 enabled = true,
                 actions = listOf(BlockEvent.OnDuplicateNonSelected(selectedPageBlock)),
             ).let(::add)
         }
         EditorPagesState.DockOption(
-            titleRes = CoreR.string.ly_img_editor_resize,
+            titleRes = R.string.ly_img_editor_pages_view_mode_dock_button_resize,
             icon = EditorIcon.Vector(CoreIconPack.Resize),
             enabled = true,
             actions = listOf(EditorEvent.Sheet.Open(SheetType.ResizeAll())),
         ).let(::add)
         if (pages.size > 1 && engine.isDeleteAllowed(selectedPageBlock)) {
             EditorPagesState.DockOption(
-                titleRes = CoreR.string.ly_img_editor_delete,
+                titleRes = R.string.ly_img_editor_pages_view_mode_dock_button_delete,
                 icon = EditorIcon.Vector(
                     imageVector = CoreIconPack.Delete,
                     tint = { MaterialTheme.colorScheme.error },

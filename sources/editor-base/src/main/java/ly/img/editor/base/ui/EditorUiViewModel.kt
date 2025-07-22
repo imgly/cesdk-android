@@ -3,6 +3,7 @@ package ly.img.editor.base.ui
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.core.content.FileProvider
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.ViewModel
@@ -18,11 +19,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -48,6 +47,12 @@ import ly.img.editor.base.dock.options.effect.EffectUiState
 import ly.img.editor.base.dock.options.fillstroke.FillStrokeUiState
 import ly.img.editor.base.dock.options.format.createFormatUiState
 import ly.img.editor.base.dock.options.layer.createLayerUiState
+import ly.img.editor.base.dock.options.postcard.colors.PostcardColorsBottomSheetContent
+import ly.img.editor.base.dock.options.postcard.colors.PostcardColorsUiState
+import ly.img.editor.base.dock.options.postcard.font.PostcardGreetingFontBottomSheetContent
+import ly.img.editor.base.dock.options.postcard.font.PostcardGreetingFontUiState
+import ly.img.editor.base.dock.options.postcard.size.PostcardGreetingSizeBottomSheetContent
+import ly.img.editor.base.dock.options.postcard.size.PostcardGreetingSizeUiState
 import ly.img.editor.base.dock.options.reorder.ReorderBottomSheetContent
 import ly.img.editor.base.dock.options.shapeoptions.createShapeOptionsUiState
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheetContent
@@ -65,11 +70,11 @@ import ly.img.editor.base.engine.isPlaceholder
 import ly.img.editor.base.engine.resetHistory
 import ly.img.editor.base.engine.setFillType
 import ly.img.editor.base.engine.showPage
+import ly.img.editor.base.engine.toEngineColor
 import ly.img.editor.base.engine.zoomToPage
 import ly.img.editor.base.engine.zoomToSelectedText
 import ly.img.editor.base.migration.EditorMigrationHelper
 import ly.img.editor.base.sheet.LibraryAddToBackgroundTrackSheetType
-import ly.img.editor.base.sheet.LibraryTabsSheetType
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.ui.handler.animationEvents
 import ly.img.editor.base.ui.handler.appearanceEvents
@@ -116,6 +121,7 @@ import ly.img.engine.Engine
 import ly.img.engine.FillType
 import ly.img.engine.GlobalScope
 import ly.img.engine.SceneMode
+import ly.img.engine.Typeface
 import ly.img.engine.UnstableEngineApi
 import java.io.File
 import kotlin.math.abs
@@ -123,6 +129,7 @@ import kotlin.math.max
 
 abstract class EditorUiViewModel(
     private val onCreate: suspend EditorScope.() -> Unit,
+    private val onLoaded: suspend EditorScope.() -> Unit,
     private val onExport: suspend EditorScope.() -> Unit,
     private val onClose: suspend EditorScope.(Boolean) -> Unit,
     private val onError: suspend EditorScope.(Throwable) -> Unit,
@@ -256,13 +263,10 @@ abstract class EditorUiViewModel(
             },
         )
         editorEvents()
-        extraEvents()
         animationEvents(
             engine = ::engine,
         )
     }
-
-    protected open fun EventsHandler.extraEvents() = Unit
 
     private fun EventsHandler.editorEvents() {
         register<Event.OnError> { onError(it.throwable) }
@@ -304,6 +308,15 @@ abstract class EditorUiViewModel(
         }
         register<Event.OnVideoCameraClick> { onVideoCameraClick(it.callback) }
         register<Event.OnLaunchContractResult> { onLaunchContractResult(it.onResult, it.editorScope, it.result) }
+        register<Event.OnPostcardGreetingTypefaceChange> {
+            onPostcardGreetingTypefaceChange(it.designBlock, it.typeface)
+        }
+        register<Event.OnPostcardGreetingSizeChange> {
+            onPostcardGreetingSizeChange(it.designBlock, it.size)
+        }
+        register<Event.OnPostcardColorChange> {
+            onPostcardColorChange(it.name, it.color)
+        }
 
         /** Customer exposed internal events **/
         register<EditorEvent.OnClose> { onClose() }
@@ -409,10 +422,10 @@ abstract class EditorUiViewModel(
         }
     }
 
-    protected open fun openSheet(type: SheetType) {
+    private fun openSheet(type: SheetType) {
         val eventBlock = getBlockForEvents()
         val hasEventBlock = eventBlock != null
-        val block by lazy { requireNotNull(eventBlock) }
+        val block by lazy { requireNotNull(getBlockForEvents()) }
         val designBlock by lazy {
             block.designBlock
         }
@@ -427,20 +440,16 @@ abstract class EditorUiViewModel(
                         addToBackgroundTrack = true,
                     )
                 }
-                // Cannot be invoked by customers
-                is LibraryTabsSheetType -> {
-                    LibraryTabsBottomSheetContent(
-                        type = type,
-                    )
-                }
                 // This sheet triggered only from dock for now.
                 // addToBackgroundTrack is always false for now as we do not want to expose it to customers due to unknown future.
-                is SheetType.LibraryAdd -> {
+                is SheetType.LibraryAdd -> type.libraryCategory?.let {
                     LibraryAddBottomSheetContent(
                         type = type,
-                        libraryCategory = type.libraryCategory,
+                        libraryCategory = it,
                         addToBackgroundTrack = false,
                     )
+                } ?: run {
+                    LibraryTabsBottomSheetContent(type = type)
                 }
                 is SheetType.LibraryReplace -> {
                     timelineState?.clampPlayheadPositionToSelectedClip()
@@ -581,6 +590,24 @@ abstract class EditorUiViewModel(
                         uiState = TextBackgroundUiState.create(designBlock, engine, editor.colorPalette),
                     )
                 }
+                is SheetType.PostcardGreetingFont -> {
+                    PostcardGreetingFontBottomSheetContent(
+                        type = type,
+                        uiState = PostcardGreetingFontUiState.create(engine),
+                    )
+                }
+                is SheetType.PostcardGreetingSize -> {
+                    PostcardGreetingSizeBottomSheetContent(
+                        type = type,
+                        uiState = PostcardGreetingSizeUiState.create(engine),
+                    )
+                }
+                is SheetType.PostcardColors -> {
+                    PostcardColorsBottomSheetContent(
+                        type = type,
+                        uiState = PostcardColorsUiState(editor.colorPalette, type.colorMapping),
+                    )
+                }
                 else -> {
                     error(
                         "Unknown sheet type ${type.javaClass.name}. Prefer using SheetType.Custom over inheriting from SheetType.",
@@ -632,7 +659,7 @@ abstract class EditorUiViewModel(
 
     protected open fun hasUnsavedChanges(): Boolean = engine.editor.canUndo()
 
-    protected open fun updateBottomSheetUiState() {
+    private fun updateBottomSheetUiState() {
         _bottomSheetContent.value ?: return
         val block = getBlockForEvents()
         val designBlock = block?.designBlock
@@ -744,6 +771,31 @@ abstract class EditorUiViewModel(
                         )
                     }
 
+                    is PostcardGreetingFontBottomSheetContent -> {
+                        PostcardGreetingFontBottomSheetContent(
+                            type = content.type,
+                            uiState = PostcardGreetingFontUiState.create(engine),
+                        )
+                    }
+
+                    is PostcardGreetingSizeBottomSheetContent -> {
+                        PostcardGreetingSizeBottomSheetContent(
+                            type = content.type,
+                            uiState = PostcardGreetingSizeUiState.create(engine),
+                        )
+                    }
+
+                    is PostcardColorsBottomSheetContent -> {
+                        PostcardColorsBottomSheetContent(
+                            type = content.type,
+                            uiState = PostcardColorsUiState.create(
+                                engine = engine,
+                                colorPalette = editor.colorPalette,
+                                sheetType = content.type as SheetType.PostcardColors,
+                            ),
+                        )
+                    }
+
                     else -> {
                         content
                     }
@@ -832,26 +884,15 @@ abstract class EditorUiViewModel(
         if (isConfigChange) {
             setViewMode(publicState.value.viewMode)
         } else {
-            if (engine.scene.get() == null) {
-                viewModelScope.launch {
-                    engine.scene
-                        .onActiveChanged()
-                        .onEach { onSceneLoaded() }
-                        .first()
-                }
-            }
             viewModelScope.launch {
                 runCatching {
                     migrationHelper.migrate()
-                    onPreCreate()
-                    val isSceneRestorationFlow = engine.scene.get() != null
-                    // Make sure to set all settings before calling `onCreate` so that the consumer can change them if needed!
-                    onCreate(editorScope)
-                    // Invoke onSceneLoaded only when engine was restored, because in the regular flow
-                    // we have another coroutine that observes scene change and invokes this funcion.
-                    if (isSceneRestorationFlow) {
-                        onSceneLoaded()
+                    if (engine.scene.get() == null) {
+                        onPreCreate()
+                        // Make sure to set all settings before calling `onCreate` so that the consumer can change them if needed!
                     }
+                    onCreate(editorScope)
+                    onSceneLoaded()
                     initiallySetEditorSelectGlobalScope = engine.editor.getGlobalScope(Scope.EditorSelect)
                     requireNotNull(engine.scene.get()) { "onCreate body must contain scene creation." }
                     if (engine.isSceneModeVideo) {
@@ -862,6 +903,7 @@ abstract class EditorUiViewModel(
                     engine.resetHistory()
                 }.onSuccess {
                     _isSceneLoaded.update { true }
+                    onLoaded(editorScope)
                 }.onFailure {
                     onError(it)
                 }
@@ -1486,6 +1528,50 @@ abstract class EditorUiViewModel(
 
     fun setEditorScope(editorScope: EditorScope) {
         this.editorScope = editorScope
+    }
+
+    private fun onPostcardGreetingSizeChange(
+        designBlock: DesignBlock,
+        size: Float,
+    ) {
+        engine.block.setFloat(designBlock, "text/fontSize", size)
+        engine.editor.addUndoStep()
+    }
+
+    private fun onPostcardGreetingTypefaceChange(
+        designBlock: DesignBlock,
+        typeface: Typeface,
+    ) {
+        engine.overrideAndRestore(
+            designBlock = designBlock,
+            "text/character",
+        ) {
+            engine.block.setTypeface(
+                block = designBlock,
+                typeface = typeface,
+            )
+        }
+        engine.editor.addUndoStep()
+    }
+
+    private fun onPostcardColorChange(
+        name: String,
+        color: Color,
+    ) {
+        val engineColor = color.toEngineColor()
+        engine.block.findByName(name).forEach {
+            if (engine.block.supportsFill(it) && engine.block.isFillEnabled(it)) {
+                engine.overrideAndRestore(it, Scope.FillChange) {
+                    engine.block.setFillType(it, FillType.Color)
+                    engine.block.setFillSolidColor(it, engineColor)
+                }
+            }
+            if (engine.block.supportsStroke(it) && engine.block.isStrokeEnabled(it)) {
+                engine.overrideAndRestore(it, Scope.StrokeChange) {
+                    engine.block.setStrokeColor(it, engineColor)
+                }
+            }
+        }
     }
 
     private companion object {

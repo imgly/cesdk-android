@@ -2,11 +2,11 @@ package ly.img.editor.base.dock.options.animation
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
-import ly.img.editor.base.R
 import ly.img.editor.base.components.TabItem
 import ly.img.editor.base.engine.DesignBlockWithProperties
 import ly.img.editor.base.engine.getAvailableProperties
 import ly.img.editor.base.engine.toPropertyAndValueList
+import ly.img.editor.core.R
 import ly.img.editor.core.library.AssetType
 import ly.img.editor.core.library.data.AssetSourceType
 import ly.img.editor.core.ui.library.getMeta
@@ -99,21 +99,21 @@ data class AnimationUiState(
             return AnimationUiState(
                 categories = listOf(
                     getTabItem(
-                        titleRes = R.string.ly_img_editor_animation_in,
+                        titleRes = R.string.ly_img_editor_sheet_animations_tab_in,
                         thumbnailsBaseUri = thumbnailsBaseUri,
                         group = "in",
                         animationDesignBlock = engine.block.getInAnimation(designBlock),
                         engine = engine,
                     ),
                     getTabItem(
-                        titleRes = R.string.ly_img_editor_animation_loop,
+                        titleRes = R.string.ly_img_editor_sheet_animations_tab_loop,
                         thumbnailsBaseUri = thumbnailsBaseUri,
                         group = "loop",
                         animationDesignBlock = engine.block.getLoopAnimation(designBlock),
                         engine = engine,
                     ),
                     getTabItem(
-                        titleRes = R.string.ly_img_editor_animation_out,
+                        titleRes = R.string.ly_img_editor_sheet_animations_tab_out,
                         thumbnailsBaseUri = thumbnailsBaseUri,
                         group = "out",
                         animationDesignBlock = engine.block.getOutAnimation(designBlock),

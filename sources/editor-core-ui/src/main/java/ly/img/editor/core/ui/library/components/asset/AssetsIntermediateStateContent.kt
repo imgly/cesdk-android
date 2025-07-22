@@ -123,7 +123,7 @@ internal fun AssetsIntermediateStateContent(
 
         if (state == IntermediateState.Empty) {
             Text(
-                stringResource(id = R.string.ly_img_editor_no_elements),
+                stringResource(id = R.string.ly_img_editor_asset_library_label_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.Center),

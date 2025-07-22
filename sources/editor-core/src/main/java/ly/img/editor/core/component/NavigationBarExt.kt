@@ -566,7 +566,7 @@ fun NavigationBar.ListBuilder.Companion.rememberForPostcard(): HorizontalListBui
         add { Button.rememberCloseEditor() }
         add {
             Button.rememberPreviousPage(
-                text = { stringResource(R.string.ly_img_editor_design) },
+                text = { stringResource(R.string.ly_img_editor_navigation_bar_button_design) },
             )
         }
     }
@@ -580,7 +580,7 @@ fun NavigationBar.ListBuilder.Companion.rememberForPostcard(): HorizontalListBui
     aligned(alignment = Alignment.End) {
         add {
             Button.rememberNextPage(
-                text = { stringResource(R.string.ly_img_editor_write) },
+                text = { stringResource(R.string.ly_img_editor_navigation_bar_button_write) },
             )
         }
         add { Button.rememberExport() }
@@ -626,7 +626,7 @@ val Button.Id.Companion.closeEditor by unsafeLazy {
  * By default [EditorEvent.OnClose] event is invoked.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
  * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
- * Default value is always [R.string.ly_img_editor_back].
+ * Default value is always [R.string.ly_img_editor_navigation_bar_button_close_editor].
  * @return a button that will be displayed in the navigation bar.
  */
 @Composable
@@ -653,7 +653,7 @@ fun Button.Companion.rememberCloseEditor(
         editorContext.eventHandler.send(EditorEvent.OnClose())
     },
     contentDescription: (@Composable ButtonScope.() -> String)? = {
-        stringResource(R.string.ly_img_editor_back)
+        stringResource(R.string.ly_img_editor_navigation_bar_button_close_editor)
     },
     `_`: Nothing = nothing,
 ): Button = remember(
@@ -713,7 +713,7 @@ val Button.Id.Companion.undo by unsafeLazy {
  * By default [ly.img.engine.EditorApi.undo] engine API is invoked.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
  * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
- * Default value is always [R.string.ly_img_editor_undo].
+ * Default value is always [R.string.ly_img_editor_navigation_bar_button_undo].
  * @return a button that will be displayed in the navigation bar.
  */
 @Composable
@@ -742,7 +742,7 @@ fun Button.Companion.rememberUndo(
     },
     onClick: ButtonScope.() -> Unit = { editorContext.engine.editor.undo() },
     contentDescription: (@Composable ButtonScope.() -> String)? = {
-        stringResource(R.string.ly_img_editor_undo)
+        stringResource(R.string.ly_img_editor_navigation_bar_button_undo)
     },
     `_`: Nothing = nothing,
 ): Button = remember(
@@ -802,7 +802,7 @@ val Button.Id.Companion.redo by unsafeLazy {
  * By default [ly.img.engine.EditorApi.redo] engine API is invoked.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
  * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
- * Default value is always [R.string.ly_img_editor_redo].
+ * Default value is always [R.string.ly_img_editor_navigation_bar_button_redo].
  * @return a button that will be displayed in the navigation bar.
  */
 @Composable
@@ -831,7 +831,7 @@ fun Button.Companion.rememberRedo(
     },
     onClick: ButtonScope.() -> Unit = { editorContext.engine.editor.redo() },
     contentDescription: (@Composable ButtonScope.() -> String)? = {
-        stringResource(R.string.ly_img_editor_redo)
+        stringResource(R.string.ly_img_editor_navigation_bar_button_redo)
     },
     `_`: Nothing = nothing,
 ): Button = remember(
@@ -890,7 +890,7 @@ val Button.Id.Companion.export by unsafeLazy {
  * By default [EditorEvent.Export] event is invoked.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
  * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
- * Default value is always [R.string.ly_img_editor_export].
+ * Default value is always [R.string.ly_img_editor_navigation_bar_button_export].
  * @return a button that will be displayed in the navigation bar.
  */
 @Composable
@@ -924,7 +924,7 @@ fun Button.Companion.rememberExport(
         editorContext.eventHandler.send(EditorEvent.Export.Start())
     },
     contentDescription: (@Composable ButtonScope.() -> String)? = {
-        stringResource(R.string.ly_img_editor_export)
+        stringResource(R.string.ly_img_editor_navigation_bar_button_export)
     },
     `_`: Nothing = nothing,
 ): Button = remember(
@@ -982,7 +982,7 @@ val Button.Id.Companion.togglePreviewMode by unsafeLazy {
  * By default [EditorEvent.SetViewMode] event is invoked.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
  * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
- * Default value is always [R.string.ly_img_editor_toggle_preview_mode].
+ * Default value is always [R.string.ly_img_editor_navigation_bar_button_toggle_preview_mode].
  * @return a button that will be displayed in the navigation bar.
  */
 @Composable
@@ -1030,7 +1030,7 @@ fun Button.Companion.rememberTogglePreviewMode(
         editorContext.eventHandler.send(EditorEvent.SetViewMode(viewMode))
     },
     contentDescription: (@Composable ButtonScope.() -> String)? = {
-        stringResource(R.string.ly_img_editor_toggle_preview_mode)
+        stringResource(R.string.ly_img_editor_navigation_bar_button_toggle_preview_mode)
     },
     `_`: Nothing = nothing,
 ): Button = remember(
@@ -1088,7 +1088,7 @@ val Button.Id.Companion.togglePagesMode by unsafeLazy {
  * By default [EditorEvent.SetViewMode] event is invoked.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
  * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
- * Default value is always [R.string.ly_img_editor_toggle_pages_mode].
+ * Default value is always [R.string.ly_img_editor_navigation_bar_button_toggle_pages_mode].
  * @return a button that will be displayed in the navigation bar.
  */
 @Composable
@@ -1138,7 +1138,7 @@ fun Button.Companion.rememberTogglePagesMode(
         editorContext.eventHandler.send(EditorEvent.SetViewMode(viewMode))
     },
     contentDescription: (@Composable ButtonScope.() -> String)? = {
-        stringResource(R.string.ly_img_editor_toggle_pages_mode)
+        stringResource(R.string.ly_img_editor_navigation_bar_button_toggle_pages_mode)
     },
     `_`: Nothing = nothing,
 ): NavigationBar.Custom<ButtonScope> {
@@ -1217,7 +1217,7 @@ val Button.Id.Companion.previousPage by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.ArrowBack].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_previous].
+ * Default value is always [R.string.ly_img_editor_navigation_bar_button_previous].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -1246,7 +1246,7 @@ fun Button.Companion.rememberPreviousPage(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.ArrowBack },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_previous) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_navigation_bar_button_previous) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
@@ -1330,7 +1330,7 @@ val Button.Id.Companion.nextPage by unsafeLazy {
  * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
  * Default value is always [IconPack.ArrowForward].
  * @param text the text content of the button as a string. If null then text is not rendered.
- * Default value is always [R.string.ly_img_editor_next].
+ * Default value is always [R.string.ly_img_editor_navigation_bar_button_next].
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
@@ -1359,7 +1359,7 @@ fun Button.Companion.rememberNextPage(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.ArrowForward },
-    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_next) },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_navigation_bar_button_next) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {

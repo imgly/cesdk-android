@@ -1,6 +1,5 @@
 package ly.img.editor.core.ui.library
 
-import ly.img.editor.core.R
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.iconpack.LibraryElements
 import ly.img.editor.core.iconpack.LibraryElementsOutline
@@ -11,11 +10,11 @@ import ly.img.editor.core.library.LibraryContent
 object CropLibraryCategory {
     val Crop by lazy {
         LibraryCategory(
-            tabTitleRes = R.string.ly_img_editor_filters,
+            tabTitleRes = 0,
             tabSelectedIcon = IconPack.LibraryElements,
             tabUnselectedIcon = IconPack.LibraryElementsOutline,
             content = LibraryContent.Sections(
-                titleRes = R.string.ly_img_editor_filters,
+                titleRes = 0,
                 sections = listOf(
                     LibraryContent.Section(
                         sourceTypes = listOf(CropAssetSourceType.Crop),
@@ -30,11 +29,11 @@ object CropLibraryCategory {
 
     val Page by lazy {
         LibraryCategory(
-            tabTitleRes = R.string.ly_img_editor_effects,
+            tabTitleRes = 0,
             tabSelectedIcon = IconPack.LibraryElements,
             tabUnselectedIcon = IconPack.LibraryElementsOutline,
             content = LibraryContent.Sections(
-                titleRes = R.string.ly_img_editor_effects,
+                titleRes = 0,
                 sections = listOf(
                     LibraryContent.Section(
                         sourceTypes = listOf(

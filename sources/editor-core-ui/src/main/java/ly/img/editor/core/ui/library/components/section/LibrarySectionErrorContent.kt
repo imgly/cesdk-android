@@ -20,7 +20,7 @@ import ly.img.editor.core.ui.library.util.AssetLibraryUiConfig
 @Composable
 internal fun LibrarySectionErrorContent(assetType: AssetType) {
     Column {
-        StringBox(assetType = assetType, id = R.string.ly_img_editor_error_text)
+        StringBox(assetType = assetType, id = R.string.ly_img_editor_asset_library_label_error)
         Spacer(modifier = Modifier.height(24.dp))
     }
 }

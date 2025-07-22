@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import ly.img.editor.base.R
 import ly.img.editor.base.components.NestedSheetHeader
 import ly.img.editor.base.components.PropertyLink
 import ly.img.editor.base.components.PropertyPicker
@@ -30,6 +29,7 @@ import ly.img.editor.base.components.PropertySwitch
 import ly.img.editor.base.components.SectionHeader
 import ly.img.editor.base.components.ToggleIconButton
 import ly.img.editor.base.ui.BlockEvent
+import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.ui.SheetHeader
@@ -41,7 +41,6 @@ import ly.img.editor.core.ui.sheetScrollableContentModifier
 import ly.img.engine.FontStyle
 import ly.img.engine.FontWeight
 import ly.img.engine.TextCase
-import ly.img.editor.core.R as CoreR
 
 @Composable
 fun FormatOptionsSheet(
@@ -58,7 +57,7 @@ fun FormatOptionsSheet(
         ScreenState.Main -> {
             Column {
                 SheetHeader(
-                    title = stringResource(id = CoreR.string.ly_img_editor_format),
+                    title = stringResource(id = R.string.ly_img_editor_sheet_format_text_title),
                     onClose = { onEvent(EditorEvent.Sheet.Close(animate = true)) },
                 )
 
@@ -69,7 +68,7 @@ fun FormatOptionsSheet(
                         colors = UiDefaults.cardColors,
                     ) {
                         PropertyLink(
-                            title = stringResource(id = R.string.ly_img_editor_font),
+                            title = stringResource(id = R.string.ly_img_editor_sheet_format_text_label_font),
                             value = uiState.fontFamily,
                         ) {
                             screenState = ScreenState.SelectFont
@@ -92,7 +91,7 @@ fun FormatOptionsSheet(
                                 ) {
                                     Icon(
                                         IconPack.Formatbold,
-                                        contentDescription = stringResource(R.string.ly_img_editor_bold),
+                                        contentDescription = stringResource(R.string.ly_img_editor_sheet_format_text_button_bold),
                                     )
                                 }
                                 ToggleIconButton(
@@ -105,7 +104,7 @@ fun FormatOptionsSheet(
                                     Icon(
                                         IconPack.Formatitalic,
                                         contentDescription = stringResource(
-                                            R.string.ly_img_editor_italic,
+                                            R.string.ly_img_editor_sheet_format_text_button_italic,
                                         ),
                                     )
                                 }
@@ -121,7 +120,7 @@ fun FormatOptionsSheet(
 
                     Spacer(Modifier.height(16.dp))
                     PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_font_size),
+                        title = stringResource(R.string.ly_img_editor_sheet_format_text_label_font_size),
                         value = uiState.fontSize,
                         valueRange = 6f..90f,
                         onValueChange = { onEvent(BlockEvent.OnChangeFontSize(it)) },
@@ -129,7 +128,7 @@ fun FormatOptionsSheet(
                     )
 
                     Spacer(Modifier.height(16.dp))
-                    SectionHeader(text = stringResource(R.string.ly_img_editor_alignment))
+                    SectionHeader(text = stringResource(R.string.ly_img_editor_sheet_format_text_label_alignment))
                     Card(
                         colors = UiDefaults.cardColors,
                     ) {
@@ -175,14 +174,14 @@ fun FormatOptionsSheet(
                             colors = UiDefaults.cardColors,
                         ) {
                             PropertyPicker(
-                                title = stringResource(R.string.ly_img_editor_frame_behaviour),
+                                title = stringResource(R.string.ly_img_editor_sheet_format_text_label_frame_behaviour),
                                 propertyTextRes = uiState.sizeModeRes,
                                 properties = sizeModeList,
                                 onPropertyPicked = { onEvent(BlockEvent.OnChangeSizeMode(it)) },
                             )
                             if (uiState.hasClippingOption) {
                                 PropertySwitch(
-                                    title = stringResource(R.string.ly_img_editor_frame_clipping),
+                                    title = stringResource(R.string.ly_img_editor_sheet_format_text_label_frame_clipping),
                                     isChecked = uiState.isClipped,
                                     onPropertyChange = {
                                         onEvent(BlockEvent.OnChangeClipping(it))
@@ -193,7 +192,7 @@ fun FormatOptionsSheet(
                     }
                     Spacer(Modifier.height(16.dp))
                     PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_line_height),
+                        title = stringResource(R.string.ly_img_editor_sheet_format_text_label_line_height),
                         value = uiState.lineHeight,
                         onValueChange = { onEvent(BlockEvent.OnChangeLineHeight(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
@@ -201,7 +200,7 @@ fun FormatOptionsSheet(
                     )
                     Spacer(Modifier.height(16.dp))
                     PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_paragraph_spacing),
+                        title = stringResource(R.string.ly_img_editor_sheet_format_text_label_paragraph_spacing),
                         value = uiState.paragraphSpacing,
                         onValueChange = { onEvent(BlockEvent.OnChangeParagraphSpacing(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
@@ -209,7 +208,7 @@ fun FormatOptionsSheet(
                     )
 
                     Spacer(Modifier.height(16.dp))
-                    SectionHeader(text = stringResource(R.string.ly_img_editor_latter_case))
+                    SectionHeader(text = stringResource(R.string.ly_img_editor_sheet_format_text_label_letter_case))
                     Card(
                         colors = UiDefaults.cardColors,
                     ) {
@@ -235,7 +234,7 @@ fun FormatOptionsSheet(
 
                     Spacer(Modifier.height(16.dp))
                     PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_letter_spacing),
+                        title = stringResource(R.string.ly_img_editor_sheet_format_text_label_letter_spacing),
                         value = uiState.letterSpacing,
                         onValueChange = { onEvent(BlockEvent.OnChangeLetterSpacing(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
@@ -248,7 +247,7 @@ fun FormatOptionsSheet(
         ScreenState.SelectFont -> {
             Column {
                 NestedSheetHeader(
-                    title = stringResource(R.string.ly_img_editor_font),
+                    title = stringResource(R.string.ly_img_editor_sheet_format_text_label_font),
                     onBack = { screenState = ScreenState.Main },
                     onClose = { onEvent(EditorEvent.Sheet.Close(animate = true)) },
                 )
@@ -266,7 +265,7 @@ fun FormatOptionsSheet(
         ScreenState.SelectFontWeight -> {
             Column {
                 NestedSheetHeader(
-                    title = stringResource(R.string.ly_img_editor_font),
+                    title = stringResource(R.string.ly_img_editor_sheet_format_text_label_font),
                     onBack = { screenState = ScreenState.Main },
                     onClose = { onEvent(EditorEvent.Sheet.Close(animate = true)) },
                 )
@@ -306,7 +305,7 @@ fun DefaultPreview() {
             canToggleItalic = true,
             horizontalAlignment = HorizontalAlignment.Left,
             verticalAlignment = VerticalAlignment.Top,
-            sizeModeRes = R.string.ly_img_editor_fixed_size,
+            sizeModeRes = R.string.ly_img_editor_sheet_format_text_frame_behavior_option_fixed_size,
             isArrangeResizeAllowed = true,
             libraryCategory = LibraryCategory.Text,
             casing = TextCase.UPPER_CASE,

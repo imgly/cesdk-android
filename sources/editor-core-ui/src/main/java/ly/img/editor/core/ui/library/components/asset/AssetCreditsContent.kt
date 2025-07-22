@@ -28,7 +28,7 @@ internal fun AssetCreditsContent(
     Column(Modifier.navigationBarsPadding()) {
         Spacer(modifier = Modifier.height(8.dp))
         SheetHeader(
-            title = stringResource(id = R.string.ly_img_editor_credits_title),
+            title = stringResource(id = R.string.ly_img_editor_asset_library_title_credits),
             onClose = onCloseAssetDetails,
             icon = IconPack.Close,
         )
@@ -41,18 +41,18 @@ internal fun AssetCreditsContent(
 
             val creditsLabel = if (assetCreditsEvent.assetCredits != null && assetCreditsEvent.assetSourceCredits != null) {
                 stringResource(
-                    R.string.ly_img_editor_credits_artist_on_source,
+                    R.string.ly_img_editor_asset_library_label_credits_artist_on_source,
                     assetCreditsEvent.assetCredits.name,
                     assetCreditsEvent.assetSourceCredits.name,
                 )
             } else if (assetCreditsEvent.assetCredits != null) {
                 stringResource(
-                    R.string.ly_img_editor_credits_artist,
+                    R.string.ly_img_editor_asset_library_label_credits_artist,
                     assetCreditsEvent.assetCredits.name,
                 )
             } else if (assetCreditsEvent.assetSourceCredits != null) {
                 stringResource(
-                    R.string.ly_img_editor_credits_on_source,
+                    R.string.ly_img_editor_asset_library_label_credits_on_source,
                     assetCreditsEvent.assetSourceCredits.name,
                 )
             } else {

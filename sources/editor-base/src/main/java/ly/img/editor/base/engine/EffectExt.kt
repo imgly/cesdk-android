@@ -1,6 +1,6 @@
 package ly.img.editor.base.engine
 
-import ly.img.editor.base.R
+import ly.img.editor.core.R
 import ly.img.engine.EffectType
 
 /*
@@ -50,84 +50,84 @@ fun EffectType.getProperties() = when (this) {
     EffectType.Adjustments -> listOf(
         Property(
             key = "$key/brightness",
-            titleRes = R.string.ly_img_editor_adjustment_brightness,
+            titleRes = R.string.ly_img_editor_sheet_adjustments_label_brightness,
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
             ),
         ),
         Property(
             key = "$key/saturation",
-            titleRes = R.string.ly_img_editor_adjustment_saturation,
+            titleRes = R.string.ly_img_editor_sheet_adjustments_label_saturation,
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
             ),
         ),
         Property(
             key = "$key/contrast",
-            titleRes = R.string.ly_img_editor_adjustment_contrast,
+            titleRes = R.string.ly_img_editor_sheet_adjustments_label_contrast,
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
             ),
         ),
         Property(
             key = "$key/gamma",
-            titleRes = R.string.ly_img_editor_adjustment_gamma,
+            titleRes = R.string.ly_img_editor_sheet_adjustments_label_gamma,
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
             ),
         ),
         Property(
             key = "$key/clarity",
-            titleRes = R.string.ly_img_editor_adjustment_clarity,
+            titleRes = R.string.ly_img_editor_sheet_adjustments_label_clarity,
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
             ),
         ),
         Property(
             key = "$key/exposure",
-            titleRes = R.string.ly_img_editor_adjustment_exposure,
+            titleRes = R.string.ly_img_editor_sheet_adjustments_label_exposure,
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
             ),
         ),
         Property(
             key = "$key/shadows",
-            titleRes = R.string.ly_img_editor_adjustment_shadows,
+            titleRes = R.string.ly_img_editor_sheet_adjustments_label_shadows,
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
             ),
         ),
         Property(
             key = "$key/highlights",
-            titleRes = R.string.ly_img_editor_adjustment_highlights,
+            titleRes = R.string.ly_img_editor_sheet_adjustments_label_highlights,
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
             ),
         ),
         Property(
             key = "$key/blacks",
-            titleRes = R.string.ly_img_editor_adjustment_blacks,
+            titleRes = R.string.ly_img_editor_sheet_adjustments_label_blacks,
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
             ),
         ),
         Property(
             key = "$key/whites",
-            titleRes = R.string.ly_img_editor_adjustment_whites,
+            titleRes = R.string.ly_img_editor_sheet_adjustments_label_whites,
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
             ),
         ),
         Property(
             key = "$key/temperature",
-            titleRes = R.string.ly_img_editor_adjustment_temperature,
+            titleRes = R.string.ly_img_editor_sheet_adjustments_label_temperature,
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
             ),
         ),
         Property(
             key = "$key/sharpness",
-            titleRes = R.string.ly_img_editor_adjustment_sharpness,
+            titleRes = R.string.ly_img_editor_sheet_adjustments_label_sharpness,
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
             ),
@@ -136,7 +136,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.LutFilter -> listOf(
         Property(
             key = "$key/intensity",
-            titleRes = R.string.ly_img_editor_filter_intensity,
+            titleRes = R.string.ly_img_editor_sheet_filter_label_intensity,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
             ),
@@ -145,7 +145,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.DuoToneFilter -> listOf(
         Property(
             key = "$key/intensity",
-            titleRes = R.string.ly_img_editor_filter_intensity,
+            titleRes = R.string.ly_img_editor_sheet_filter_label_intensity,
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
             ),
@@ -154,14 +154,14 @@ fun EffectType.getProperties() = when (this) {
     EffectType.Pixelize -> listOf(
         Property(
             key = "$key/horizontalPixelSize",
-            titleRes = R.string.ly_img_editor_filter_pixelize_horizontalpixelsize,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_pixelize_horizontal_count,
             valueType = PropertyValueType.Int(
                 range = 5..50,
             ),
         ),
         Property(
             key = "$key/verticalPixelSize",
-            titleRes = R.string.ly_img_editor_filter_pixelize_verticalpixelsize,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_pixelize_vertical_count,
             valueType = PropertyValueType.Int(
                 range = 5..50,
             ),
@@ -171,7 +171,7 @@ fun EffectType.getProperties() = when (this) {
         // Radial Pixel Effect
         Property(
             key = "$key/radius",
-            titleRes = R.string.ly_img_editor_filter_radial_pixel_radius,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_radial_pixel_row_pixels,
             valueType = PropertyValueType.Float(
                 range = 0.05F..1F,
                 step = 0.01F,
@@ -179,7 +179,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/segments",
-            titleRes = R.string.ly_img_editor_filter_radial_pixel_segments,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_radial_pixel_row_size,
             valueType = PropertyValueType.Float(
                 range = 0.01F..1F,
                 step = 0.01F,
@@ -189,7 +189,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.CrossCut -> listOf(
         Property(
             key = "$key/slices",
-            titleRes = R.string.ly_img_editor_filter_cross_cut_slices,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_cross_cut_horizontal_cuts,
             valueType = PropertyValueType.Float(
                 range = 1F..10F,
                 step = 1F,
@@ -197,7 +197,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/offset",
-            titleRes = R.string.ly_img_editor_filter_cross_cut_offset,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_cross_cut_horizontal_offset,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -205,7 +205,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/speedV",
-            titleRes = R.string.ly_img_editor_filter_cross_cut_speedv,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_cross_cut_vertical_offset,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -213,7 +213,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/time",
-            titleRes = R.string.ly_img_editor_filter_cross_cut_time,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_cross_cut_variation,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -224,7 +224,7 @@ fun EffectType.getProperties() = when (this) {
         // Liquid Effect
         Property(
             key = "$key/amount",
-            titleRes = R.string.ly_img_editor_filter_liquid_amount,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_liquid_intensity,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -232,7 +232,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/scale",
-            titleRes = R.string.ly_img_editor_filter_liquid_scale,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_liquid_scale,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -240,7 +240,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/time",
-            titleRes = R.string.ly_img_editor_filter_liquid_time,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_liquid_variation,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -250,7 +250,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.Outliner -> listOf(
         Property(
             key = "$key/amount",
-            titleRes = R.string.ly_img_editor_filter_outliner_amount,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_outliner_intensity,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -258,7 +258,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/passthrough",
-            titleRes = R.string.ly_img_editor_filter_outliner_passthrough,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_outliner_blending,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -268,7 +268,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.DotPattern -> listOf(
         Property(
             key = "$key/dots",
-            titleRes = R.string.ly_img_editor_filter_dot_pattern_dots,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_dot_pattern_dots,
             valueType = PropertyValueType.Float(
                 range = 1F..80F,
                 step = 1F,
@@ -276,7 +276,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/size",
-            titleRes = R.string.ly_img_editor_filter_dot_pattern_size,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_dot_pattern_size,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -284,7 +284,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/blur",
-            titleRes = R.string.ly_img_editor_filter_dot_pattern_blur,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_dot_pattern_blur,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -294,7 +294,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.Posterize -> listOf(
         Property(
             key = "$key/levels",
-            titleRes = R.string.ly_img_editor_filter_posterize_levels,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_posterize_levels,
             valueType = PropertyValueType.Float(
                 range = 1F..15F,
                 step = 1F,
@@ -304,7 +304,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.TvGlitch -> listOf(
         Property(
             key = "$key/distortion",
-            titleRes = R.string.ly_img_editor_filter_tv_glitch_distortion,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_tv_glitch_rough_distortion,
             valueType = PropertyValueType.Float(
                 range = 0F..10F,
                 step = 0.1F,
@@ -312,7 +312,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/distortion2",
-            titleRes = R.string.ly_img_editor_filter_tv_glitch_distortion2,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_tv_glitch_fine_distortion,
             valueType = PropertyValueType.Float(
                 range = 0F..5F,
                 step = 0.05F,
@@ -320,7 +320,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/speed",
-            titleRes = R.string.ly_img_editor_filter_tv_glitch_speed,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_tv_glitch_variance,
             valueType = PropertyValueType.Float(
                 range = 0F..5F,
                 step = 0.05F,
@@ -328,7 +328,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/rollSpeed",
-            titleRes = R.string.ly_img_editor_filter_tv_glitch_rollspeed,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_tv_glitch_vertical_offset,
             valueType = PropertyValueType.Float(
                 range = 0F..3F,
                 step = 0.1F,
@@ -338,7 +338,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.HalfTone -> listOf(
         Property(
             key = "$key/angle",
-            titleRes = R.string.ly_img_editor_filter_half_tone_angle,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_half_tone_angle,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -346,7 +346,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/scale",
-            titleRes = R.string.ly_img_editor_filter_half_tone_scale,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_half_tone_scale,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -356,7 +356,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.Linocut -> listOf(
         Property(
             key = "$key/scale",
-            titleRes = R.string.ly_img_editor_filter_linocut_scale,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_linocut_scale,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -366,7 +366,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.Shifter -> listOf(
         Property(
             key = "$key/amount",
-            titleRes = R.string.ly_img_editor_filter_shifter_amount,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_shifter_distance,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -374,7 +374,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/angle",
-            titleRes = R.string.ly_img_editor_filter_shifter_angle,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_shifter_direction,
             valueType = PropertyValueType.Float(
                 range = 0F..6.3F,
                 step = 0.1F,
@@ -384,7 +384,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.Mirror -> listOf(
         Property(
             key = "$key/side",
-            titleRes = R.string.ly_img_editor_filter_mirror_side,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_mirror_side,
             valueType = PropertyValueType.Int(
                 range = 0..3,
             ),
@@ -393,7 +393,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.Glow -> listOf(
         Property(
             key = "$key/size",
-            titleRes = R.string.ly_img_editor_filter_glow_size,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_glow_bloom,
             valueType = PropertyValueType.Float(
                 range = 0F..10F,
                 step = 0.1F,
@@ -401,7 +401,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/amount",
-            titleRes = R.string.ly_img_editor_filter_glow_amount,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_glow_intensity,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -409,7 +409,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/darkness",
-            titleRes = R.string.ly_img_editor_filter_glow_darkness,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_glow_darkening,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -420,7 +420,7 @@ fun EffectType.getProperties() = when (this) {
         // Vignette Effect
         Property(
             key = "$key/offset",
-            titleRes = R.string.ly_img_editor_filter_vignette_offset,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_vignette_size,
             valueType = PropertyValueType.Float(
                 range = 0F..5F,
                 step = 0.05F,
@@ -428,7 +428,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/darkness",
-            titleRes = R.string.ly_img_editor_filter_vignette_darkness,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_vignette_color,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -438,7 +438,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.TiltShift -> listOf(
         Property(
             key = "$key/amount",
-            titleRes = R.string.ly_img_editor_filter_tilt_shift_amount,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_tilt_shift_intensity,
             valueType = PropertyValueType.Float(
                 range = 0F..0.02F,
                 step = 0.001F,
@@ -446,7 +446,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/position",
-            titleRes = R.string.ly_img_editor_filter_tilt_shift_position,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_tilt_shift_position,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -456,17 +456,17 @@ fun EffectType.getProperties() = when (this) {
     EffectType.Recolor -> listOf(
         Property(
             key = "$key/fromColor",
-            titleRes = R.string.ly_img_editor_filter_recolor_from_color,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_recolor_source_color,
             valueType = PropertyValueType.Color(),
         ),
         Property(
             key = "$key/toColor",
-            titleRes = R.string.ly_img_editor_filter_recolor_to_color,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_recolor_target_color,
             valueType = PropertyValueType.Color(),
         ),
         Property(
             key = "$key/colorMatch",
-            titleRes = R.string.ly_img_editor_filter_recolor_color_match,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_recolor_color_match,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -474,7 +474,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/brightnessMatch",
-            titleRes = R.string.ly_img_editor_filter_recolor_brightness_match,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_recolor_brightness_match,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -482,7 +482,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/smoothness",
-            titleRes = R.string.ly_img_editor_filter_recolor_smoothness,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_recolor_smoothness,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -492,12 +492,12 @@ fun EffectType.getProperties() = when (this) {
     EffectType.GreenScreen -> listOf(
         Property(
             key = "$key/fromColor",
-            titleRes = R.string.ly_img_editor_filter_green_screen_from_color,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_green_screen_source_color,
             valueType = PropertyValueType.Color(),
         ),
         Property(
             key = "$key/colorMatch",
-            titleRes = R.string.ly_img_editor_filter_green_screen_color_match,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_green_screen_color_match,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -505,7 +505,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/smoothness",
-            titleRes = R.string.ly_img_editor_filter_green_screen_smoothness,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_green_screen_smoothness,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -513,7 +513,7 @@ fun EffectType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/spill",
-            titleRes = R.string.ly_img_editor_filter_green_screen_spill,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_green_screen_spill,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -523,7 +523,7 @@ fun EffectType.getProperties() = when (this) {
     EffectType.ExtrudeBlur -> listOf(
         Property(
             key = "$key/amount",
-            titleRes = R.string.ly_img_editor_filter_extrude_blur_amount,
+            titleRes = R.string.ly_img_editor_sheet_effect_label_extrude_blur_intensity,
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,

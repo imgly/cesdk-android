@@ -25,7 +25,7 @@ fun TextBackgroundBottomSheet(
     when (screenState) {
         ScreenState.Main -> {
             SheetHeader(
-                title = stringResource(id = R.string.ly_img_editor_background),
+                title = stringResource(id = R.string.ly_img_editor_sheet_text_background_title),
                 onClose = { onEvent(EditorEvent.Sheet.Close(animate = true)) },
             )
             PropertiesBlock(

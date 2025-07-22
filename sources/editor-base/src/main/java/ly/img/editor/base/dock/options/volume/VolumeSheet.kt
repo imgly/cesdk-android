@@ -39,7 +39,7 @@ fun VolumeSheet(
 ) {
     Column {
         SheetHeader(
-            title = stringResource(id = R.string.ly_img_editor_volume),
+            title = stringResource(id = R.string.ly_img_editor_sheet_volume_title),
             onClose = { onEvent(EditorEvent.Sheet.Close(animate = true)) },
         )
 
@@ -67,7 +67,7 @@ fun VolumeSheet(
                         else -> throw IllegalStateException()
                     }
 
-                    Icon(icon, contentDescription = stringResource(R.string.ly_img_editor_volume))
+                    Icon(icon, contentDescription = null)
                 }
 
                 Slider(

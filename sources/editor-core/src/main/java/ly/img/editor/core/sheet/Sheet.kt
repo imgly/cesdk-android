@@ -1,9 +1,11 @@
 package ly.img.editor.core.sheet
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.R
+import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.component.data.Height
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.sheet.SheetType.Custom
@@ -37,6 +39,7 @@ interface SheetType {
      * @param style the style that should be used to display the sheet.
      * Default value is [SheetStyle] that is floating, fullscreen and is initially half-expanded.
      * @param libraryCategory the library category that should be displayed in the sheet.
+     * Default value is null, which means the sheet will display the tabs returned by [ly.img.editor.core.library.AssetLibrary.tabs].
      */
     class LibraryAdd(
         override val style: SheetStyle = SheetStyle(
@@ -44,7 +47,7 @@ interface SheetType {
             maxHeight = Height.Fraction(1F),
             isHalfExpandingEnabled = true,
         ),
-        val libraryCategory: LibraryCategory,
+        val libraryCategory: LibraryCategory? = null,
     ) : SheetType
 
     /**
@@ -154,7 +157,7 @@ interface SheetType {
 
             /** Default mode for cropping image or video fills. */
             data object ImageCrop : Mode {
-                override val titleRes = R.string.ly_img_editor_crop
+                override val titleRes = R.string.ly_img_editor_sheet_crop_title
 
                 override val hasCropAsset: Boolean = true
                 override val hasPageAsset: Boolean = true
@@ -168,7 +171,7 @@ interface SheetType {
 
             /** Used when cropping the current page image fill. */
             data object PageCrop : Mode {
-                override val titleRes = R.string.ly_img_editor_crop
+                override val titleRes = R.string.ly_img_editor_sheet_crop_title
 
                 override val hasCropAsset: Boolean = false
                 override val hasPageAsset: Boolean = true
@@ -182,7 +185,7 @@ interface SheetType {
 
             /** Crops the currently selected design element. */
             data object Element : Mode {
-                override val titleRes = R.string.ly_img_editor_crop
+                override val titleRes = R.string.ly_img_editor_sheet_crop_title
 
                 override val hasCropAsset: Boolean = true
                 override val hasPageAsset: Boolean = false
@@ -196,7 +199,7 @@ interface SheetType {
 
             /** Resizes all pages of the design. */
             data object ResizeAll : Mode {
-                override val titleRes = R.string.ly_img_editor_resize
+                override val titleRes = R.string.ly_img_editor_sheet_resize_title
 
                 override val hasCropAsset: Boolean = false
                 override val hasPageAsset: Boolean = true
@@ -291,6 +294,41 @@ interface SheetType {
      */
     class TextBackground(
         override val style: SheetStyle = SheetStyle(),
+    ) : SheetType
+
+    /**
+     * A sheet that is used to control greeting font in [ly.img.editor.PostcardEditor].
+     *
+     * @param style the style that should be used to display the sheet.
+     * Default value is the default [SheetStyle].
+     */
+    @UnstableEditorApi
+    class PostcardGreetingFont(
+        override val style: SheetStyle = SheetStyle(),
+    ) : SheetType
+
+    /**
+     * A sheet that is used to control greeting font size in [ly.img.editor.PostcardEditor].
+     *
+     * @param style the style that should be used to display the sheet.
+     * Default value is the default [SheetStyle].
+     */
+    @UnstableEditorApi
+    class PostcardGreetingSize(
+        override val style: SheetStyle = SheetStyle(),
+    ) : SheetType
+
+    /**
+     * A sheet that is used to control greeting the colors [ly.img.editor.PostcardEditor].
+     *
+     * @param style the style that should be used to display the sheet.
+     * Default value is the default [SheetStyle].
+     * @param colorMapping the mappings between design block name and current color that should be displayed.
+     */
+    @UnstableEditorApi
+    class PostcardColors(
+        override val style: SheetStyle = SheetStyle(),
+        val colorMapping: Map<String, Color>,
     ) : SheetType
 }
 

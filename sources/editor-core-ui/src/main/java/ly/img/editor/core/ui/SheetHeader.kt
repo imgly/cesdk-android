@@ -51,7 +51,7 @@ fun SheetHeader(
                 .align(Alignment.CenterEnd)
                 .padding(horizontal = 4.dp),
         ) {
-            Icon(icon, contentDescription = stringResource(R.string.ly_img_editor_close))
+            Icon(icon, contentDescription = stringResource(R.string.ly_img_editor_sheet_button_close))
         }
     }
 }

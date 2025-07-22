@@ -22,19 +22,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ly.img.editor.base.R
 import ly.img.editor.base.dock.BottomSheetContent
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.compose.foundation.lazy.LazyRow
 import ly.img.editor.compose.foundation.lazy.rememberLazyListState
+import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.ui.SheetHeader
 import ly.img.editor.core.ui.swappable.SwappableItem
 import ly.img.editor.core.ui.swappable.rememberSwappableListState
 import ly.img.engine.DesignBlock
-import ly.img.editor.core.R as CoreR
 
 @Composable
 fun ReorderSheet(
@@ -43,7 +42,7 @@ fun ReorderSheet(
 ) {
     Column {
         SheetHeader(
-            title = stringResource(id = CoreR.string.ly_img_editor_reorder),
+            title = stringResource(id = R.string.ly_img_editor_sheet_reorder_title),
             onClose = { onEvent(EditorEvent.Sheet.Close(animate = true)) },
         )
 
@@ -124,7 +123,7 @@ fun ReorderSheet(
 
             Text(
                 modifier = Modifier.padding(top = 16.dp),
-                text = stringResource(R.string.ly_img_editor_reorder_label),
+                text = stringResource(R.string.ly_img_editor_sheet_reorder_label_info),
                 style = MaterialTheme.typography.labelSmall,
             )
 
