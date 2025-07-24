@@ -637,8 +637,8 @@ object EditorDefaults {
                             is VideoExportStatus.Success -> {
                                 VideoStatusOverlayContent(
                                     titleRes = R.string.ly_img_editor_dialog_export_success_title,
-                                    textRes = R.string.ly_img_editor_dialog_export_error_text,
-                                    buttonText = R.string.ly_img_editor_dialog_export_error_button_dismiss,
+                                    textRes = R.string.ly_img_editor_dialog_export_success_text,
+                                    buttonText = R.string.ly_img_editor_dialog_export_success_button_dismiss,
                                     onClick = {
                                         eventHandler.send(ShareFileEvent(status.file, status.mimeType))
                                     },
