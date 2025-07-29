@@ -889,8 +889,8 @@ abstract class EditorUiViewModel(
                     migrationHelper.migrate()
                     if (engine.scene.get() == null) {
                         onPreCreate()
-                        // Make sure to set all settings before calling `onCreate` so that the consumer can change them if needed!
                     }
+                    // Make sure to set all settings before calling `onCreate` so that the consumer can change them if needed!
                     onCreate(editorScope)
                     onSceneLoaded()
                     initiallySetEditorSelectGlobalScope = engine.editor.getGlobalScope(Scope.EditorSelect)

@@ -207,15 +207,51 @@ sealed interface LibraryContent {
                 titleRes = R.string.ly_img_editor_asset_library_title_shapes,
                 sections = listOf(
                     Section(
-                        titleRes = R.string.ly_img_editor_asset_library_section_basic,
+                        titleRes = R.string.ly_img_editor_asset_library_section_filled,
                         sourceTypes = listOf(AssetSourceType.Shapes),
-                        groups = listOf("//ly.img.cesdk.vectorpaths/category/vectorpaths"),
+                        groups = listOf("//ly.img.cesdk.vectorpaths/category/filled"),
                         assetType = AssetType.Shape,
                     ),
                     Section(
-                        titleRes = R.string.ly_img_editor_asset_library_section_abstract,
+                        titleRes = R.string.ly_img_editor_asset_library_section_outline,
                         sourceTypes = listOf(AssetSourceType.Shapes),
-                        groups = listOf("//ly.img.cesdk.vectorpaths.abstract/category/abstract"),
+                        groups = listOf("//ly.img.cesdk.vectorpaths/category/outline"),
+                        assetType = AssetType.Shape,
+                    ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_asset_library_section_gradient,
+                        sourceTypes = listOf(AssetSourceType.Shapes),
+                        groups = listOf("//ly.img.cesdk.vectorpaths/category/gradient"),
+                        assetType = AssetType.Shape,
+                    ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_asset_library_section_image,
+                        sourceTypes = listOf(AssetSourceType.Shapes),
+                        groups = listOf("//ly.img.cesdk.vectorpaths/category/image"),
+                        assetType = AssetType.Shape,
+                    ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_asset_library_section_abstract_filled,
+                        sourceTypes = listOf(AssetSourceType.Shapes),
+                        groups = listOf("//ly.img.cesdk.vectorpaths/category/abstract-filled"),
+                        assetType = AssetType.Shape,
+                    ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_asset_library_section_abstract_outline,
+                        sourceTypes = listOf(AssetSourceType.Shapes),
+                        groups = listOf("//ly.img.cesdk.vectorpaths/category/abstract-outline"),
+                        assetType = AssetType.Shape,
+                    ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_asset_library_section_abstract_gradient,
+                        sourceTypes = listOf(AssetSourceType.Shapes),
+                        groups = listOf("//ly.img.cesdk.vectorpaths/category/abstract-gradient"),
+                        assetType = AssetType.Shape,
+                    ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_asset_library_section_abstract_image,
+                        sourceTypes = listOf(AssetSourceType.Shapes),
+                        groups = listOf("//ly.img.cesdk.vectorpaths/category/abstract-image"),
                         assetType = AssetType.Shape,
                     ),
                 ),
@@ -230,12 +266,6 @@ sealed interface LibraryContent {
                 titleRes = R.string.ly_img_editor_asset_library_title_stickers,
                 sections = listOf(
                     Section(
-                        titleRes = R.string.ly_img_editor_asset_library_section_doodle,
-                        sourceTypes = listOf(AssetSourceType.Stickers),
-                        groups = listOf("//ly.img.cesdk.stickers.doodle/category/doodle"),
-                        assetType = AssetType.Sticker,
-                    ),
-                    Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_emoji,
                         sourceTypes = listOf(AssetSourceType.Stickers),
                         groups = listOf("//ly.img.cesdk.stickers.emoji/category/emoji"),
@@ -248,9 +278,27 @@ sealed interface LibraryContent {
                         assetType = AssetType.Sticker,
                     ),
                     Section(
+                        titleRes = R.string.ly_img_editor_asset_library_section_craft,
+                        sourceTypes = listOf(AssetSourceType.Stickers),
+                        groups = listOf("//ly.img.cesdk.stickers.craft/category/craft"),
+                        assetType = AssetType.Sticker,
+                    ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_asset_library_section_3d_stickers,
+                        sourceTypes = listOf(AssetSourceType.Stickers),
+                        groups = listOf("//ly.img.cesdk.stickers.3Dstickers/category/3Dstickers"),
+                        assetType = AssetType.Sticker,
+                    ),
+                    Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_hand,
                         sourceTypes = listOf(AssetSourceType.Stickers),
                         groups = listOf("//ly.img.cesdk.stickers.hand/category/hand"),
+                        assetType = AssetType.Sticker,
+                    ),
+                    Section(
+                        titleRes = R.string.ly_img_editor_asset_library_section_doodle,
+                        sourceTypes = listOf(AssetSourceType.Stickers),
+                        groups = listOf("//ly.img.cesdk.stickers.doodle/category/doodle"),
                         assetType = AssetType.Sticker,
                     ),
                 ),

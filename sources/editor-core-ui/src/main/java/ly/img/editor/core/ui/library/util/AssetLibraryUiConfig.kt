@@ -14,7 +14,7 @@ internal object AssetLibraryUiConfig {
         else -> 80.dp
     }
 
-    fun shouldTintImages(assetType: AssetType) = assetType == AssetType.Shape
+    fun shouldTintImages(assetType: AssetType) = false
 
     fun contentPadding(assetType: AssetType) = when (assetType) {
         AssetType.Image, AssetType.Video, AssetType.Gallery, AssetType.Filter,
