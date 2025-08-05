@@ -673,7 +673,7 @@ fun Dock.ListBuilder.Companion.rememberForPostcard(): HorizontalListBuilder<Item
                     val size = editorContext.engine.block.getFloat(block, "text/fontSize")
                     when {
                         size <= 14F -> IconPack.SizeSCircled
-                        size >= 18F -> IconPack.SizeLCircled
+                        size > 18F -> IconPack.SizeLCircled
                         else -> IconPack.SizeMCircled
                     }
                 }
