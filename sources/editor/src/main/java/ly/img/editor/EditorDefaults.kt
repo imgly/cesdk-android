@@ -60,7 +60,6 @@ import ly.img.editor.core.ui.iconpack.Erroroutline
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.WifiCancel
 import ly.img.engine.DesignBlock
-import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
 import ly.img.engine.EngineException
 import ly.img.engine.MimeType
@@ -121,15 +120,9 @@ object EditorDefaults {
         block: suspend (DesignBlock, CoroutineScope) -> Unit = { _, _ -> },
     ) = onCreateCommon(engine, eventHandler, block) {
         engine.scene.createFromImage(imageUri)
-        val graphicBlocks = engine.block.findByType(DesignBlockType.Graphic)
-        require(graphicBlocks.size == 1) { "No image found." }
-        val graphicBlock = graphicBlocks[0]
         val pages = engine.scene.getPages()
         require(pages.size == 1) { "No image found." }
         val page = pages[0]
-        engine.block.setFill(page, engine.block.getFill(graphicBlock))
-        engine.block.setScopeEnabled(page, key = "layer/visibility", enabled = true)
-        engine.block.destroy(graphicBlock)
         size?.let {
             engine.block.setWidth(page, size.width)
             engine.block.setHeight(page, size.height)
