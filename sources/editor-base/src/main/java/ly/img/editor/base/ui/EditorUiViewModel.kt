@@ -62,7 +62,6 @@ import ly.img.editor.base.dock.options.volume.VolumeUiState
 import ly.img.editor.base.engine.CROP_EDIT_MODE
 import ly.img.editor.base.engine.TEXT_EDIT_MODE
 import ly.img.editor.base.engine.TOUCH_ACTION_SCALE
-import ly.img.editor.base.engine.TOUCH_ACTION_ZOOM
 import ly.img.editor.base.engine.TRANSFORM_EDIT_MODE
 import ly.img.editor.base.engine.delete
 import ly.img.editor.base.engine.duplicate
@@ -1315,14 +1314,18 @@ abstract class EditorUiViewModel(
     protected open fun onEditModeChanged(editMode: String) = Unit
 
     private fun observeEditorStateChange() {
-        var flag = false
         viewModelScope.launch {
+            var flag = false
+            var defaultPinchAction = ""
+            var previousEditMode: String? = null
+
             engine.editor.onStateChanged().map { engine.editor.getEditMode() }.distinctUntilChanged().collect { editMode ->
                 onEditModeChanged(editMode)
                 when (editMode) {
                     TEXT_EDIT_MODE -> send(EditorEvent.Sheet.Close(animate = false))
                     CROP_EDIT_MODE -> {
                         val block = engine.block.findAllSelected().single()
+                        defaultPinchAction = engine.editor.getSettingEnum("touch/pinchAction")
                         engine.editor.setSettingEnum("touch/pinchAction", TOUCH_ACTION_SCALE)
                         setInitCropValues(block)
                         // no need to send EditorEvent.Sheet.Open here
@@ -1353,9 +1356,9 @@ abstract class EditorUiViewModel(
                             send(EditorEvent.Sheet.Close(animate = false))
                         }
 
-                        // restore pinchAction, for video scenes, it is already set to scale
-                        if (!engine.isSceneModeVideo) {
-                            engine.editor.setSettingEnum("touch/pinchAction", TOUCH_ACTION_ZOOM)
+                        // restore pinchAction if coming from crop mode
+                        if (previousEditMode == CROP_EDIT_MODE) {
+                            engine.editor.setSettingEnum("touch/pinchAction", defaultPinchAction)
                         }
 
                         if (!flag) {
@@ -1369,6 +1372,7 @@ abstract class EditorUiViewModel(
                     zoom(bottomInset = 0F)
                 }
                 isKeyboardShowing.update { showKeyboard }
+                previousEditMode = editMode
             }
         }
     }
