@@ -182,7 +182,7 @@ fun Engine.getFill(designBlock: DesignBlock): Fill? = if (!block.supportsFill(de
             val rgbaColor = if (DesignBlockType.getOrNull(block.getType(designBlock)) == DesignBlockType.Text) {
                 block.getTextColors(designBlock).first().toRGBColor(this)
             } else {
-                block.getColor(designBlock, "fill/solid/color") as RGBAColor
+                block.getColor(designBlock, "fill/solid/color").toRGBColor(this)
             }
             SolidFill(rgbaColor.toComposeColor())
         }
