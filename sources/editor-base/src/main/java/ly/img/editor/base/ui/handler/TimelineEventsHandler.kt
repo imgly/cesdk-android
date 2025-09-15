@@ -149,39 +149,9 @@ fun EventsHandler.timelineEvents(
             return@register
         }
 
-        val secondClipId = engine.block.duplicate(selectedClip.id)
-        val firstClipDuration = playheadPosition - absoluteStartTime
-        val secondClipDuration = (originalClipDuration - firstClipDuration).toDouble(DurationUnit.SECONDS)
-        engine.block.setDuration(secondClipId, secondClipDuration)
+        val splitTime = (playheadPosition - absoluteStartTime).toDouble(DurationUnit.SECONDS)
+        engine.block.split(block = selectedClip.id, atTime = splitTime)
 
-        if (selectedClip.allowsTrimming && !selectedClip.isLooping) {
-            // We need to set the trim to the fill on videos but to the block itself for everything else.
-            val secondClipTrimmableId = if (selectedClip.clipType == ClipType.Video) {
-                engine.block.getFill(secondClipId)
-            } else {
-                secondClipId
-            }
-
-            // Get the existing trim offset and add the duration of the first clip, then assign it to the second clip.
-            val oldTrimOffset = selectedClip.trimOffset
-            engine.block.setTrimOffset(
-                block = secondClipTrimmableId,
-                offset = (oldTrimOffset + firstClipDuration).toDouble(DurationUnit.SECONDS),
-            )
-        }
-
-        // Adjust the first clip
-        engine.block.setDuration(selectedClip.id, firstClipDuration.toDouble(DurationUnit.SECONDS))
-
-        if (!selectedClip.isInBackgroundTrack) {
-            engine.block.setTimeOffset(
-                block = secondClipId,
-                offset = (selectedClip.timeOffset + firstClipDuration).toDouble(DurationUnit.SECONDS),
-            )
-        }
-
-        engine.block.setSelected(selectedClip.id, false)
-        engine.block.setSelected(secondClipId, true)
         engine.editor.addUndoStep()
     }
 
