@@ -886,9 +886,7 @@ abstract class EditorUiViewModel(
             viewModelScope.launch {
                 runCatching {
                     migrationHelper.migrate()
-                    if (engine.scene.get() == null) {
-                        onPreCreate()
-                    }
+                    onPreCreate()
                     // Make sure to set all settings before calling `onCreate` so that the consumer can change them if needed!
                     onCreate(editorScope)
                     onSceneLoaded()
