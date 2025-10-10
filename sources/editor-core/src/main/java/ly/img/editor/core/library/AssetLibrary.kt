@@ -26,6 +26,7 @@ data class AssetLibrary(
     val elements: (SceneMode) -> LibraryCategory = { LibraryCategory.getElements(it) },
     val images: (SceneMode) -> LibraryCategory = { LibraryCategory.Images },
     val videos: (SceneMode) -> LibraryCategory = { LibraryCategory.Video },
+    val gallery: (SceneMode) -> LibraryCategory = { LibraryCategory.getGallery(it) },
     val audios: (SceneMode) -> LibraryCategory = { LibraryCategory.Audio },
     val text: (SceneMode) -> LibraryCategory = { LibraryCategory.Text },
     val shapes: (SceneMode) -> LibraryCategory = { LibraryCategory.Shapes },
@@ -83,6 +84,7 @@ data class AssetLibrary(
             overlays: LibraryCategory = createOverlaysCategory(videos = videos, images = images),
             clips: LibraryCategory = createClipsCategory(videos = videos, images = images),
             stickersAndShapes: LibraryCategory = createStickersAndShapesCategory(stickers = stickers, shapes = shapes),
+            gallery: (SceneMode) -> LibraryCategory = { LibraryCategory.getGallery(it) },
         ): AssetLibrary {
             fun getElements(sceneMode: SceneMode): LibraryCategory = LibraryCategory.getElements(
                 sceneMode = sceneMode,
@@ -111,6 +113,7 @@ data class AssetLibrary(
                 elements = ::getElements,
                 images = { images },
                 videos = { videos },
+                gallery = gallery,
                 audios = { audios },
                 text = { if (it == SceneMode.VIDEO) text else textAndTextComponents },
                 shapes = { shapes },

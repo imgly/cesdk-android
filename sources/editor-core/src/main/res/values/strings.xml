@@ -2,13 +2,16 @@
 <resources>
     <string name="ly_img_editor_asset_library_button_add">Add</string>
     <string name="ly_img_editor_asset_library_button_back">Back</string>
+    <string name="ly_img_editor_asset_library_button_change_permissions">Change Permissions</string>
     <string name="ly_img_editor_asset_library_button_choose_photo">Choose Photo</string>
     <string name="ly_img_editor_asset_library_button_choose_video">Choose Video</string>
     <string name="ly_img_editor_asset_library_button_more">More</string>
+    <string name="ly_img_editor_asset_library_button_permissions">Permissions</string>
     <string name="ly_img_editor_asset_library_button_retry">Retry</string>
     <string name="ly_img_editor_asset_library_button_search">Search</string>
     <string name="ly_img_editor_asset_library_button_search_clear">Clear</string>
     <string name="ly_img_editor_asset_library_button_see_all">See All</string>
+    <string name="ly_img_editor_asset_library_button_select_more_photos">Select more Photos</string>
     <string name="ly_img_editor_asset_library_button_take_photo">Take Photo</string>
     <string name="ly_img_editor_asset_library_button_take_video">Take Video</string>
     <string name="ly_img_editor_asset_library_label_credits_artist">By %s</string>
@@ -16,6 +19,7 @@
     <string name="ly_img_editor_asset_library_label_credits_on_source">On %s</string>
     <string name="ly_img_editor_asset_library_label_empty">No Elements</string>
     <string name="ly_img_editor_asset_library_label_error">Cannot connect to service</string>
+    <string name="ly_img_editor_asset_library_label_grant_permissions">Tap to grant permissions to show media</string>
     <string name="ly_img_editor_asset_library_label_none">None</string>
     <string name="ly_img_editor_asset_library_label_search_placeholder">Search %s…</string>
     <string name="ly_img_editor_asset_library_section_3d_stickers">3D Grain</string>
@@ -87,6 +91,10 @@
     <string name="ly_img_editor_dialog_permission_camera_button_dismiss">Cancel</string>
     <string name="ly_img_editor_dialog_permission_camera_text">To use the camera, please enable camera access for this app in your Settings under \'Permissions\'.</string>
     <string name="ly_img_editor_dialog_permission_camera_title">Camera permission needed</string>
+    <string name="ly_img_editor_dialog_permission_gallery_button_confirm">Settings</string>
+    <string name="ly_img_editor_dialog_permission_gallery_button_dismiss">Not now</string>
+    <string name="ly_img_editor_dialog_permission_gallery_text">To add media from your device, please enable photo and video access for this app in your Settings under \'Permissions\'.</string>
+    <string name="ly_img_editor_dialog_permission_gallery_title">Gallery access needed</string>
     <string name="ly_img_editor_dialog_permission_microphone_button_confirm">Settings</string>
     <string name="ly_img_editor_dialog_permission_microphone_button_dismiss">Cancel</string>
     <string name="ly_img_editor_dialog_permission_microphone_text">To record audio, please enable microphone access for this app in your Settings under \'Permissions\'.</string>

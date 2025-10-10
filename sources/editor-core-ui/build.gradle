@@ -20,6 +20,7 @@ dependencies {
     api libs.kotlin.coroutines
 
     api libs.coil.compose
+    api libs.coil.video
 
     api libs.shimmer
 

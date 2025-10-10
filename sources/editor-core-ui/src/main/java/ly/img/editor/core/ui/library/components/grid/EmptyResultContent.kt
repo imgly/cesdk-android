@@ -12,11 +12,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
 internal fun EmptyResultContent(
-    icon: ImageVector,
+    icon: ImageVector?,
     text: String,
     button: @Composable (() -> Unit)? = null,
 ) {
@@ -29,10 +30,11 @@ internal fun EmptyResultContent(
         CompositionLocalProvider(
             LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
         ) {
-            Icon(icon, contentDescription = null)
+            icon?.let { Icon(it, contentDescription = null) }
             Text(
                 text,
                 style = MaterialTheme.typography.labelLarge,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
             )
         }

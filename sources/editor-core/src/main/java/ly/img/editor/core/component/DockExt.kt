@@ -1,6 +1,5 @@
 package ly.img.editor.core.component
 
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -1544,25 +1543,9 @@ fun Button.Companion.rememberSystemGallery(
     tint: (@Composable ButtonScope.() -> Color)? = null,
     enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
     onClick: ButtonScope.() -> Unit = {
-        val mediaType = if (editorContext.engine.scene.getMode() == SceneMode.VIDEO) {
-            ActivityResultContracts.PickVisualMedia.ImageAndVideo
-        } else {
-            ActivityResultContracts.PickVisualMedia.ImageOnly
-        }
-        val request = PickVisualMediaRequest(mediaType)
-        val event = EditorEvent.LaunchContract(ActivityResultContracts.PickVisualMedia(), request) {
-            it?.let {
-                val uploadAssetSourceType = if (editorContext.activity.contentResolver.getType(it)?.startsWith("video") == true) {
-                    AssetSourceType.VideoUploads
-                } else {
-                    AssetSourceType.ImageUploads
-                }
-                editorContext.eventHandler.send(
-                    EditorEvent.AddUriToScene(uploadAssetSourceType, it),
-                )
-            }
-        }
-        editorContext.eventHandler.send(event)
+        val sceneMode = editorContext.engine.scene.getMode()
+        val category = editorContext.assetLibrary.gallery(sceneMode)
+        editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.LibraryAdd(libraryCategory = category)))
     },
     contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,
@@ -1656,14 +1639,27 @@ fun Button.Companion.rememberSystemCamera(
         } else {
             ActivityResultContracts.TakePicture()
         }
-        val event = EditorEvent.LaunchContract(launchContract, uri) {
-            if (it) {
-                val assetSourceType = if (isVideoScene) {
+        val event = EditorEvent.LaunchContract(launchContract, uri) { success ->
+            if (success) {
+                val uploadSource = if (isVideoScene) {
                     AssetSourceType.VideoUploads
                 } else {
                     AssetSourceType.ImageUploads
                 }
-                editorContext.eventHandler.send(EditorEvent.AddUriToScene(assetSourceType, uri))
+                editorContext.eventHandler.send(EditorEvent.AddUriToScene(uploadSource, uri))
+
+                // Persist selection and rescan so it appears in gallery for follow-up edits
+                runCatching { ly.img.editor.core.library.data.GalleryPermissionManager.addSelected(uri, context) }
+                runCatching { android.media.MediaScannerConnection.scanFile(context, arrayOf(uri.toString()), null, null) }
+
+                // Open the uploads category so users can re-use the capture
+                val sceneMode = editorContext.engine.scene.getMode()
+                val category = if (isVideoScene) {
+                    editorContext.assetLibrary.videos(sceneMode)
+                } else {
+                    editorContext.assetLibrary.images(sceneMode)
+                }
+                editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.LibraryAdd(libraryCategory = category)))
             }
         }
         editorContext.eventHandler.send(event)
@@ -1756,6 +1752,7 @@ fun Button.Companion.rememberImglyCamera(
                     ?.map { recording ->
                         Pair(recording.videos.first().uri, recording.duration)
                     }?.let { recordings ->
+                        // For camera recordings, still upload into timeline via existing flow to keep behavior; optional: route via gallery if needed
                         editorContext.eventHandler.send(
                             EditorEvent.AddCameraRecordingsToScene(
                                 uploadAssetSourceType = AssetSourceType.VideoUploads,

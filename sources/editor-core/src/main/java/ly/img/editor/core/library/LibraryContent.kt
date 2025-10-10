@@ -117,8 +117,8 @@ sealed interface LibraryContent {
                         assetType = AssetType.Video,
                     ),
                     Section(
-                        titleRes = R.string.ly_img_editor_asset_library_section_video_uploads,
-                        sourceTypes = listOf(AssetSourceType.VideoUploads),
+                        titleRes = R.string.ly_img_editor_asset_library_section_gallery,
+                        sourceTypes = listOf(AssetSourceType.GalleryVideo),
                         assetType = AssetType.Video,
                     ),
                 ),
@@ -162,7 +162,7 @@ sealed interface LibraryContent {
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_gallery,
-                        sourceTypes = listOf(AssetSourceType.ImageUploads),
+                        sourceTypes = listOf(AssetSourceType.GalleryImage),
                         assetType = AssetType.Image,
                     ),
                 ),
@@ -326,22 +326,12 @@ sealed interface LibraryContent {
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_gallery,
-                        sourceTypes = listOf(AssetSourceType.ImageUploads, AssetSourceType.VideoUploads),
+                        sourceTypes = listOf(AssetSourceType.GalleryAllVisuals),
                         assetType = AssetType.Gallery,
-                        expandContent = Sections(
+                        expandContent = Grid(
                             titleRes = R.string.ly_img_editor_asset_library_section_gallery,
-                            sections = listOf(
-                                Section(
-                                    titleRes = R.string.ly_img_editor_asset_library_section_image_uploads,
-                                    sourceTypes = listOf(AssetSourceType.ImageUploads),
-                                    assetType = AssetType.Image,
-                                ),
-                                Section(
-                                    titleRes = R.string.ly_img_editor_asset_library_section_video_uploads,
-                                    sourceTypes = listOf(AssetSourceType.VideoUploads),
-                                    assetType = AssetType.Video,
-                                ),
-                            ),
+                            sourceType = AssetSourceType.GalleryAllVisuals,
+                            assetType = AssetType.Gallery,
                         ),
                     ),
                 ),

@@ -3,6 +3,8 @@ package ly.img.editor.core.ui.library.components.section
 import androidx.annotation.StringRes
 import ly.img.editor.core.library.AssetType
 import ly.img.editor.core.library.LibraryContent
+import ly.img.editor.core.library.data.AssetSourceType
+import ly.img.editor.core.library.data.SystemGalleryAssetSourceType
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.library.state.WrappedAsset
 
@@ -14,6 +16,7 @@ sealed class LibrarySectionItem(
         val sectionIndex: Int,
         @StringRes val titleRes: Int,
         val uploadAssetSourceType: UploadAssetSourceType?,
+        val systemGalleryAssetSourceType: SystemGalleryAssetSourceType? = null,
         val count: Int? = null,
         val expandContent: LibraryContent?,
     ) : LibrarySectionItem("Header $stackIndex $sectionIndex")
@@ -23,6 +26,7 @@ sealed class LibrarySectionItem(
         val sectionIndex: Int,
         val wrappedAssets: List<WrappedAsset>,
         val assetType: AssetType,
+        val sourceTypes: List<AssetSourceType>,
         val expandContent: LibraryContent?,
     ) : LibrarySectionItem("Content $stackIndex $sectionIndex")
 

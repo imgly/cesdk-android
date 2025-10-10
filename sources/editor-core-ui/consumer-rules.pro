@@ -1,0 +1,1 @@
+-keep class ly.img.editor.core.ui.library.fetcher.MediaStoreThumbnailFetcher { *; }

@@ -1,5 +1,7 @@
 package ly.img.editor.core.library.data
 
+import android.content.Context
+
 /**
  * A class that wraps the asset source id and is used in [ly.img.editor.core.library.LibraryContent]. Note that you should
  * register an asset source or local asset source with the same id as [sourceId] before using the asset source:
@@ -80,6 +82,27 @@ open class AssetSourceType(
         }
 
         /**
+         * Asset source type for accessing the device gallery.
+         */
+        val GalleryAllVisuals by lazy {
+            SystemGalleryAssetSourceType(sourceId = "ly.img.gallery.all")
+        }
+
+        /**
+         * Asset source type for accessing the device gallery.
+         */
+        val GalleryVideo by lazy {
+            SystemGalleryAssetSourceType(sourceId = "ly.img.gallery.video", mimeTypeFilter = "video/*")
+        }
+
+        /**
+         * Asset source type for accessing the device gallery.
+         */
+        val GalleryImage by lazy {
+            SystemGalleryAssetSourceType(sourceId = "ly.img.gallery.image", mimeTypeFilter = "image/*")
+        }
+
+        /**
          * The default source type for audio uploads.
          */
         val AudioUploads by lazy {
@@ -97,3 +120,15 @@ class UploadAssetSourceType(
     sourceId: String,
     val mimeTypeFilter: String,
 ) : AssetSourceType(sourceId)
+
+/**
+ * Same as [AssetSourceType] but for assets from your devices gallery and that have mime type of [mimeTypeFilter].
+ *
+ * @param mimeTypeFilter the mime type filter that is used to filter out the device assets when system picker is displayed.
+ */
+class SystemGalleryAssetSourceType(
+    sourceId: String,
+    val mimeTypeFilter: String = "*/*",
+) : AssetSourceType(sourceId) {
+    fun hasPermission(context: Context): Boolean = GalleryPermissionManager.hasPermission(context, mimeTypeFilter)
+}

@@ -1,5 +1,6 @@
 package ly.img.editor.core.ui.library.components
 
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -28,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import coil.request.videoFrameMillis
+import ly.img.editor.core.ui.Environment
 import ly.img.editor.core.ui.GradientCard
 import ly.img.editor.core.ui.iconpack.Erroroutline
 import ly.img.editor.core.ui.iconpack.IconPack
@@ -41,12 +44,14 @@ private const val HEADER_USER_AGENT_VALUE = "IMG.LY SDK"
 internal fun LibraryImageCard(
     modifier: Modifier = Modifier,
     uri: String? = null,
+    isVideo: Boolean = false,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     contentPadding: Dp = 0.dp,
     contentScale: ContentScale,
     tintImages: Boolean,
     cornerRadius: Dp = 12.0.dp,
+    overlayContent: @Composable (BoxScope.() -> Unit)? = null,
 ) {
     var state by remember { mutableStateOf(ImageState.Loading) }
     GradientCard(
@@ -63,9 +68,11 @@ internal fun LibraryImageCard(
         if (uri != null) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(uri)
+                    .data(uri.toUri())
                     .addHeader(HEADER_USER_AGENT_KEY, HEADER_USER_AGENT_VALUE)
+                    .apply { if (isVideo) videoFrameMillis(0L) }
                     .build(),
+                imageLoader = Environment.getImageLoader(),
                 onLoading = {
                     state = ImageState.Loading
                 },
@@ -74,6 +81,10 @@ internal fun LibraryImageCard(
                 },
                 onError = {
                     state = ImageState.Error
+                    android.util.Log.w(
+                        "LibraryImageCard",
+                        "Image load failed for uri=$uri (isVideo=$isVideo)",
+                    )
                 },
                 contentScale = contentScale,
                 contentDescription = null,
@@ -107,6 +118,7 @@ internal fun LibraryImageCard(
                     .align(Alignment.Center),
             )
         }
+        overlayContent?.invoke(this)
     }
 }
 

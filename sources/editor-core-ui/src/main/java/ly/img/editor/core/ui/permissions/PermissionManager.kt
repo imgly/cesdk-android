@@ -14,6 +14,8 @@ class PermissionManager(
     private val context: Context,
 ) {
     companion object {
+        var current: PermissionManager? = null
+
         fun Context.hasCameraPermission() = hasPermission(Manifest.permission.CAMERA)
 
         fun Context.hasMicPermission() = hasPermission(Manifest.permission.RECORD_AUDIO)
@@ -23,6 +25,20 @@ class PermissionManager(
             return packageInfo.requestedPermissions?.any { it == Manifest.permission.CAMERA } ?: false
         }
 
+        fun Context.hasAnyPermission(permissions: Array<String>?): Boolean = permissions?.let {
+            it.isEmpty() ||
+                it.any { permission ->
+                    hasPermission(permission)
+                }
+        } != false
+
+        fun Context.hasAllPermissions(permissions: Array<String>?): Boolean = permissions?.let {
+            it.isEmpty() ||
+                it.all { permission ->
+                    hasPermission(permission)
+                }
+        } != false
+
         private fun Context.hasPermission(permission: String): Boolean =
             ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
     }
@@ -31,6 +47,7 @@ class PermissionManager(
         !shouldShowRequestPermissionRationale(checkNotNull(context.activity), permission)
 
     fun openAppSettings() {
+        current = this
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             data = Uri.fromParts("package", context.packageName, null)
         }

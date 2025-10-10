@@ -4,9 +4,11 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.net.Uri
-import coil.imageLoader
+import coil.ImageLoader
+import coil.decode.VideoFrameDecoder
 import coil.request.ImageRequest
 import ly.img.editor.core.ui.library.data.MediaMetadataExtractor
+import ly.img.editor.core.ui.library.fetcher.MediaStoreThumbnailFetcher
 import ly.img.engine.Engine
 import java.io.File
 
@@ -21,7 +23,16 @@ object Environment {
         }
     }
 
-    fun getImageLoader() = context.imageLoader
+    private val _imageLoader: ImageLoader by lazy {
+        ImageLoader.Builder(context)
+            .components {
+                add(MediaStoreThumbnailFetcher.Factory())
+                add(VideoFrameDecoder.Factory())
+            }
+            .build()
+    }
+
+    fun getImageLoader() = _imageLoader
 
     fun getEditorDir() = File(context.filesDir, "ly.img.editor")
 

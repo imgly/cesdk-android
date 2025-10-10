@@ -6,6 +6,9 @@ import androidx.compose.ui.unit.dp
 import ly.img.editor.core.library.AssetType
 
 internal object AssetLibraryUiConfig {
+    // Feature flags to keep behavior reversible for customers
+    var autoExpandSingleSection: Boolean = true
+
     fun contentRowHeight(assetType: AssetType) = when (assetType) {
         AssetType.Image, AssetType.Video, AssetType.Gallery, AssetType.Filter,
         AssetType.Effect, AssetType.Blur, AssetType.TextComponent,

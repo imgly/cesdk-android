@@ -36,6 +36,7 @@ sealed interface LibraryEvent : EditorEvent {
 
     data class OnFetch(
         val libraryCategory: LibraryCategory,
+        val reset: Boolean = true,
     ) : LibraryEvent
 
     data class OnAddAsset(

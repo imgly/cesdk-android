@@ -62,32 +62,20 @@ data class LibraryCategory(
                 content = LibraryContent.Sections(
                     titleRes = R.string.ly_img_editor_asset_library_title_elements,
                     sections = buildList {
+                        val gallerySource = if (isSceneModeVideo) {
+                            listOf(AssetSourceType.GalleryAllVisuals)
+                        } else {
+                            listOf(AssetSourceType.GalleryImage)
+                        }
                         LibraryContent.Section(
                             titleRes = R.string.ly_img_editor_asset_library_section_gallery,
-                            sourceTypes = buildList {
-                                add(AssetSourceType.ImageUploads)
-                                if (isSceneModeVideo) {
-                                    add(AssetSourceType.VideoUploads)
-                                }
-                            },
+                            sourceTypes = gallerySource,
                             showUpload = false,
                             assetType = AssetType.Gallery,
-                            expandContent = LibraryContent.Sections(
+                            expandContent = LibraryContent.Grid(
                                 titleRes = R.string.ly_img_editor_asset_library_section_gallery,
-                                sections = buildList {
-                                    LibraryContent.Section(
-                                        titleRes = R.string.ly_img_editor_asset_library_section_image_uploads,
-                                        sourceTypes = listOf(AssetSourceType.ImageUploads),
-                                        assetType = AssetType.Image,
-                                    ).let(::add)
-                                    if (isSceneModeVideo) {
-                                        LibraryContent.Section(
-                                            titleRes = R.string.ly_img_editor_asset_library_section_video_uploads,
-                                            sourceTypes = listOf(AssetSourceType.VideoUploads),
-                                            assetType = AssetType.Video,
-                                        ).let(::add)
-                                    }
-                                },
+                                sourceType = gallerySource.first(),
+                                assetType = AssetType.Gallery,
                             ),
                         ).let(::add)
 
@@ -153,17 +141,51 @@ data class LibraryCategory(
             )
         }
 
+        fun getGallery(sceneMode: SceneMode): LibraryCategory {
+            val isVideoScene = sceneMode == SceneMode.VIDEO
+            val sections = if (isVideoScene) {
+                listOf(
+                    LibraryContent.Section(
+                        titleRes = R.string.ly_img_editor_asset_library_section_gallery,
+                        sourceTypes = listOf(AssetSourceType.GalleryAllVisuals),
+                        assetType = AssetType.Gallery,
+                        expandContent = LibraryContent.Grid(
+                            titleRes = R.string.ly_img_editor_asset_library_section_gallery,
+                            sourceType = AssetSourceType.GalleryAllVisuals,
+                            assetType = AssetType.Gallery,
+                        ),
+                    ),
+                )
+            } else {
+                listOf(
+                    LibraryContent.Section(
+                        titleRes = R.string.ly_img_editor_asset_library_section_gallery,
+                        sourceTypes = listOf(AssetSourceType.GalleryImage),
+                        assetType = AssetType.Image,
+                    ),
+                )
+            }
+            return LibraryCategory(
+                tabTitleRes = R.string.ly_img_editor_asset_library_section_gallery,
+                tabSelectedIcon = IconPack.Image,
+                tabUnselectedIcon = IconPack.ImageOutline,
+                content = LibraryContent.Sections(
+                    titleRes = R.string.ly_img_editor_asset_library_section_gallery,
+                    sections = sections,
+                ),
+            )
+        }
+
         /**
          * The default library category for video assets.
          */
-        val Video by lazy {
-            LibraryCategory(
+        val Video: LibraryCategory
+            get() = LibraryCategory(
                 tabTitleRes = R.string.ly_img_editor_asset_library_title_videos,
                 tabSelectedIcon = IconPack.PlayBox,
                 tabUnselectedIcon = IconPack.PlayBoxOutline,
                 content = LibraryContent.Video,
             )
-        }
 
         /**
          * The default library category for audio assets.
@@ -180,14 +202,13 @@ data class LibraryCategory(
         /**
          * The default library category for image assets.
          */
-        val Images by lazy {
-            LibraryCategory(
+        val Images: LibraryCategory
+            get() = LibraryCategory(
                 tabTitleRes = R.string.ly_img_editor_asset_library_title_images,
                 tabSelectedIcon = IconPack.Image,
                 tabUnselectedIcon = IconPack.ImageOutline,
                 content = LibraryContent.Images,
             )
-        }
 
         /**
          * The default library category for text assets.
@@ -242,38 +263,35 @@ data class LibraryCategory(
         /**
          * The default library category for overlay assets.
          */
-        val Overlays by lazy {
-            LibraryCategory(
+        val Overlays: LibraryCategory
+            get() = LibraryCategory(
                 tabTitleRes = R.string.ly_img_editor_asset_library_title_overlays,
                 tabSelectedIcon = IconPack.PlayBox,
                 tabUnselectedIcon = IconPack.PlayBoxOutline,
                 content = LibraryContent.Overlays,
             )
-        }
 
         /**
          * The default library category for clip assets.
          */
-        val Clips by lazy {
-            LibraryCategory(
+        val Clips: LibraryCategory
+            get() = LibraryCategory(
                 tabTitleRes = R.string.ly_img_editor_asset_library_title_clips,
                 tabSelectedIcon = IconPack.PlayBox,
                 tabUnselectedIcon = IconPack.PlayBoxOutline,
                 content = LibraryContent.Clips,
             )
-        }
 
         /**
          * The default library category for sticker and shape assets.
          */
-        val StickersAndShapes by lazy {
-            LibraryCategory(
+        val StickersAndShapes: LibraryCategory
+            get() = LibraryCategory(
                 tabTitleRes = R.string.ly_img_editor_asset_library_title_stickers_and_shapes,
                 tabSelectedIcon = IconPack.StickerEmoji,
                 tabUnselectedIcon = IconPack.StickerEmojiOutline,
                 content = LibraryContent.StickersAndShapes,
             )
-        }
 
         /**
          * All the source types of the library content.

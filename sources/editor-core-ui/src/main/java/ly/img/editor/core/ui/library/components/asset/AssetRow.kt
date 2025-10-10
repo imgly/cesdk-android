@@ -40,10 +40,16 @@ internal fun AssetRow(
     onAssetLongClick: (WrappedAsset) -> Unit,
     onSeeAllClick: (LibraryContent) -> Unit,
     assetType: AssetType,
+    emptyText: String? = null,
+    onEmptyClick: (() -> Unit)? = null,
 ) {
     Column {
         if (wrappedAssets.isEmpty()) {
-            EmptyAssetsContent(assetType = assetType)
+            EmptyAssetsContent(
+                assetType = assetType,
+                emptyText = emptyText,
+                onEmptyClick = onEmptyClick,
+            )
         } else {
             val lazyRowState = rememberLazyListState()
             LaunchedEffect(wrappedAssets) {

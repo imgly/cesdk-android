@@ -28,8 +28,6 @@ import ly.img.editor.core.iconpack.LibraryElements
 import ly.img.editor.core.theme.surface3
 import ly.img.editor.core.ui.library.LibraryViewModel
 import ly.img.editor.core.ui.library.components.ClipMenuItem
-import ly.img.editor.core.ui.library.resultcontract.GalleryMimeType
-import ly.img.editor.core.ui.library.resultcontract.rememberGalleryLauncherForActivityResult
 
 @Composable
 fun AddClipButton(
@@ -45,17 +43,19 @@ fun AddClipButton(
     callback?.invoke()
     callback = null
 
-    val galleryLauncher = rememberGalleryLauncherForActivityResult(addToBackgroundTrack = true) { event ->
-        showClipMenu = false
-        libraryViewModel.onEvent(event)
-    }
-
     fun handleClickOf(option: AddClipOption) = when (option) {
         AddClipOption.Camera -> {
             onEvent(Event.OnVideoCameraClick { callback = it })
         }
         AddClipOption.Gallery -> {
-            galleryLauncher.launch(GalleryMimeType.All)
+            showClipMenu = false
+            onEvent(
+                EditorEvent.Sheet.Open(
+                    LibraryAddToBackgroundTrackSheetType(
+                        libraryCategory = libraryViewModel.assetLibrary.images(libraryViewModel.sceneMode),
+                    ),
+                ),
+            )
         }
         AddClipOption.Library -> {
             onEvent(
@@ -103,6 +103,7 @@ fun AddClipButton(
                                 textResourceId = R.string.ly_img_editor_timeline_add_clip_option_gallery,
                                 icon = IconPack.AddGalleryBackground,
                             ) {
+                                showClipMenu = false
                                 handleClickOf(option)
                             }
                         }

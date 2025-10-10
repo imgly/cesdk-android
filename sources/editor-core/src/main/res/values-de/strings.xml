@@ -2,13 +2,16 @@
 <resources>
     <string name="ly_img_editor_asset_library_button_add">Hinzufügen</string>
     <string name="ly_img_editor_asset_library_button_back">Zurück</string>
+    <string name="ly_img_editor_asset_library_button_change_permissions">Berechtigungen ändern</string>
     <string name="ly_img_editor_asset_library_button_choose_photo">Foto auswählen</string>
     <string name="ly_img_editor_asset_library_button_choose_video">Video auswählen</string>
     <string name="ly_img_editor_asset_library_button_more">Mehr</string>
+    <string name="ly_img_editor_asset_library_button_permissions">Berechtigungen</string>
     <string name="ly_img_editor_asset_library_button_retry">Wiederholen</string>
     <string name="ly_img_editor_asset_library_button_search">Suchen</string>
     <string name="ly_img_editor_asset_library_button_search_clear">Löschen</string>
     <string name="ly_img_editor_asset_library_button_see_all">Alle anzeigen</string>
+    <string name="ly_img_editor_asset_library_button_select_more_photos">Weitere Fotos auswählen</string>
     <string name="ly_img_editor_asset_library_button_take_photo">Foto aufnehmen</string>
     <string name="ly_img_editor_asset_library_button_take_video">Video aufnehmen</string>
     <string name="ly_img_editor_asset_library_label_credits_artist">Von %s</string>
@@ -16,6 +19,7 @@
     <string name="ly_img_editor_asset_library_label_credits_on_source">Auf %s</string>
     <string name="ly_img_editor_asset_library_label_empty">Keine Elemente</string>
     <string name="ly_img_editor_asset_library_label_error">Verbindung zum Dienst nicht möglich</string>
+    <string name="ly_img_editor_asset_library_label_grant_permissions">Tippen, um Berechtigungen für die Anzeige von Medien zu gewähren</string>
     <string name="ly_img_editor_asset_library_label_none">Keine</string>
     <string name="ly_img_editor_asset_library_label_search_placeholder">%s suchen…</string>
     <string name="ly_img_editor_asset_library_section_3d_stickers">3D Grain</string>
@@ -87,6 +91,10 @@
     <string name="ly_img_editor_dialog_permission_camera_button_dismiss">Abbrechen</string>
     <string name="ly_img_editor_dialog_permission_camera_text">Um die Kamera zu verwenden, aktivieren Sie bitte den Kamerazugriff für diese App in Ihren Einstellungen unter \'Berechtigungen\'.</string>
     <string name="ly_img_editor_dialog_permission_camera_title">Kameraberechtigung erforderlich</string>
+    <string name="ly_img_editor_dialog_permission_gallery_button_confirm">Einstellungen</string>
+    <string name="ly_img_editor_dialog_permission_gallery_button_dismiss">Nicht jetzt</string>
+    <string name="ly_img_editor_dialog_permission_gallery_text">Um Medien von Ihrem Gerät hinzuzufügen, aktivieren Sie bitte den Foto- und Videozugriff für diese App in Ihren Einstellungen unter \'Berechtigungen\'.</string>
+    <string name="ly_img_editor_dialog_permission_gallery_title">Galeriezugriff erforderlich</string>
     <string name="ly_img_editor_dialog_permission_microphone_button_confirm">Einstellungen</string>
     <string name="ly_img_editor_dialog_permission_microphone_button_dismiss">Abbrechen</string>
     <string name="ly_img_editor_dialog_permission_microphone_text">Um Audio aufzunehmen, aktivieren Sie bitte den Mikrofonzugriff für diese App in Ihren Einstellungen unter \'Berechtigungen\'.</string>

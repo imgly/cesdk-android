@@ -11,11 +11,16 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,6 +31,7 @@ import ly.img.editor.core.iconpack.Plus
 import ly.img.editor.core.library.AssetType
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.GradientCard
+import ly.img.editor.core.ui.library.components.ClipMenuItem
 
 @Composable
 internal fun AssetGridUploadItemContent(
@@ -57,10 +63,11 @@ internal fun AssetGridUploadItemContent(
             },
         )
     } else {
+        var showMenu by remember { mutableStateOf(false) }
         GradientCard(
             modifier = Modifier.aspectRatio(1f),
             onClick = {
-                launcher.launch(uploadAssetSource.mimeTypeFilter)
+                showMenu = true
             },
         ) {
             Column(
@@ -77,6 +84,32 @@ internal fun AssetGridUploadItemContent(
                     text = stringResource(R.string.ly_img_editor_asset_library_button_add),
                     style = MaterialTheme.typography.titleSmall,
                 )
+            }
+            DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                val isVideo = uploadAssetSource.mimeTypeFilter.startsWith("video")
+                ClipMenuItem(
+                    textResourceId = if (isVideo) {
+                        R.string.ly_img_editor_asset_library_button_choose_video
+                    } else {
+                        R.string.ly_img_editor_asset_library_button_choose_photo
+                    },
+                    icon = if (isVideo) IconPack.Plus else IconPack.Plus,
+                ) {
+                    launcher.launch(uploadAssetSource.mimeTypeFilter)
+                    showMenu = false
+                }
+                ClipMenuItem(
+                    textResourceId = if (isVideo) {
+                        R.string.ly_img_editor_asset_library_button_take_video
+                    } else {
+                        R.string.ly_img_editor_asset_library_button_take_photo
+                    },
+                    icon = IconPack.Plus,
+                ) {
+                    // Camera opening is handled at a higher level via header button; keep only picker here for consistency
+                    launcher.launch(uploadAssetSource.mimeTypeFilter)
+                    showMenu = false
+                }
             }
         }
     }

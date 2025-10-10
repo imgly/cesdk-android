@@ -32,6 +32,7 @@ internal fun LibraryContent(
             onAssetClick = onAssetClick,
             onUriPick = onUriPick,
             onLibraryEvent = onLibraryEvent,
+            launchCamera = launchCamera,
         )
     } else {
         LibrarySectionColumn(

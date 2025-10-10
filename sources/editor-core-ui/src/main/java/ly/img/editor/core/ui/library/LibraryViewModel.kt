@@ -3,6 +3,7 @@ package ly.img.editor.core.ui.library
 import android.graphics.RectF
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.request.SuccessResult
@@ -22,6 +23,8 @@ import ly.img.editor.core.library.AssetType
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.library.LibraryContent
 import ly.img.editor.core.library.data.AssetSourceType
+import ly.img.editor.core.library.data.GalleryPermissionManager
+import ly.img.editor.core.library.data.SystemGalleryAssetSourceType
 import ly.img.editor.core.library.data.TypefaceProvider
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.Environment
@@ -44,6 +47,7 @@ import ly.img.editor.core.ui.library.state.AssetsLoadState
 import ly.img.editor.core.ui.library.state.CategoryLoadState
 import ly.img.editor.core.ui.library.state.LibraryCategoryStackData
 import ly.img.editor.core.ui.library.state.WrappedAsset
+import ly.img.editor.core.ui.library.util.AssetLibraryUiConfig
 import ly.img.editor.core.ui.library.util.LibraryEvent
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddAsset
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddCameraRecordings
@@ -114,7 +118,7 @@ class LibraryViewModel(
             onEnterSearchMode(it.enter, it.libraryCategory)
         }
         register<OnFetch> {
-            onFetch(it.libraryCategory)
+            onFetch(it.libraryCategory, it.reset)
         }
         register<OnPopStack> {
             onPopStack(it.libraryCategory)
@@ -190,13 +194,50 @@ class LibraryViewModel(
     ) {
         viewModelScope.launch {
             engine.awaitEngineAndSceneLoad()
-            // TODO: propagate error to UI instead of silencing it
-            val designBlock =
-                runCatching { engine.asset.applyAssetSourceAsset(assetSourceType.sourceId, asset) }.getOrNull() ?: return@launch
+            val isSystemGallerySelection = assetSourceType is SystemGalleryAssetSourceType
+            Log.d(
+                TAG,
+                "onAddAsset start source=${assetSourceType.sourceId} isSystemGallery=$isSystemGallerySelection meta=${asset.meta}",
+            )
+
+            var resolvedAssetSourceType = assetSourceType
+            var resolvedAsset = asset
+            var designBlock = runCatching {
+                engine.asset.applyAssetSourceAsset(resolvedAssetSourceType.sourceId, resolvedAsset)
+            }.onFailure {
+                Log.w(
+                    TAG,
+                    "applyAssetSourceAsset failed for source=${resolvedAssetSourceType.sourceId} assetId=${resolvedAsset.id}",
+                    it,
+                )
+            }.getOrNull()
+
+            if (designBlock == null && isSystemGallerySelection) {
+                Log.w(
+                    TAG,
+                    "applyAssetSourceAsset returned null for gallery assetId=${resolvedAsset.id}; attempting fallback",
+                )
+                val fallback = applySystemGalleryGalleryAsset(resolvedAsset)
+                if (fallback != null) {
+                    resolvedAssetSourceType = fallback.first
+                    resolvedAsset = fallback.second
+                    designBlock = fallback.third
+                } else {
+                    Log.e(TAG, "fallbackApplyGalleryAsset failed for assetId=${resolvedAsset.id}; aborting add")
+                }
+            }
+
+            val finalDesignBlock = designBlock ?: return@launch
+
+            runCatching { engine.asset.assetSourceContentsChanged(resolvedAssetSourceType.sourceId) }
+            if (isSystemGallerySelection) {
+                runCatching { engine.asset.assetSourceContentsChanged(AssetSourceType.GalleryAllVisuals.sourceId) }
+            }
+
             if (engine.isSceneModeVideo) {
-                setupAssetForVideo(asset, designBlock, addToBackgroundTrack)
+                setupAssetForVideo(resolvedAsset, finalDesignBlock, addToBackgroundTrack)
             } else {
-                placeDesignBlock(designBlock)
+                placeDesignBlock(finalDesignBlock)
             }
         }
     }
@@ -208,8 +249,15 @@ class LibraryViewModel(
     ) {
         viewModelScope.launch {
             engine.awaitEngineAndSceneLoad()
+            Log.d(TAG, "onAddUri source=${assetSourceType.sourceId} uri=$uri")
             val asset = uploadToAssetSource(assetSourceType, uri)
             onAddAsset(assetSourceType, asset, addToBackgroundTrack)
+            // Also trigger refresh for gallery source if relevant
+            runCatching {
+                if (assetSourceType == AssetSourceType.ImageUploads || assetSourceType == AssetSourceType.VideoUploads) {
+                    engine.asset.assetSourceContentsChanged(AssetSourceType.GalleryAllVisuals.sourceId)
+                }
+            }
         }
     }
 
@@ -515,9 +563,62 @@ class LibraryViewModel(
         }
     }
 
-    private fun onFetch(libraryCategory: LibraryCategory) {
+    private fun onFetch(
+        libraryCategory: LibraryCategory,
+        reset: Boolean = true,
+    ) {
         val categoryData = getLibraryCategoryData(libraryCategory)
+        val currentAssets = categoryData.uiStateFlow.value.assetsData
+        Log.d(
+            "LibraryViewModel",
+            "onFetch(category=${libraryCategory.tabTitleRes}, reset=$reset, dirty=${categoryData.dirty}, page=${currentAssets.page}, assets=${currentAssets.assets.size})",
+        )
         val content = categoryData.dataStack.last()
+
+        if (!reset && !categoryData.dirty) {
+            categoryData.fetchJob?.cancel()
+            categoryData.fetchJob = when (content) {
+                is LibraryContent.Sections -> loadContent(categoryData, content)
+                is LibraryContent.Grid -> loadContent(categoryData, content)
+            }
+            Log.d(
+                "LibraryViewModel",
+                "onFetch paginate category=${libraryCategory.tabTitleRes} nextPage=${currentAssets.page}",
+            )
+            return
+        }
+
+        if (content is LibraryContent.Sections && AssetLibraryUiConfig.autoExpandSingleSection) {
+            val sections = content.sections
+            if (sections.size == 1) {
+                val expandedContent = sections.first().expandContent ?: LibraryContent.Grid(
+                    titleRes = sections.first().titleRes ?: libraryCategory.tabTitleRes,
+                    sourceType = sections.first().sourceTypes.first(),
+                    assetType = sections.first().assetType,
+                )
+                modifyDataStack(libraryCategory) { stack ->
+                    stack.pop()
+                    stack.push(expandedContent)
+                }
+                return
+            }
+        }
+
+        // Mark as dirty to force reload after permission changes or stack mutations
+        categoryData.dirty = true
+        categoryData.fetchJob?.cancel()
+
+        categoryData.uiStateFlow.update {
+            it.copy(
+                loadState = CategoryLoadState.Idle,
+                assetsData = AssetsData(),
+                sectionItems = listOf(),
+                searchText = "",
+                isInSearchMode = false,
+                isRoot = true,
+                titleRes = libraryCategory.tabTitleRes,
+            )
+        }
 
         categoryData.fetchJob = when (content) {
             is LibraryContent.Sections -> loadContent(categoryData, content)
@@ -531,6 +632,10 @@ class LibraryViewModel(
     ) = viewModelScope.launch {
         val uiStateFlow = categoryData.uiStateFlow
         val assetsData = uiStateFlow.value.assetsData
+        Log.d(
+            "LibraryViewModel",
+            "loadContent(grid) page=${assetsData.page} assets=${assetsData.assets.size} canPaginate=${assetsData.canPaginate} state=${assetsData.assetsLoadState}",
+        )
         val canLoadMore = (assetsData.page == 0 && assetsData.assets.isEmpty()) || assetsData.canPaginate
         val isLoading = assetsData.assetsLoadState == AssetsLoadState.Loading || assetsData.assetsLoadState == AssetsLoadState.Paginating
         if (canLoadMore.not() || isLoading) return@launch
@@ -555,6 +660,10 @@ class LibraryViewModel(
                 groups = content.groups,
                 page = assetsData.page,
                 perPage = content.perPage,
+            )
+            Log.d(
+                "LibraryViewModel",
+                "loadContent(grid) fetched page=${assetsData.page} results=${findAssetsResult.assets.size} nextPage=${findAssetsResult.nextPage}",
             )
             val canPaginate = findAssetsResult.nextPage > 0
             val resultAssets = findAssetsResult.assets.mapNotNull {
@@ -610,18 +719,35 @@ class LibraryViewModel(
                 sectionItems = listOf(LibrarySectionItem.Loading(stackIndex = stackIndex)),
             )
         }
+        val context = editor.activity
         content.sections.forEachIndexed { sectionIndex, section ->
             val sectionTitleRes = section.titleRes
             if (sectionTitleRes != null) {
+                val uploadSource = if (section.showUpload) {
+                    section.sourceTypes.singleOrNull() as? UploadAssetSourceType
+                } else {
+                    null
+                }
+                val shouldShowUpload = uploadSource?.let { source ->
+                    when (source) {
+                        AssetSourceType.ImageUploads, AssetSourceType.VideoUploads -> {
+                            context?.let { ctx ->
+                                GalleryPermissionManager.hasPermission(ctx, source.mimeTypeFilter)
+                            } ?: true
+                        }
+                        else -> true
+                    }
+                } ?: false
+
+                val systemGallerySource =
+                    section.sourceTypes.singleOrNull() as? ly.img.editor.core.library.data.SystemGalleryAssetSourceType
+
                 LibrarySectionItem.Header(
                     stackIndex = stackIndex,
                     sectionIndex = sectionIndex,
                     titleRes = sectionTitleRes,
-                    uploadAssetSourceType = if (section.showUpload) {
-                        section.sourceTypes.singleOrNull() as? UploadAssetSourceType
-                    } else {
-                        null
-                    },
+                    uploadAssetSourceType = if (shouldShowUpload) uploadSource else null,
+                    systemGalleryAssetSourceType = systemGallerySource,
                     expandContent = section.expandContent,
                 ).let(loadingSectionItemsList::add)
             }
@@ -693,6 +819,7 @@ class LibraryViewModel(
                                     sectionIndex = content.sectionIndex,
                                     wrappedAssets = wrappedAssets,
                                     assetType = section.assetType,
+                                    sourceTypes = section.sourceTypes,
                                     expandContent = if (total > wrappedAssets.size) section.expandContent else null,
                                 )
                             } ?: LibrarySectionItem.Error(
@@ -805,6 +932,7 @@ class LibraryViewModel(
         uri: Uri,
         duration: Duration? = null,
     ): Asset {
+        Log.d(TAG, "uploadToAssetSource start source=${assetSourceType.sourceId} uri=$uri duration=$duration")
         val uuid = UUID.randomUUID().toString()
         val uriString = uri.toString()
         val meta = mutableMapOf(
@@ -857,12 +985,48 @@ class LibraryViewModel(
             onUpload(editorScope, it, assetSourceType)
         }
 
+        Log.d(TAG, "uploadToAssetSource metaPrepared source=${assetSourceType.sourceId} uuid=$uuid meta=${assetDefinition.meta}")
+
         engine.asset.addAsset(
             sourceId = assetSourceType.sourceId,
             asset = assetDefinition,
         )
+        Log.d(TAG, "uploadToAssetSource assetAdded source=${assetSourceType.sourceId} uuid=$uuid")
         val result = findAssets(assetSourceType.sourceId, perPage = 10, query = label ?: uuid)
-        return result.assets.first { it.id == uuid }
+        val uploadedAsset = result.assets.first { it.id == uuid }
+        Log.d(TAG, "uploadToAssetSource resolvedAsset id=${uploadedAsset.id} meta=${uploadedAsset.meta}")
+        return uploadedAsset
+    }
+
+    private suspend fun applySystemGalleryGalleryAsset(asset: Asset): Triple<AssetSourceType, Asset, DesignBlock>? {
+        val uriString = asset.getMeta("uri") ?: run {
+            Log.w(TAG, "fallbackApplyGalleryAsset missing uri meta for assetId=${asset.id}")
+            return null
+        }
+        val uri = runCatching { Uri.parse(uriString) }.getOrElse {
+            Log.w(TAG, "fallbackApplyGalleryAsset invalid uri=$uriString assetId=${asset.id}", it)
+            return null
+        }
+        val kind = asset.getMeta("kind")
+        val uploadSource = if (kind == "video") {
+            AssetSourceType.VideoUploads
+        } else {
+            AssetSourceType.ImageUploads
+        }
+        Log.d(TAG, "fallbackApplyGalleryAsset uploadSource=${uploadSource.sourceId} uri=$uri kind=$kind")
+
+        val uploadedAsset = uploadToAssetSource(uploadSource, uri)
+        val designBlock = runCatching {
+            engine.asset.applyAssetSourceAsset(uploadSource.sourceId, uploadedAsset)
+        }.onFailure {
+            Log.w(
+                TAG,
+                "fallbackApplyGalleryAsset apply failed uploadSource=${uploadSource.sourceId} assetId=${uploadedAsset.id}",
+                it,
+            )
+        }.getOrNull() ?: return null
+        runCatching { engine.asset.assetSourceContentsChanged(uploadSource.sourceId) }
+        return Triple(uploadSource, uploadedAsset, designBlock)
     }
 
     private suspend fun getImageDimensions(uri: Uri): Pair<Int, Int>? {
@@ -871,5 +1035,9 @@ class LibraryViewModel(
         val width = bitmap.width
         val height = bitmap.height
         return width to height
+    }
+
+    companion object {
+        private const val TAG = "LibraryViewModel"
     }
 }

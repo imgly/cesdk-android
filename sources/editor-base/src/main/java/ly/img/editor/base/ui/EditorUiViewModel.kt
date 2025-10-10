@@ -1,5 +1,10 @@
 package ly.img.editor.base.ui
 
+import android.content.ContentValues
+import android.media.MediaScannerConnection
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Rect
@@ -94,6 +99,7 @@ import ly.img.editor.core.component.rememberSystemCamera
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.event.EditorEventHandler
 import ly.img.editor.core.library.data.AssetSourceType
+import ly.img.editor.core.library.data.GalleryPermissionManager
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.state.EditorState
@@ -123,6 +129,7 @@ import ly.img.engine.SceneMode
 import ly.img.engine.Typeface
 import ly.img.engine.UnstableEngineApi
 import java.io.File
+import java.io.FileOutputStream
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -923,31 +930,101 @@ abstract class EditorUiViewModel(
         val uri = File.createTempFile("imgly_", null, context.filesDir).let {
             FileProvider.getUriForFile(context, "${context.packageName}.ly.img.editor.fileprovider", it)
         }
+        val isVideoScene = engine.scene.getMode() == SceneMode.VIDEO
         val launchContract = if (captureVideo) {
             ActivityResultContracts.CaptureVideo()
         } else {
             ActivityResultContracts.TakePicture()
         }
         EditorEvent.LaunchContract(launchContract, uri) { success ->
-            if (success) {
-                val assetSource = if (captureVideo) AssetSourceType.VideoUploads else AssetSourceType.ImageUploads
-                val event = designBlock?.let {
-                    LibraryEvent.OnReplaceUri(
-                        uri = uri,
-                        assetSource = assetSource,
-                        designBlock = designBlock,
-                    )
-                } ?: LibraryEvent.OnAddUri(
-                    assetSource = assetSource,
-                    uri = uri,
-                    addToBackgroundTrack = addToBackgroundTrack,
-                )
-                // IMPORTANT! we cannot invoke simply invoke it on this.libraryViewModel as it's the previous instance and it will result to a crash!
-                // + we do not want to capture anything from previous instance to allow it GC.
-                (editorContext.eventHandler as EditorUiViewModel).libraryViewModel.onEvent(event)
-                editorContext.eventHandler.send(EditorEvent.Sheet.Close(animate = true))
+            if (!success) {
+                return@LaunchContract
+            }
+
+            val uploadSource = if (isVideoScene) {
+                AssetSourceType.VideoUploads
+            } else {
+                AssetSourceType.ImageUploads
+            }
+            editorContext.eventHandler.send(EditorEvent.AddUriToScene(uploadSource, uri))
+
+            val galleryUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                copyCaptureToMediaStore(context, uri, captureVideo)
+            } else {
+                copyCaptureToLegacyGallery(context, uri, captureVideo)
+                null
+            }
+            galleryUri?.let {
+                runCatching { GalleryPermissionManager.addSelected(it, context) }
+                runCatching { engine.asset.assetSourceContentsChanged(AssetSourceType.GalleryAllVisuals.sourceId) }
             }
         }.let(::send)
+    }
+
+    private fun copyCaptureToMediaStore(
+        context: android.content.Context,
+        sourceUri: android.net.Uri,
+        isVideo: Boolean,
+    ): android.net.Uri? {
+        val resolver = context.contentResolver
+        val timestamp = System.currentTimeMillis()
+        val fileName = if (isVideo) "VID_$timestamp.mp4" else "IMG_$timestamp.jpg"
+        val collection = if (isVideo) {
+            MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        } else {
+            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        }
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, if (isVideo) "video/mp4" else "image/jpeg")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.MediaColumns.DATE_TAKEN, timestamp)
+                put(
+                    MediaStore.MediaColumns.RELATIVE_PATH,
+                    if (isVideo) Environment.DIRECTORY_MOVIES else Environment.DIRECTORY_PICTURES,
+                )
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+        }
+        val destination = resolver.insert(collection, values) ?: return null
+        return try {
+            resolver.openOutputStream(destination)?.use { output ->
+                resolver.openInputStream(sourceUri)?.use { input ->
+                    input.copyTo(output)
+                } ?: throw IllegalStateException("Unable to open camera result stream")
+            } ?: throw IllegalStateException("Unable to open MediaStore output stream")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val completeValues = ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }
+                resolver.update(destination, completeValues, null, null)
+            }
+            destination
+        } catch (throwable: Throwable) {
+            resolver.delete(destination, null, null)
+            null
+        }
+    }
+
+    private fun copyCaptureToLegacyGallery(
+        context: android.content.Context,
+        sourceUri: android.net.Uri,
+        isVideo: Boolean,
+    ) {
+        val directory = Environment.getExternalStoragePublicDirectory(
+            if (isVideo) Environment.DIRECTORY_MOVIES else Environment.DIRECTORY_PICTURES,
+        )
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+        val timestamp = System.currentTimeMillis()
+        val destinationFile = File(directory, if (isVideo) "VID_$timestamp.mp4" else "IMG_$timestamp.jpg")
+        runCatching {
+            context.contentResolver.openInputStream(sourceUri)?.use { input ->
+                FileOutputStream(destinationFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            MediaScannerConnection.scanFile(context, arrayOf(destinationFile.absolutePath), null, null)
+        }
     }
 
     private fun onLaunchGetContent(
@@ -969,7 +1046,7 @@ abstract class EditorUiViewModel(
                     uri = uri,
                     addToBackgroundTrack = addToBackgroundTrack,
                 )
-                // IMPORTANT! we cannot invoke simply invoke it on this.libraryViewModel as it's the previous instance and it will result to a crash!
+                // IMPORTANT! we cannot simply invoke it on this.libraryViewModel as it's the previous instance and it will result to a crash!
                 // + we do not want to capture anything from previous instance to allow it GC.
                 (editorContext.eventHandler as EditorUiViewModel).libraryViewModel.onEvent(event)
                 editorContext.eventHandler.send(EditorEvent.Sheet.Close(animate = true))
@@ -978,7 +1055,6 @@ abstract class EditorUiViewModel(
     }
 
     private fun onVideoCameraClick(callback: (@Composable () -> Unit) -> Unit) = callback {
-        // If imgly camera is missing, then use system camera.
         runCatching {
             Dock.Button.rememberImglyCamera()
         }.getOrElse {

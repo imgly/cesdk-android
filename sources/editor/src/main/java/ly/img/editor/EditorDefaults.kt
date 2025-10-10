@@ -48,6 +48,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ly.img.editor.compose.foundation.gestures.detectTapGestures
 import ly.img.editor.core.R
+import ly.img.editor.core.engine.addSystemGalleryAssetSources
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.event.EditorEventHandler
 import ly.img.editor.core.library.data.TextAssetSource
@@ -144,6 +145,7 @@ object EditorDefaults {
             onSceneCreated(scene, this)
             launch {
                 engine.addDefaultAssetSources()
+                engine.addSystemGalleryAssetSources()
                 val defaultTypeface = TypefaceProvider().provideTypeface(engine, "Roboto")
                 requireNotNull(defaultTypeface)
                 engine.asset.addSource(TextAssetSource(engine, defaultTypeface))

@@ -1,5 +1,6 @@
 package ly.img.editor.core.ui.library.components.asset
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,8 @@ internal fun AssetsIntermediateStateContent(
     state: IntermediateState,
     assetType: AssetType,
     inGrid: Boolean = false,
+    emptyText: String? = null,
+    onEmptyClick: (() -> Unit)? = null,
 ) {
     val isLoading = state == IntermediateState.Loading
 
@@ -122,11 +125,18 @@ internal fun AssetsIntermediateStateContent(
         }
 
         if (state == IntermediateState.Empty) {
+            val textModifier = Modifier.align(Alignment.Center).let {
+                if (onEmptyClick != null) {
+                    it.clickable { onEmptyClick() }
+                } else {
+                    it
+                }
+            }
             Text(
-                stringResource(id = R.string.ly_img_editor_asset_library_label_empty),
+                emptyText ?: stringResource(id = R.string.ly_img_editor_asset_library_label_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.align(Alignment.Center),
+                modifier = textModifier,
             )
         }
     }

@@ -6,7 +6,6 @@ import kotlin.time.Duration.Companion.seconds
 object TimelineConfiguration {
     var addClipOptions: List<AddClipOption> = listOf(
         AddClipOption.Camera,
-        AddClipOption.Gallery,
         AddClipOption.Library,
     )
 
