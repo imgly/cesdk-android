@@ -130,30 +130,62 @@ object GalleryPermissionManager {
         mimeType: String?,
     ): Boolean {
         ensureLoaded(context)
-        val fullAccess = if (
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            (
-                ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) ==
-                    PackageManager.PERMISSION_GRANTED ||
-                    ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_VIDEO) ==
-                    PackageManager.PERMISSION_GRANTED
-            )
-        ) {
-            Log.d("GalleryPermissionManager", "Full access granted (Android 13+)")
+        val needsVideo = mimeType?.startsWith("video/") == true
+        val needsImage = mimeType?.startsWith("image/") == true
+        val needsAnyVisuals = !needsVideo && !needsImage
+
+        val legacyGranted = ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val imagePermissionGranted =
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) ==
+                PackageManager.PERMISSION_GRANTED
+        val videoPermissionGranted =
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_VIDEO) ==
+                PackageManager.PERMISSION_GRANTED
+
+        val fullAccess = when {
+            legacyGranted -> true
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> when {
+                needsVideo -> videoPermissionGranted
+                needsImage -> imagePermissionGranted
+                needsAnyVisuals -> imagePermissionGranted || videoPermissionGranted
+                else -> imagePermissionGranted || videoPermissionGranted
+            }
+            else -> false
+        }
+
+        if (fullAccess) {
+            Log.d("GalleryPermissionManager", "Full access granted for mimeType=$mimeType")
             if (mode != Mode.ALL) setAllGranted()
-            true
-        } else if (
-            ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.READ_EXTERNAL_STORAGE,
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.d("GalleryPermissionManager", "Full access granted (legacy permission)")
-            if (mode != Mode.ALL) setAllGranted()
-            true
+            // Ensure mode reflects the actual scope when only one of the media permissions is granted
+            when {
+                legacyGranted -> {
+                    if (mode != Mode.ALL) setAllGranted()
+                }
+                needsVideo && !videoPermissionGranted -> {
+                    if (updateMode(Mode.SELECTED)) {
+                        markPermissionsChanged()
+                    }
+                }
+                needsImage && !imagePermissionGranted -> {
+                    if (updateMode(Mode.SELECTED)) {
+                        markPermissionsChanged()
+                    }
+                }
+                needsAnyVisuals && !(imagePermissionGranted && videoPermissionGranted) -> {
+                    if (updateMode(Mode.SELECTED)) {
+                        markPermissionsChanged()
+                    }
+                }
+            }
         } else {
-            Log.d("GalleryPermissionManager", "No full access")
-            false
+            Log.d(
+                "GalleryPermissionManager",
+                "No full access for mimeType=$mimeType (legacy=$legacyGranted, image=$imagePermissionGranted, video=$videoPermissionGranted)",
+            )
         }
 
         val partialAccess =
@@ -164,7 +196,15 @@ object GalleryPermissionManager {
                 ) == PackageManager.PERMISSION_GRANTED
 
         val result = when {
-            fullAccess -> true
+            fullAccess -> {
+                // If we don't actually have the specific permission we need, treat as partial
+                when {
+                    needsVideo && !videoPermissionGranted -> false
+                    needsImage && !imagePermissionGranted -> false
+                    needsAnyVisuals && !(imagePermissionGranted && videoPermissionGranted) && !legacyGranted -> false
+                    else -> true
+                }
+            }
             partialAccess -> {
                 // User granted limited access; even wenn keine selectedUris lokal hinterlegt sind,
                 // liefert MediaStore bereits die erlaubten Einträge. UI darf fortfahren.
@@ -204,10 +244,12 @@ object GalleryPermissionManager {
         Build.VERSION.SDK_INT >= 34 -> when {
             mimeType?.startsWith("video/") == true -> arrayOf(
                 android.Manifest.permission.READ_MEDIA_VIDEO,
+                android.Manifest.permission.READ_MEDIA_IMAGES,
                 android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
             )
             mimeType?.startsWith("image/") == true -> arrayOf(
                 android.Manifest.permission.READ_MEDIA_IMAGES,
+                android.Manifest.permission.READ_MEDIA_VIDEO,
                 android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
             )
             else -> arrayOf(
@@ -217,8 +259,14 @@ object GalleryPermissionManager {
             )
         }
         Build.VERSION.SDK_INT >= 33 -> when {
-            mimeType?.startsWith("video/") == true -> arrayOf(android.Manifest.permission.READ_MEDIA_VIDEO)
-            mimeType?.startsWith("image/") == true -> arrayOf(android.Manifest.permission.READ_MEDIA_IMAGES)
+            mimeType?.startsWith("video/") == true -> arrayOf(
+                android.Manifest.permission.READ_MEDIA_VIDEO,
+                android.Manifest.permission.READ_MEDIA_IMAGES,
+            )
+            mimeType?.startsWith("image/") == true -> arrayOf(
+                android.Manifest.permission.READ_MEDIA_IMAGES,
+                android.Manifest.permission.READ_MEDIA_VIDEO,
+            )
             else -> arrayOf(
                 android.Manifest.permission.READ_MEDIA_IMAGES,
                 android.Manifest.permission.READ_MEDIA_VIDEO,

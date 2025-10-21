@@ -79,12 +79,10 @@ internal fun AssetGrid(
     if (gridSource is SystemGalleryAssetSourceType) {
         val context = LocalContext.current
         LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-            GalleryPermissionManager.hasPermission(context, gridSource.mimeTypeFilter)
             val currentVersion = GalleryPermissionManager.permissionVersion
-            if (currentVersion != lastPermissionVersion) {
-                lastPermissionVersion = currentVersion
-                onLibraryEvent(LibraryEvent.OnFetch(libraryCategory))
-            }
+            GalleryPermissionManager.hasPermission(context, gridSource.mimeTypeFilter)
+            lastPermissionVersion = GalleryPermissionManager.permissionVersion
+            onLibraryEvent(LibraryEvent.OnFetch(libraryCategory))
         }
     }
 

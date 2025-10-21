@@ -62,11 +62,8 @@ internal fun LibrarySectionColumn(
         } else {
             filters.forEach { GalleryPermissionManager.hasPermission(context, it) }
         }
-        val currentVersion = GalleryPermissionManager.permissionVersion
-        if (currentVersion != lastPermissionVersion) {
-            lastPermissionVersion = currentVersion
-            onLibraryEvent(LibraryEvent.OnFetch(uiState.libraryCategory))
-        }
+        lastPermissionVersion = GalleryPermissionManager.permissionVersion
+        onLibraryEvent(LibraryEvent.OnFetch(uiState.libraryCategory))
     }
 
     LazyColumn(

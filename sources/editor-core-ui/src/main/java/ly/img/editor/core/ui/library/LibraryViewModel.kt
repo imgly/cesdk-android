@@ -158,6 +158,7 @@ class LibraryViewModel(
                     AssetLibraryUiState(
                         libraryCategory = libraryCategory,
                         titleRes = libraryCategory.tabTitleRes,
+                        isSearchEnabled = supportsSearch(libraryCategory.content),
                     ),
                 ),
                 dataStack = Stack<LibraryContent>().apply { push(libraryCategory.content) },
@@ -515,7 +516,9 @@ class LibraryViewModel(
         enter: Boolean,
         libraryCategory: LibraryCategory,
     ) {
-        val uiStateFlow = getLibraryCategoryData(libraryCategory).uiStateFlow
+        val categoryData = getLibraryCategoryData(libraryCategory)
+        val uiStateFlow = categoryData.uiStateFlow
+        if (!uiStateFlow.value.isSearchEnabled) return
         if (enter == uiStateFlow.value.isInSearchMode) return
         uiStateFlow.update { it.copy(isInSearchMode = enter) }
     }
@@ -527,6 +530,7 @@ class LibraryViewModel(
         force: Boolean = false,
     ) {
         val categoryData = getLibraryCategoryData(libraryCategory)
+        if (!force && !categoryData.uiStateFlow.value.isSearchEnabled) return
         val oldValue = categoryData.uiStateFlow.value.searchText
         if (!force && oldValue == value) return
 
@@ -574,12 +578,16 @@ class LibraryViewModel(
             "onFetch(category=${libraryCategory.tabTitleRes}, reset=$reset, dirty=${categoryData.dirty}, page=${currentAssets.page}, assets=${currentAssets.assets.size})",
         )
         val content = categoryData.dataStack.last()
+        val searchEnabled = supportsSearch(content)
 
         if (!reset && !categoryData.dirty) {
             categoryData.fetchJob?.cancel()
             categoryData.fetchJob = when (content) {
                 is LibraryContent.Sections -> loadContent(categoryData, content)
                 is LibraryContent.Grid -> loadContent(categoryData, content)
+            }
+            if (!categoryData.uiStateFlow.value.isSearchEnabled && searchEnabled) {
+                categoryData.uiStateFlow.update { it.copy(isSearchEnabled = true) }
             }
             Log.d(
                 "LibraryViewModel",
@@ -589,13 +597,9 @@ class LibraryViewModel(
         }
 
         if (content is LibraryContent.Sections && AssetLibraryUiConfig.autoExpandSingleSection) {
-            val sections = content.sections
-            if (sections.size == 1) {
-                val expandedContent = sections.first().expandContent ?: LibraryContent.Grid(
-                    titleRes = sections.first().titleRes ?: libraryCategory.tabTitleRes,
-                    sourceType = sections.first().sourceTypes.first(),
-                    assetType = sections.first().assetType,
-                )
+            val singleSection = content.sections.singleOrNull()
+            val expandedContent = singleSection?.expandContent
+            if (expandedContent != null) {
                 modifyDataStack(libraryCategory) { stack ->
                     stack.pop()
                     stack.push(expandedContent)
@@ -613,10 +617,11 @@ class LibraryViewModel(
                 loadState = CategoryLoadState.Idle,
                 assetsData = AssetsData(),
                 sectionItems = listOf(),
-                searchText = "",
-                isInSearchMode = false,
+                searchText = if (searchEnabled) it.searchText else "",
+                isInSearchMode = if (searchEnabled) it.isInSearchMode else false,
                 isRoot = true,
                 titleRes = libraryCategory.tabTitleRes,
+                isSearchEnabled = searchEnabled,
             )
         }
 
@@ -641,7 +646,8 @@ class LibraryViewModel(
         if (canLoadMore.not() || isLoading) return@launch
         categoryData.dirty = false
         uiStateFlow.update {
-            it.copy(
+            val searchEnabled = supportsSearch(content)
+            var state = it.copy(
                 titleRes = content.titleRes,
                 isRoot = categoryData.dataStack.size == 1,
                 assetsData = it.assetsData.copy(
@@ -650,7 +656,12 @@ class LibraryViewModel(
                     assetsLoadState = if (assetsData.page == 0) AssetsLoadState.Loading else AssetsLoadState.Paginating,
                 ),
                 loadState = CategoryLoadState.LoadingAssets,
+                isSearchEnabled = searchEnabled,
             )
+            if (!searchEnabled) {
+                state = state.copy(searchText = "", isInSearchMode = false)
+            }
+            state
         }
         val searchQuery = uiStateFlow.value.searchText
         runCatching {
@@ -712,12 +723,18 @@ class LibraryViewModel(
         val loadingSectionItemsList = mutableListOf<LibrarySectionItem>()
         categoryData.dirty = false
         uiStateFlow.update {
-            it.copy(
+            val searchEnabled = supportsSearch(content)
+            var state = it.copy(
                 titleRes = content.titleRes,
                 isRoot = categoryData.dataStack.size == 1,
                 loadState = CategoryLoadState.Loading,
                 sectionItems = listOf(LibrarySectionItem.Loading(stackIndex = stackIndex)),
+                isSearchEnabled = searchEnabled,
             )
+            if (!searchEnabled) {
+                state = state.copy(searchText = "", isInSearchMode = false)
+            }
+            state
         }
         val context = editor.activity
         content.sections.forEachIndexed { sectionIndex, section ->
@@ -925,6 +942,13 @@ class LibraryViewModel(
             it.copy(assetsData = AssetsData())
         }
         onFetch(libraryCategory)
+    }
+
+    private fun supportsSearch(content: LibraryContent): Boolean = when (content) {
+        is LibraryContent.Grid -> content.sourceType !is SystemGalleryAssetSourceType
+        is LibraryContent.Sections -> content.sections.any { section ->
+            section.sourceTypes.any { source -> source !is SystemGalleryAssetSourceType }
+        }
     }
 
     private suspend fun uploadToAssetSource(

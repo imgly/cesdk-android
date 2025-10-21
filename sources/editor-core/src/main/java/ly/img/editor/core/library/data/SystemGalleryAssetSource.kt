@@ -70,11 +70,7 @@ class SystemGalleryAssetSource(
 
         val limit = query.perPage
         val offset = query.page * query.perPage
-        val sortOrder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            "${MediaStore.MediaColumns.DATE_TAKEN} DESC, ${MediaStore.Files.FileColumns.DATE_ADDED} DESC"
-        } else {
-            "${MediaStore.Files.FileColumns.DATE_ADDED} DESC"
-        }
+        val sortOrder = "${MediaStore.MediaColumns.DATE_MODIFIED} DESC"
 
         val overallStart = SystemClock.elapsedRealtime()
         val assets = mutableListOf<Asset>()

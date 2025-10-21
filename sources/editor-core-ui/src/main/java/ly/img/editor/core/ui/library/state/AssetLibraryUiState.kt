@@ -11,6 +11,7 @@ data class AssetLibraryUiState(
     @StringRes val titleRes: Int,
     val searchText: String = "",
     val isInSearchMode: Boolean = false,
+    val isSearchEnabled: Boolean = true,
     val sectionItems: List<LibrarySectionItem> = listOf(),
     val loadState: CategoryLoadState = CategoryLoadState.Idle,
     val isRoot: Boolean = true,

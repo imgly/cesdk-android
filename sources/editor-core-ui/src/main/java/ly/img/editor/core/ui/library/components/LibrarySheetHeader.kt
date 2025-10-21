@@ -74,9 +74,10 @@ internal fun LibrarySearchHeader(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth(),
     ) {
+        val searchEnabled = uiState.isSearchEnabled
         AnimatedContent(
             modifier = Modifier.weight(1f),
-            targetState = uiState.isInSearchMode,
+            targetState = if (searchEnabled) uiState.isInSearchMode else false,
             transitionSpec = {
                 if (targetState) {
                     fadeIn(animationSpec = tween(250)) +
@@ -95,7 +96,7 @@ internal fun LibrarySearchHeader(
             },
             label = "SearchAnimation",
         ) { isInSearchMode ->
-            if (isInSearchMode) {
+            if (searchEnabled && isInSearchMode) {
                 val focusRequester = remember { FocusRequester() }
                 var textFieldValue by remember {
                     mutableStateOf(
@@ -184,7 +185,7 @@ internal fun LibrarySearchHeader(
                     },
                     actions = {
                         val searchQuery = uiState.searchText
-                        if (searchQuery.isNotEmpty()) {
+                        if (searchEnabled && searchQuery.isNotEmpty()) {
                             InputChip(
                                 selected = true,
                                 onClick = {
@@ -214,7 +215,7 @@ internal fun LibrarySearchHeader(
                                 shape = ShapeDefaults.Large,
                                 modifier = Modifier.padding(start = 8.dp, end = 8.dp),
                             )
-                        } else {
+                        } else if (searchEnabled) {
                             Box(Modifier.offset(x = 4.dp)) {
                                 IconButton(
                                     onClick = {
