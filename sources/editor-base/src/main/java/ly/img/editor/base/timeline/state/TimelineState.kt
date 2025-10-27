@@ -191,6 +191,10 @@ class TimelineState(
                 clipType = ClipType.Text
             }
 
+            blockType == DesignBlockType.Group.key -> {
+                clipType = ClipType.Group
+            }
+
             blockType == DesignBlockType.Audio.key -> {
                 clipType = ClipType.Audio
                 title = runCatching { engine.block.getMetadata(designBlock, "name") }.getOrDefault("")
