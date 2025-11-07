@@ -446,13 +446,12 @@ abstract class EditorUiViewModel(
                         addToBackgroundTrack = true,
                     )
                 }
-                // This sheet triggered only from dock for now.
-                // addToBackgroundTrack is always false for now as we do not want to expose it to customers due to unknown future.
+                // This sheet is triggered from the dock and certain timeline entry points.
                 is SheetType.LibraryAdd -> type.libraryCategory?.let {
                     LibraryAddBottomSheetContent(
                         type = type,
                         libraryCategory = it,
-                        addToBackgroundTrack = false,
+                        addToBackgroundTrack = type.addToBackgroundTrack,
                     )
                 } ?: run {
                     LibraryTabsBottomSheetContent(type = type)

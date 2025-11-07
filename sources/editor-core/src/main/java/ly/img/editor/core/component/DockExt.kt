@@ -1533,7 +1533,8 @@ fun Button.Companion.rememberSystemGallery(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = {
-        if (editorContext.engine.scene.getMode() == SceneMode.VIDEO) {
+        val sceneMode = editorContext.engine.scene.getMode()
+        if (sceneMode == SceneMode.VIDEO) {
             IconPack.AddGalleryBackground
         } else {
             IconPack.AddGalleryForeground
@@ -1545,7 +1546,14 @@ fun Button.Companion.rememberSystemGallery(
     onClick: ButtonScope.() -> Unit = {
         val sceneMode = editorContext.engine.scene.getMode()
         val category = editorContext.assetLibrary.gallery(sceneMode)
-        editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.LibraryAdd(libraryCategory = category)))
+        editorContext.eventHandler.send(
+            EditorEvent.Sheet.Open(
+                SheetType.LibraryAdd(
+                    libraryCategory = category,
+                    addToBackgroundTrack = sceneMode == SceneMode.VIDEO,
+                ),
+            ),
+        )
     },
     contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,

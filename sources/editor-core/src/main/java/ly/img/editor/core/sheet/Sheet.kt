@@ -40,6 +40,8 @@ interface SheetType {
      * Default value is [SheetStyle] that is floating, fullscreen and is initially half-expanded.
      * @param libraryCategory the library category that should be displayed in the sheet.
      * Default value is null, which means the sheet will display the tabs returned by [ly.img.editor.core.library.AssetLibrary.tabs].
+     * @param addToBackgroundTrack whether assets picked from this sheet should be placed on the background track when working on
+     * a video scene. Default value is false.
      */
     class LibraryAdd(
         override val style: SheetStyle = SheetStyle(
@@ -48,6 +50,7 @@ interface SheetType {
             isHalfExpandingEnabled = true,
         ),
         val libraryCategory: LibraryCategory? = null,
+        val addToBackgroundTrack: Boolean = false,
     ) : SheetType
 
     /**
