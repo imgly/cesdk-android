@@ -177,17 +177,24 @@ sealed interface LibraryContent {
                 titleRes = R.string.ly_img_editor_asset_library_title_text,
                 sections = listOf(
                     Section(
-                        titleRes = R.string.ly_img_editor_asset_library_section_plain_text,
                         sourceTypes = listOf(AssetSourceType.Text),
                         count = Int.MAX_VALUE,
                         assetType = AssetType.Text,
                         expandContent = null,
                     ),
-                    Section(
-                        titleRes = R.string.ly_img_editor_asset_library_section_font_combinations,
-                        sourceTypes = listOf(AssetSourceType.TextComponents),
-                        assetType = AssetType.TextComponent,
-                    ),
+                ),
+            )
+        }
+
+        /**
+         * The default content for displaying text assets along with text components.
+         */
+        val TextAndTextComponents by lazy {
+            Text.copy(
+                sections = Text.sections.map { it.copy(titleRes = R.string.ly_img_editor_asset_library_section_plain_text) } + Section(
+                    titleRes = R.string.ly_img_editor_asset_library_section_font_combinations,
+                    sourceTypes = listOf(AssetSourceType.TextComponents),
+                    assetType = AssetType.TextComponent,
                 ),
             )
         }

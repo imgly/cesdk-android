@@ -34,5 +34,4 @@ enum class ClipType {
     Sticker,
     Text,
     Video,
-    Group,
 }
