@@ -7,6 +7,7 @@ import android.os.CancellationSignal
 import android.os.SystemClock
 import android.util.Log
 import android.util.Size
+import androidx.annotation.RequiresApi
 import androidx.core.graphics.drawable.toDrawable
 import coil.ImageLoader
 import coil.decode.DataSource
@@ -27,6 +28,7 @@ class MediaStoreThumbnailFetcher(
     private val source: Uri,
     private val options: Options,
 ) : Fetcher {
+    @RequiresApi(Build.VERSION_CODES.Q)
     override suspend fun fetch(): FetchResult {
         require(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             "MediaStore#loadThumbnail requires API 29+."

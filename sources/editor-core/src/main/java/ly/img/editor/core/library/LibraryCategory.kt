@@ -50,7 +50,6 @@ data class LibraryCategory(
             videos: LibraryCategory = Video,
             audios: LibraryCategory = Audio,
             text: LibraryCategory = Text,
-            textAndTextComponents: LibraryCategory = TextAndTextComponents,
             shapes: LibraryCategory = Shapes,
             stickers: LibraryCategory = Stickers,
         ): LibraryCategory {
@@ -109,7 +108,6 @@ data class LibraryCategory(
                         }
 
                         text.apply {
-                            val content = if (!isSceneModeVideo) textAndTextComponents.content else content
                             LibraryContent.Section(
                                 titleRes = R.string.ly_img_editor_asset_library_section_text,
                                 sourceTypes = content.sourceTypes,
@@ -220,19 +218,6 @@ data class LibraryCategory(
                 tabUnselectedIcon = IconPack.TextFields,
                 isHalfExpandedInitially = true,
                 content = LibraryContent.Text,
-            )
-        }
-
-        /**
-         * The default library category for text assets with text components.
-         */
-        val TextAndTextComponents by lazy {
-            LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_text,
-                tabSelectedIcon = IconPack.TextFields,
-                tabUnselectedIcon = IconPack.TextFields,
-                isHalfExpandedInitially = true,
-                content = LibraryContent.TextAndTextComponents,
             )
         }
 

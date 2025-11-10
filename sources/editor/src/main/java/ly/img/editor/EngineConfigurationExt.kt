@@ -10,9 +10,9 @@ import ly.img.engine.MimeType
 /**
  * A composable helper function that creates and remembers an [EngineConfiguration] instance when launching [DesignEditor].
  * This function simplifies the initialization process, offering a default configuration ideal for a wide range of
- * applications. The essential requirement is the [license], with available extra parameters for further customization.
+ * applications. All parameters are optional for further customization.
  *
- * @param license the license required to activate the [ly.img.engine.Engine].
+ * @param license the license to activate the [ly.img.engine.Engine] with. Can be empty for evaluation mode with watermark.
  * @param userId an optional identifier for the application's user, enhancing the accuracy of monthly active users (MAU) calculations.
  * This is particularly beneficial for tracking users across multiple devices when they sign in, ensuring they are counted uniquely.
  * @param baseUri the foundational uri for constructing absolute paths from relative ones. For example, setting it to
@@ -22,11 +22,12 @@ import ly.img.engine.MimeType
  * [EditorDefaults.onCreate] to facilitate scene and asset loading at initialization.
  * @param renderTarget the target which should be used by the [ly.img.engine.Engine] to render.
  * Default value is [EngineRenderTarget.SURFACE_VIEW].
+ * @param forceCropConfiguration optional configuration for enforcing a crop preset after the scene has been loaded.
  */
 @UnstableEditorApi
 @Composable
 fun EngineConfiguration.Companion.rememberForDesign(
-    license: String,
+    license: String? = null,
     userId: String? = null,
     baseUri: Uri = defaultBaseUri,
     sceneUri: Uri = defaultDesignSceneUri,
@@ -44,9 +45,9 @@ fun EngineConfiguration.Companion.rememberForDesign(
 /**
  * A composable helper function that creates and remembers an [EngineConfiguration] instance when launching [PhotoEditor].
  * This function simplifies the initialization process, offering a default configuration ideal for a wide range of
- * applications. The essential requirement is the [license], with available extra parameters for further customization.
+ * applications. All parameters are optional for further customization.
  *
- * @param license the license required to activate the [ly.img.engine.Engine].
+ * @param license the license to activate the [ly.img.engine.Engine] with. Can be empty for evaluation mode with watermark.
  * @param imageUri the uri of the image that is used to create a scene using [ly.img.engine.SceneApi.createFromImage] API.
  * @param imageSize the size that should be used to load the image. If null, original size of the image will be used.
  * @param userId an optional identifier for the application's user, enhancing the accuracy of monthly active users (MAU) calculations.
@@ -61,12 +62,13 @@ fun EngineConfiguration.Companion.rememberForDesign(
 @UnstableEditorApi
 @Composable
 fun EngineConfiguration.Companion.rememberForPhoto(
-    license: String,
+    license: String? = null,
     imageUri: Uri,
     imageSize: SizeF? = null,
     userId: String? = null,
     baseUri: Uri = defaultBaseUri,
     renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
+    forceCropConfiguration: ForceCropConfiguration? = null,
 ): EngineConfiguration = remember(
     license = license,
     userId = userId,
@@ -74,6 +76,20 @@ fun EngineConfiguration.Companion.rememberForPhoto(
     renderTarget = renderTarget,
     onCreate = {
         EditorDefaults.onCreateFromImage(editorContext.engine, imageUri, editorContext.eventHandler, imageSize)
+    },
+    onLoaded = {
+        forceCropConfiguration?.let { configuration ->
+            val pages = editorContext.engine.scene.getPages()
+            require(pages.size == 1) {
+                "Force crop requires a single page scene."
+            }
+            editorContext.eventHandler.send(
+                ApplyForceCrop(
+                    block = pages.first(),
+                    configuration = configuration,
+                ),
+            )
+        }
     },
     onExport = {
         EditorDefaults.onExport(editorContext.engine, editorContext.eventHandler, MimeType.PNG)
@@ -83,9 +99,9 @@ fun EngineConfiguration.Companion.rememberForPhoto(
 /**
  * A composable helper function that creates and remembers an [EngineConfiguration] instance when launching [ApparelEditor].
  * This function simplifies the initialization process, offering a default configuration ideal for a wide range of
- * applications. The essential requirement is the [license], with available extra parameters for further customization.
+ * applications. All parameters are optional for further customization.
  *
- * @param license the license to activate the [ly.img.engine.Engine] with.
+ * @param license the license to activate the [ly.img.engine.Engine] with. Can be empty for evaluation mode with watermark.
  * @param userId an optional unique ID tied to your application's user. This helps us accurately calculate monthly active users (MAU).
  * Especially useful when one person uses the app on multiple devices with a sign-in feature, ensuring they're counted once.
  * Providing this aids in better data accuracy.
@@ -102,7 +118,7 @@ fun EngineConfiguration.Companion.rememberForPhoto(
 @UnstableEditorApi
 @Composable
 fun EngineConfiguration.Companion.rememberForApparel(
-    license: String,
+    license: String? = null,
     userId: String? = null,
     baseUri: Uri = defaultBaseUri,
     sceneUri: Uri = defaultApparelSceneUri,
@@ -120,9 +136,9 @@ fun EngineConfiguration.Companion.rememberForApparel(
 /**
  * A composable helper function that creates and remembers an [EngineConfiguration] instance when launching [PostcardEditor].
  * This function simplifies the initialization process, offering a default configuration ideal for a wide range of
- * applications. The essential requirement is the [license], with available extra parameters for further customization.
+ * applications. All parameters are optional for further customization.
  *
- * @param license the license to activate the [ly.img.engine.Engine] with.
+ * @param license the license to activate the [ly.img.engine.Engine] with. Can be empty for evaluation mode with watermark.
  * @param userId an optional unique ID tied to your application's user. This helps us accurately calculate monthly active users (MAU).
  * Especially useful when one person uses the app on multiple devices with a sign-in feature, ensuring they're counted once.
  * Providing this aids in better data accuracy.
@@ -139,7 +155,7 @@ fun EngineConfiguration.Companion.rememberForApparel(
 @UnstableEditorApi
 @Composable
 fun EngineConfiguration.Companion.rememberForPostcard(
-    license: String,
+    license: String? = null,
     userId: String? = null,
     baseUri: Uri = defaultBaseUri,
     sceneUri: Uri = defaultPostcardSceneUri,
@@ -157,9 +173,9 @@ fun EngineConfiguration.Companion.rememberForPostcard(
 /**
  * A composable helper function that creates and remembers an [EngineConfiguration] instance when launching [VideoEditor].
  * This function simplifies the initialization process, offering a default configuration ideal for a wide range of
- * applications. The essential requirement is the [license], with available extra parameters for further customization.
+ * applications. All parameters are optional for further customization.
  *
- * @param license the license to activate the [ly.img.engine.Engine] with.
+ * @param license the license to activate the [ly.img.engine.Engine] with. Can be empty for evaluation mode with watermark.
  * @param userId an optional unique ID tied to your application's user. This helps us accurately calculate monthly active users (MAU).
  * This is particularly beneficial for tracking users across multiple devices when they sign in, ensuring they are counted uniquely.
  * @param baseUri the foundational uri for constructing absolute paths from relative ones. For example, setting it to
@@ -173,7 +189,7 @@ fun EngineConfiguration.Companion.rememberForPostcard(
 @UnstableEditorApi
 @Composable
 fun EngineConfiguration.Companion.rememberForVideo(
-    license: String,
+    license: String? = null,
     userId: String? = null,
     baseUri: Uri = defaultBaseUri,
     sceneUri: Uri = defaultVideoSceneUri,

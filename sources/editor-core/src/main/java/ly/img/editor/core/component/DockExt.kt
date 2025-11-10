@@ -347,18 +347,22 @@ fun Dock.Companion.rememberForVideo(
         }
 
         val reorderButtonVisible by remember(this) {
-            engine.event.subscribe(engine.scene.getPages())
-                .map { getBackgroundTrack() }
-                .onStart { emit(getBackgroundTrack()) }
-                .distinctUntilChanged()
-                .flatMapLatest { backgroundTrack ->
-                    if (backgroundTrack == null) {
-                        flowOf(false)
-                    } else {
-                        engine.event.subscribe(listOf(backgroundTrack))
-                            .map { engine.block.getChildren(backgroundTrack).size >= 2 }
-                            .onStart { emit(engine.block.getChildren(backgroundTrack).size >= 2) }
-                    }
+            engine.scene.onActiveChanged()
+                .onStart { emit(Unit) }
+                .flatMapLatest {
+                    engine.event.subscribe(engine.scene.getPages())
+                        .map { getBackgroundTrack() }
+                        .onStart { emit(getBackgroundTrack()) }
+                        .distinctUntilChanged()
+                        .flatMapLatest { backgroundTrack ->
+                            if (backgroundTrack == null) {
+                                flowOf(false)
+                            } else {
+                                engine.event.subscribe(listOf(backgroundTrack))
+                                    .map { engine.block.getChildren(backgroundTrack).size >= 2 }
+                                    .onStart { emit(engine.block.getChildren(backgroundTrack).size >= 2) }
+                            }
+                        }
                 }
         }.collectAsState(
             initial = remember { getBackgroundTrack()?.let { engine.block.getChildren(it).size >= 2 } ?: false },
@@ -546,16 +550,21 @@ fun Dock.ListBuilder.Companion.rememberForApparel(): HorizontalListBuilder<Item<
  * Default value is always no decoration.
  * @return a dock that will be displayed when launching a [ly.img.editor.PostcardEditor].
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @UnstableEditorApi
 @Composable
 fun Dock.Companion.rememberForPostcard(
     scope: Scope = LocalEditorScope.current.run {
         val pageIndex by remember(this) {
-            val stack = editorContext.engine.block.findByType(DesignBlockType.Stack).first()
-            editorContext.engine.event.subscribe(listOf(stack))
-                .map {
-                    val currentPage = editorContext.engine.scene.getCurrentPage()
-                    editorContext.engine.scene.getPages().indexOf(currentPage)
+            editorContext.engine.scene.onActiveChanged()
+                .onStart { emit(Unit) }
+                .flatMapLatest {
+                    val stack = editorContext.engine.block.findByType(DesignBlockType.Stack).first()
+                    editorContext.engine.event.subscribe(listOf(stack))
+                        .map {
+                            val currentPage = editorContext.engine.scene.getCurrentPage()
+                            editorContext.engine.scene.getPages().indexOf(currentPage)
+                        }
                 }
         }.collectAsState(initial = 0)
         var trigger by remember { mutableStateOf(false) }
@@ -1533,7 +1542,8 @@ fun Button.Companion.rememberSystemGallery(
     exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
     decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = {
-        if (editorContext.engine.scene.getMode() == SceneMode.VIDEO) {
+        val sceneMode = editorContext.engine.scene.getMode()
+        if (sceneMode == SceneMode.VIDEO) {
             IconPack.AddGalleryBackground
         } else {
             IconPack.AddGalleryForeground
@@ -1545,7 +1555,14 @@ fun Button.Companion.rememberSystemGallery(
     onClick: ButtonScope.() -> Unit = {
         val sceneMode = editorContext.engine.scene.getMode()
         val category = editorContext.assetLibrary.gallery(sceneMode)
-        editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.LibraryAdd(libraryCategory = category)))
+        editorContext.eventHandler.send(
+            EditorEvent.Sheet.Open(
+                SheetType.LibraryAdd(
+                    libraryCategory = category,
+                    addToBackgroundTrack = sceneMode == SceneMode.VIDEO,
+                ),
+            ),
+        )
     },
     contentDescription: (@Composable ButtonScope.() -> String)? = null,
     `_`: Nothing = nothing,

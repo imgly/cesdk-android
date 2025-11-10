@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import ly.img.editor.core.iconpack.Animation
+import ly.img.editor.core.iconpack.GroupEnter
 import ly.img.editor.core.iconpack.ImageOutline
 import ly.img.editor.core.iconpack.Music
 import ly.img.editor.core.iconpack.PlayBoxOutline
@@ -100,6 +101,7 @@ private fun ClipIcon(clip: Clip) {
             ClipType.Sticker -> ly.img.editor.core.iconpack.IconPack.StickerEmojiOutline
             ClipType.Text -> ly.img.editor.core.iconpack.IconPack.TextFields
             ClipType.Video -> ly.img.editor.core.iconpack.IconPack.PlayBoxOutline
+            ClipType.Group -> ly.img.editor.core.iconpack.IconPack.GroupEnter
         }
     }
     Icon(icon, contentDescription = null, modifier = Modifier.requiredSize(16.dp))
