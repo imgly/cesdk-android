@@ -56,7 +56,7 @@ fun EditorScope(
 }
 
 class EditorContextImpl(
-    override val license: String?,
+    override val license: String,
     override val userId: String?,
     override val baseUri: Uri,
     override val colorPalette: List<Color>,

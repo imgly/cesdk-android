@@ -46,7 +46,6 @@ class SystemGalleryAssetSource(
             MediaStore.MediaColumns.WIDTH,
             MediaStore.MediaColumns.HEIGHT,
             MediaStore.Video.VideoColumns.DURATION,
-            MediaStore.MediaColumns.MIME_TYPE,
         )
 
         val selection: String
@@ -88,11 +87,10 @@ class SystemGalleryAssetSource(
             val extraEnd = minOf(end, extraCount)
             for (i in start until extraEnd) {
                 val euri = extraSelected[i]
-                val resolvedMimeType = applicationContext.contentResolver.getType(euri)
-                val typeIsVideo = resolvedMimeType?.startsWith("video") == true
+                val typeIsVideo = applicationContext.contentResolver.getType(euri)?.startsWith("video") == true
                 val assetId = euri.toString()
                 if (seenIds.add(assetId)) {
-                    assets += buildAsset(euri, typeIsVideo, null, null, null, resolvedMimeType)
+                    assets += buildAsset(euri, typeIsVideo, null, null, null)
                     extrasAdded += 1
                 }
             }
@@ -146,7 +144,6 @@ class SystemGalleryAssetSource(
                     val widthIndex = resultCursor.getColumnIndexOrThrow(MediaStore.MediaColumns.WIDTH)
                     val heightIndex = resultCursor.getColumnIndexOrThrow(MediaStore.MediaColumns.HEIGHT)
                     val durationIndex = resultCursor.getColumnIndex(MediaStore.Video.VideoColumns.DURATION)
-                    val mimeTypeIndex = resultCursor.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE)
 
                     var skipped = 0
                     while (resultCursor.moveToNext()) {
@@ -173,10 +170,9 @@ class SystemGalleryAssetSource(
                         } else {
                             null
                         }
-                        val mimeType = runCatching { resultCursor.getString(mimeTypeIndex) }.getOrNull()
                         val assetId = contentUri.toString()
                         if (seenIds.add(assetId)) {
-                            assets += buildAsset(contentUri, isVideo, width, height, duration, mimeType)
+                            assets += buildAsset(contentUri, isVideo, width, height, duration)
                             mediaStoreItemsFetched += 1
                         }
                         if (assets.size >= limit) {
@@ -217,15 +213,11 @@ class SystemGalleryAssetSource(
         width: Int?,
         height: Int?,
         duration: Long?,
-        mimeType: String?,
     ): Asset {
         val meta = mutableMapOf(
             "uri" to uri.toString(),
             "kind" to if (isVideo) "video" else "image",
         )
-        val resolvedMimeType = mimeType?.takeIf { it.isNotBlank() }
-            ?: if (isVideo) "video/mp4" else "image/jpeg"
-        meta["mimeType"] = resolvedMimeType
         width?.takeIf { it > 0 }?.let { meta["width"] = it.toString() }
         height?.takeIf { it > 0 }?.let { meta["height"] = it.toString() }
         duration?.takeIf { it > 0 }?.let { meta["duration"] = it.toString() }

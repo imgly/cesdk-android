@@ -749,13 +749,10 @@ class CanvasMenu private constructor(
 
                 var isScenePlayingTrigger by remember { mutableStateOf(false) }
                 LaunchedEffect(this) {
-                    editorContext.engine.scene.onActiveChanged()
-                        .onStart { emit(Unit) }
-                        .flatMapLatest {
-                            val page = editorContext.engine.scene.getCurrentPage() ?: editorContext.engine.scene.getPages()[0]
-                            editorContext.engine.event.subscribe(listOf(page))
-                                .onEach { isScenePlayingTrigger = isScenePlayingTrigger.not() }
-                        }.collect()
+                    val page = editorContext.engine.scene.getCurrentPage() ?: editorContext.engine.scene.getPages()[0]
+                    editorContext.engine.event.subscribe(listOf(page))
+                        .onEach { isScenePlayingTrigger = isScenePlayingTrigger.not() }
+                        .collect()
                 }
 
                 remember(this, selection, isScenePlayingTrigger) {

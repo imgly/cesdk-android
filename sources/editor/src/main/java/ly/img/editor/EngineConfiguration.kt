@@ -18,10 +18,10 @@ import ly.img.engine.MimeType
 
 /**
  * Configuration class of the [ly.img.engine.Engine] when launching the editor. All the properties are optional
- * except [onCreate]. Check helper implementations in the companion object of the class.
+ * except [license] and [onCreate]. Check helper implementations in the companion object of the class.
  * Use remember composable functions in the companion object to create an instance of this class.
  *
- * @param license the license to activate the [Engine] with. Can be empty for evaluation mode with watermark.
+ * @param license the license to activate the [ly.img.engine.Engine] with.
  * @param userId an optional unique ID tied to your application's user. This helps us accurately calculate monthly active users (MAU).
  * Especially useful when one person uses the app on multiple devices with a sign-in feature, ensuring they're counted once.
  * Providing this aids in better data accuracy.
@@ -72,7 +72,7 @@ import ly.img.engine.MimeType
  * the process is killed when in the background.
  */
 class EngineConfiguration private constructor(
-    val license: String? = null,
+    val license: String,
     val userId: String? = null,
     val baseUri: Uri,
     val renderTarget: EngineRenderTarget,
@@ -142,9 +142,9 @@ class EngineConfiguration private constructor(
 
         /**
          * A composable function that creates and remembers an [EngineConfiguration] instance.
-         * All parameters are optional for further customization.
+         * The essential requirement is the [license], with available extra parameters for further customization.
          *
-         * @param license the license to activate the [Engine] with. Can be empty for evaluation mode with watermark.
+         * @param license the license to activate the [ly.img.engine.Engine] with.
          * @param userId an optional unique ID tied to your application's user. This helps us accurately calculate monthly active users (MAU).
          * Especially useful when one person uses the app on multiple devices with a sign-in feature, ensuring they're counted once.
          * Providing this aids in better data accuracy.
@@ -195,7 +195,7 @@ class EngineConfiguration private constructor(
          */
         @Composable
         fun remember(
-            license: String? = null,
+            license: String,
             userId: String? = null,
             baseUri: Uri = defaultBaseUri,
             renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
@@ -239,7 +239,7 @@ class EngineConfiguration private constructor(
 
         @Deprecated("Use EngineConfiguration.Companion.rememberForDesign instead.")
         fun getForDesign(
-            license: String? = null,
+            license: String,
             userId: String? = null,
             baseUri: Uri = defaultBaseUri,
             sceneUri: Uri = defaultDesignSceneUri,
@@ -256,7 +256,7 @@ class EngineConfiguration private constructor(
 
         @Deprecated("Use EngineConfiguration.Companion.rememberForPhoto instead.")
         fun getForPhoto(
-            license: String? = null,
+            license: String,
             imageUri: Uri,
             imageSize: SizeF? = null,
             userId: String? = null,
@@ -277,7 +277,7 @@ class EngineConfiguration private constructor(
 
         @Deprecated("Use EngineConfiguration.Companion.rememberForApparel instead.")
         fun getForApparel(
-            license: String? = null,
+            license: String,
             userId: String? = null,
             baseUri: Uri = defaultBaseUri,
             sceneUri: Uri = defaultApparelSceneUri,
@@ -294,7 +294,7 @@ class EngineConfiguration private constructor(
 
         @Deprecated("Use EngineConfiguration.Companion.rememberForPostcard instead.")
         fun getForPostcard(
-            license: String? = null,
+            license: String,
             userId: String? = null,
             baseUri: Uri = defaultBaseUri,
             sceneUri: Uri = defaultPostcardSceneUri,
@@ -311,7 +311,7 @@ class EngineConfiguration private constructor(
 
         @Deprecated("Use EngineConfiguration.Companion.rememberForVideo instead.")
         fun getForVideo(
-            license: String? = null,
+            license: String,
             userId: String? = null,
             baseUri: Uri = defaultBaseUri,
             sceneUri: Uri = defaultVideoSceneUri,
@@ -332,7 +332,7 @@ class EngineConfiguration private constructor(
     )
     @UnstableEditorApi
     constructor(
-        license: String? = null,
+        license: String,
         userId: String? = null,
         baseUri: Uri = defaultBaseUri,
         renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,

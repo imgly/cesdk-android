@@ -20,9 +20,6 @@ suspend fun createAllPageResizeUiState(
     pageAssetSourceIds: String?,
     initCropTranslationX: Float,
     initCropTranslationY: Float,
-    selectedAssetKey: String? = null,
-    allowContentFillMode: Boolean = true,
-    allowResizeOption: Boolean = true,
 ) = createCropUiState(
     designBlock = engine.getScene(),
     engine = engine,
@@ -31,9 +28,6 @@ suspend fun createAllPageResizeUiState(
     cropAssetSourceId = null,
     initCropTranslationX = initCropTranslationX,
     initCropTranslationY = initCropTranslationY,
-    selectedAssetKey = selectedAssetKey,
-    allowContentFillMode = allowContentFillMode,
-    allowResizeOption = allowResizeOption,
 )
 
 suspend fun createCropUiState(
@@ -45,14 +39,11 @@ suspend fun createCropUiState(
     cropMode: SheetType.Crop.Mode,
     cropAssetSourceId: String?,
     pageAssetSourceId: String?,
-    selectedAssetKey: String? = null,
-    allowContentFillMode: Boolean = true,
-    allowResizeOption: Boolean = true,
 ): CropUiState = CropUiState(
     straightenAngle = getStraightenDegrees(engine, designBlock),
     cropScaleRatio = cropScaleRatio ?: engine.block.getCropScaleRatio(designBlock),
     canResetCrop = canResetCrop(engine, designBlock, initCropTranslationX, initCropTranslationY),
-    selectedAssetKey,
+    null,
     contentFillMode = engine.block.getContentFillMode(designBlock),
     resizeState = ResizeUiState(
         width = engine.block.getWidth(engine.getPage(0)),
@@ -75,8 +66,6 @@ suspend fun createCropUiState(
     ),
     cropAssetSourceId = cropAssetSourceId,
     pageAssetSourceId = pageAssetSourceId,
-    allowContentFillMode = allowContentFillMode,
-    allowResizeOption = allowResizeOption,
 )
 
 suspend fun getGroups(
@@ -151,8 +140,6 @@ data class CropUiState(
     val cropAssetSourceId: String?,
     val pageAssetSourceId: String?,
     val resizeState: ResizeUiState,
-    val allowContentFillMode: Boolean,
-    val allowResizeOption: Boolean,
 ) {
     fun contentFillModeTextRes(mode: ContentFillMode) = when (mode) {
         ContentFillMode.CROP -> R.string.ly_img_editor_sheet_crop_fill_mode_option_crop

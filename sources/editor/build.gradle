@@ -16,7 +16,7 @@ dependencies {
     implementation project(':editor-design')
     implementation project(':editor-photo')
     implementation project(":editor-video")
-    api project(":editor-base")
+    implementation project(":editor-base")
     api project(":editor-core")
 }
 

@@ -24,17 +24,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ly.img.editor.ApplyForceCrop
-import ly.img.editor.applyForceCrop
 import ly.img.editor.base.dock.AdjustmentSheetContent
 import ly.img.editor.base.dock.BottomSheetContent
 import ly.img.editor.base.dock.CustomBottomSheetContent
@@ -124,7 +120,6 @@ import ly.img.editor.core.ui.library.CropAssetSourceType
 import ly.img.editor.core.ui.library.LibraryViewModel
 import ly.img.editor.core.ui.library.util.LibraryEvent
 import ly.img.editor.core.ui.register
-import ly.img.engine.AssetTransformPreset
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
@@ -168,7 +163,6 @@ abstract class EditorUiViewModel(
     private var initCropTranslationX = 0f
     private var initCropTranslationY = 0f
     private var isCropReset = false
-    private var forceCropState: ForceCropState? = null
 
     private val isExporting = MutableStateFlow(false)
 
@@ -351,29 +345,6 @@ abstract class EditorUiViewModel(
         register<EditorEvent.Sheet.OnExpanded> { /* do nothing */ }
         register<EditorEvent.Sheet.OnHalfExpanded> { /* do nothing */ }
         register<EditorEvent.Sheet.OnClosed> { onSheetClosed() }
-        register<ApplyForceCrop> { event ->
-            val result = runCatching {
-                editorScope.applyForceCrop(event.block, event.configuration)
-            }
-            result.onFailure { throwable ->
-                if (forceCropState?.block == event.block) {
-                    setForceCropState(null)
-                }
-                onError(throwable)
-            }
-            result.getOrNull()?.let { forceResult ->
-                if (forceResult.applied) {
-                    setForceCropState(
-                        ForceCropState(
-                            block = event.block,
-                            sourceId = forceResult.candidate.sourceId,
-                            presetId = forceResult.candidate.presetId,
-                            transformPreset = forceResult.transformPreset,
-                        ),
-                    )
-                }
-            }
-        }
         register<EditorEvent.LaunchContract<*, *>> { _uiState.update { state -> state.copy(openContract = it) } }
         register<EditorEvent.AddUriToScene> {
             // This event is triggered only from dock for now.
@@ -530,21 +501,13 @@ abstract class EditorUiViewModel(
 
                 is SheetType.ResizeAll -> {
                     currentCropSheetType = type
-                    val currentPage = editor.engine.scene.getCurrentPage()
-                    val forcedSources = currentPage?.let(::forcedCropSourcesFor)
-                    val forceCropActive = currentPage?.let { isForceCropActiveFor(it) } ?: false
-                    val allowContentFillMode = !forceCropActive
-                    val allowResizeOption = !forceCropActive
                     CropBottomSheetContent(
                         type = type,
                         uiState = createAllPageResizeUiState(
                             engine = engine,
                             initCropTranslationX = initCropTranslationX,
                             initCropTranslationY = initCropTranslationY,
-                            pageAssetSourceIds = forcedSources?.pageAssetSourceId ?: CropAssetSourceType.Page.sourceId,
-                            selectedAssetKey = forcedSources?.selectedAssetKey,
-                            allowContentFillMode = allowContentFillMode,
-                            allowResizeOption = allowResizeOption,
+                            pageAssetSourceIds = CropAssetSourceType.Page.sourceId,
                         ),
                     )
                 }
@@ -560,23 +523,16 @@ abstract class EditorUiViewModel(
                     } else {
                         val page = editor.engine.scene.getCurrentPage()
                         if (page != null) {
-                            val forcedSources = forcedCropSourcesFor(page)
-                            val forceCropActive = isForceCropActiveFor(page)
-                            val allowContentFillMode = !forceCropActive
-                            val allowResizeOption = !forceCropActive
                             CropBottomSheetContent(
                                 type = type,
                                 uiState = createCropUiState(
                                     page,
                                     engine,
                                     cropMode = type.mode,
-                                    pageAssetSourceId = forcedSources?.pageAssetSourceId ?: CropAssetSourceType.Page.sourceId,
-                                    cropAssetSourceId = forcedSources?.cropAssetSourceId ?: CropAssetSourceType.Crop.sourceId,
+                                    pageAssetSourceId = CropAssetSourceType.Page.sourceId,
+                                    cropAssetSourceId = CropAssetSourceType.Crop.sourceId,
                                     initCropTranslationX = initCropTranslationX,
                                     initCropTranslationY = initCropTranslationY,
-                                    selectedAssetKey = forcedSources?.selectedAssetKey,
-                                    allowContentFillMode = allowContentFillMode,
-                                    allowResizeOption = allowResizeOption,
                                 ),
                             )
                         } else {
@@ -719,31 +675,19 @@ abstract class EditorUiViewModel(
                 if (content is CropBottomSheetContent) {
                     val useOldScaleRatio = isStraighteningOrRotating
                     isStraighteningOrRotating = false
-                    val page = editor.engine.scene.getCurrentPage()
-                    if (page != null) {
-                        val forcedSources = forcedCropSourcesFor(page)
-                        val forceCropActive = isForceCropActiveFor(page)
-                        val allowContentFillMode = !forceCropActive
-                        val allowResizeOption = !forceCropActive
-                        CropBottomSheetContent(
-                            type = content.type,
-                            uiState = createCropUiState(
-                                page,
-                                engine,
-                                initCropTranslationX,
-                                initCropTranslationY,
-                                if (useOldScaleRatio) content.uiState.cropScaleRatio else null,
-                                cropMode = currentCropSheetType.mode,
-                                pageAssetSourceId = forcedSources?.pageAssetSourceId ?: CropAssetSourceType.Page.sourceId,
-                                cropAssetSourceId = forcedSources?.cropAssetSourceId ?: CropAssetSourceType.Crop.sourceId,
-                                selectedAssetKey = forcedSources?.selectedAssetKey,
-                                allowContentFillMode = allowContentFillMode,
-                                allowResizeOption = allowResizeOption,
-                            ),
-                        )
-                    } else {
-                        null
-                    }
+                    CropBottomSheetContent(
+                        type = content.type,
+                        uiState = createCropUiState(
+                            engine.getScene(),
+                            engine,
+                            initCropTranslationX,
+                            initCropTranslationY,
+                            if (useOldScaleRatio) content.uiState.cropScaleRatio else null,
+                            cropMode = currentCropSheetType.mode,
+                            pageAssetSourceId = CropAssetSourceType.Page.sourceId,
+                            cropAssetSourceId = CropAssetSourceType.Crop.sourceId,
+                        ),
+                    )
                 } else {
                     null
                 }
@@ -796,10 +740,6 @@ abstract class EditorUiViewModel(
                         if (isCropReset) {
                             setInitCropValues(designBlock)
                         }
-                        val forcedSources = forcedCropSourcesFor(designBlock)
-                        val forceCropActive = isForceCropActiveFor(designBlock)
-                        val allowContentFillMode = !forceCropActive
-                        val allowResizeOption = !forceCropActive
                         CropBottomSheetContent(
                             type = content.type,
                             uiState = createCropUiState(
@@ -809,11 +749,8 @@ abstract class EditorUiViewModel(
                                 initCropTranslationY,
                                 if (useOldScaleRatio) content.uiState.cropScaleRatio else null,
                                 cropMode = currentCropSheetType.mode,
-                                pageAssetSourceId = forcedSources?.pageAssetSourceId ?: CropAssetSourceType.Page.sourceId,
-                                cropAssetSourceId = forcedSources?.cropAssetSourceId ?: CropAssetSourceType.Crop.sourceId,
-                                selectedAssetKey = forcedSources?.selectedAssetKey,
-                                allowContentFillMode = allowContentFillMode,
-                                allowResizeOption = allowResizeOption,
+                                pageAssetSourceId = CropAssetSourceType.Page.sourceId,
+                                cropAssetSourceId = CropAssetSourceType.Crop.sourceId,
                             ),
                         )
                     }
@@ -874,76 +811,6 @@ abstract class EditorUiViewModel(
 
     protected open fun showPage(index: Int) {
         engine.showPage(index)
-    }
-
-    private fun currentForceCropState(): ForceCropState? = forceCropState?.takeIf { state ->
-        engine.block.isValid(state.block)
-    }
-
-    private fun setForceCropState(newState: ForceCropState?) {
-        val normalizedState = newState?.takeIf { engine.block.isValid(it.block) }
-        if (forceCropState == normalizedState) {
-            return
-        }
-        forceCropState = normalizedState
-        if (_uiState.value.pagesState != null) {
-            updateEditorPagesState()
-        }
-        updateBottomSheetUiState()
-    }
-
-    private data class ForceCropState(
-        val block: DesignBlock,
-        val sourceId: String,
-        val presetId: String,
-        val transformPreset: AssetTransformPreset?,
-    )
-
-    private data class ForcedCropSources(
-        val pageAssetSourceId: String?,
-        val cropAssetSourceId: String?,
-        val selectedAssetKey: String?,
-    )
-
-    private fun forcedCropSourcesFor(block: DesignBlock): ForcedCropSources? {
-        val state = currentForceCropState() ?: return null
-        if (state.block != block) {
-            return null
-        }
-        val transformPreset = state.transformPreset
-        val treatAsPage = when (transformPreset) {
-            is AssetTransformPreset.FixedSize -> true
-            else -> state.sourceId == CropAssetSourceType.Page.sourceId
-        }
-        val pageAssetSourceId = if (treatAsPage) state.sourceId else null
-        val cropAssetSourceId = if (treatAsPage) null else state.sourceId
-        return ForcedCropSources(
-            pageAssetSourceId = pageAssetSourceId,
-            cropAssetSourceId = cropAssetSourceId,
-            selectedAssetKey = state.presetId,
-        )
-    }
-
-    private fun isForceCropActiveFor(block: DesignBlock?): Boolean {
-        val state = currentForceCropState() ?: return false
-        return block != null && state.block == block
-    }
-
-    private fun EditorPagesState.applyForceCropConstraints(): EditorPagesState {
-        val forceState = currentForceCropState()
-        if (forceState == null || forceState.block != selectedPage.block) {
-            return this
-        }
-        val filteredDockOptions = dockOptions.filterNot { option ->
-            option.actions.any { action ->
-                action is EditorEvent.Sheet.Open && action.type is SheetType.ResizeAll
-            }
-        }
-        return if (filteredDockOptions == dockOptions) {
-            this
-        } else {
-            copy(dockOptions = filteredDockOptions)
-        }
     }
 
     protected open fun setPage(index: Int) {
@@ -1022,25 +889,34 @@ abstract class EditorUiViewModel(
         if (isConfigChange) {
             setViewMode(publicState.value.viewMode)
         } else {
+            viewModelScope.launch {
+                runCatching {
+                    migrationHelper.migrate()
+                    onPreCreate()
+                    // Make sure to set all settings before calling `onCreate` so that the consumer can change them if needed!
+                    onCreate(editorScope)
+                    onSceneLoaded()
+                    initiallySetEditorSelectGlobalScope = engine.editor.getGlobalScope(Scope.EditorSelect)
+                    requireNotNull(engine.scene.get()) { "onCreate body must contain scene creation." }
+                    if (engine.isSceneModeVideo) {
+                        timelineState = TimelineState(engine, viewModelScope)
+                    }
+                    showPage(pageIndex.value)
+                    setEditMode(EditorViewMode.Edit()).join()
+                    engine.resetHistory()
+                }.onSuccess {
+                    _isSceneLoaded.update { true }
+                    onLoaded(editorScope)
+                }.onFailure {
+                    onError(it)
+                }
+            }
+
             observeSelectedBlock()
             observeHistory()
             observeUiStateChanges()
             observeEvents()
             observeEditorStateChange()
-            observeActiveScene()
-            viewModelScope.launch {
-                try {
-                    migrationHelper.migrate()
-                    onPreCreate()
-                    // Make sure to set all settings before calling `onCreate` so that the consumer can change them if needed!
-                    onCreate(editorScope)
-                    requireNotNull(engine.scene.get()) { "onCreate body must contain scene creation." }
-                    _isSceneLoaded.update { true }
-                    onLoaded(editorScope)
-                } catch (ex: Exception) {
-                    onError(ex)
-                }
-            }
         }
     }
 
@@ -1252,7 +1128,6 @@ abstract class EditorUiViewModel(
 
     protected open fun onSceneLoaded() {
         engine.deselectAllBlocks()
-        setForceCropState(null)
     }
 
     private fun onAddPage(index: Int) {
@@ -1268,11 +1143,9 @@ abstract class EditorUiViewModel(
 
     private fun updateEditorPagesState() {
         _uiState.update {
-            val pagesState = (
-                it.pagesState
-                    ?.copy(engine, markThumbnails = true)
-                    ?: createEditorPagesState(pagesSessionId++, engine, pageIndex.value)
-            ).applyForceCropConstraints()
+            val pagesState = it.pagesState
+                ?.copy(engine, markThumbnails = true)
+                ?: createEditorPagesState(pagesSessionId++, engine, pageIndex.value)
             setPage(pagesState.selectedPageIndex)
             it.copy(pagesState = pagesState)
         }
@@ -1283,10 +1156,7 @@ abstract class EditorUiViewModel(
             if (page == it.pagesState?.selectedPage) {
                 it
             } else {
-                val updatedPagesState = it.pagesState
-                    ?.copy(engine, selectedPage = page, markThumbnails = false)
-                    ?.applyForceCropConstraints()
-                it.copy(pagesState = updatedPagesState)
+                it.copy(pagesState = it.pagesState?.copy(engine, selectedPage = page, markThumbnails = false))
             }
         }
     }
@@ -1538,23 +1408,16 @@ abstract class EditorUiViewModel(
                              */
                             val type = currentCropSheetType ?: defaultCropSheetType
                             val selection = engine.block.findAllSelected().single()
-                            val forcedSources = forcedCropSourcesFor(selection)
-                            val forceCropActive = isForceCropActiveFor(selection)
-                            val allowContentFillMode = !forceCropActive
-                            val allowResizeOption = !forceCropActive
                             CropBottomSheetContent(
                                 type = type,
                                 uiState = createCropUiState(
                                     selection,
                                     engine,
                                     cropMode = type.mode,
-                                    pageAssetSourceId = forcedSources?.pageAssetSourceId ?: CropAssetSourceType.Page.sourceId,
-                                    cropAssetSourceId = forcedSources?.cropAssetSourceId ?: CropAssetSourceType.Crop.sourceId,
+                                    pageAssetSourceId = CropAssetSourceType.Page.sourceId,
+                                    cropAssetSourceId = CropAssetSourceType.Crop.sourceId,
                                     initCropTranslationX = initCropTranslationX,
                                     initCropTranslationY = initCropTranslationY,
-                                    selectedAssetKey = forcedSources?.selectedAssetKey,
-                                    allowContentFillMode = allowContentFillMode,
-                                    allowResizeOption = allowResizeOption,
                                 ),
                             )
                         }
@@ -1635,23 +1498,6 @@ abstract class EditorUiViewModel(
                 if (bottomSheetContent.value is CropBottomSheetContent) {
                     zoom(max(bottomSheetHeight, timelineHeight))
                 }
-            }
-        }
-    }
-
-    private fun observeActiveScene() {
-        viewModelScope.launch {
-            isSceneLoaded.first { it }
-            engine.scene.onActiveChanged().onStart { emit(Unit) }.collect {
-                setPageIndex(0)
-                onSceneLoaded()
-                initiallySetEditorSelectGlobalScope = engine.editor.getGlobalScope(Scope.EditorSelect)
-                if (engine.isSceneModeVideo) {
-                    timelineState = TimelineState(engine, viewModelScope)
-                }
-                showPage(pageIndex.value)
-                setEditMode(EditorViewMode.Edit()).join()
-                engine.resetHistory()
             }
         }
     }

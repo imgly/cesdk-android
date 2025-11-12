@@ -60,9 +60,7 @@ internal fun rememberGalleryPermissionRequest(
     val context = LocalContext.current
     if (mimeTypeFilter == null) {
         return GalleryPermissionRequestState(
-            statusState = remember {
-                mutableStateOf(GalleryPermissionStatus(hasPermission = true, hasSelections = true))
-            },
+            statusState = mutableStateOf(GalleryPermissionStatus(hasPermission = true, hasSelections = true)),
             requestPermission = {},
             openSettings = {},
             Dialogs = {},

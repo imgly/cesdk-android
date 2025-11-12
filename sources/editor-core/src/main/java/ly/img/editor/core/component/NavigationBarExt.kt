@@ -31,12 +31,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.LocalEditorScope
 import ly.img.editor.core.R
@@ -512,21 +509,16 @@ fun NavigationBar.ListBuilder.Companion.rememberForApparel(): HorizontalListBuil
  * Default value is always no decoration.
  * @return a navigation bar that will be displayed when launching a [ly.img.editor.PostcardEditor].
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 @UnstableEditorApi
 @Composable
 fun NavigationBar.Companion.rememberForPostcard(
     scope: Scope = LocalEditorScope.current.run {
         val pageIndex by remember(this) {
-            editorContext.engine.scene.onActiveChanged()
-                .onStart { emit(Unit) }
-                .flatMapLatest {
-                    val stack = editorContext.engine.block.findByType(DesignBlockType.Stack).first()
-                    editorContext.engine.event.subscribe(listOf(stack))
-                        .map {
-                            val currentPage = editorContext.engine.scene.getCurrentPage()
-                            editorContext.engine.scene.getPages().indexOf(currentPage)
-                        }
+            val stack = editorContext.engine.block.findByType(DesignBlockType.Stack).first()
+            editorContext.engine.event.subscribe(listOf(stack))
+                .map {
+                    val currentPage = editorContext.engine.scene.getCurrentPage()
+                    editorContext.engine.scene.getPages().indexOf(currentPage)
                 }
         }.collectAsState(initial = 0)
         var trigger by remember { mutableStateOf(false) }

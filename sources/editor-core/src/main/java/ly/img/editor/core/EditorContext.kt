@@ -29,7 +29,7 @@ interface EditorContext {
     /**
      * The license provided via [ly.img.editor.EngineConfiguration.license].
      */
-    val license: String?
+    val license: String
 
     /**
      * The userId provided via [ly.img.editor.EngineConfiguration.userId].
