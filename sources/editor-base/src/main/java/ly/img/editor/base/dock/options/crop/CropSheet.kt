@@ -86,7 +86,28 @@ fun CropSheet(
     val groupListState = rememberLazyListState()
 
     var selectedGroup by remember {
-        mutableStateOf<CropGroup?>(uiState.groups.first())
+        mutableStateOf(
+            uiState.groups.firstOrNull { it.sourceId == uiState.cropAssetSourceId }
+                ?: uiState.groups.firstOrNull { it.sourceId == uiState.pageAssetSourceId }
+                ?: uiState.groups.firstOrNull(),
+        )
+    }
+
+    LaunchedEffect(uiState.groups, uiState.cropAssetSourceId, uiState.pageAssetSourceId) {
+        val defaultGroup =
+            uiState.groups.firstOrNull { it.sourceId == uiState.cropAssetSourceId }
+                ?: uiState.groups.firstOrNull { it.sourceId == uiState.pageAssetSourceId }
+                ?: uiState.groups.firstOrNull()
+
+        val selectionStillValid = selectedGroup?.let { current ->
+            uiState.groups.any { it.id == current.id }
+        } ?: false
+
+        selectedGroup = when {
+            uiState.groups.isEmpty() -> null
+            selectionStillValid -> selectedGroup
+            else -> defaultGroup
+        }
     }
 
     var isResizeDialogOpen by remember { mutableStateOf(false) }
@@ -209,7 +230,10 @@ fun CropSheet(
             }
         }
     }
-    if (uiState.cropMode.hasResizeOption || uiState.cropMode.hasContentFillMode || uiState.groups.size > 1) {
+    val showResizeOption = uiState.allowResizeOption && uiState.cropMode.hasResizeOption
+    val showPresetGroups = uiState.groups.size > 1
+
+    if (showResizeOption || uiState.allowContentFillMode || showPresetGroups) {
         Divider(
             modifier = Modifier
                 .fillMaxWidth()
@@ -231,12 +255,12 @@ fun CropSheet(
                 verticalAlignment = Alignment.CenterVertically,
                 state = groupListState,
             ) {
-                if (uiState.cropMode.hasContentFillMode) {
+                if (uiState.allowContentFillMode) {
                     item {
                         ContentFillModePicker(uiState = uiState, onEvent = onEvent)
                     }
                 }
-                if (uiState.cropMode.hasResizeOption) {
+                if (showResizeOption) {
                     item {
                         Row(
                             modifier = Modifier
@@ -267,8 +291,8 @@ fun CropSheet(
                         }
                     }
                 }
-                if (uiState.groups.size > 1) {
-                    if (uiState.cropMode.hasResizeOption || uiState.cropMode.hasContentFillMode) {
+                if (showPresetGroups) {
+                    if (showResizeOption || uiState.allowContentFillMode) {
                         item {
                             Divider(
                                 modifier = Modifier
@@ -442,6 +466,8 @@ fun SheetPreview(mode: SheetType.Crop.Mode = SheetType.Crop.Mode.ImageCrop) {
                             CropGroup("group1", "Group 1"),
                             CropGroup("group2", "Group 2"),
                         ),
+                        allowContentFillMode = true,
+                        allowResizeOption = true,
                     ),
                     onEvent = {},
                 )

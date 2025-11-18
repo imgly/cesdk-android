@@ -5,17 +5,17 @@ import android.os.Parcelable
 
 /**
  * Basic configuration settings to initialize the engine.
- * @param license the license to activate the [ly.img.engine.Engine] with.
+ * @param license the license to activate the [ly.img.engine.Engine] with. Can be empty for evaluation mode with watermark.
  * @param userId an optional unique ID tied to your application's user. This helps us accurately calculate monthly active users (MAU).
  * Especially useful when one person uses the app on multiple devices with a sign-in feature, ensuring they're counted once.
  * Providing this aids in better data accuracy.
  */
 data class EngineConfiguration(
-    val license: String,
+    val license: String? = null,
     val userId: String? = null,
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
-        parcel.readString()!!,
+        parcel.readString(),
         parcel.readString(),
     )
 

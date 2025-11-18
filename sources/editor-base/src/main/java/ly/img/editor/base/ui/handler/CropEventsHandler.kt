@@ -1,6 +1,7 @@
 package ly.img.editor.base.ui.handler
 
 import android.util.Log
+import ly.img.editor.PAGE_BLOCK_TYPE
 import ly.img.editor.base.dock.options.crop.getNormalizedDegrees
 import ly.img.editor.base.dock.options.crop.getRotationDegrees
 import ly.img.editor.base.ui.BlockEvent
@@ -8,6 +9,7 @@ import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.engine.getScene
 import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register
+import ly.img.editor.withTemporaryPageResizeInteraction
 import ly.img.engine.AssetTransformPreset
 import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
@@ -68,18 +70,25 @@ fun EventsHandler.cropEvents(
         val cropAsset = it.wrappedAsset?.asset
         if (cropAsset != null) {
             bewarePageState {
-                if (it.applyOnAllPages) {
-                    engine.scene.getPages().forEach { page ->
+                val isPage = try {
+                    engine.block.getType(block) == PAGE_BLOCK_TYPE
+                } catch (_: Throwable) {
+                    false
+                }
+                engine.withTemporaryPageResizeInteraction(enable = isPage || it.applyOnAllPages) {
+                    if (it.applyOnAllPages) {
+                        engine.scene.getPages().forEach { page ->
+                            engine.asset.defaultApplyAsset(
+                                asset = cropAsset,
+                                block = page,
+                            )
+                        }
+                    } else {
                         engine.asset.defaultApplyAsset(
                             asset = cropAsset,
-                            block = page,
+                            block = block,
                         )
                     }
-                } else {
-                    engine.asset.defaultApplyAsset(
-                        asset = cropAsset,
-                        block = block,
-                    )
                 }
                 val scene = engine.getScene()
                 when (val transformPreset = it.wrappedAsset.asset.payload.transformPreset) {

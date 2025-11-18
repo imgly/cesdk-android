@@ -30,7 +30,7 @@ import ly.img.engine.Engine
 
 @Composable
 fun EngineCanvasView(
-    license: String,
+    license: String?,
     userId: String?,
     renderTarget: EngineRenderTarget,
     engine: Engine,

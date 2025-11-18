@@ -27,6 +27,7 @@ class DesignUiViewModel(
         libraryViewModel = libraryViewModel,
     ) {
     val uiState = baseUiState
+    var isFirstLoad = true
 
     override fun enterEditMode() {
         engine.deselectAllBlocks()
@@ -39,14 +40,17 @@ class DesignUiViewModel(
             engine.block.setEnum(it, "stack/axis", LayoutAxis.Horizontal.name)
         }
         engine.editor.setSettingBoolean(keypath = "features/pageCarouselEnabled", value = true)
-        viewModelScope.launch {
-            engine.editor.onCarouselPageChanged()
-                .onEach {
-                    engine.scene.getPages()
-                        .indexOf(it)
-                        .let(::setPageIndex)
-                }
-                .collect()
+        if (isFirstLoad) {
+            isFirstLoad = false
+            viewModelScope.launch {
+                engine.editor.onCarouselPageChanged()
+                    .onEach {
+                        engine.scene.getPages()
+                            .indexOf(it)
+                            .let(::setPageIndex)
+                    }
+                    .collect()
+            }
         }
     }
 
