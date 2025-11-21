@@ -17,7 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import ly.img.editor.core.R
-import ly.img.editor.core.library.data.GalleryPermissionManager
+import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.ui.permissions.PermissionManager
 import ly.img.editor.core.ui.utils.lifecycle.LifecycleEventEffect
 
@@ -58,6 +58,19 @@ internal fun rememberGalleryPermissionRequest(
     onPermissionChanged: () -> Unit,
 ): GalleryPermissionRequestState {
     val context = LocalContext.current
+    if (SystemGalleryPermission.isManualMode) {
+        return GalleryPermissionRequestState(
+            statusState = mutableStateOf(
+                GalleryPermissionStatus(
+                    hasPermission = true,
+                    hasSelections = true,
+                ),
+            ),
+            requestPermission = {},
+            openSettings = {},
+            Dialogs = {},
+        )
+    }
     if (mimeTypeFilter == null) {
         return GalleryPermissionRequestState(
             statusState = remember {
@@ -75,9 +88,9 @@ internal fun rememberGalleryPermissionRequest(
     var shouldHandleOnResume by remember { mutableStateOf(false) }
 
     fun computeStatus(): GalleryPermissionStatus {
-        val hasPermission = GalleryPermissionManager.hasPermission(context, mimeTypeFilter)
-        val hasSelections = GalleryPermissionManager.mode == GalleryPermissionManager.Mode.ALL ||
-            GalleryPermissionManager.selectedUris.isNotEmpty()
+        val hasPermission = SystemGalleryPermission.hasPermission(context, mimeTypeFilter)
+        val hasSelections = SystemGalleryPermission.mode == SystemGalleryPermission.Mode.ALL ||
+            SystemGalleryPermission.selectedUris.isNotEmpty()
         return GalleryPermissionStatus(hasPermission, hasSelections)
     }
 
@@ -104,7 +117,7 @@ internal fun rememberGalleryPermissionRequest(
     }
 
     val requestPermission: () -> Unit = {
-        val permissions = GalleryPermissionManager.requiredPermission(mimeTypeFilter)
+        val permissions = SystemGalleryPermission.requiredPermission(mimeTypeFilter)
             ?.filterNotNull()
             ?.toTypedArray()
             ?: emptyArray()

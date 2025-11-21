@@ -177,13 +177,21 @@ data class LibraryCategory(
         /**
          * The default library category for video assets.
          */
+        private fun createVideoCategory(includeSystemGallery: Boolean): LibraryCategory = LibraryCategory(
+            tabTitleRes = R.string.ly_img_editor_asset_library_title_videos,
+            tabSelectedIcon = IconPack.PlayBox,
+            tabUnselectedIcon = IconPack.PlayBoxOutline,
+            content = LibraryContent.videos(includeSystemGallery = includeSystemGallery),
+        )
+
         val Video: LibraryCategory
-            get() = LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_videos,
-                tabSelectedIcon = IconPack.PlayBox,
-                tabUnselectedIcon = IconPack.PlayBoxOutline,
-                content = LibraryContent.Video,
-            )
+            get() = createVideoCategory(includeSystemGallery = true)
+
+        /**
+         * Variant of [Video] that omits the system gallery section (only curated sources and uploads).
+         */
+        val VideoWithoutSystemGallery: LibraryCategory
+            get() = createVideoCategory(includeSystemGallery = false)
 
         /**
          * The default library category for audio assets.
@@ -200,13 +208,21 @@ data class LibraryCategory(
         /**
          * The default library category for image assets.
          */
+        private fun createImagesCategory(includeSystemGallery: Boolean): LibraryCategory = LibraryCategory(
+            tabTitleRes = R.string.ly_img_editor_asset_library_title_images,
+            tabSelectedIcon = IconPack.Image,
+            tabUnselectedIcon = IconPack.ImageOutline,
+            content = LibraryContent.images(includeSystemGallery = includeSystemGallery),
+        )
+
         val Images: LibraryCategory
-            get() = LibraryCategory(
-                tabTitleRes = R.string.ly_img_editor_asset_library_title_images,
-                tabSelectedIcon = IconPack.Image,
-                tabUnselectedIcon = IconPack.ImageOutline,
-                content = LibraryContent.Images,
-            )
+            get() = createImagesCategory(includeSystemGallery = true)
+
+        /**
+         * Variant of [Images] that omits the system gallery section (only curated sources and uploads).
+         */
+        val ImagesWithoutSystemGallery: LibraryCategory
+            get() = createImagesCategory(includeSystemGallery = false)
 
         /**
          * The default library category for text assets.

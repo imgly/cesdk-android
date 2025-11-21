@@ -4,6 +4,7 @@ import android.graphics.RectF
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.util.Log
+import android.webkit.MimeTypeMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.request.SuccessResult
@@ -23,8 +24,8 @@ import ly.img.editor.core.library.AssetType
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.library.LibraryContent
 import ly.img.editor.core.library.data.AssetSourceType
-import ly.img.editor.core.library.data.GalleryPermissionManager
 import ly.img.editor.core.library.data.SystemGalleryAssetSourceType
+import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.library.data.TypefaceProvider
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.Environment
@@ -74,6 +75,7 @@ import ly.img.engine.FindAssetsResult
 import ly.img.engine.PositionMode
 import ly.img.engine.SceneMode
 import ly.img.engine.ShapeType
+import java.util.Locale
 import java.util.Stack
 import java.util.UUID
 import kotlin.math.max
@@ -253,6 +255,7 @@ class LibraryViewModel(
             Log.d(TAG, "onAddUri source=${assetSourceType.sourceId} uri=$uri")
             val asset = uploadToAssetSource(assetSourceType, uri)
             onAddAsset(assetSourceType, asset, addToBackgroundTrack)
+            runCatching { SystemGalleryPermission.addSelected(uri, editor.activity) }
             // Also trigger refresh for gallery source if relevant
             runCatching {
                 if (assetSourceType == AssetSourceType.ImageUploads || assetSourceType == AssetSourceType.VideoUploads) {
@@ -749,15 +752,14 @@ class LibraryViewModel(
                     when (source) {
                         AssetSourceType.ImageUploads, AssetSourceType.VideoUploads -> {
                             context?.let { ctx ->
-                                GalleryPermissionManager.hasPermission(ctx, source.mimeTypeFilter)
+                                SystemGalleryPermission.hasPermission(ctx, source.mimeTypeFilter)
                             } ?: true
                         }
                         else -> true
                     }
                 } ?: false
 
-                val systemGallerySource =
-                    section.sourceTypes.singleOrNull() as? ly.img.editor.core.library.data.SystemGalleryAssetSourceType
+                val systemGallerySource = section.sourceTypes.singleOrNull() as? SystemGalleryAssetSourceType
 
                 LibrarySectionItem.Header(
                     stackIndex = stackIndex,
@@ -962,6 +964,7 @@ class LibraryViewModel(
         val meta = mutableMapOf(
             "uri" to uriString,
         )
+        resolveMimeType(uri, assetSourceType)?.let { meta["mimeType"] = it }
         var label: String? = null
 
         when (assetSourceType) {
@@ -1020,6 +1023,28 @@ class LibraryViewModel(
         val uploadedAsset = result.assets.first { it.id == uuid }
         Log.d(TAG, "uploadToAssetSource resolvedAsset id=${uploadedAsset.id} meta=${uploadedAsset.meta}")
         return uploadedAsset
+    }
+
+    private fun resolveMimeType(
+        uri: Uri,
+        assetSourceType: UploadAssetSourceType,
+    ): String? {
+        val resolver = editor.activity.contentResolver
+        val direct = resolver.getType(uri)
+        if (!direct.isNullOrBlank()) return direct
+
+        val extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
+            ?.lowercase(Locale.ROOT)
+        if (!extension.isNullOrBlank()) {
+            MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)?.let { return it }
+        }
+
+        return when (assetSourceType) {
+            AssetSourceType.ImageUploads -> "image/jpeg"
+            AssetSourceType.VideoUploads -> "video/mp4"
+            AssetSourceType.AudioUploads -> "audio/mpeg"
+            else -> null
+        }
     }
 
     private suspend fun applySystemGalleryGalleryAsset(asset: Asset): Triple<AssetSourceType, Asset, DesignBlock>? {

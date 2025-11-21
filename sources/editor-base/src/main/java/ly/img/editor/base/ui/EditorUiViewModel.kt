@@ -103,7 +103,7 @@ import ly.img.editor.core.component.rememberSystemCamera
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.event.EditorEventHandler
 import ly.img.editor.core.library.data.AssetSourceType
-import ly.img.editor.core.library.data.GalleryPermissionManager
+import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.state.EditorState
@@ -1050,10 +1050,17 @@ abstract class EditorUiViewModel(
         addToBackgroundTrack: Boolean,
     ) {
         val context = editor.activity
-        val uri = File.createTempFile("imgly_", null, context.filesDir).let {
-            FileProvider.getUriForFile(context, "${context.packageName}.ly.img.editor.fileprovider", it)
+        val tempFile = File.createTempFile(
+            "imgly_",
+            if (captureVideo) ".mp4" else ".jpg",
+            context.filesDir,
+        )
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.ly.img.editor.fileprovider", tempFile)
+        val uploadSource = if (captureVideo) {
+            AssetSourceType.VideoUploads
+        } else {
+            AssetSourceType.ImageUploads
         }
-        val isVideoScene = engine.scene.getMode() == SceneMode.VIDEO
         val launchContract = if (captureVideo) {
             ActivityResultContracts.CaptureVideo()
         } else {
@@ -1064,11 +1071,6 @@ abstract class EditorUiViewModel(
                 return@LaunchContract
             }
 
-            val uploadSource = if (isVideoScene) {
-                AssetSourceType.VideoUploads
-            } else {
-                AssetSourceType.ImageUploads
-            }
             editorContext.eventHandler.send(EditorEvent.AddUriToScene(uploadSource, uri))
 
             val galleryUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -1078,7 +1080,7 @@ abstract class EditorUiViewModel(
                 null
             }
             galleryUri?.let {
-                runCatching { GalleryPermissionManager.addSelected(it, context) }
+                runCatching { SystemGalleryPermission.addSelected(it, context) }
                 runCatching { engine.asset.assetSourceContentsChanged(AssetSourceType.GalleryAllVisuals.sourceId) }
             }
         }.let(::send)

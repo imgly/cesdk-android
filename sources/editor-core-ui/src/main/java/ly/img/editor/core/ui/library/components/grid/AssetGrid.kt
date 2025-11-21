@@ -38,8 +38,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.media3.exoplayer.ExoPlayer
 import ly.img.editor.core.R
 import ly.img.editor.core.iconpack.Plus
-import ly.img.editor.core.library.data.GalleryPermissionManager
 import ly.img.editor.core.library.data.SystemGalleryAssetSourceType
+import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.GradientCard
 import ly.img.editor.core.ui.iconpack.Folder
@@ -74,14 +74,14 @@ internal fun AssetGrid(
         }
     }
 
-    var lastPermissionVersion by remember { mutableStateOf(GalleryPermissionManager.permissionVersion) }
+    var lastPermissionVersion by remember { mutableStateOf(SystemGalleryPermission.permissionVersion) }
     val gridSource = uiState.assetsData.assetSourceType
     if (gridSource is SystemGalleryAssetSourceType) {
         val context = LocalContext.current
         LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-            val currentVersion = GalleryPermissionManager.permissionVersion
-            GalleryPermissionManager.hasPermission(context, gridSource.mimeTypeFilter)
-            lastPermissionVersion = GalleryPermissionManager.permissionVersion
+            val currentVersion = SystemGalleryPermission.permissionVersion
+            SystemGalleryPermission.hasPermission(context, gridSource.mimeTypeFilter)
+            lastPermissionVersion = SystemGalleryPermission.permissionVersion
             onLibraryEvent(LibraryEvent.OnFetch(libraryCategory))
         }
     }
@@ -124,8 +124,12 @@ internal fun AssetGrid(
 
         AssetsLoadState.EmptyResult -> {
             val assetSource = uiState.assetsData.assetSourceType
-            val permissions = (assetSource as? SystemGalleryAssetSourceType)?.let {
-                GalleryPermissionManager.requiredPermission(it.mimeTypeFilter)
+            val isSystemGallery = assetSource is SystemGalleryAssetSourceType
+            val isManualGallery = isSystemGallery && SystemGalleryPermission.isManualMode
+            val permissions: Array<String?>? = when {
+                assetSource is SystemGalleryAssetSourceType && isManualGallery -> emptyArray<String?>()
+                assetSource is SystemGalleryAssetSourceType -> SystemGalleryPermission.requiredPermission(assetSource.mimeTypeFilter)
+                else -> null
             }
             RequireUserPermission(
                 permissions = permissions,
@@ -134,52 +138,88 @@ internal fun AssetGrid(
                     onLibraryEvent(LibraryEvent.OnFetch(libraryCategory))
                 },
             ) {
-                val isSystemGallery = assetSource is SystemGalleryAssetSourceType
-                EmptyResultContent(
-                    icon = if (isSystemGallery) null else IconPack.Folder,
-                    text = stringResource(
-                        if (isSystemGallery) {
-                            R.string.ly_img_editor_asset_library_label_grant_permissions
-                        } else {
-                            R.string.ly_img_editor_asset_library_label_empty
-                        },
-                    ),
-                    button = if (!isSystemGallery && assetSource is UploadAssetSourceType) {
-                        {
-                            val launcher = rememberLauncherForActivityResult(
-                                contract = ActivityResultContracts.GetContent(),
-                            ) { uri: Uri? ->
-                                uri?.let { onUriPick(assetSource, it) }
-                            }
-                            Button(
-                                onClick = {
-                                    launcher.launch(assetSource.mimeTypeFilter)
-                                },
-                            ) {
-                                Text(text = stringResource(R.string.ly_img_editor_asset_library_button_add))
-                            }
-                        }
+                if (isManualGallery && assetSource is SystemGalleryAssetSourceType) {
+                    val assetType = uiState.assetsData.assetType
+                    if (assetType == null) {
+                        EmptyResultContent(
+                            icon = null,
+                            text = stringResource(R.string.ly_img_editor_asset_library_label_empty),
+                        )
                     } else {
-                        {
-                            val nonNullPermission = permissions?.filterNotNull()?.toTypedArray()
-                            val permissionLauncher = rememberLauncherForActivityResult(
-                                ActivityResultContracts.RequestMultiplePermissions(),
-                            ) { result ->
-                                val isGranted = result.entries.any { it.value }
-                                if (isGranted) {
-                                    onLibraryEvent(LibraryEvent.OnFetch(libraryCategory))
+                        LazyVerticalGrid(
+                            state = lazyGridState,
+                            verticalArrangement = AssetLibraryUiConfig.assetGridVerticalArrangement(assetType),
+                            horizontalArrangement = AssetLibraryUiConfig.assetGridHorizontalArrangement(assetType),
+                            contentPadding = PaddingValues(4.dp),
+                            columns = GridCells.Fixed(AssetLibraryUiConfig.assetGridColumns(assetType)),
+                            modifier = Modifier
+                                .nestedScroll(nestedScrollConnection)
+                                .fillMaxSize(),
+                        ) {
+                            item {
+                                SystemGalleryAddMenu(
+                                    mimeTypeFilter = assetSource.mimeTypeFilter,
+                                    launchCamera = launchCamera,
+                                    onPermissionChanged = { onLibraryEvent(LibraryEvent.OnFetch(libraryCategory)) },
+                                ) { openTrigger ->
+                                    SystemGalleryAddCard(
+                                        modifier = Modifier.aspectRatio(1f),
+                                        labelRes = R.string.ly_img_editor_asset_library_button_add,
+                                        onClick = openTrigger,
+                                    )
                                 }
                             }
-                            Button(
-                                onClick = {
-                                    permissionLauncher.launch(nonNullPermission)
-                                },
-                            ) {
-                                Text(text = stringResource(R.string.ly_img_editor_asset_library_button_permissions))
-                            }
                         }
-                    },
-                )
+                    }
+                } else {
+                    EmptyResultContent(
+                        icon = if (isSystemGallery) null else IconPack.Folder,
+                        text = stringResource(
+                            if (isSystemGallery) {
+                                R.string.ly_img_editor_asset_library_label_grant_permissions
+                            } else {
+                                R.string.ly_img_editor_asset_library_label_empty
+                            },
+                        ),
+                        button = if (!isSystemGallery && assetSource is UploadAssetSourceType) {
+                            {
+                                val launcher = rememberLauncherForActivityResult(
+                                    contract = ActivityResultContracts.GetContent(),
+                                ) { uri: Uri? ->
+                                    uri?.let { onUriPick(assetSource, it) }
+                                }
+                                Button(
+                                    onClick = {
+                                        launcher.launch(assetSource.mimeTypeFilter)
+                                    },
+                                ) {
+                                    Text(text = stringResource(R.string.ly_img_editor_asset_library_button_add))
+                                }
+                            }
+                        } else if (isSystemGallery) {
+                            {
+                                val nonNullPermission = permissions?.filterNotNull()?.toTypedArray()
+                                val permissionLauncher = rememberLauncherForActivityResult(
+                                    ActivityResultContracts.RequestMultiplePermissions(),
+                                ) { result ->
+                                    val isGranted = result.entries.any { it.value }
+                                    if (isGranted) {
+                                        onLibraryEvent(LibraryEvent.OnFetch(libraryCategory))
+                                    }
+                                }
+                                Button(
+                                    onClick = {
+                                        permissionLauncher.launch(nonNullPermission)
+                                    },
+                                ) {
+                                    Text(text = stringResource(R.string.ly_img_editor_asset_library_button_permissions))
+                                }
+                            }
+                        } else {
+                            null
+                        },
+                    )
+                }
             }
         }
 
@@ -219,34 +259,19 @@ internal fun AssetGrid(
                                 onUriPick = onUriPick,
                             )
                         }
-                    } else if (assetSource is ly.img.editor.core.library.data.SystemGalleryAssetSourceType) {
-                        if (GalleryPermissionManager.hasPermission(context, assetSource.mimeTypeFilter)) {
+                    } else if (assetSource is SystemGalleryAssetSourceType) {
+                        if (SystemGalleryPermission.hasPermission(context, assetSource.mimeTypeFilter)) {
                             item {
                                 SystemGalleryAddMenu(
                                     mimeTypeFilter = assetSource.mimeTypeFilter,
                                     launchCamera = launchCamera,
                                     onPermissionChanged = { onLibraryEvent(LibraryEvent.OnFetch(libraryCategory)) },
                                 ) { openTrigger ->
-                                    GradientCard(
+                                    SystemGalleryAddCard(
                                         modifier = Modifier.aspectRatio(1f),
-                                        onClick = { openTrigger() },
-                                    ) {
-                                        Column(
-                                            modifier = Modifier.fillMaxSize(),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.Center,
-                                        ) {
-                                            Icon(
-                                                imageVector = CoreIcons.Plus,
-                                                contentDescription = null,
-                                            )
-                                            Text(
-                                                modifier = Modifier.padding(vertical = 2.dp),
-                                                text = stringResource(R.string.ly_img_editor_asset_library_button_add),
-                                                style = MaterialTheme.typography.titleSmall,
-                                            )
-                                        }
-                                    }
+                                        labelRes = R.string.ly_img_editor_asset_library_button_add,
+                                        onClick = openTrigger,
+                                    )
                                 }
                             }
                         }
@@ -265,6 +290,34 @@ internal fun AssetGrid(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SystemGalleryAddCard(
+    modifier: Modifier,
+    labelRes: Int,
+    onClick: () -> Unit,
+) {
+    GradientCard(
+        modifier = modifier,
+        onClick = onClick,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                imageVector = CoreIcons.Plus,
+                contentDescription = null,
+            )
+            Text(
+                modifier = Modifier.padding(vertical = 2.dp),
+                text = stringResource(labelRes),
+                style = MaterialTheme.typography.titleSmall,
+            )
         }
     }
 }

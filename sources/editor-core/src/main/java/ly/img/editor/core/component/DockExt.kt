@@ -1525,8 +1525,7 @@ val Button.Id.Companion.systemGallery by unsafeLazy {
  * @param enabled whether the button is enabled.
  * Default value is always true.
  * @param onClick the callback that is invoked when the button is clicked.
- * By default [EditorEvent.LaunchContract] event is invoked with [ActivityResultContracts.PickVisualMedia] contract.
- * If the editor has a video scene, then both images and videos are allowed to be picked, if not then only images.
+ * By default the button opens the library sheet that lists the system gallery sources.
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
  * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
  * Default value is null.
@@ -1666,7 +1665,7 @@ fun Button.Companion.rememberSystemCamera(
                 editorContext.eventHandler.send(EditorEvent.AddUriToScene(uploadSource, uri))
 
                 // Persist selection and rescan so it appears in gallery for follow-up edits
-                runCatching { ly.img.editor.core.library.data.GalleryPermissionManager.addSelected(uri, context) }
+                runCatching { ly.img.editor.core.library.data.SystemGalleryPermission.addSelected(uri, context) }
                 runCatching { android.media.MediaScannerConnection.scanFile(context, arrayOf(uri.toString()), null, null) }
 
                 // Open the uploads category so users can re-use the capture

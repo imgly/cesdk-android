@@ -48,9 +48,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ly.img.editor.compose.foundation.gestures.detectTapGestures
 import ly.img.editor.core.R
-import ly.img.editor.core.engine.addSystemGalleryAssetSources
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.event.EditorEventHandler
+import ly.img.editor.core.library.data.AssetSourceType
+import ly.img.editor.core.library.data.SystemGalleryAssetSource
+import ly.img.editor.core.library.data.SystemGalleryConfiguration
+import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.library.data.TextAssetSource
 import ly.img.editor.core.library.data.TypefaceProvider
 import ly.img.editor.core.theme.LocalExtendedColorScheme
@@ -108,8 +111,8 @@ object EditorDefaults {
      *
      * @param engine the engine that is used in the editor.
      * @param imageUri the uri of the image that is used to create a scene with single page and image fill.
-     * @param size the size that should be used to load the image. If null, original size of the image will be used.
      * @param eventHandler the object that can send [EditorEvent]s.
+     * @param size the size that should be used to load the image. If null, original size of the image will be used.
      * @param block a suspend function that allows custom modifications to the scene after it has been loaded.
      * It receives the scene [DesignBlock] and [CoroutineScope] as parameters.
      */
@@ -137,6 +140,15 @@ object EditorDefaults {
         createScene: suspend (CoroutineScope) -> Unit,
     ) {
         coroutineScope {
+            SystemGalleryPermission.setMode(SystemGalleryConfiguration.Disabled)
+            val context = engine.applicationContext
+            listOf(
+                AssetSourceType.GalleryAllVisuals,
+                AssetSourceType.GalleryImage,
+                AssetSourceType.GalleryVideo,
+            ).forEach { type ->
+                engine.asset.addSource(SystemGalleryAssetSource(context, type))
+            }
             // Loading is guaranteed to be showing here, no need to send eventHandler.send(ShowLoading)
             if (engine.scene.get() == null) {
                 createScene(this)
@@ -145,7 +157,6 @@ object EditorDefaults {
             onSceneCreated(scene, this)
             launch {
                 engine.addDefaultAssetSources()
-                engine.addSystemGalleryAssetSources()
                 val defaultTypeface = TypefaceProvider().provideTypeface(engine, "Roboto")
                 requireNotNull(defaultTypeface)
                 engine.asset.addSource(TextAssetSource(engine, defaultTypeface))

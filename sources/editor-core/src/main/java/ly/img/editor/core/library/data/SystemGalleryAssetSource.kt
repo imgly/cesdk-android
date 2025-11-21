@@ -3,6 +3,8 @@ package ly.img.editor.core.library.data
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -32,12 +34,19 @@ class SystemGalleryAssetSource(
     override val supportedMimeTypes: List<String> = listOf(mimeType)
 
     override suspend fun findAssets(query: FindAssetsQuery): FindAssetsResult {
-        if (!GalleryPermissionManager.hasPermission(applicationContext, mimeType)) {
-            return FindAssetsResult(emptyList(), query.page, -1, 0)
+        val allowMediaStoreAccess = !SystemGalleryPermission.isManualMode
+        val hasPermission = if (allowMediaStoreAccess) {
+            SystemGalleryPermission.hasPermission(applicationContext, mimeType)
+        } else {
+            false
         }
 
-        // No separate SELECTED-branch: rely on MediaStore enumeration for both full and limited access
-        val extraSelected = GalleryPermissionManager.selectedUris.filterNot(::isMediaStoreContentUri)
+        // Ignore MediaStore URIs only when we also enumerate the MediaStore; otherwise we keep everything.
+        val extraSelected = if (allowMediaStoreAccess) {
+            SystemGalleryPermission.selectedUris.filterNot(::isMediaStoreContentUri)
+        } else {
+            SystemGalleryPermission.selectedUris
+        }
         val extraCount = extraSelected.size
 
         val projection = arrayOf(
@@ -80,7 +89,7 @@ class SystemGalleryAssetSource(
         val start = offset
         val end = start + limit
         val mediaOffset: Int
-        val mediaLimit: Int
+        var mediaLimit: Int
         var hasMoreExtra = false
         var extrasAdded = 0
         if (start < extraCount) {
@@ -92,7 +101,15 @@ class SystemGalleryAssetSource(
                 val typeIsVideo = resolvedMimeType?.startsWith("video") == true
                 val assetId = euri.toString()
                 if (seenIds.add(assetId)) {
-                    assets += buildAsset(euri, typeIsVideo, null, null, null, resolvedMimeType)
+                    val meta = resolveExtraMetadata(euri, typeIsVideo)
+                    assets += buildAsset(
+                        uri = euri,
+                        isVideo = typeIsVideo,
+                        width = meta.width,
+                        height = meta.height,
+                        duration = meta.duration,
+                        mimeType = resolvedMimeType,
+                    )
                     extrasAdded += 1
                 }
             }
@@ -103,12 +120,15 @@ class SystemGalleryAssetSource(
             mediaOffset = start - extraCount
             mediaLimit = limit
         }
+        if (!allowMediaStoreAccess || !hasPermission) {
+            mediaLimit = 0
+        }
         Log.d(
             "SystemGalleryAssetSource",
             "findAssets(page=${query.page}, perPage=${query.perPage}) extrasAdded=$extrasAdded extraCount=$extraCount extraOnly=${mediaLimit <= 0}",
         )
         var mediaStoreItemsFetched = 0
-        if (mediaLimit > 0) {
+        if (mediaLimit > 0 && allowMediaStoreAccess && hasPermission) {
             try {
                 val queryStart = SystemClock.elapsedRealtime()
                 val requestedLimit = mediaLimit + extrasAdded
@@ -240,6 +260,57 @@ class SystemGalleryAssetSource(
             payload = AssetPayload(),
         )
     }
+
+    private fun resolveExtraMetadata(
+        uri: Uri,
+        isVideo: Boolean,
+    ): ExtraMetadata = if (isVideo) {
+        resolveVideoMetadata(uri)
+    } else {
+        resolveImageMetadata(uri)
+    }
+
+    private fun resolveImageMetadata(uri: Uri): ExtraMetadata = try {
+        applicationContext.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFileDescriptor(pfd.fileDescriptor, null, options)
+            ExtraMetadata(
+                width = options.outWidth.takeIf { it > 0 },
+                height = options.outHeight.takeIf { it > 0 },
+                duration = null,
+            )
+        } ?: ExtraMetadata()
+    } catch (e: Exception) {
+        Log.w("SystemGalleryAssetSource", "Failed to resolve image metadata for $uri", e)
+        ExtraMetadata()
+    }
+
+    private fun resolveVideoMetadata(uri: Uri): ExtraMetadata {
+        val retriever = MediaMetadataRetriever()
+        return try {
+            retriever.setDataSource(applicationContext, uri)
+            val width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull()
+            val height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull()
+            val durationSeconds = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
+                ?.let { (it / 1000).takeIf { value -> value > 0 } }
+            ExtraMetadata(
+                width = width?.takeIf { it > 0 },
+                height = height?.takeIf { it > 0 },
+                duration = durationSeconds,
+            )
+        } catch (e: Exception) {
+            Log.w("SystemGalleryAssetSource", "Failed to resolve video metadata for $uri", e)
+            ExtraMetadata()
+        } finally {
+            runCatching { retriever.release() }
+        }
+    }
+
+    private data class ExtraMetadata(
+        val width: Int? = null,
+        val height: Int? = null,
+        val duration: Long? = null,
+    )
 
     private object BundleKeys {
         const val SELECTION = ContentResolver.QUERY_ARG_SQL_SELECTION

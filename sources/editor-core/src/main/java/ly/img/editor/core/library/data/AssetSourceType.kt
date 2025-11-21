@@ -130,5 +130,5 @@ class SystemGalleryAssetSourceType(
     sourceId: String,
     val mimeTypeFilter: String = "*/*",
 ) : AssetSourceType(sourceId) {
-    fun hasPermission(context: Context): Boolean = GalleryPermissionManager.hasPermission(context, mimeTypeFilter)
+    fun hasPermission(context: Context): Boolean = SystemGalleryPermission.hasPermission(context, mimeTypeFilter)
 }

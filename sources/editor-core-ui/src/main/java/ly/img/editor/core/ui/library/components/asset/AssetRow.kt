@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -42,9 +43,10 @@ internal fun AssetRow(
     assetType: AssetType,
     emptyText: String? = null,
     onEmptyClick: (() -> Unit)? = null,
+    leadingContent: (@Composable () -> Unit)? = null,
 ) {
     Column {
-        if (wrappedAssets.isEmpty()) {
+        if (wrappedAssets.isEmpty() && leadingContent == null) {
             EmptyAssetsContent(
                 assetType = assetType,
                 emptyText = emptyText,
@@ -61,6 +63,11 @@ internal fun AssetRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
+                if (leadingContent != null) {
+                    item(key = "manual_add_tile") {
+                        leadingContent()
+                    }
+                }
                 items(wrappedAssets) { wrappedAsset ->
                     AssetImage(
                         wrappedAsset = wrappedAsset,
@@ -88,11 +95,14 @@ private fun SeeAllButton(
     assetType: AssetType,
     onClick: () -> Unit,
 ) {
+    val size = AssetLibraryUiConfig.contentRowHeight(assetType)
     Column(
         modifier = Modifier
-            .size(AssetLibraryUiConfig.contentRowHeight(assetType))
+            .height(size)
+            .widthIn(min = size)
             .clip(shape = MaterialTheme.shapes.medium)
-            .clickable { onClick() },
+            .clickable { onClick() }
+            .padding(horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -103,9 +113,10 @@ private fun SeeAllButton(
                 .padding(12.dp),
             contentDescription = null,
         )
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = stringResource(R.string.ly_img_editor_asset_library_button_see_all),
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelSmall,
         )
     }
 }

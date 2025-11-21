@@ -105,25 +105,35 @@ sealed interface LibraryContent {
 
     companion object {
         /**
-         * The default content for displaying video assets.
+         * Returns the default video content, optionally including the system gallery section.
          */
-        val Video by lazy {
-            Sections(
-                titleRes = R.string.ly_img_editor_asset_library_title_videos,
-                sections = listOf(
+        fun videos(includeSystemGallery: Boolean = true): Sections {
+            val sections = buildList {
+                add(
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_videos,
                         sourceTypes = listOf(AssetSourceType.Videos),
                         assetType = AssetType.Video,
                     ),
-                    Section(
-                        titleRes = R.string.ly_img_editor_asset_library_section_gallery,
-                        sourceTypes = listOf(AssetSourceType.GalleryVideo),
-                        assetType = AssetType.Video,
-                    ),
-                ),
+                )
+                if (includeSystemGallery) {
+                    add(
+                        Section(
+                            titleRes = R.string.ly_img_editor_asset_library_section_gallery,
+                            sourceTypes = listOf(AssetSourceType.GalleryVideo),
+                            assetType = AssetType.Video,
+                        ),
+                    )
+                }
+            }
+            return Sections(
+                titleRes = R.string.ly_img_editor_asset_library_title_videos,
+                sections = sections,
             )
         }
+
+        val Video: Sections
+            get() = videos(includeSystemGallery = true)
 
         /**
          * The default content for displaying audio assets.
@@ -149,25 +159,35 @@ sealed interface LibraryContent {
         }
 
         /**
-         * The default content for displaying image assets.
+         * Returns the default image content, optionally including the system gallery section.
          */
-        val Images by lazy {
-            Sections(
-                titleRes = R.string.ly_img_editor_asset_library_title_images,
-                sections = listOf(
+        fun images(includeSystemGallery: Boolean = true): Sections {
+            val sections = buildList {
+                add(
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_images,
                         sourceTypes = listOf(AssetSourceType.Images),
                         assetType = AssetType.Image,
                     ),
-                    Section(
-                        titleRes = R.string.ly_img_editor_asset_library_section_gallery,
-                        sourceTypes = listOf(AssetSourceType.GalleryImage),
-                        assetType = AssetType.Image,
-                    ),
-                ),
+                )
+                if (includeSystemGallery) {
+                    add(
+                        Section(
+                            titleRes = R.string.ly_img_editor_asset_library_section_gallery,
+                            sourceTypes = listOf(AssetSourceType.GalleryImage),
+                            assetType = AssetType.Image,
+                        ),
+                    )
+                }
+            }
+            return Sections(
+                titleRes = R.string.ly_img_editor_asset_library_title_images,
+                sections = sections,
             )
         }
+
+        val Images: Sections
+            get() = images(includeSystemGallery = true)
 
         /**
          * The default content for displaying text assets.

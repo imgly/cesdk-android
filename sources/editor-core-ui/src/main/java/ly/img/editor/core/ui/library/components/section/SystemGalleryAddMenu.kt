@@ -1,6 +1,7 @@
 package ly.img.editor.core.ui.library.components.section
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.DropdownMenu
@@ -13,7 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import ly.img.editor.core.R
 import ly.img.editor.core.iconpack.AddCameraBackground
-import ly.img.editor.core.library.data.GalleryPermissionManager
+import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Permission
 import ly.img.editor.core.ui.iconpack.Photolibraryoutline
@@ -36,7 +37,9 @@ internal fun SystemGalleryAddMenu(
     var showMenu by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    val currentPermission = { GalleryPermissionManager.hasPermission(context, mimeTypeFilter) }
+    val manualMode = SystemGalleryPermission.isManualMode
+
+    val currentPermission = { SystemGalleryPermission.hasPermission(context, mimeTypeFilter) }
     var lastPermissionState by remember { mutableStateOf(currentPermission()) }
     var resumeCheck by remember { mutableStateOf(false) }
 
@@ -62,9 +65,23 @@ internal fun SystemGalleryAddMenu(
         }
     }
 
-    trigger { showMenu = true }
+    val showPermissionEntries = !manualMode && SystemGalleryPermission.mode != SystemGalleryPermission.Mode.ALL
 
-    val showPermissionEntries = GalleryPermissionManager.mode != GalleryPermissionManager.Mode.ALL
+    val pickVisualLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) {
+            SystemGalleryPermission.addSelected(uri, context)
+            onPermissionChanged()
+        }
+        showMenu = false
+    }
+
+    val manualPickRequest = remember(mimeTypeFilter, isVideoMimeType, isImageMimeType) {
+        when {
+            isVideoMimeType && !isImageMimeType -> PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)
+            isImageMimeType && !isVideoMimeType -> PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            else -> PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+        }
+    }
 
     Box {
         trigger { showMenu = true }
@@ -72,6 +89,24 @@ internal fun SystemGalleryAddMenu(
             expanded = showMenu,
             onDismissRequest = { showMenu = false },
         ) {
+            if (manualMode) {
+                ClipMenuItem(
+                    textResourceId = when {
+                        isVideoMimeType && !isImageMimeType -> R.string.ly_img_editor_asset_library_button_choose_video
+                        isImageMimeType && !isVideoMimeType -> R.string.ly_img_editor_asset_library_button_choose_photo
+                        else -> R.string.ly_img_editor_asset_library_button_add
+                    },
+                    icon = when {
+                        isVideoMimeType && !isImageMimeType -> IconPack.Videolibraryoutline
+                        isImageMimeType && !isVideoMimeType -> IconPack.Photolibraryoutline
+                        else -> IconPack.Photolibraryoutline
+                    },
+                ) {
+                    showMenu = false
+                    pickVisualLauncher.launch(manualPickRequest)
+                }
+            }
+
             if (showPermissionEntries) {
                 ClipMenuItem(
                     textResourceId = if (isVideoMimeType) {
@@ -81,7 +116,7 @@ internal fun SystemGalleryAddMenu(
                     },
                     icon = if (isVideoMimeType) IconPack.Videolibraryoutline else IconPack.Photolibraryoutline,
                 ) {
-                    val perms = GalleryPermissionManager.requiredPermission(mimeTypeFilter)
+                    val perms = SystemGalleryPermission.requiredPermission(mimeTypeFilter)
                         .filterNotNull()
                         .toTypedArray()
                     permissionLauncher.launch(perms)
