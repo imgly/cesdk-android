@@ -1,5 +1,6 @@
 package ly.img.editor.core.library.data
 
+import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
@@ -7,25 +8,10 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import ly.img.editor.core.UnstableEditorApi
 
-/**
- * Centralized state for handling system gallery permissions.
- *
- * The editor uses this object to decide whether full gallery access is granted,
- * whether only user-selected items are available, or if access is denied.
- * State changes bump [permissionVersion] so UI flows can react.
- */
-object SystemGalleryPermission {
-    /**
-     * Current permission mode for gallery access.
-     *
-     * - [UNDECIDED]: No decision yet; UI should ask for permission when needed.
-     * - [ALL]: Full media access granted.
-     * - [SELECTED]: Limited access to user-selected items.
-     * - [DENIED]: Access denied; UI should surface a permission prompt.
-     */
+object GalleryPermissionManager {
     enum class Mode { UNDECIDED, ALL, SELECTED, DENIED }
 
     var mode: Mode = Mode.UNDECIDED
@@ -36,7 +22,7 @@ object SystemGalleryPermission {
     val permissionVersion: Int
         get() = permissionsVersion
 
-    // App-added persistent grants (merged with system selection for display).
+    // App-added persistent grants (unioniert mit Systemauswahl in der Anzeige)
     private val _selectedUris = mutableListOf<Uri>()
     private var loaded = false
 
@@ -47,13 +33,7 @@ object SystemGalleryPermission {
     val isManualMode: Boolean
         get() = manualMode
 
-    /**
-     * Configure how the system gallery should behave.
-     *
-     * Marked unstable to make opt-in explicit for integrators.
-     */
-    @UnstableEditorApi
-    fun setMode(configuration: SystemGalleryConfiguration) {
+    fun applyConfiguration(configuration: SystemGalleryConfiguration) {
         val newManualMode = !configuration.enableAssetSource
         if (manualMode != newManualMode) {
             manualMode = newManualMode
@@ -68,9 +48,34 @@ object SystemGalleryPermission {
         }
     }
 
-    /**
-     * Mark full access granted and clear any selected-only state.
-     */
+    fun setSelected(
+        uris: List<Uri>,
+        context: Context,
+    ) {
+        ensureLoaded(context)
+        Log.d("GalleryPermissionManager", "Adding selected URIs: ${uris.size} items")
+        var changed = if (manualMode) {
+            updateMode(Mode.SELECTED)
+        } else {
+            updateMode(Mode.UNDECIDED) // Anzeige wird über MediaStore bestimmt; diese Liste ergänzt nur
+        }
+        val existing = _selectedUris.map { it.toString() }.toMutableSet()
+        uris.forEach { uri ->
+            if (isInternalFileProviderUri(uri, context)) {
+                Log.d("GalleryPermissionManager", "Skipping internal capture URI: $uri")
+                return@forEach
+            }
+            persistUriPermission(uri, context)
+            if (existing.add(uri.toString())) {
+                _selectedUris.add(uri)
+                changed = true
+            }
+        }
+        if (changed) {
+            markPermissionsChanged()
+        }
+    }
+
     fun setAllGranted() {
         val cleared = _selectedUris.isNotEmpty()
         _selectedUris.clear()
@@ -80,15 +85,21 @@ object SystemGalleryPermission {
         }
     }
 
-    /**
-     * Add a single user-selected URI to the allowed set.
-     */
+    fun setDenied() {
+        val cleared = _selectedUris.isNotEmpty()
+        _selectedUris.clear()
+        val modeChanged = updateMode(Mode.DENIED)
+        if (cleared || modeChanged) {
+            markPermissionsChanged()
+        }
+    }
+
     fun addSelected(
         uri: Uri,
         context: Context,
     ) {
         if (isInternalFileProviderUri(uri, context)) {
-            Log.d("GalleryPermission", "Ignoring internal file-provider URI: $uri")
+            Log.d("GalleryPermissionManager", "Ignoring internal file-provider URI: $uri")
             return
         }
         persistUriPermission(uri, context)
@@ -104,12 +115,32 @@ object SystemGalleryPermission {
             }
             return
         }
-
-        val hasFullAccess = hasFullReadAccess(context)
-        var changed = if (hasFullAccess) {
-            updateMode(Mode.ALL)
+        // If we already have full access, keep ALL mode
+        val hasFullAccess = if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            (
+                ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) ==
+                    PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_VIDEO) ==
+                    PackageManager.PERMISSION_GRANTED
+            )
+        ) {
+            true
+        } else if (
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            true
         } else {
+            false
+        }
+
+        var changed = if (!hasFullAccess) {
             updateMode(Mode.SELECTED)
+        } else {
+            updateMode(Mode.ALL)
         }
         if (_selectedUris.none { it == uri }) {
             _selectedUris.add(uri)
@@ -120,9 +151,6 @@ object SystemGalleryPermission {
         }
     }
 
-    /**
-     * Returns true if the current permission state allows reading the given mimeType.
-     */
     fun hasPermission(
         context: Context,
         mimeType: String?,
@@ -135,7 +163,6 @@ object SystemGalleryPermission {
             return true
         }
         ensureLoaded(context)
-
         val needsVideo = mimeType?.startsWith("video/") == true
         val needsImage = mimeType?.startsWith("image/") == true
         val needsAnyVisuals = !needsVideo && !needsImage
@@ -145,35 +172,32 @@ object SystemGalleryPermission {
             android.Manifest.permission.READ_EXTERNAL_STORAGE,
         ) == PackageManager.PERMISSION_GRANTED
 
-        val imagePermissionGranted = ContextCompat.checkSelfPermission(
-            context,
-            android.Manifest.permission.READ_MEDIA_IMAGES,
-        ) == PackageManager.PERMISSION_GRANTED
-        val videoPermissionGranted = ContextCompat.checkSelfPermission(
-            context,
-            android.Manifest.permission.READ_MEDIA_VIDEO,
-        ) == PackageManager.PERMISSION_GRANTED
+        val imagePermissionGranted =
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_IMAGES) ==
+                PackageManager.PERMISSION_GRANTED
+        val videoPermissionGranted =
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_MEDIA_VIDEO) ==
+                PackageManager.PERMISSION_GRANTED
 
-        val fullAccess = if (legacyGranted) {
-            true
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            when {
+        val fullAccess = when {
+            legacyGranted -> true
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> when {
                 needsVideo -> videoPermissionGranted
                 needsImage -> imagePermissionGranted
                 needsAnyVisuals -> imagePermissionGranted || videoPermissionGranted
                 else -> imagePermissionGranted || videoPermissionGranted
             }
-        } else {
-            false
+            else -> false
         }
 
-        if (legacyGranted) {
-            Log.d("GalleryPermission", "Legacy full access granted for mime=$mimeType")
+        if (fullAccess) {
+            Log.d("GalleryPermissionManager", "Full access granted for mimeType=$mimeType")
             if (mode != Mode.ALL) setAllGranted()
-        } else if (fullAccess) {
-            Log.d("GalleryPermission", "Full access granted for mime=$mimeType")
-            if (mode != Mode.ALL) setAllGranted()
+            // Ensure mode reflects the actual scope when only one of the media permissions is granted
             when {
+                legacyGranted -> {
+                    if (mode != Mode.ALL) setAllGranted()
+                }
                 needsVideo && !videoPermissionGranted -> {
                     if (updateMode(Mode.SELECTED)) {
                         markPermissionsChanged()
@@ -184,13 +208,17 @@ object SystemGalleryPermission {
                         markPermissionsChanged()
                     }
                 }
-                needsAnyVisuals &&
-                    !(imagePermissionGranted && videoPermissionGranted) -> {
+                needsAnyVisuals && !(imagePermissionGranted && videoPermissionGranted) -> {
                     if (updateMode(Mode.SELECTED)) {
                         markPermissionsChanged()
                     }
                 }
             }
+        } else {
+            Log.d(
+                "GalleryPermissionManager",
+                "No full access for mimeType=$mimeType (legacy=$legacyGranted, image=$imagePermissionGranted, video=$videoPermissionGranted)",
+            )
         }
 
         val partialAccess =
@@ -201,18 +229,18 @@ object SystemGalleryPermission {
                 ) == PackageManager.PERMISSION_GRANTED
 
         val result = when {
-            legacyGranted -> true
             fullAccess -> {
+                // If we don't actually have the specific permission we need, treat as partial
                 when {
                     needsVideo && !videoPermissionGranted -> false
                     needsImage && !imagePermissionGranted -> false
-                    needsAnyVisuals &&
-                        !(imagePermissionGranted && videoPermissionGranted) &&
-                        !legacyGranted -> false
+                    needsAnyVisuals && !(imagePermissionGranted && videoPermissionGranted) && !legacyGranted -> false
                     else -> true
                 }
             }
             partialAccess -> {
+                // User granted limited access; even wenn keine selectedUris lokal hinterlegt sind,
+                // liefert MediaStore bereits die erlaubten Einträge. UI darf fortfahren.
                 val changed = if (_selectedUris.isNotEmpty()) {
                     updateMode(Mode.SELECTED)
                 } else {
@@ -231,16 +259,23 @@ object SystemGalleryPermission {
             }
         }
         Log.d(
-            "GalleryPermission",
-            "Permission result=$result full=$fullAccess " +
-                "partial=$partialAccess selected=${_selectedUris.size}",
+            "GalleryPermissionManager",
+            "Permission check result: $result (fullAccess: $fullAccess, partialAccess: $partialAccess, selectedUris: ${_selectedUris.size})",
         )
         return result
     }
 
-    /**
-     * Returns the permission set required for the provided mimeType.
-     */
+    fun requestAllPermission(
+        activity: Activity,
+        mimeType: String?,
+    ) {
+        if (manualMode) {
+            return
+        }
+        val permissions = requiredPermission(mimeType)
+        ActivityCompat.requestPermissions(activity, permissions, 0)
+    }
+
     fun requiredPermission(mimeType: String?): Array<String?> = when {
         manualMode -> emptyArray()
         Build.VERSION.SDK_INT >= 34 -> when {
@@ -275,26 +310,6 @@ object SystemGalleryPermission {
             )
         }
         else -> arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE)
-    }
-
-    private fun hasFullReadAccess(context: Context): Boolean {
-        val legacyGranted = ContextCompat.checkSelfPermission(
-            context,
-            android.Manifest.permission.READ_EXTERNAL_STORAGE,
-        ) == PackageManager.PERMISSION_GRANTED
-        if (legacyGranted) return true
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
-
-        val imagesGranted = ContextCompat.checkSelfPermission(
-            context,
-            android.Manifest.permission.READ_MEDIA_IMAGES,
-        ) == PackageManager.PERMISSION_GRANTED
-        val videoGranted = ContextCompat.checkSelfPermission(
-            context,
-            android.Manifest.permission.READ_MEDIA_VIDEO,
-        ) == PackageManager.PERMISSION_GRANTED
-        return imagesGranted || videoGranted
     }
 
     private fun updateMode(newMode: Mode): Boolean = if (mode != newMode) {
@@ -332,9 +347,9 @@ object SystemGalleryPermission {
                 uri,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION,
             )
-            Log.d("GalleryPermission", "Persisted permission for: $uri")
+            Log.d("GalleryPermissionManager", "Persisted permission for: $uri")
         } catch (e: SecurityException) {
-            Log.w("GalleryPermission", "Failed persist for: $uri", e)
+            Log.w("GalleryPermissionManager", "Failed persist for: $uri", e)
         }
     }
 }

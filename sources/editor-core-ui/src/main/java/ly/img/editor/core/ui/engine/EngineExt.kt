@@ -238,29 +238,45 @@ fun Engine.getStrokeColor(designBlock: DesignBlock): Color? {
 
 /**
  * An extension function that tells whether the [designBlock] is a background track.
+ * A background track is identified as a [DesignBlockType.Track] type that is also set as the page duration source.
  *
  * @param designBlock the design block that is being queried.
  * @return true if the design block is a background track, false otherwise.
  */
-fun BlockApi.isBackgroundTrack(designBlock: DesignBlock): Boolean = DesignBlockType.get(getType(designBlock)) == DesignBlockType.Track &&
-    isAlwaysOnBottom(designBlock)
+fun BlockApi.isBackgroundTrack(designBlock: DesignBlock): Boolean {
+    if (DesignBlockType.get(getType(designBlock)) != DesignBlockType.Track) {
+        return false
+    }
+    return isPageDurationSource(designBlock)
+}
 
 /**
  * An extension function for getting the background track from the scene.
  * A scene should have a maximum of one background track.
- * A background track is created and appended to the current page if it doesn't exist already.
+ * A background track is identified as a [DesignBlockType.Track] type that is set as the page duration source.
  *
  * @return the design block of the background track.
  */
-fun Engine.getBackgroundTrack(): DesignBlock = block.findByType(DesignBlockType.Track).firstOrNull {
-    block.isBackgroundTrack(it)
-} ?: createBackgroundTrack()
+fun Engine.getBackgroundTrack(): DesignBlock? {
+    val page = getCurrentPage()
+    val children = block.getChildren(page)
+    return children.firstOrNull { child ->
+        block.getType(child) == DesignBlockType.Track.key &&
+            block.isPageDurationSource(child)
+    }
+}
+
+fun Engine.getSafeBackgroundTrack(): DesignBlock = getBackgroundTrack() ?: createBackgroundTrack()
 
 private fun Engine.createBackgroundTrack(): DesignBlock {
+    val page = getCurrentPage()
     val backgroundTrack = block.create(DesignBlockType.Track)
-    block.appendChild(parent = getCurrentPage(), child = backgroundTrack)
+    block.appendChild(parent = page, child = backgroundTrack)
     block.setAlwaysOnBottom(backgroundTrack, true)
     block.fillParent(backgroundTrack)
     block.setScopeEnabled(backgroundTrack, Scope.EditorSelect, false)
+    if (block.supportsPageDurationSource(page, backgroundTrack)) {
+        block.setPageDurationSource(page, backgroundTrack)
+    }
     return backgroundTrack
 }

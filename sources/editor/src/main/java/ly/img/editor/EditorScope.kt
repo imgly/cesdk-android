@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
+import ly.img.editor.core.library.data.GalleryPermissionManager
 import ly.img.editor.core.ui.scope.EditorContextImpl
 
 @Composable
@@ -12,6 +13,7 @@ internal fun rememberEditorScope(
     engineConfiguration: EngineConfiguration,
     editorConfiguration: EditorConfiguration<*>,
 ): EditorScope = remember(engineConfiguration, editorConfiguration) {
+    GalleryPermissionManager.applyConfiguration(engineConfiguration.systemGallery)
     object : EditorScope() {
         override val impl: EditorContext =
             EditorContextImpl(

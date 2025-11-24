@@ -24,8 +24,8 @@ import ly.img.editor.core.library.AssetType
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.library.LibraryContent
 import ly.img.editor.core.library.data.AssetSourceType
+import ly.img.editor.core.library.data.GalleryPermissionManager
 import ly.img.editor.core.library.data.SystemGalleryAssetSourceType
-import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.library.data.TypefaceProvider
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.Environment
@@ -34,9 +34,9 @@ import ly.img.editor.core.ui.engine.ROLE_ADOPTER
 import ly.img.editor.core.ui.engine.Scope
 import ly.img.editor.core.ui.engine.awaitEngineAndSceneLoad
 import ly.img.editor.core.ui.engine.dpToCanvasUnit
-import ly.img.editor.core.ui.engine.getBackgroundTrack
 import ly.img.editor.core.ui.engine.getCamera
 import ly.img.editor.core.ui.engine.getCurrentPage
+import ly.img.editor.core.ui.engine.getSafeBackgroundTrack
 import ly.img.editor.core.ui.engine.isSceneModeVideo
 import ly.img.editor.core.ui.engine.overrideAndRestore
 import ly.img.editor.core.ui.library.components.section.LibrarySectionItem
@@ -255,7 +255,7 @@ class LibraryViewModel(
             Log.d(TAG, "onAddUri source=${assetSourceType.sourceId} uri=$uri")
             val asset = uploadToAssetSource(assetSourceType, uri)
             onAddAsset(assetSourceType, asset, addToBackgroundTrack)
-            runCatching { SystemGalleryPermission.addSelected(uri, editor.activity) }
+            runCatching { GalleryPermissionManager.addSelected(uri, editor.activity) }
             // Also trigger refresh for gallery source if relevant
             runCatching {
                 if (assetSourceType == AssetSourceType.ImageUploads || assetSourceType == AssetSourceType.VideoUploads) {
@@ -272,7 +272,7 @@ class LibraryViewModel(
         viewModelScope.launch {
             engine.awaitEngineAndSceneLoad()
             val page = engine.getCurrentPage()
-            val backgroundTrack = engine.getBackgroundTrack()
+            val backgroundTrack = engine.getSafeBackgroundTrack()
 
             // set playhead position to end of background track
             engine.block.setPlaybackTime(page, engine.block.getDuration(backgroundTrack))
@@ -292,7 +292,7 @@ class LibraryViewModel(
         uri: Uri,
         duration: Duration,
     ) {
-        val backgroundTrack = engine.getBackgroundTrack()
+        val backgroundTrack = engine.getSafeBackgroundTrack()
         val id = engine.block.create(DesignBlockType.Graphic)
         val rectShape = engine.block.createShape(ShapeType.Rect)
         engine.block.setShape(id, rectShape)
@@ -397,11 +397,9 @@ class LibraryViewModel(
         val page = engine.getCurrentPage()
 
         if (inBackgroundTrack) {
-            val backgroundTrack = engine.getBackgroundTrack()
+            val backgroundTrack = engine.getSafeBackgroundTrack()
             engine.block.appendChild(parent = backgroundTrack, child = designBlock)
             engine.block.fillParent(designBlock)
-            // page duration needs to be updated to ensure playback time does not get clamped to the previous known page duration
-            engine.block.setDuration(page, engine.block.getDuration(backgroundTrack))
             engine.block.setPlaybackTime(page, engine.block.getTimeOffset(designBlock))
         } else {
             engine.block.appendChild(parent = page, child = designBlock)
@@ -752,14 +750,15 @@ class LibraryViewModel(
                     when (source) {
                         AssetSourceType.ImageUploads, AssetSourceType.VideoUploads -> {
                             context?.let { ctx ->
-                                SystemGalleryPermission.hasPermission(ctx, source.mimeTypeFilter)
+                                GalleryPermissionManager.hasPermission(ctx, source.mimeTypeFilter)
                             } ?: true
                         }
                         else -> true
                     }
                 } ?: false
 
-                val systemGallerySource = section.sourceTypes.singleOrNull() as? SystemGalleryAssetSourceType
+                val systemGallerySource =
+                    section.sourceTypes.singleOrNull() as? ly.img.editor.core.library.data.SystemGalleryAssetSourceType
 
                 LibrarySectionItem.Header(
                     stackIndex = stackIndex,

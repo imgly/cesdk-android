@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import ly.img.editor.core.R
 import ly.img.editor.core.iconpack.AddCameraBackground
-import ly.img.editor.core.library.data.SystemGalleryPermission
+import ly.img.editor.core.library.data.GalleryPermissionManager
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Permission
 import ly.img.editor.core.ui.iconpack.Photolibraryoutline
@@ -37,9 +37,9 @@ internal fun SystemGalleryAddMenu(
     var showMenu by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    val manualMode = SystemGalleryPermission.isManualMode
+    val manualMode = GalleryPermissionManager.isManualMode
 
-    val currentPermission = { SystemGalleryPermission.hasPermission(context, mimeTypeFilter) }
+    val currentPermission = { GalleryPermissionManager.hasPermission(context, mimeTypeFilter) }
     var lastPermissionState by remember { mutableStateOf(currentPermission()) }
     var resumeCheck by remember { mutableStateOf(false) }
 
@@ -65,11 +65,11 @@ internal fun SystemGalleryAddMenu(
         }
     }
 
-    val showPermissionEntries = !manualMode && SystemGalleryPermission.mode != SystemGalleryPermission.Mode.ALL
+    val showPermissionEntries = !manualMode && GalleryPermissionManager.mode != GalleryPermissionManager.Mode.ALL
 
     val pickVisualLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            SystemGalleryPermission.addSelected(uri, context)
+            GalleryPermissionManager.addSelected(uri, context)
             onPermissionChanged()
         }
         showMenu = false
@@ -116,7 +116,7 @@ internal fun SystemGalleryAddMenu(
                     },
                     icon = if (isVideoMimeType) IconPack.Videolibraryoutline else IconPack.Photolibraryoutline,
                 ) {
-                    val perms = SystemGalleryPermission.requiredPermission(mimeTypeFilter)
+                    val perms = GalleryPermissionManager.requiredPermission(mimeTypeFilter)
                         .filterNotNull()
                         .toTypedArray()
                     permissionLauncher.launch(perms)

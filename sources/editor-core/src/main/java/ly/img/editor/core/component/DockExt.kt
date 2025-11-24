@@ -341,9 +341,13 @@ fun Dock.Companion.rememberForVideo(
     scope: Scope = LocalEditorScope.current.run {
         val engine = editorContext.engine
 
-        fun getBackgroundTrack(): DesignBlock? = engine.block.findByType(DesignBlockType.Track).firstOrNull {
-            DesignBlockType.get(engine.block.getType(it)) == DesignBlockType.Track &&
-                engine.block.isAlwaysOnBottom(it)
+        fun getBackgroundTrack(): DesignBlock? {
+            val page = engine.scene.getCurrentPage() ?: return null
+            val children = engine.block.getChildren(page)
+            return children.firstOrNull { child ->
+                engine.block.getType(child) == DesignBlockType.Track.key &&
+                    engine.block.isPageDurationSource(child)
+            }
         }
 
         val reorderButtonVisible by remember(this) {
@@ -359,7 +363,13 @@ fun Dock.Companion.rememberForVideo(
                                 flowOf(false)
                             } else {
                                 engine.event.subscribe(listOf(backgroundTrack))
-                                    .map { engine.block.getChildren(backgroundTrack).size >= 2 }
+                                    .map {
+                                        if (engine.block.isValid(backgroundTrack)) {
+                                            engine.block.getChildren(backgroundTrack).size >= 2
+                                        } else {
+                                            false
+                                        }
+                                    }
                                     .onStart { emit(engine.block.getChildren(backgroundTrack).size >= 2) }
                             }
                         }
@@ -1665,7 +1675,7 @@ fun Button.Companion.rememberSystemCamera(
                 editorContext.eventHandler.send(EditorEvent.AddUriToScene(uploadSource, uri))
 
                 // Persist selection and rescan so it appears in gallery for follow-up edits
-                runCatching { ly.img.editor.core.library.data.SystemGalleryPermission.addSelected(uri, context) }
+                runCatching { ly.img.editor.core.library.data.GalleryPermissionManager.addSelected(uri, context) }
                 runCatching { android.media.MediaScannerConnection.scanFile(context, arrayOf(uri.toString()), null, null) }
 
                 // Open the uploads category so users can re-use the capture
@@ -1848,7 +1858,7 @@ fun Button.Companion.rememberReorder(
         remember(this) {
             val backgroundTrack = editorContext.engine.block.findByType(DesignBlockType.Track).firstOrNull {
                 DesignBlockType.get(editorContext.engine.block.getType(it)) == DesignBlockType.Track &&
-                    editorContext.engine.block.isAlwaysOnBottom(it)
+                    editorContext.engine.block.isPageDurationSource(it)
             }
             backgroundTrack?.let { editorContext.engine.block.getChildren(it).size >= 2 } ?: false
         }

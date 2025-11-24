@@ -201,7 +201,7 @@ class CanvasMenu private constructor(
                 run {
                     selection.parentDesignBlock?.let {
                         DesignBlockType.get(editorContext.engine.block.getType(it)) == DesignBlockType.Track &&
-                            editorContext.engine.block.isAlwaysOnBottom(it)
+                            editorContext.engine.block.isPageDurationSource(it)
                     } ?: false
                 }.not() &&
                 _selectionSiblings.size > 1

@@ -18,8 +18,8 @@ import ly.img.editor.core.R
 import ly.img.editor.core.iconpack.Plus
 import ly.img.editor.core.library.AssetType
 import ly.img.editor.core.library.LibraryContent
+import ly.img.editor.core.library.data.GalleryPermissionManager
 import ly.img.editor.core.library.data.SystemGalleryAssetSourceType
-import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.ui.GradientCard
 import ly.img.editor.core.ui.library.components.asset.AssetColumn
 import ly.img.editor.core.ui.library.components.asset.AssetRow
@@ -44,7 +44,7 @@ internal fun LibrarySectionContent(
         )
     }
     permissionRequest?.Dialogs?.invoke()
-    val isManualGallery = SystemGalleryPermission.isManualMode
+    val isManualGallery = GalleryPermissionManager.isManualMode
     val galleryPermissionGranted = permissionRequest?.let { it.hasPermission && it.hasSelections } ?: true
     val useManualAddTile = isManualGallery && gallerySource != null
     val emptyText = when {

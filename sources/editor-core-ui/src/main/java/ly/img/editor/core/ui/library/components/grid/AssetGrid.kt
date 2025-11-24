@@ -38,8 +38,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.media3.exoplayer.ExoPlayer
 import ly.img.editor.core.R
 import ly.img.editor.core.iconpack.Plus
+import ly.img.editor.core.library.data.GalleryPermissionManager
 import ly.img.editor.core.library.data.SystemGalleryAssetSourceType
-import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.GradientCard
 import ly.img.editor.core.ui.iconpack.Folder
@@ -74,14 +74,14 @@ internal fun AssetGrid(
         }
     }
 
-    var lastPermissionVersion by remember { mutableStateOf(SystemGalleryPermission.permissionVersion) }
+    var lastPermissionVersion by remember { mutableStateOf(GalleryPermissionManager.permissionVersion) }
     val gridSource = uiState.assetsData.assetSourceType
     if (gridSource is SystemGalleryAssetSourceType) {
         val context = LocalContext.current
         LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-            val currentVersion = SystemGalleryPermission.permissionVersion
-            SystemGalleryPermission.hasPermission(context, gridSource.mimeTypeFilter)
-            lastPermissionVersion = SystemGalleryPermission.permissionVersion
+            val currentVersion = GalleryPermissionManager.permissionVersion
+            GalleryPermissionManager.hasPermission(context, gridSource.mimeTypeFilter)
+            lastPermissionVersion = GalleryPermissionManager.permissionVersion
             onLibraryEvent(LibraryEvent.OnFetch(libraryCategory))
         }
     }
@@ -125,10 +125,10 @@ internal fun AssetGrid(
         AssetsLoadState.EmptyResult -> {
             val assetSource = uiState.assetsData.assetSourceType
             val isSystemGallery = assetSource is SystemGalleryAssetSourceType
-            val isManualGallery = isSystemGallery && SystemGalleryPermission.isManualMode
+            val isManualGallery = isSystemGallery && GalleryPermissionManager.isManualMode
             val permissions: Array<String?>? = when {
                 assetSource is SystemGalleryAssetSourceType && isManualGallery -> emptyArray<String?>()
-                assetSource is SystemGalleryAssetSourceType -> SystemGalleryPermission.requiredPermission(assetSource.mimeTypeFilter)
+                assetSource is SystemGalleryAssetSourceType -> GalleryPermissionManager.requiredPermission(assetSource.mimeTypeFilter)
                 else -> null
             }
             RequireUserPermission(
@@ -260,7 +260,7 @@ internal fun AssetGrid(
                             )
                         }
                     } else if (assetSource is SystemGalleryAssetSourceType) {
-                        if (SystemGalleryPermission.hasPermission(context, assetSource.mimeTypeFilter)) {
+                        if (GalleryPermissionManager.hasPermission(context, assetSource.mimeTypeFilter)) {
                             item {
                                 SystemGalleryAddMenu(
                                     mimeTypeFilter = assetSource.mimeTypeFilter,

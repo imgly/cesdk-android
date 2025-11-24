@@ -9,8 +9,8 @@ import ly.img.editor.core.R
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.engine.BlockKind
 import ly.img.editor.core.ui.engine.Scope
-import ly.img.editor.core.ui.engine.getBackgroundTrack
 import ly.img.editor.core.ui.engine.getKindEnum
+import ly.img.editor.core.ui.engine.getSafeBackgroundTrack
 import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register
 import ly.img.engine.DesignBlock
@@ -39,7 +39,7 @@ fun EventsHandler.timelineEvents(
                 engine.block.appendChild(parent = checkNotNull(engine.scene.getCurrentPage()), child = id)
             } else {
                 val insertedBlockTimeOffset = engine.block.getTimeOffset(id)
-                val backgroundTrack = engine.getBackgroundTrack()
+                val backgroundTrack = engine.getSafeBackgroundTrack()
                 val backgroundTrackChildren = engine.block.getChildren(backgroundTrack)
 
                 // Find the slot in the background track closest to the current time offset.
@@ -164,7 +164,7 @@ fun EventsHandler.timelineEvents(
         backgroundClips.add(it.newIndex, backgroundClips.removeAt(oldIndex))
 
         engine.block.insertChild(
-            parent = engine.getBackgroundTrack(),
+            parent = engine.getSafeBackgroundTrack(),
             child = it.block,
             index = it.newIndex,
         )

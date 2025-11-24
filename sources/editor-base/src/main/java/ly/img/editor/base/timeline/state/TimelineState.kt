@@ -29,7 +29,6 @@ import ly.img.engine.EngineException
 import ly.img.engine.FillType
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.DurationUnit
 
 class TimelineState(
     private val engine: Engine,
@@ -61,13 +60,14 @@ class TimelineState(
     private val thumbnailsManager = ThumbnailsManager(engine, coroutineScope)
 
     private val page = engine.getCurrentPage()
-    private val backgroundTrack = engine.getBackgroundTrack()
 
     private var pageChildren: List<DesignBlock> = emptyList()
 
     fun getThumbnailProvider(designBlock: DesignBlock) = thumbnailsManager.getProvider(designBlock)
 
     fun refresh(events: List<DesignBlockEvent>) {
+        cleanUpEmptyTracks()
+
         val blocks = engine.block.getChildren(page)
 
         // If the block order has changed OR a block was destroyed or created, we refresh the entire timeline
@@ -152,7 +152,7 @@ class TimelineState(
             return
         }
 
-        if (designBlock == backgroundTrack) {
+        if (designBlock == engine.getBackgroundTrack()) {
             engine.block.getChildren(designBlock).forEach {
                 refresh(it, dataSource.findClip(it))
             }
@@ -349,22 +349,18 @@ class TimelineState(
         }
     }
 
-    private fun updateDuration() {
-        totalDuration = if (dataSource.backgroundTrack.clips.isNotEmpty()) {
-            engine.block.getDuration(backgroundTrack).seconds
-        } else {
-            // If background track is empty, iterate over all clips and make make sure they’re all accessible.
-            dataSource.tracks.fold(0.seconds) { partialResult, track ->
-                // non video tracks only have one clip
-                val clip = track.clips.first()
-                maxOf(partialResult, clip.timeOffset + clip.duration)
+    private fun cleanUpEmptyTracks() {
+        engine.block.getChildren(page).forEach { block ->
+            if (engine.block.isValid(block)) {
+                val type = DesignBlockType.get(engine.block.getType(block))
+                if ((type == DesignBlockType.Track || type == DesignBlockType.CaptionTrack) && engine.block.getChildren(block).isEmpty()) {
+                    engine.block.destroy(block)
+                }
             }
         }
+    }
 
-        val oldDuration = engine.block.getDuration(page)
-        // This check is important to avoid an infinite loop through the update events.
-        if (totalDuration != oldDuration.seconds) {
-            engine.block.setDuration(page, totalDuration.toDouble(DurationUnit.SECONDS))
-        }
+    private fun updateDuration() {
+        totalDuration = engine.block.getDuration(page).seconds
     }
 }

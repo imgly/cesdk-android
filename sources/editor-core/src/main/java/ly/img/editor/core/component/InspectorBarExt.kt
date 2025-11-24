@@ -78,12 +78,16 @@ private fun Selection.isNotAnyKindOfSticker() = !this.isAnyKindOfSticker()
 
 /**
  * An extension function for checking whether the [designBlock] is a background track.
+ * A background track is identified as a [DesignBlockType.Track] type that is also set as the page duration source.
  *
  * @return true if the [designBlock] is a background track.
  */
-private fun Engine.isBackgroundTrack(designBlock: DesignBlock): Boolean =
-    DesignBlockType.get(block.getType(designBlock)) == DesignBlockType.Track &&
-        block.isAlwaysOnBottom(designBlock)
+private fun Engine.isBackgroundTrack(designBlock: DesignBlock): Boolean {
+    if (DesignBlockType.get(block.getType(designBlock)) != DesignBlockType.Track) {
+        return false
+    }
+    return block.isPageDurationSource(designBlock)
+}
 
 /**
  * An extension function for checking whether the [selection] can be moved up/down.

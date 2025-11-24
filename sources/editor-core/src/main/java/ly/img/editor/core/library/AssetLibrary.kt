@@ -1,7 +1,6 @@
 package ly.img.editor.core.library
 
 import ly.img.editor.core.library.LibraryCategory.Companion.sourceTypes
-import ly.img.editor.core.library.data.SystemGalleryAssetSourceType
 import ly.img.engine.SceneMode
 
 /**
@@ -29,18 +28,8 @@ data class AssetLibrary(
     val text: (SceneMode) -> LibraryCategory = { LibraryCategory.Text },
     val shapes: (SceneMode) -> LibraryCategory = { LibraryCategory.Shapes },
     val stickers: (SceneMode) -> LibraryCategory = { LibraryCategory.Stickers },
-    val overlays: (SceneMode) -> LibraryCategory = {
-        createOverlaysCategory(
-            videos = videos(it).withoutSystemGallerySections(),
-            images = images(it).withoutSystemGallerySections(),
-        )
-    },
-    val clips: (SceneMode) -> LibraryCategory = {
-        createClipsCategory(
-            videos = videos(it).withoutSystemGallerySections(),
-            images = images(it).withoutSystemGallerySections(),
-        )
-    },
+    val overlays: (SceneMode) -> LibraryCategory = { createOverlaysCategory(videos(it), images(it)) },
+    val clips: (SceneMode) -> LibraryCategory = { createClipsCategory(videos(it), images(it)) },
     val stickersAndShapes: (SceneMode) -> LibraryCategory = {
         createStickersAndShapesCategory(
             stickers = stickers(it),
@@ -87,14 +76,8 @@ data class AssetLibrary(
             text: LibraryCategory = LibraryCategory.Text,
             shapes: LibraryCategory = LibraryCategory.Shapes,
             stickers: LibraryCategory = LibraryCategory.Stickers,
-            overlays: LibraryCategory = createOverlaysCategory(
-                videos = videos.withoutSystemGallerySections(),
-                images = images.withoutSystemGallerySections(),
-            ),
-            clips: LibraryCategory = createClipsCategory(
-                videos = videos.withoutSystemGallerySections(),
-                images = images.withoutSystemGallerySections(),
-            ),
+            overlays: LibraryCategory = createOverlaysCategory(videos = videos, images = images),
+            clips: LibraryCategory = createClipsCategory(videos = videos, images = images),
             stickersAndShapes: LibraryCategory = createStickersAndShapesCategory(stickers = stickers, shapes = shapes),
             gallery: (SceneMode) -> LibraryCategory = { LibraryCategory.getGallery(it) },
         ): AssetLibrary {
@@ -166,15 +149,6 @@ data class AssetLibrary(
                     expandContent = images.content,
                 )
             }
-
-        private fun LibraryCategory.withoutSystemGallerySections(): LibraryCategory {
-            val sectionsContent = content as? LibraryContent.Sections ?: return this
-            val filteredSections = sectionsContent.sections.filterNot { section ->
-                section.sourceTypes.size == 1 && section.sourceTypes.first() is SystemGalleryAssetSourceType
-            }
-            if (filteredSections.size == sectionsContent.sections.size) return this
-            return copy(content = sectionsContent.copy(sections = filteredSections))
-        }
 
         private fun createStickersAndShapesCategory(
             stickers: LibraryCategory,

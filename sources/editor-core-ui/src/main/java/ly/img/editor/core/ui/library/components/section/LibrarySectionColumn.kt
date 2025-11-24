@@ -16,8 +16,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.Lifecycle
+import ly.img.editor.core.library.data.GalleryPermissionManager
 import ly.img.editor.core.library.data.SystemGalleryAssetSourceType
-import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.library.RequireUserPermission
 import ly.img.editor.core.ui.library.state.AssetLibraryUiState
@@ -46,7 +46,7 @@ internal fun LibrarySectionColumn(
         }
     }
 
-    var lastPermissionVersion by remember { mutableStateOf(SystemGalleryPermission.permissionVersion) }
+    var lastPermissionVersion by remember { mutableStateOf(GalleryPermissionManager.permissionVersion) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         val filters = uiState.sectionItems.flatMap { item ->
             when (item) {
@@ -58,11 +58,11 @@ internal fun LibrarySectionColumn(
             }
         }.toSet()
         if (filters.isEmpty()) {
-            SystemGalleryPermission.hasPermission(context, null)
+            GalleryPermissionManager.hasPermission(context, null)
         } else {
-            filters.forEach { SystemGalleryPermission.hasPermission(context, it) }
+            filters.forEach { GalleryPermissionManager.hasPermission(context, it) }
         }
-        lastPermissionVersion = SystemGalleryPermission.permissionVersion
+        lastPermissionVersion = GalleryPermissionManager.permissionVersion
         onLibraryEvent(LibraryEvent.OnFetch(uiState.libraryCategory))
     }
 
@@ -93,7 +93,7 @@ internal fun LibrarySectionColumn(
                 is LibrarySectionItem.Content -> {
                     val galleryAssetSource = sectionItem.sourceTypes.find { it is SystemGalleryAssetSourceType }
                     val permissions = (galleryAssetSource as? SystemGalleryAssetSourceType)?.let {
-                        SystemGalleryPermission.requiredPermission(it.mimeTypeFilter)
+                        GalleryPermissionManager.requiredPermission(it.mimeTypeFilter)
                     }
                     RequireUserPermission(
                         permissions = permissions,
