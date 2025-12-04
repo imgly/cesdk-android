@@ -5,7 +5,6 @@ import android.util.SizeF
 import androidx.compose.runtime.Composable
 import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.engine.EngineRenderTarget
-import ly.img.editor.core.library.data.SystemGalleryConfiguration
 import ly.img.engine.MimeType
 
 /**
@@ -33,15 +32,13 @@ fun EngineConfiguration.Companion.rememberForDesign(
     baseUri: Uri = defaultBaseUri,
     sceneUri: Uri = defaultDesignSceneUri,
     renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-    systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
 ): EngineConfiguration = remember(
     license = license,
     userId = userId,
     baseUri = baseUri,
     renderTarget = renderTarget,
-    systemGallery = systemGallery,
     onCreate = {
-        EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler, systemGallery)
+        EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler)
     },
 )
 
@@ -71,16 +68,14 @@ fun EngineConfiguration.Companion.rememberForPhoto(
     userId: String? = null,
     baseUri: Uri = defaultBaseUri,
     renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-    systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
     forceCropConfiguration: ForceCropConfiguration? = null,
 ): EngineConfiguration = remember(
     license = license,
     userId = userId,
     baseUri = baseUri,
     renderTarget = renderTarget,
-    systemGallery = systemGallery,
     onCreate = {
-        EditorDefaults.onCreateFromImage(editorContext.engine, imageUri, editorContext.eventHandler, systemGallery, imageSize)
+        EditorDefaults.onCreateFromImage(editorContext.engine, imageUri, editorContext.eventHandler, imageSize)
     },
     onLoaded = {
         forceCropConfiguration?.let { configuration ->
@@ -128,15 +123,13 @@ fun EngineConfiguration.Companion.rememberForApparel(
     baseUri: Uri = defaultBaseUri,
     sceneUri: Uri = defaultApparelSceneUri,
     renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-    systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
 ): EngineConfiguration = remember(
     license = license,
     userId = userId,
     baseUri = baseUri,
     renderTarget = renderTarget,
-    systemGallery = systemGallery,
     onCreate = {
-        EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler, systemGallery)
+        EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler)
     },
 )
 
@@ -167,15 +160,13 @@ fun EngineConfiguration.Companion.rememberForPostcard(
     baseUri: Uri = defaultBaseUri,
     sceneUri: Uri = defaultPostcardSceneUri,
     renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-    systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
 ): EngineConfiguration = remember(
     license = license,
     userId = userId,
     baseUri = baseUri,
     renderTarget = renderTarget,
-    systemGallery = systemGallery,
     onCreate = {
-        EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler, systemGallery)
+        EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler)
     },
 )
 
@@ -203,14 +194,12 @@ fun EngineConfiguration.Companion.rememberForVideo(
     baseUri: Uri = defaultBaseUri,
     sceneUri: Uri = defaultVideoSceneUri,
     renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-    systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
 ): EngineConfiguration = remember(
     license = license,
     userId = userId,
     baseUri = baseUri,
     renderTarget = renderTarget,
-    systemGallery = systemGallery,
     onCreate = {
-        EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler, systemGallery)
+        EditorDefaults.onCreate(editorContext.engine, sceneUri, editorContext.eventHandler)
     },
 )

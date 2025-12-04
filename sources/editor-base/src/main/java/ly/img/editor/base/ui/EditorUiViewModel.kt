@@ -103,7 +103,7 @@ import ly.img.editor.core.component.rememberSystemCamera
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.event.EditorEventHandler
 import ly.img.editor.core.library.data.AssetSourceType
-import ly.img.editor.core.library.data.GalleryPermissionManager
+import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.state.EditorState
@@ -1080,7 +1080,7 @@ abstract class EditorUiViewModel(
                 null
             }
             galleryUri?.let {
-                runCatching { GalleryPermissionManager.addSelected(it, context) }
+                runCatching { SystemGalleryPermission.addSelected(it, context) }
                 runCatching { engine.asset.assetSourceContentsChanged(AssetSourceType.GalleryAllVisuals.sourceId) }
             }
         }.let(::send)

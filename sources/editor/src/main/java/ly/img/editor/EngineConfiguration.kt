@@ -11,7 +11,6 @@ import ly.img.editor.core.component.data.nothing
 import ly.img.editor.core.engine.EngineRenderTarget
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.event.EditorEventHandler
-import ly.img.editor.core.library.data.SystemGalleryConfiguration
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.engine.AssetDefinition
 import ly.img.engine.Engine
@@ -77,7 +76,6 @@ class EngineConfiguration private constructor(
     val userId: String? = null,
     val baseUri: Uri,
     val renderTarget: EngineRenderTarget,
-    val systemGallery: SystemGalleryConfiguration,
     val onCreate: suspend EditorScope.() -> Unit,
     val onLoaded: suspend EditorScope.() -> Unit,
     val onExport: suspend EditorScope.() -> Unit,
@@ -91,7 +89,6 @@ class EngineConfiguration private constructor(
         ", userId = $userId" +
         ", baseUri = $baseUri" +
         ", renderTarget = $renderTarget" +
-        ", systemGallery = $systemGallery" +
         ", onCreate = $onCreate" +
         ", onUpload = $onExport" +
         ", onClose = $onClose" +
@@ -158,9 +155,6 @@ class EngineConfiguration private constructor(
          *      engine.scene.load(sceneUri = Uri.parse("scenes/example.scene"))
          * @param renderTarget the target which should be used by the [ly.img.engine.Engine] to render.
          * Default value is [EngineRenderTarget.SURFACE_VIEW].
-         * @param systemGallery configuration controlling whether the in-app system gallery asset sources are registered.
-         * By default this is [SystemGalleryConfiguration.Disabled], so the editor relies on upload buttons and
-         * camera intents for importing media from the device.
          * @param onCreate the callback that is invoked when the editor is created. This is the main initialization block of both the editor
          * and engine. Normally, you should create/load a scene, prepare asset sources and apply editor settings in this block.
          * We recommend that you check the availability of the scene before creating/loading a new scene since a recreated scene may already
@@ -205,7 +199,6 @@ class EngineConfiguration private constructor(
             userId: String? = null,
             baseUri: Uri = defaultBaseUri,
             renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-            systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
             onCreate: suspend EditorScope.() -> Unit,
             onLoaded: suspend EditorScope.() -> Unit = {},
             onExport: suspend EditorScope.() -> Unit = {
@@ -234,7 +227,6 @@ class EngineConfiguration private constructor(
                     userId = userId,
                     baseUri = baseUri,
                     renderTarget = renderTarget,
-                    systemGallery = systemGallery,
                     onCreate = onCreate,
                     onLoaded = onLoaded,
                     onExport = onExport,
@@ -252,15 +244,13 @@ class EngineConfiguration private constructor(
             baseUri: Uri = defaultBaseUri,
             sceneUri: Uri = defaultDesignSceneUri,
             renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-            systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
         ) = EngineConfiguration(
             license = license,
             userId = userId,
             baseUri = baseUri,
             renderTarget = renderTarget,
-            systemGallery = systemGallery,
             onCreate = { engine, eventHandler ->
-                EditorDefaults.onCreate(engine, sceneUri, eventHandler, systemGallery)
+                EditorDefaults.onCreate(engine, sceneUri, eventHandler)
             },
         )
 
@@ -272,15 +262,13 @@ class EngineConfiguration private constructor(
             userId: String? = null,
             baseUri: Uri = defaultBaseUri,
             renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-            systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
         ) = EngineConfiguration(
             license = license,
             userId = userId,
             baseUri = baseUri,
             renderTarget = renderTarget,
-            systemGallery = systemGallery,
             onCreate = { engine, eventHandler ->
-                EditorDefaults.onCreateFromImage(engine, imageUri, eventHandler, systemGallery, imageSize)
+                EditorDefaults.onCreateFromImage(engine, imageUri, eventHandler, imageSize)
             },
             onExport = { engine, eventHandler ->
                 EditorDefaults.onExport(engine, eventHandler, MimeType.PNG)
@@ -294,15 +282,13 @@ class EngineConfiguration private constructor(
             baseUri: Uri = defaultBaseUri,
             sceneUri: Uri = defaultApparelSceneUri,
             renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-            systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
         ) = EngineConfiguration(
             license = license,
             userId = userId,
             baseUri = baseUri,
             renderTarget = renderTarget,
-            systemGallery = systemGallery,
             onCreate = { engine, eventHandler ->
-                EditorDefaults.onCreate(engine, sceneUri, eventHandler, systemGallery)
+                EditorDefaults.onCreate(engine, sceneUri, eventHandler)
             },
         )
 
@@ -313,15 +299,13 @@ class EngineConfiguration private constructor(
             baseUri: Uri = defaultBaseUri,
             sceneUri: Uri = defaultPostcardSceneUri,
             renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-            systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
         ) = EngineConfiguration(
             license = license,
             userId = userId,
             baseUri = baseUri,
             renderTarget = renderTarget,
-            systemGallery = systemGallery,
             onCreate = { engine, eventHandler ->
-                EditorDefaults.onCreate(engine, sceneUri, eventHandler, systemGallery)
+                EditorDefaults.onCreate(engine, sceneUri, eventHandler)
             },
         )
 
@@ -332,15 +316,13 @@ class EngineConfiguration private constructor(
             baseUri: Uri = defaultBaseUri,
             sceneUri: Uri = defaultVideoSceneUri,
             renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-            systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
         ) = EngineConfiguration(
             license = license,
             userId = userId,
             baseUri = baseUri,
             renderTarget = renderTarget,
-            systemGallery = systemGallery,
             onCreate = { engine, eventHandler ->
-                EditorDefaults.onCreate(engine, sceneUri, eventHandler, systemGallery)
+                EditorDefaults.onCreate(engine, sceneUri, eventHandler)
             },
         )
     }
@@ -354,7 +336,6 @@ class EngineConfiguration private constructor(
         userId: String? = null,
         baseUri: Uri = defaultBaseUri,
         renderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
-        systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
         onCreate: suspend (Engine, EditorEventHandler) -> Unit,
         onExport: suspend (Engine, EditorEventHandler) -> Unit = { engine, eventHandler ->
             EditorDefaults.onExport(engine, eventHandler)
@@ -379,7 +360,6 @@ class EngineConfiguration private constructor(
         userId = userId,
         baseUri = baseUri,
         renderTarget = renderTarget,
-        systemGallery = systemGallery,
         onCreate = { onCreate(editorContext.engine, editorContext.eventHandler) },
         onLoaded = {},
         onExport = { onExport(editorContext.engine, editorContext.eventHandler) },

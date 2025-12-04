@@ -12,7 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import ly.img.editor.core.library.data.GalleryPermissionManager
+import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.ui.library.components.section.rememberGalleryPermissionRequest
 import ly.img.editor.core.ui.permissions.PermissionManager.Companion.hasAnyPermission
 
@@ -23,7 +23,7 @@ internal fun RequireUserPermission(
     permissionGranted: () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    if (GalleryPermissionManager.isManualMode) {
+    if (SystemGalleryPermission.isManualMode) {
         content()
         return
     }
@@ -31,7 +31,7 @@ internal fun RequireUserPermission(
     val context = LocalContext.current
     val hasPermissionInitial = remember(mimeTypeFilter, nonNullPermission) {
         when {
-            mimeTypeFilter != null -> GalleryPermissionManager.hasPermission(context, mimeTypeFilter)
+            mimeTypeFilter != null -> SystemGalleryPermission.hasPermission(context, mimeTypeFilter)
             nonNullPermission != null -> nonNullPermission.isEmpty() || context.hasAnyPermission(nonNullPermission)
             else -> true
         }
@@ -53,7 +53,7 @@ internal fun RequireUserPermission(
                 modifier = Modifier
                     .wrapContentSize()
                     .clickable {
-                        if (GalleryPermissionManager.hasPermission(context, mimeTypeFilter)) {
+                        if (SystemGalleryPermission.hasPermission(context, mimeTypeFilter)) {
                             hasPermission = true
                             permissionGranted()
                         } else {

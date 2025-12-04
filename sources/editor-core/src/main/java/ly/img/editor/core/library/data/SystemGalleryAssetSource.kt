@@ -27,7 +27,6 @@ import ly.img.engine.FindAssetsResult
 class SystemGalleryAssetSource(
     context: Context,
     type: SystemGalleryAssetSourceType,
-    private val configuration: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
 ) : AssetSource(type.sourceId) {
     private val mimeType = type.mimeTypeFilter
     private val applicationContext: Context = context.applicationContext
@@ -35,18 +34,18 @@ class SystemGalleryAssetSource(
     override val supportedMimeTypes: List<String> = listOf(mimeType)
 
     override suspend fun findAssets(query: FindAssetsQuery): FindAssetsResult {
-        val allowMediaStoreAccess = configuration.enableAssetSource
+        val allowMediaStoreAccess = !SystemGalleryPermission.isManualMode
         val hasPermission = if (allowMediaStoreAccess) {
-            GalleryPermissionManager.hasPermission(applicationContext, mimeType)
+            SystemGalleryPermission.hasPermission(applicationContext, mimeType)
         } else {
             false
         }
 
         // Ignore MediaStore URIs only when we also enumerate the MediaStore; otherwise we keep everything.
         val extraSelected = if (allowMediaStoreAccess) {
-            GalleryPermissionManager.selectedUris.filterNot(::isMediaStoreContentUri)
+            SystemGalleryPermission.selectedUris.filterNot(::isMediaStoreContentUri)
         } else {
-            GalleryPermissionManager.selectedUris
+            SystemGalleryPermission.selectedUris
         }
         val extraCount = extraSelected.size
 

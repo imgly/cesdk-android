@@ -48,11 +48,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ly.img.editor.compose.foundation.gestures.detectTapGestures
 import ly.img.editor.core.R
-import ly.img.editor.core.engine.addSystemGalleryAssetSources
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.event.EditorEventHandler
-import ly.img.editor.core.library.data.GalleryPermissionManager
+import ly.img.editor.core.library.data.AssetSourceType
+import ly.img.editor.core.library.data.SystemGalleryAssetSource
 import ly.img.editor.core.library.data.SystemGalleryConfiguration
+import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.library.data.TextAssetSource
 import ly.img.editor.core.library.data.TypefaceProvider
 import ly.img.editor.core.theme.LocalExtendedColorScheme
@@ -89,7 +90,6 @@ object EditorDefaults {
      * @param engine the engine that is used in the editor.
      * @param sceneUri the Uri that is used to load the scene file into the scene.
      * @param eventHandler the object that can send [EditorEvent]s.
-     * @param systemGallery controls whether the default configuration registers the device gallery asset sources.
      * @param block a suspend function that allows custom modifications to the scene after it has been loaded.
      * It receives the scene [DesignBlock] and [CoroutineScope] as parameters.
      */
@@ -97,9 +97,8 @@ object EditorDefaults {
         engine: Engine,
         sceneUri: Uri,
         eventHandler: EditorEventHandler,
-        systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
         block: suspend (DesignBlock, CoroutineScope) -> Unit = { _, _ -> },
-    ) = onCreateCommon(engine, eventHandler, systemGallery, block) {
+    ) = onCreateCommon(engine, eventHandler, block) {
         engine.scene.load(sceneUri)
     }
 
@@ -113,7 +112,6 @@ object EditorDefaults {
      * @param engine the engine that is used in the editor.
      * @param imageUri the uri of the image that is used to create a scene with single page and image fill.
      * @param eventHandler the object that can send [EditorEvent]s.
-     * @param systemGallery controls whether the default configuration registers the device gallery asset sources.
      * @param size the size that should be used to load the image. If null, original size of the image will be used.
      * @param block a suspend function that allows custom modifications to the scene after it has been loaded.
      * It receives the scene [DesignBlock] and [CoroutineScope] as parameters.
@@ -122,10 +120,9 @@ object EditorDefaults {
         engine: Engine,
         imageUri: Uri,
         eventHandler: EditorEventHandler,
-        systemGallery: SystemGalleryConfiguration = SystemGalleryConfiguration.Disabled,
         size: SizeF? = null,
         block: suspend (DesignBlock, CoroutineScope) -> Unit = { _, _ -> },
-    ) = onCreateCommon(engine, eventHandler, systemGallery, block) {
+    ) = onCreateCommon(engine, eventHandler, block) {
         engine.scene.createFromImage(imageUri)
         val pages = engine.scene.getPages()
         require(pages.size == 1) { "No image found." }
@@ -139,21 +136,27 @@ object EditorDefaults {
     private suspend fun onCreateCommon(
         engine: Engine,
         eventHandler: EditorEventHandler,
-        systemGallery: SystemGalleryConfiguration,
         onSceneCreated: suspend (DesignBlock, CoroutineScope) -> Unit,
         createScene: suspend (CoroutineScope) -> Unit,
     ) {
         coroutineScope {
+            SystemGalleryPermission.setMode(SystemGalleryConfiguration.Disabled)
+            val context = engine.applicationContext
+            listOf(
+                AssetSourceType.GalleryAllVisuals,
+                AssetSourceType.GalleryImage,
+                AssetSourceType.GalleryVideo,
+            ).forEach { type ->
+                engine.asset.addSource(SystemGalleryAssetSource(context, type))
+            }
             // Loading is guaranteed to be showing here, no need to send eventHandler.send(ShowLoading)
             if (engine.scene.get() == null) {
                 createScene(this)
             }
             val scene = checkNotNull(engine.scene.get())
             onSceneCreated(scene, this)
-            GalleryPermissionManager.applyConfiguration(systemGallery)
             launch {
                 engine.addDefaultAssetSources()
-                engine.addSystemGalleryAssetSources(systemGallery)
                 val defaultTypeface = TypefaceProvider().provideTypeface(engine, "Roboto")
                 requireNotNull(defaultTypeface)
                 engine.asset.addSource(TextAssetSource(engine, defaultTypeface))

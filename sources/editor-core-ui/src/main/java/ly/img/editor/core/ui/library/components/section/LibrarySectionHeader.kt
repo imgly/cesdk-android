@@ -30,7 +30,7 @@ import ly.img.editor.core.R
 import ly.img.editor.core.iconpack.AddCameraBackground
 import ly.img.editor.core.iconpack.Plus
 import ly.img.editor.core.library.LibraryContent
-import ly.img.editor.core.library.data.GalleryPermissionManager
+import ly.img.editor.core.library.data.SystemGalleryPermission
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.iconpack.Arrowright
 import ly.img.editor.core.ui.iconpack.IconPack
@@ -51,11 +51,11 @@ internal fun LibrarySectionHeader(
     onPermissionChanged: () -> Unit = {},
 ) {
     val context = LocalContext.current
-    val manualMode = GalleryPermissionManager.isManualMode
+    val manualMode = SystemGalleryPermission.isManualMode
 
     val galleryType = item.systemGalleryAssetSourceType
     val galleryPermissionGranted = galleryType?.let {
-        GalleryPermissionManager.hasPermission(context, it.mimeTypeFilter)
+        SystemGalleryPermission.hasPermission(context, it.mimeTypeFilter)
     } ?: true
     val galleryPermissionRequest = if (!galleryPermissionGranted && galleryType != null) {
         rememberGalleryPermissionRequest(
@@ -225,8 +225,8 @@ private fun SystemGalleryAddButton(
 ) {
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
-    val manualMode = GalleryPermissionManager.isManualMode
-    val currentPermission = { GalleryPermissionManager.hasPermission(context, mimeTypeFilter) }
+    val manualMode = SystemGalleryPermission.isManualMode
+    val currentPermission = { SystemGalleryPermission.hasPermission(context, mimeTypeFilter) }
     var lastPermissionState by remember { mutableStateOf(currentPermission()) }
     var resumeCheck by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -251,7 +251,7 @@ private fun SystemGalleryAddButton(
 
     val pickVisualLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            GalleryPermissionManager.addSelected(uri, context)
+            SystemGalleryPermission.addSelected(uri, context)
             onPermissionChanged()
         }
         showMenu = false
@@ -294,7 +294,7 @@ private fun SystemGalleryAddButton(
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false },
             ) {
-                if (GalleryPermissionManager.mode != GalleryPermissionManager.Mode.ALL) {
+                if (SystemGalleryPermission.mode != SystemGalleryPermission.Mode.ALL) {
                     ClipMenuItem(
                         textResourceId = if (isVideoMimeType) {
                             R.string.ly_img_editor_asset_library_button_choose_video
@@ -303,7 +303,7 @@ private fun SystemGalleryAddButton(
                         },
                         icon = if (isVideoMimeType) IconPack.Videolibraryoutline else IconPack.Photolibraryoutline,
                     ) {
-                        val perms = GalleryPermissionManager.requiredPermission(mimeTypeFilter)
+                        val perms = SystemGalleryPermission.requiredPermission(mimeTypeFilter)
                             ?.filterNotNull()
                             ?.toTypedArray()
                             ?: emptyArray()
