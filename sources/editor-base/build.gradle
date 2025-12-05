@@ -10,4 +10,7 @@ dependencies {
 
     debugImplementation libs.compose.tooling
     implementation libs.compose.preview
+
+    compileOnly(project(":camera-core"))
+    implementation project(":editor-debug-menu-dummy")
 }

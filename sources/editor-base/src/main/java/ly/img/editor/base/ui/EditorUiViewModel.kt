@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ly.img.camera.core.CaptureVideo
 import ly.img.editor.ApplyForceCrop
 import ly.img.editor.applyForceCrop
 import ly.img.editor.base.dock.AdjustmentSheetContent
@@ -124,6 +125,7 @@ import ly.img.editor.core.ui.library.CropAssetSourceType
 import ly.img.editor.core.ui.library.LibraryViewModel
 import ly.img.editor.core.ui.library.util.LibraryEvent
 import ly.img.editor.core.ui.register
+import ly.img.editor.featureFlag.flags.IMGLYCameraFeature
 import ly.img.engine.AssetTransformPreset
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
@@ -1180,9 +1182,14 @@ abstract class EditorUiViewModel(
     }
 
     private fun onVideoCameraClick(callback: (@Composable () -> Unit) -> Unit) = callback {
-        runCatching {
+        val isImglyCameraAvailable = androidx.compose.runtime.remember {
+            runCatching { CaptureVideo() }.isSuccess
+        } &&
+            IMGLYCameraFeature.enabled
+
+        if (isImglyCameraAvailable) {
             Dock.Button.rememberImglyCamera()
-        }.getOrElse {
+        } else {
             Dock.Button.rememberSystemCamera()
         }.onClick(Dock.ButtonScope(editorScope))
     }
