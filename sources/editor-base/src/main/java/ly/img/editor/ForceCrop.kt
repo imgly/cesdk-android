@@ -328,7 +328,8 @@ internal inline fun <T> ly.img.engine.Engine.withTemporaryPageResizeInteraction(
     val previousAllowResize = editor.getSettingBoolean(ALLOW_RESIZE_INTERACTION_KEY)
     val previousRestrictResize = editor.getSettingBoolean(RESTRICT_RESIZE_INTERACTION_KEY)
     editor.setSettingBoolean(ALLOW_RESIZE_INTERACTION_KEY, true)
-    editor.setSettingBoolean(RESTRICT_RESIZE_INTERACTION_KEY, true)
+    // Temporarily lift the fixed-aspect restriction so free presets can apply; restored afterwards.
+    editor.setSettingBoolean(RESTRICT_RESIZE_INTERACTION_KEY, false)
     return try {
         action()
     } finally {
