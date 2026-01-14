@@ -1675,7 +1675,8 @@ fun Button.Companion.rememberSystemCamera(
                 editorContext.eventHandler.send(EditorEvent.AddUriToScene(uploadSource, uri))
 
                 // Persist selection and rescan so it appears in gallery for follow-up edits
-                runCatching { ly.img.editor.core.library.data.SystemGalleryPermission.addSelected(uri, context) }
+                val mimeTypeHint = if (isVideoScene) "video/*" else "image/*"
+                runCatching { ly.img.editor.core.library.data.SystemGalleryPermission.addSelected(uri, context, mimeTypeHint) }
                 runCatching { android.media.MediaScannerConnection.scanFile(context, arrayOf(uri.toString()), null, null) }
 
                 // Open the uploads category so users can re-use the capture

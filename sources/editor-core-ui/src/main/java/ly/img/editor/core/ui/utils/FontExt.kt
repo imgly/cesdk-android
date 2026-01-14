@@ -19,6 +19,7 @@ import ly.img.editor.core.ui.library.data.font.FontData
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.ConcurrentHashMap
 
 val FontData.fontFamily: FontFamily
     @Composable
@@ -55,29 +56,56 @@ class RemoteTypefaceLoader : AndroidFont.TypefaceLoader {
         font: AndroidFont,
     ): Typeface? {
         if (font !is RemoteFont) return null
-        val fontFile = font.fontFile ?: return null
-        if (fontFile.exists()) return Typeface.createFromFile(fontFile)
+
+        // Check cache first
+        val cacheKey = font.uri.toString()
+        typefaceCache[cacheKey]?.let { return it }
+
         return withContext(Dispatchers.IO) {
-            fontFile.parentFile?.mkdirs()
-            val url = URL(font.uri.toString())
-            val connection = url.openConnection() as HttpURLConnection
-            val responseCode = connection.responseCode
-            require(responseCode == HttpURLConnection.HTTP_OK)
-            connection.inputStream.use { cis ->
-                val tempFile = File(fontFile.absolutePath + ".temp")
-                tempFile.outputStream().use { fos ->
-                    cis.copyTo(fos)
+            // Double-check cache after switching to IO thread
+            typefaceCache[cacheKey]?.let { return@withContext it }
+
+            val fontFile = font.fontFile ?: return@withContext null
+            val typeface = if (fontFile.exists()) {
+                Typeface.createFromFile(fontFile)
+            } else {
+                fontFile.parentFile?.mkdirs()
+                val url = URL(font.uri.toString())
+                val connection = url.openConnection() as HttpURLConnection
+                val responseCode = connection.responseCode
+                require(responseCode == HttpURLConnection.HTTP_OK)
+                connection.inputStream.use { cis ->
+                    val tempFile = File(fontFile.absolutePath + ".temp")
+                    tempFile.outputStream().use { fos ->
+                        cis.copyTo(fos)
+                    }
+                    tempFile.renameTo(fontFile)
                 }
-                tempFile.renameTo(fontFile)
+                Typeface.createFromFile(fontFile)
             }
-            Typeface.createFromFile(fontFile)
+
+            typeface?.also { typefaceCache[cacheKey] = it }
         }
     }
 
     override fun loadBlocking(
         context: Context,
         font: AndroidFont,
-    ): Typeface? = font.fontFile?.let(Typeface::createFromFile)
+    ): Typeface? {
+        if (font !is RemoteFont) return null
+
+        // Check cache first
+        val cacheKey = font.uri.toString()
+        typefaceCache[cacheKey]?.let { return it }
+
+        return font.fontFile?.let { fontFile ->
+            if (fontFile.exists()) {
+                Typeface.createFromFile(fontFile)?.also { typefaceCache[cacheKey] = it }
+            } else {
+                null
+            }
+        }
+    }
 
     private val AndroidFont.fontFile: File?
         get() {
@@ -87,4 +115,8 @@ class RemoteTypefaceLoader : AndroidFont.TypefaceLoader {
             }
             return File(Environment.getEditorCacheDir(), requireNotNull(uri.path))
         }
+
+    companion object {
+        private val typefaceCache = ConcurrentHashMap<String, Typeface>()
+    }
 }

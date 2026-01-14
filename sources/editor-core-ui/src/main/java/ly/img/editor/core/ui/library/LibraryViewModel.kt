@@ -255,7 +255,7 @@ class LibraryViewModel(
             Log.d(TAG, "onAddUri source=${assetSourceType.sourceId} uri=$uri")
             val asset = uploadToAssetSource(assetSourceType, uri)
             onAddAsset(assetSourceType, asset, addToBackgroundTrack)
-            runCatching { SystemGalleryPermission.addSelected(uri, editor.activity) }
+            runCatching { SystemGalleryPermission.addSelected(uri, editor.activity, assetSourceType.mimeTypeFilter) }
             // Also trigger refresh for gallery source if relevant
             runCatching {
                 if (assetSourceType == AssetSourceType.ImageUploads || assetSourceType == AssetSourceType.VideoUploads) {

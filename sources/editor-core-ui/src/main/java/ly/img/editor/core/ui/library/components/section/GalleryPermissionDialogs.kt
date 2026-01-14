@@ -90,7 +90,7 @@ internal fun rememberGalleryPermissionRequest(
     fun computeStatus(): GalleryPermissionStatus {
         val hasPermission = SystemGalleryPermission.hasPermission(context, mimeTypeFilter)
         val hasSelections = SystemGalleryPermission.mode == SystemGalleryPermission.Mode.ALL ||
-            SystemGalleryPermission.selectedUris.isNotEmpty()
+            SystemGalleryPermission.selectedForMimeType(mimeTypeFilter).isNotEmpty()
         return GalleryPermissionStatus(hasPermission, hasSelections)
     }
 

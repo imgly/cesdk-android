@@ -48,7 +48,7 @@ internal class RecordingManager(
             state.status is Status.TimerRunning -> resetTimer()
             hasStartedRecording -> stop()
             state.timer != Timer.Off -> startTimer(context)
-            else -> startRecording(context)
+            else -> coroutineScope.launch { startRecording(context) }
         }
     }
 
@@ -101,7 +101,7 @@ internal class RecordingManager(
         state = state.copy(maxDuration = duration)
     }
 
-    internal fun startRecording(context: Context) {
+    internal suspend fun startRecording(context: Context) {
         state = state.copy(status = Status.StartRecording)
         var reachedMaxDuration = false
         videoRecorder.startRecording(context) { status ->

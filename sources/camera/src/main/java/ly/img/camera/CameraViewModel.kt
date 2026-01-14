@@ -1,5 +1,6 @@
 package ly.img.camera
 
+import android.app.Application
 import android.util.Size
 import androidx.camera.core.MirrorMode.MIRROR_MODE_ON_FRONT_ONLY
 import androidx.camera.core.Preview
@@ -12,14 +13,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ly.img.camera.components.sidemenu.layout.LayoutMode
 import ly.img.camera.core.CameraConfiguration
 import ly.img.camera.core.CameraLayoutMode
@@ -44,12 +48,14 @@ import ly.img.engine.GlobalScope
 import ly.img.engine.ShapeType
 import ly.img.engine.UnstableEngineApi
 import ly.img.engine.camera.setCameraPreview
+import java.io.File
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
 internal class CameraViewModel(
+    application: Application,
     savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+) : AndroidViewModel(application) {
     @OptIn(UnstableEngineApi::class)
     val engine = Engine.getInstance("ly.img.camera").also {
         it.idlingEnabled = true
@@ -59,6 +65,10 @@ internal class CameraViewModel(
     val engineConfiguration: EngineConfiguration? = cameraInput?.engineConfiguration
     val cameraConfiguration: CameraConfiguration = cameraInput?.cameraConfiguration ?: CameraConfiguration()
     val cameraMode: CameraMode = cameraInput?.cameraMode ?: CameraMode.Standard()
+
+    // Deferred filesDir to avoid StrictMode disk read violation during recording.
+    // Completed on IO thread in init block, awaited when recording starts.
+    private val filesDirDeferred = CompletableDeferred<File>()
 
     private var reactionVideoIsPlaying = false
 
@@ -93,7 +103,10 @@ internal class CameraViewModel(
         maxDuration = cameraConfiguration.maxTotalDuration,
         allowExceedingMaxDuration = cameraConfiguration.allowExceedingMaxDuration,
         coroutineScope = viewModelScope,
-        videoRecorder = VideoRecorder { cameraState.videoCaptureUseCase },
+        videoRecorder = VideoRecorder(
+            videoCaptureProvider = { cameraState.videoCaptureUseCase },
+            filesDirProvider = { filesDirDeferred.await() },
+        ),
     )
 
     var cameraLayoutMode by mutableStateOf(
@@ -116,6 +129,13 @@ internal class CameraViewModel(
     private var secondaryBlock: DesignBlock = 0
 
     init {
+        viewModelScope.launch {
+            val filesDir = withContext(Dispatchers.IO) {
+                getApplication<Application>().filesDir
+            }
+            filesDirDeferred.complete(filesDir)
+        }
+
         viewModelScope.launch {
             snapshotFlow { recordingManager.state.status }
                 .distinctUntilChanged()

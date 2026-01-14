@@ -1,0 +1,127 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'com.github.gmazzo.buildconfig'
+}
+
+apply from: "ktlint.gradle"
+
+String getLocalProperty(String property) {
+    def propertiesFile = new File(rootDir, "local.properties")
+    if (!propertiesFile.exists()) return null
+    def properties = new Properties()
+    properties.load(propertiesFile.newDataInputStream())
+    return properties.getProperty(property)
+}
+
+android {
+    namespace = "ly.img.editor.guides"
+    compileSdk = libs.versions.androidCompileSdk.get().toInteger()
+
+    defaultConfig {
+        applicationId = "ly.img.editor.guides"
+        minSdk = libs.versions.androidMinSdk.get().toInteger()
+        targetSdk = libs.versions.androidTargetSdk.get().toInteger()
+        versionCode = 1
+        versionName = "local"
+        testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
+        ndk {
+            abiFilters "arm64-v8a", "armeabi-v7a", "x86_64", "x86"
+        }
+    }
+
+    signingConfigs {
+        release {
+            storeFile rootProject.file("android-release.keystore")
+            storePassword System.getenv("CESDK_AND_KEYSTORE_PWD") ?: getLocalProperty("release_key_password")
+            keyAlias "cesdk-dev"
+            keyPassword System.getenv("CESDK_AND_KEYSTORE_PWD") ?: getLocalProperty("release_key_password")
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.release
+            minifyEnabled false
+            shrinkResources = false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            // Keep default debug settings
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = false
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.kotlinCompilerExtension.get()
+    }
+
+    sourceSets {
+        main {
+            def exampleRoot = file("$projectDir/../../cesdk_android_examples")
+            def includeDirs = [
+                "editor-guides-configuration-dock",
+                "editor-guides-configuration-panel",
+            ]
+            includeDirs.each { name ->
+                def dir = new File(exampleRoot, name)
+                if (dir.directory) {
+                    java.srcDirs += dir
+                }
+            }
+        }
+    }
+}
+
+buildConfig {
+    className "GuidesBuildConfig"
+    packageName "ly.img.editor.guides"
+    buildConfigField String, "LICENSE", System.env.CESDK_APP_STORE_LICENSE ?: getLocalProperty("license") ?: ""
+}
+
+dependencies {
+    implementation project(':editor')
+    implementation project(':camera')
+    implementation libs.cesdk.engine
+    implementation libs.cesdk.engine.camera
+    implementation project(":editor-debug-menu")
+
+    implementation libs.camera.core
+    implementation libs.camera.camera2
+    implementation libs.camera.view
+    implementation libs.camera.lifecycle
+    implementation libs.camera.video
+
+    def composeBom = platform(libs.compose.bom)
+    implementation composeBom
+    implementation libs.compose.material3
+    implementation libs.compose.navigation
+    implementation(libs.material) {
+        because "MaterialComponents DayNight theme"
+    }
+
+    androidTestImplementation composeBom
+    androidTestImplementation libs.test.androidx.runner
+    androidTestImplementation libs.compose.test.junit4
+    androidTestImplementation libs.espresso.core
+    debugImplementation libs.compose.test.manifest
+}
+
+configurations.configureEach {
+    resolutionStrategy.dependencySubstitution {
+        substitute project(":editor-debug-menu-dummy") using project(":editor-debug-menu") because "we want the real debug menu in the guides app"
+    }
+}

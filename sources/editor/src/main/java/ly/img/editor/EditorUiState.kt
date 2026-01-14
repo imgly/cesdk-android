@@ -1,9 +1,9 @@
 package ly.img.editor
 
+import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.core.os.ParcelCompat
-import java.io.File
 
 /**
  * The state class of the editor that is used in the default implementations of [EditorConfiguration].
@@ -66,7 +66,10 @@ sealed class VideoExportStatus : Parcelable {
         val CREATOR = object : Parcelable.Creator<VideoExportStatus> {
             override fun createFromParcel(source: Parcel): VideoExportStatus = when (val type = source.readInt()) {
                 0 -> Loading(source.readFloat())
-                1 -> Success(source.readSerializable() as File, source.readString()!!)
+                1 -> Success(
+                    ParcelCompat.readParcelable(source, Uri::class.java.classLoader, Uri::class.java)!!,
+                    source.readString()!!,
+                )
                 2 -> Error
                 3 -> Idle
                 else -> throw IllegalArgumentException("Unknown type: $type")
@@ -89,7 +92,7 @@ sealed class VideoExportStatus : Parcelable {
     }
 
     data class Success(
-        val file: File,
+        val uri: Uri,
         val mimeType: String,
     ) : VideoExportStatus() {
         override fun writeToParcel(
@@ -97,7 +100,7 @@ sealed class VideoExportStatus : Parcelable {
             flags: Int,
         ) {
             dest.writeInt(1)
-            dest.writeSerializable(file)
+            dest.writeParcelable(uri, flags)
             dest.writeString(mimeType)
         }
     }

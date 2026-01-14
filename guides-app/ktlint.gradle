@@ -1,0 +1,32 @@
+configurations {
+    ktlint
+}
+
+dependencies {
+    ktlint(libs.ktlint.cli) {
+        attributes {
+            attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
+        }
+    }
+}
+
+def ktlintFiles = "../../../**/*.kt"
+// We exclude editor-experimental as it contains copied source files and we'd like to preserve the original formatting
+def ktlintExcludeFiles = ["!../../../**/editor-experimental/**/*", "!../../../**/build/**/*", "!../../../config/conan/**/*"]
+
+tasks.register("ktlintCheck", JavaExec) {
+    group = "verification"
+    description = "Check Kotlin code style."
+    classpath = configurations.ktlint
+    mainClass = "com.pinterest.ktlint.Main"
+    args(ktlintFiles, *ktlintExcludeFiles)
+}
+
+tasks.register("ktlintFormat", JavaExec) {
+    group = "formatting"
+    description = "Fix Kotlin code style deviations."
+    classpath = configurations.ktlint
+    mainClass = "com.pinterest.ktlint.Main"
+    jvmArgs "--add-opens=java.base/java.lang=ALL-UNNAMED"
+    args("-F", ktlintFiles, *ktlintExcludeFiles)
+}

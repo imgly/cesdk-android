@@ -1,5 +1,6 @@
 package ly.img.editor
 
+import android.net.Uri
 import ly.img.editor.core.event.EditorEvent
 import ly.img.engine.MimeType
 import java.io.File
@@ -36,10 +37,10 @@ object ShowVideoExportErrorEvent : EditorEvent
 
 /**
  * An event that is invoked in the default implementation of [EngineConfiguration.onExport] for a video scene
- * for showing that the export was successful. The [file] is the exported file and the [mimeType] is the mime type of the file.
+ * for showing that the export was successful. The [uri] is the uri of the exported file and the [mimeType] is the mime type of the file.
  */
 class ShowVideoExportSuccessEvent(
-    val file: File,
+    val uri: Uri,
     val mimeType: String,
 ) : EditorEvent
 
@@ -67,6 +68,16 @@ object HideErrorDialogEvent : EditorEvent
  */
 class ShareFileEvent(
     val file: File,
+    val mimeType: String = MimeType.PDF.key,
+) : EditorEvent
+
+/**
+ * An event that is invoked in the default implementation of [EngineConfiguration.onExport] after the export is done.
+ * By default, the event is captured in [EditorConfiguration.onEvent] and a system level popup is displayed to share the [uri].
+ * The [mimeType] is the mime type of the content being shared.
+ */
+class ShareUriEvent(
+    val uri: Uri,
     val mimeType: String = MimeType.PDF.key,
 ) : EditorEvent
 

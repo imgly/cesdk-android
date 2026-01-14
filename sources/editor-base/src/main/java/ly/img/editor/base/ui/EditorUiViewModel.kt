@@ -1052,40 +1052,44 @@ abstract class EditorUiViewModel(
         addToBackgroundTrack: Boolean,
     ) {
         val context = editor.activity
-        val tempFile = File.createTempFile(
-            "imgly_",
-            if (captureVideo) ".mp4" else ".jpg",
-            context.filesDir,
-        )
-        val uri = FileProvider.getUriForFile(context, "${context.packageName}.ly.img.editor.fileprovider", tempFile)
-        val uploadSource = if (captureVideo) {
-            AssetSourceType.VideoUploads
-        } else {
-            AssetSourceType.ImageUploads
-        }
-        val launchContract = if (captureVideo) {
-            ActivityResultContracts.CaptureVideo()
-        } else {
-            ActivityResultContracts.TakePicture()
-        }
-        EditorEvent.LaunchContract(launchContract, uri) { success ->
-            if (!success) {
-                return@LaunchContract
+        viewModelScope.launch {
+            val uri = withContext(Dispatchers.IO) {
+                val tempFile = File.createTempFile(
+                    "imgly_",
+                    if (captureVideo) ".mp4" else ".jpg",
+                    context.filesDir,
+                )
+                FileProvider.getUriForFile(context, "${context.packageName}.ly.img.editor.fileprovider", tempFile)
             }
-
-            editorContext.eventHandler.send(EditorEvent.AddUriToScene(uploadSource, uri))
-
-            val galleryUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                copyCaptureToMediaStore(context, uri, captureVideo)
+            val (uploadSource, launchContract) = if (captureVideo) {
+                AssetSourceType.VideoUploads to ActivityResultContracts.CaptureVideo()
             } else {
-                copyCaptureToLegacyGallery(context, uri, captureVideo)
-                null
+                AssetSourceType.ImageUploads to ActivityResultContracts.TakePicture()
             }
-            galleryUri?.let {
-                runCatching { SystemGalleryPermission.addSelected(it, context) }
-                runCatching { engine.asset.assetSourceContentsChanged(AssetSourceType.GalleryAllVisuals.sourceId) }
-            }
-        }.let(::send)
+            EditorEvent.LaunchContract(launchContract, uri) { success ->
+                if (!success) {
+                    return@LaunchContract
+                }
+
+                editorContext.eventHandler.send(EditorEvent.AddUriToScene(uploadSource, uri))
+
+                viewModelScope.launch {
+                    val galleryUri = withContext(Dispatchers.IO) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            copyCaptureToMediaStore(context, uri, captureVideo)
+                        } else {
+                            copyCaptureToLegacyGallery(context, uri, captureVideo)
+                            null
+                        }
+                    }
+                    galleryUri?.let {
+                        val mimeTypeHint = if (captureVideo) "video/mp4" else "image/jpeg"
+                        runCatching { SystemGalleryPermission.addSelected(it, context, mimeTypeHint) }
+                        runCatching { engine.asset.assetSourceContentsChanged(AssetSourceType.GalleryAllVisuals.sourceId) }
+                    }
+                }
+            }.let(::send)
+        }
     }
 
     private fun copyCaptureToMediaStore(

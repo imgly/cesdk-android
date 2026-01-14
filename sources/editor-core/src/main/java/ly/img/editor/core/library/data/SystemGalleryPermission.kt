@@ -7,8 +7,10 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import android.webkit.MimeTypeMap
 import androidx.core.content.ContextCompat
 import ly.img.editor.core.UnstableEditorApi
+import java.util.Locale
 
 /**
  * Centralized state for handling system gallery permissions.
@@ -36,16 +38,33 @@ object SystemGalleryPermission {
     val permissionVersion: Int
         get() = permissionsVersion
 
-    // App-added persistent grants (merged with system selection for display).
-    private val _selectedUris = mutableListOf<Uri>()
+    private val _selectedUris = mutableListOf<SelectedUri>()
     private var loaded = false
 
     @Volatile
     private var manualMode = false
-    val selectedUris: List<Uri> get() = _selectedUris
+    val selectedUris: List<Uri> get() = _selectedUris.map { it.uri }
 
     val isManualMode: Boolean
         get() = manualMode
+
+    fun selectedForMimeType(mimeType: String?): List<SelectedUri> {
+        val normalizedMimeType = mimeType?.lowercase(Locale.US)
+        val needsVideo = normalizedMimeType?.startsWith("video/") == true
+        val needsImage = normalizedMimeType?.startsWith("image/") == true
+        val needsAnyVisuals = !needsVideo && !needsImage
+
+        return _selectedUris.filter { entry ->
+            val type = entry.mimeType?.lowercase(Locale.US)
+            when {
+                needsAnyVisuals -> true
+                type.isNullOrBlank() -> false
+                needsVideo -> type.startsWith("video/")
+                needsImage -> type.startsWith("image/")
+                else -> true
+            }
+        }
+    }
 
     /**
      * Configure how the system gallery should behave.
@@ -86,6 +105,7 @@ object SystemGalleryPermission {
     fun addSelected(
         uri: Uri,
         context: Context,
+        mimeTypeHint: String? = null,
     ) {
         if (isInternalFileProviderUri(uri, context)) {
             Log.d("GalleryPermission", "Ignoring internal file-provider URI: $uri")
@@ -93,12 +113,10 @@ object SystemGalleryPermission {
         }
         persistUriPermission(uri, context)
         ensureLoaded(context)
+        val resolvedMimeType = resolveMimeType(uri, context, mimeTypeHint)
         if (manualMode) {
             var changed = updateMode(Mode.SELECTED)
-            if (_selectedUris.none { it == uri }) {
-                _selectedUris.add(uri)
-                changed = true
-            }
+            changed = addOrUpdateSelected(uri, resolvedMimeType) || changed
             if (changed) {
                 markPermissionsChanged()
             }
@@ -111,12 +129,28 @@ object SystemGalleryPermission {
         } else {
             updateMode(Mode.SELECTED)
         }
-        if (_selectedUris.none { it == uri }) {
-            _selectedUris.add(uri)
-            changed = true
-        }
+        changed = addOrUpdateSelected(uri, resolvedMimeType) || changed
         if (changed) {
             markPermissionsChanged()
+        }
+    }
+
+    private fun addOrUpdateSelected(
+        uri: Uri,
+        mimeType: String?,
+    ): Boolean {
+        val existingIndex = _selectedUris.indexOfFirst { it.uri == uri }
+        return if (existingIndex == -1) {
+            _selectedUris.add(SelectedUri(uri, mimeType))
+            true
+        } else {
+            val existing = _selectedUris[existingIndex]
+            if (existing.mimeType == null && mimeType != null) {
+                _selectedUris[existingIndex] = SelectedUri(uri, mimeType)
+                true
+            } else {
+                false
+            }
         }
     }
 
@@ -145,14 +179,25 @@ object SystemGalleryPermission {
             android.Manifest.permission.READ_EXTERNAL_STORAGE,
         ) == PackageManager.PERMISSION_GRANTED
 
-        val imagePermissionGranted = ContextCompat.checkSelfPermission(
-            context,
-            android.Manifest.permission.READ_MEDIA_IMAGES,
-        ) == PackageManager.PERMISSION_GRANTED
-        val videoPermissionGranted = ContextCompat.checkSelfPermission(
-            context,
-            android.Manifest.permission.READ_MEDIA_VIDEO,
-        ) == PackageManager.PERMISSION_GRANTED
+        val imagePermissionGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.READ_MEDIA_IMAGES,
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+        val videoPermissionGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.READ_MEDIA_VIDEO,
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            imagePermissionGranted
+        }
 
         val fullAccess = if (legacyGranted) {
             true
@@ -213,7 +258,8 @@ object SystemGalleryPermission {
                 }
             }
             partialAccess -> {
-                val changed = if (_selectedUris.isNotEmpty()) {
+                val hasSelectionForMimeType = selectedForMimeType(mimeType).isNotEmpty()
+                val changed = if (hasSelectionForMimeType) {
                     updateMode(Mode.SELECTED)
                 } else {
                     updateMode(Mode.UNDECIDED)
@@ -221,7 +267,7 @@ object SystemGalleryPermission {
                 if (changed) {
                     markPermissionsChanged()
                 }
-                true
+                hasSelectionForMimeType
             }
             else -> {
                 if (updateMode(Mode.DENIED)) {
@@ -314,6 +360,29 @@ object SystemGalleryPermission {
         }
     }
 
+    private fun resolveMimeType(
+        uri: Uri,
+        context: Context,
+        mimeTypeHint: String?,
+    ): String? {
+        val resolverType = runCatching { context.contentResolver.getType(uri) }.getOrNull()
+            ?.takeIf { it.isNotBlank() }
+        if (resolverType != null) return normalizeMimeType(resolverType)
+
+        val extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
+            ?.lowercase(Locale.US)
+        if (!extension.isNullOrBlank()) {
+            MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)?.let {
+                return normalizeMimeType(it)
+            }
+        }
+        val normalizedHint = normalizeMimeType(mimeTypeHint)
+        if (normalizedHint != null && normalizedHint != "*/*") return normalizedHint
+        return null
+    }
+
+    private fun normalizeMimeType(mimeType: String?): String? = mimeType?.takeIf { it.isNotBlank() }?.lowercase(Locale.US)
+
     private fun isInternalFileProviderUri(
         uri: Uri,
         context: Context,
@@ -337,4 +406,9 @@ object SystemGalleryPermission {
             Log.w("GalleryPermission", "Failed persist for: $uri", e)
         }
     }
+
+    data class SelectedUri(
+        val uri: Uri,
+        val mimeType: String?,
+    )
 }

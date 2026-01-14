@@ -69,7 +69,7 @@ internal fun SystemGalleryAddMenu(
 
     val pickVisualLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            SystemGalleryPermission.addSelected(uri, context)
+            SystemGalleryPermission.addSelected(uri, context, mimeTypeFilter)
             onPermissionChanged()
         }
         showMenu = false

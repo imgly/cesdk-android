@@ -11,6 +11,8 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.provider.MediaStore
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import ly.img.engine.Asset
 import ly.img.engine.AssetContext
 import ly.img.engine.AssetPayload
@@ -33,7 +35,7 @@ class SystemGalleryAssetSource(
 
     override val supportedMimeTypes: List<String> = listOf(mimeType)
 
-    override suspend fun findAssets(query: FindAssetsQuery): FindAssetsResult {
+    override suspend fun findAssets(query: FindAssetsQuery): FindAssetsResult = withContext(Dispatchers.IO) {
         val allowMediaStoreAccess = !SystemGalleryPermission.isManualMode
         val hasPermission = if (allowMediaStoreAccess) {
             SystemGalleryPermission.hasPermission(applicationContext, mimeType)
@@ -42,10 +44,11 @@ class SystemGalleryAssetSource(
         }
 
         // Ignore MediaStore URIs only when we also enumerate the MediaStore; otherwise we keep everything.
+        val selectedEntries = SystemGalleryPermission.selectedForMimeType(mimeType)
         val extraSelected = if (allowMediaStoreAccess) {
-            SystemGalleryPermission.selectedUris.filterNot(::isMediaStoreContentUri)
+            selectedEntries.filterNot { isMediaStoreContentUri(it.uri) }
         } else {
-            SystemGalleryPermission.selectedUris
+            selectedEntries
         }
         val extraCount = extraSelected.size
 
@@ -96,14 +99,15 @@ class SystemGalleryAssetSource(
             // take slice from extraSelected
             val extraEnd = minOf(end, extraCount)
             for (i in start until extraEnd) {
-                val euri = extraSelected[i]
-                val resolvedMimeType = applicationContext.contentResolver.getType(euri)
-                val typeIsVideo = resolvedMimeType?.startsWith("video") == true
-                val assetId = euri.toString()
+                val entry = extraSelected[i]
+                val resolvedMimeType = entry.mimeType
+                    ?: applicationContext.contentResolver.getType(entry.uri)
+                val typeIsVideo = resolvedMimeType?.startsWith("video/") == true
+                val assetId = entry.uri.toString()
                 if (seenIds.add(assetId)) {
-                    val meta = resolveExtraMetadata(euri, typeIsVideo)
+                    val meta = resolveExtraMetadata(entry.uri, typeIsVideo)
                     assets += buildAsset(
-                        uri = euri,
+                        uri = entry.uri,
                         isVideo = typeIsVideo,
                         width = meta.width,
                         height = meta.height,
@@ -226,7 +230,7 @@ class SystemGalleryAssetSource(
             "SystemGalleryAssetSource",
             "findAssets(page=${query.page}) resultCount=${assets.size} mediaFetched=$mediaStoreItemsFetched hasMore=$hasMore totalEstimate=$totalEstimate duration=${totalDuration}ms",
         )
-        return FindAssetsResult(assets, query.page, nextPage, totalEstimate)
+        FindAssetsResult(assets, query.page, nextPage, totalEstimate)
     }
 
     override suspend fun getGroups(): List<String>? = null

@@ -23,9 +23,9 @@ class MediaMetadataExtractor(
             val durationInSeconds = retriever.getDuration()
             val albumArtUri = retriever.embeddedPicture?.let {
                 val file = File.createTempFile("artwork", null)
-                val outputStream = FileOutputStream(file)
-                outputStream.write(it)
-                outputStream.close()
+                FileOutputStream(file).use { outputStream ->
+                    outputStream.write(it)
+                }
                 Uri.fromFile(file)
             }
             AudioMetadata(title, durationInSeconds?.toString(), albumArtUri?.toString())
@@ -45,10 +45,9 @@ class MediaMetadataExtractor(
                 val thumbFile = bitmap?.let {
                     try {
                         val file = File.createTempFile("thumb", null)
-                        val outputStream = FileOutputStream(file)
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-                        outputStream.flush()
-                        outputStream.close()
+                        FileOutputStream(file).use { outputStream ->
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                        }
                         file
                     } catch (e: Exception) {
                         null

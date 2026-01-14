@@ -188,7 +188,7 @@ object EditorDefaults {
         File
             .createTempFile(UUID.randomUUID().toString(), ".$extension")
             .apply {
-                outputStream().channel.write(byteBuffer)
+                outputStream().use { it.channel.write(byteBuffer) }
             }
     }
 
@@ -241,6 +241,7 @@ object EditorDefaults {
         mimeType: MimeType = if (engine.isSceneModeVideo) MimeType.MP4 else MimeType.PDF,
     ) {
         EditorDefaults.run {
+            val context = engine.applicationContext
             if (engine.isSceneModeVideo) {
                 val page = engine.scene.getCurrentPage() ?: engine.scene.getPages()[0]
                 var exportProgress = 0f
@@ -259,9 +260,12 @@ object EditorDefaults {
                             }
                         },
                     )
-                    writeToTempFile(buffer, mimeType)
-                }.onSuccess { file ->
-                    eventHandler.send(ShowVideoExportSuccessEvent(file, mimeType.key))
+                    val file = writeToTempFile(buffer, mimeType)
+                    withContext(Dispatchers.IO) {
+                        FileProvider.getUriForFile(context, "${context.packageName}.ly.img.editor.fileprovider", file)
+                    }
+                }.onSuccess { uri ->
+                    eventHandler.send(ShowVideoExportSuccessEvent(uri, mimeType.key))
                 }.onFailure {
                     if (it is CancellationException) {
                         eventHandler.send(DismissVideoExportEvent)
@@ -281,10 +285,13 @@ object EditorDefaults {
                             block.setVisible(it, visible = true)
                         }
                     }
-                    writeToTempFile(buffer, mimeType)
-                }.onSuccess { file ->
+                    val file = writeToTempFile(buffer, mimeType)
+                    withContext(Dispatchers.IO) {
+                        FileProvider.getUriForFile(context, "${context.packageName}.ly.img.editor.fileprovider", file)
+                    }
+                }.onSuccess { uri ->
                     eventHandler.send(HideLoading)
-                    eventHandler.send(ShareFileEvent(file, mimeType.key))
+                    eventHandler.send(ShareUriEvent(uri, mimeType.key))
                 }.onFailure {
                     eventHandler.send(HideLoading)
                     eventHandler.send(ShowErrorDialogEvent(error = it))
@@ -336,6 +343,15 @@ object EditorDefaults {
             state.copy(videoExportStatus = VideoExportStatus.Idle)
         }
 
+        is ShareUriEvent -> {
+            shareUri(
+                activity = activity,
+                uri = event.uri,
+                mimeType = event.mimeType,
+            )
+            state.copy(videoExportStatus = VideoExportStatus.Idle)
+        }
+
         is ShowVideoExportProgressEvent -> {
             state.copy(videoExportStatus = VideoExportStatus.Loading(event.progress))
         }
@@ -345,7 +361,7 @@ object EditorDefaults {
         }
 
         is ShowVideoExportSuccessEvent -> {
-            state.copy(videoExportStatus = VideoExportStatus.Success(event.file, event.mimeType))
+            state.copy(videoExportStatus = VideoExportStatus.Success(event.uri, event.mimeType))
         }
 
         is DismissVideoExportEvent -> {
@@ -646,7 +662,7 @@ object EditorDefaults {
                                     textRes = R.string.ly_img_editor_dialog_export_success_text,
                                     buttonText = R.string.ly_img_editor_dialog_export_success_button_dismiss,
                                     onClick = {
-                                        eventHandler.send(ShareFileEvent(status.file, status.mimeType))
+                                        eventHandler.send(ShareUriEvent(status.uri, status.mimeType))
                                     },
                                     mainContent = {
                                         Icon(

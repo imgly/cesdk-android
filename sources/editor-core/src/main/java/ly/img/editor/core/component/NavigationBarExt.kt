@@ -370,10 +370,12 @@ fun NavigationBar.ListBuilder.Companion.rememberForVideo(): HorizontalListBuilde
  * // Aligned at the start
  * - NavigationBar.Button.rememberCloseEditor
  *
- * // Aligned at the end
+ * // Aligned at the center
  * - NavigationBar.Button.rememberUndo
  * - NavigationBar.Button.rememberRedo
  * - NavigationBar.Button.rememberTogglePreviewMode
+ *
+ * // Aligned at the end
  * - NavigationBar.Button.rememberExport
  *
  * For more information on how to customize [listBuilder], check [NavigationBar.remember].
@@ -454,10 +456,12 @@ fun NavigationBar.ListBuilder.Companion.rememberForApparel(): HorizontalListBuil
     aligned(alignment = Alignment.Start) {
         add { Button.rememberCloseEditor() }
     }
-    aligned(alignment = Alignment.End) {
+    aligned(alignment = Alignment.CenterHorizontally) {
         add { Button.rememberUndo() }
         add { Button.rememberRedo() }
         add { Button.rememberTogglePreviewMode() }
+    }
+    aligned(alignment = Alignment.End) {
         add { Button.rememberExport() }
     }
 }

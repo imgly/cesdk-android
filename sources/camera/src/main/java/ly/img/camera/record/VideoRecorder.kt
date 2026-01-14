@@ -19,16 +19,17 @@ import kotlin.time.Duration.Companion.nanoseconds
 
 internal class VideoRecorder(
     private val videoCaptureProvider: () -> VideoCapture<Recorder>,
+    private val filesDirProvider: suspend () -> File,
 ) {
     private var recording: Recording? = null
 
     @OptIn(ExperimentalPersistentRecording::class)
     @SuppressLint("MissingPermission")
-    fun startRecording(
+    suspend fun startRecording(
         context: Context,
         onRecordStatusUpdate: (RecordingStatus) -> Unit,
     ) {
-        val videoFile = createFile(context)
+        val videoFile = createFile()
         val fileOutputOptions = FileOutputOptions.Builder(videoFile).build()
 
         recording = videoCaptureProvider().output
@@ -72,9 +73,10 @@ internal class VideoRecorder(
         recording?.resume()
     }
 
-    private fun createFile(context: Context): File {
+    private suspend fun createFile(): File {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(System.currentTimeMillis())
-        return File(context.filesDir, "VIDEO_$timeStamp.mp4")
+        val filesDir = filesDirProvider()
+        return File(filesDir, "VIDEO_$timeStamp.mp4")
     }
 
     sealed class RecordingStatus(
