@@ -1174,7 +1174,7 @@ fun Button.Companion.rememberFillStroke(
                 .onStart { emit(initial) }
         }.collectAsState(initial = initial)
         remember(parentScope, fillStrokeIcon) {
-            InspectorBar.FillStrokeButtonScope(parentScope = this, fillStrokeIcon = fillStrokeIcon)
+            InspectorBar.FillStrokeButtonScope(parentScope = parentScope, fillStrokeIcon = fillStrokeIcon)
         }
     },
     visible: @Composable ButtonScope.() -> Boolean = {
@@ -2067,7 +2067,7 @@ fun Button.Companion.rememberTextBackground(
                 .onStart { emit(initial) }
         }.collectAsState(initial = initial)
         remember(parentScope, editorIcon) {
-            InspectorBar.TextBackgroundButtonScope(parentScope = this, icon = editorIcon)
+            InspectorBar.TextBackgroundButtonScope(parentScope = parentScope, icon = editorIcon)
         }
     },
     visible: @Composable ButtonScope.() -> Boolean = {

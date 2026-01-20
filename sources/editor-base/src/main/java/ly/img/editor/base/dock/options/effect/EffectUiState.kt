@@ -11,7 +11,6 @@ import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.ui.library.AppearanceAssetSourceType
 import ly.img.editor.core.ui.library.AppearanceLibraryCategory
 import ly.img.editor.core.ui.library.getMeta
-import ly.img.editor.core.ui.library.getUri
 import ly.img.editor.core.ui.library.state.WrappedAsset
 import ly.img.engine.BlurType
 import ly.img.engine.Color
@@ -28,7 +27,8 @@ data class EffectUiState(
     fun getAssetKey(asset: WrappedAsset): String? {
         return when (asset.assetSourceType) {
             AppearanceAssetSourceType.LutFilter -> {
-                asset.asset.getUri()
+                // Use asset.id for LUT filters - this matches the filterId stored in the engine
+                asset.asset.id
             }
             AppearanceAssetSourceType.DuoToneFilter -> {
                 val darkColor = asset.asset.getMeta("darkColor") ?: return null
@@ -87,7 +87,13 @@ data class EffectUiState(
                     buildDuotoneUri(darkColor, lightColor)
                 }
                 EffectType.LutFilter -> {
-                    engine.block.getString(effect.designBlock, "${filterType.key}/lutFileURI")
+                    // First try filterId (works after archive load), fall back to lutFileURI
+                    val filterId = engine.block.getString(effect.designBlock, "${filterType.key}/filterId")
+                    if (filterId.isNotEmpty()) {
+                        filterId
+                    } else {
+                        engine.block.getString(effect.designBlock, "${filterType.key}/lutFileURI")
+                    }
                 }
                 else -> filterType.key
             }
