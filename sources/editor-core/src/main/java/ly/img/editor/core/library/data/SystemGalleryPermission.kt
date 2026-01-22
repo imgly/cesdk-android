@@ -17,7 +17,6 @@ import java.util.Locale
  *
  * The editor uses this object to decide whether full gallery access is granted,
  * whether only user-selected items are available, or if access is denied.
- * State changes bump [permissionVersion] so UI flows can react.
  */
 object SystemGalleryPermission {
     /**
@@ -33,32 +32,51 @@ object SystemGalleryPermission {
     var mode: Mode = Mode.UNDECIDED
         private set
 
-    @Volatile
-    private var permissionsVersion: Int = 0
-    val permissionVersion: Int
-        get() = permissionsVersion
-
-    private val _selectedUris = mutableListOf<SelectedUri>()
-    private var loaded = false
+    private val selectedUris = mutableListOf<SelectedUri>()
 
     @Volatile
     private var manualMode = false
-    val selectedUris: List<Uri> get() = _selectedUris.map { it.uri }
 
     val isManualMode: Boolean
         get() = manualMode
 
-    fun selectedForMimeType(mimeType: String?): List<SelectedUri> {
-        val normalizedMimeType = mimeType?.lowercase(Locale.US)
-        val needsVideo = normalizedMimeType?.startsWith("video/") == true
-        val needsImage = normalizedMimeType?.startsWith("image/") == true
-        val needsAnyVisuals = !needsVideo && !needsImage
+    private data class MimeTypeCoverage(
+        val needsVideo: Boolean,
+        val needsImage: Boolean,
+        val needsAnyVisuals: Boolean,
+    )
 
-        return _selectedUris.filter { entry ->
+    private fun resolveMimeTypeCoverage(mimeTypes: List<String>?): MimeTypeCoverage {
+        val normalized = mimeTypes
+            ?.mapNotNull { normalizeMimeType(it) }
+            ?.filter { it.isNotBlank() }
+            .orEmpty()
+
+        if (normalized.isEmpty()) {
+            return MimeTypeCoverage(needsVideo = true, needsImage = true, needsAnyVisuals = false)
+        }
+
+        val hasWildcard = normalized.any { it.startsWith("*") }
+        val needsVideo = hasWildcard || normalized.any { it.startsWith("video/") }
+        val needsImage = hasWildcard || normalized.any { it.startsWith("image/") }
+        val needsAnyVisuals = !needsVideo && !needsImage
+        return MimeTypeCoverage(needsVideo = needsVideo, needsImage = needsImage, needsAnyVisuals = needsAnyVisuals)
+    }
+
+    fun selectedForMimeType(mimeType: String?) = selectedForMimeTypes(mimeType?.let { listOf(it) })
+
+    fun selectedForMimeTypes(mimeTypes: List<String>?): List<SelectedUri> {
+        val coverage = resolveMimeTypeCoverage(mimeTypes)
+        val needsVideo = coverage.needsVideo
+        val needsImage = coverage.needsImage
+        val needsAnyVisuals = coverage.needsAnyVisuals
+
+        return selectedUris.filter { entry ->
             val type = entry.mimeType?.lowercase(Locale.US)
             when {
                 needsAnyVisuals -> true
                 type.isNullOrBlank() -> false
+                needsVideo && needsImage -> type.startsWith("video/") || type.startsWith("image/")
                 needsVideo -> type.startsWith("video/")
                 needsImage -> type.startsWith("image/")
                 else -> true
@@ -76,13 +94,10 @@ object SystemGalleryPermission {
         val newManualMode = !configuration.enableAssetSource
         if (manualMode != newManualMode) {
             manualMode = newManualMode
-            val changed = if (manualMode) {
+            if (manualMode) {
                 updateMode(Mode.SELECTED)
             } else {
                 updateMode(Mode.UNDECIDED)
-            }
-            if (changed) {
-                markPermissionsChanged()
             }
         }
     }
@@ -91,12 +106,8 @@ object SystemGalleryPermission {
      * Mark full access granted and clear any selected-only state.
      */
     fun setAllGranted() {
-        val cleared = _selectedUris.isNotEmpty()
-        _selectedUris.clear()
-        val modeChanged = updateMode(Mode.ALL)
-        if (cleared || modeChanged) {
-            markPermissionsChanged()
-        }
+        selectedUris.clear()
+        updateMode(Mode.ALL)
     }
 
     /**
@@ -105,48 +116,40 @@ object SystemGalleryPermission {
     fun addSelected(
         uri: Uri,
         context: Context,
-        mimeTypeHint: String? = null,
     ) {
         if (isInternalFileProviderUri(uri, context)) {
             Log.d("GalleryPermission", "Ignoring internal file-provider URI: $uri")
             return
         }
         persistUriPermission(uri, context)
-        ensureLoaded(context)
-        val resolvedMimeType = resolveMimeType(uri, context, mimeTypeHint)
+        val resolvedMimeType = resolveMimeType(uri, context)
         if (manualMode) {
-            var changed = updateMode(Mode.SELECTED)
-            changed = addOrUpdateSelected(uri, resolvedMimeType) || changed
-            if (changed) {
-                markPermissionsChanged()
-            }
+            updateMode(Mode.SELECTED)
+            addOrUpdateSelected(uri, resolvedMimeType)
             return
         }
 
         val hasFullAccess = hasFullReadAccess(context)
-        var changed = if (hasFullAccess) {
+        if (hasFullAccess) {
             updateMode(Mode.ALL)
         } else {
             updateMode(Mode.SELECTED)
         }
-        changed = addOrUpdateSelected(uri, resolvedMimeType) || changed
-        if (changed) {
-            markPermissionsChanged()
-        }
+        addOrUpdateSelected(uri, resolvedMimeType)
     }
 
     private fun addOrUpdateSelected(
         uri: Uri,
         mimeType: String?,
     ): Boolean {
-        val existingIndex = _selectedUris.indexOfFirst { it.uri == uri }
+        val existingIndex = selectedUris.indexOfFirst { it.uri == uri }
         return if (existingIndex == -1) {
-            _selectedUris.add(SelectedUri(uri, mimeType))
+            selectedUris.add(SelectedUri(uri, mimeType))
             true
         } else {
-            val existing = _selectedUris[existingIndex]
+            val existing = selectedUris[existingIndex]
             if (existing.mimeType == null && mimeType != null) {
-                _selectedUris[existingIndex] = SelectedUri(uri, mimeType)
+                selectedUris[existingIndex] = SelectedUri(uri, mimeType)
                 true
             } else {
                 false
@@ -160,19 +163,20 @@ object SystemGalleryPermission {
     fun hasPermission(
         context: Context,
         mimeType: String?,
+    ): Boolean = hasPermissionForMimeTypes(context, mimeType?.let { listOf(it) })
+
+    fun hasPermissionForMimeTypes(
+        context: Context,
+        mimeTypes: List<String>?,
     ): Boolean {
         if (manualMode) {
-            val changed = updateMode(Mode.SELECTED)
-            if (changed) {
-                markPermissionsChanged()
-            }
+            updateMode(Mode.SELECTED)
             return true
         }
-        ensureLoaded(context)
-
-        val needsVideo = mimeType?.startsWith("video/") == true
-        val needsImage = mimeType?.startsWith("image/") == true
-        val needsAnyVisuals = !needsVideo && !needsImage
+        val coverage = resolveMimeTypeCoverage(mimeTypes)
+        val needsVideo = coverage.needsVideo
+        val needsImage = coverage.needsImage
+        val needsAnyVisuals = coverage.needsAnyVisuals
 
         val legacyGranted = ContextCompat.checkSelfPermission(
             context,
@@ -203,9 +207,9 @@ object SystemGalleryPermission {
             true
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when {
+                needsVideo && needsImage -> videoPermissionGranted && imagePermissionGranted
                 needsVideo -> videoPermissionGranted
                 needsImage -> imagePermissionGranted
-                needsAnyVisuals -> imagePermissionGranted || videoPermissionGranted
                 else -> imagePermissionGranted || videoPermissionGranted
             }
         } else {
@@ -213,29 +217,11 @@ object SystemGalleryPermission {
         }
 
         if (legacyGranted) {
-            Log.d("GalleryPermission", "Legacy full access granted for mime=$mimeType")
+            Log.d("GalleryPermission", "Legacy full access granted for mimeTypes=$mimeTypes")
             if (mode != Mode.ALL) setAllGranted()
         } else if (fullAccess) {
-            Log.d("GalleryPermission", "Full access granted for mime=$mimeType")
+            Log.d("GalleryPermission", "Full access granted for mimeTypes=$mimeTypes")
             if (mode != Mode.ALL) setAllGranted()
-            when {
-                needsVideo && !videoPermissionGranted -> {
-                    if (updateMode(Mode.SELECTED)) {
-                        markPermissionsChanged()
-                    }
-                }
-                needsImage && !imagePermissionGranted -> {
-                    if (updateMode(Mode.SELECTED)) {
-                        markPermissionsChanged()
-                    }
-                }
-                needsAnyVisuals &&
-                    !(imagePermissionGranted && videoPermissionGranted) -> {
-                    if (updateMode(Mode.SELECTED)) {
-                        markPermissionsChanged()
-                    }
-                }
-            }
         }
 
         val partialAccess =
@@ -252,73 +238,73 @@ object SystemGalleryPermission {
                     needsVideo && !videoPermissionGranted -> false
                     needsImage && !imagePermissionGranted -> false
                     needsAnyVisuals &&
-                        !(imagePermissionGranted && videoPermissionGranted) &&
-                        !legacyGranted -> false
+                        !(imagePermissionGranted && videoPermissionGranted) -> false
                     else -> true
                 }
             }
             partialAccess -> {
-                val hasSelectionForMimeType = selectedForMimeType(mimeType).isNotEmpty()
-                val changed = if (hasSelectionForMimeType) {
+                val hasSelectionForMimeType = selectedForMimeTypes(mimeTypes).isNotEmpty()
+                if (hasSelectionForMimeType) {
                     updateMode(Mode.SELECTED)
                 } else {
                     updateMode(Mode.UNDECIDED)
                 }
-                if (changed) {
-                    markPermissionsChanged()
-                }
                 hasSelectionForMimeType
             }
             else -> {
-                if (updateMode(Mode.DENIED)) {
-                    markPermissionsChanged()
-                }
+                updateMode(Mode.DENIED)
                 false
             }
         }
         Log.d(
             "GalleryPermission",
             "Permission result=$result full=$fullAccess " +
-                "partial=$partialAccess selected=${_selectedUris.size}",
+                "partial=$partialAccess selected=${selectedUris.size}",
         )
         return result
     }
 
     /**
-     * Returns the permission set required for the provided mimeType.
+     * Returns the permission set required for the provided mimeTypes.
      */
-    fun requiredPermission(mimeType: String?): Array<String?> = when {
+    fun requiredPermission(mimeTypes: List<String>): Array<String?> = when {
         manualMode -> emptyArray()
-        Build.VERSION.SDK_INT >= 34 -> when {
-            mimeType?.startsWith("video/") == true -> arrayOf(
-                android.Manifest.permission.READ_MEDIA_VIDEO,
-                android.Manifest.permission.READ_MEDIA_IMAGES,
-                android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
-            )
-            mimeType?.startsWith("image/") == true -> arrayOf(
-                android.Manifest.permission.READ_MEDIA_IMAGES,
-                android.Manifest.permission.READ_MEDIA_VIDEO,
-                android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
-            )
-            else -> arrayOf(
-                android.Manifest.permission.READ_MEDIA_IMAGES,
-                android.Manifest.permission.READ_MEDIA_VIDEO,
-                android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
-            )
+        Build.VERSION.SDK_INT >= 34 -> {
+            val coverage = resolveMimeTypeCoverage(mimeTypes)
+            when {
+                coverage.needsVideo && !coverage.needsImage -> arrayOf(
+                    android.Manifest.permission.READ_MEDIA_VIDEO,
+                    android.Manifest.permission.READ_MEDIA_IMAGES,
+                    android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
+                )
+                coverage.needsImage && !coverage.needsVideo -> arrayOf(
+                    android.Manifest.permission.READ_MEDIA_IMAGES,
+                    android.Manifest.permission.READ_MEDIA_VIDEO,
+                    android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
+                )
+                else -> arrayOf(
+                    android.Manifest.permission.READ_MEDIA_IMAGES,
+                    android.Manifest.permission.READ_MEDIA_VIDEO,
+                    android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
+                )
+            }
         }
-        Build.VERSION.SDK_INT >= 33 -> when {
-            mimeType?.startsWith("video/") == true -> arrayOf(
-                android.Manifest.permission.READ_MEDIA_VIDEO,
-                android.Manifest.permission.READ_MEDIA_IMAGES,
-            )
-            mimeType?.startsWith("image/") == true -> arrayOf(
-                android.Manifest.permission.READ_MEDIA_IMAGES,
-                android.Manifest.permission.READ_MEDIA_VIDEO,
-            )
-            else -> arrayOf(
-                android.Manifest.permission.READ_MEDIA_IMAGES,
-                android.Manifest.permission.READ_MEDIA_VIDEO,
-            )
+        Build.VERSION.SDK_INT >= 33 -> {
+            val coverage = resolveMimeTypeCoverage(mimeTypes)
+            when {
+                coverage.needsVideo && !coverage.needsImage -> arrayOf(
+                    android.Manifest.permission.READ_MEDIA_VIDEO,
+                    android.Manifest.permission.READ_MEDIA_IMAGES,
+                )
+                coverage.needsImage && !coverage.needsVideo -> arrayOf(
+                    android.Manifest.permission.READ_MEDIA_IMAGES,
+                    android.Manifest.permission.READ_MEDIA_VIDEO,
+                )
+                else -> arrayOf(
+                    android.Manifest.permission.READ_MEDIA_IMAGES,
+                    android.Manifest.permission.READ_MEDIA_VIDEO,
+                )
+            }
         }
         else -> arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE)
     }
@@ -343,31 +329,21 @@ object SystemGalleryPermission {
         return imagesGranted || videoGranted
     }
 
-    private fun updateMode(newMode: Mode): Boolean = if (mode != newMode) {
-        mode = newMode
-        true
-    } else {
-        false
-    }
-
-    private fun markPermissionsChanged() {
-        permissionsVersion += 1
-    }
-
-    private fun ensureLoaded(context: Context) {
-        if (!loaded) {
-            loaded = true
+    private fun updateMode(newMode: Mode) {
+        if (mode != newMode) {
+            mode = newMode
         }
     }
 
     private fun resolveMimeType(
         uri: Uri,
         context: Context,
-        mimeTypeHint: String?,
     ): String? {
         val resolverType = runCatching { context.contentResolver.getType(uri) }.getOrNull()
             ?.takeIf { it.isNotBlank() }
-        if (resolverType != null) return normalizeMimeType(resolverType)
+            ?.let(::normalizeMimeType)
+            ?.takeUnless { it == "*/*" }
+        if (resolverType != null) return resolverType
 
         val extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
             ?.lowercase(Locale.US)
@@ -376,8 +352,6 @@ object SystemGalleryPermission {
                 return normalizeMimeType(it)
             }
         }
-        val normalizedHint = normalizeMimeType(mimeTypeHint)
-        if (normalizedHint != null && normalizedHint != "*/*") return normalizedHint
         return null
     }
 
@@ -406,6 +380,30 @@ object SystemGalleryPermission {
             Log.w("GalleryPermission", "Failed persist for: $uri", e)
         }
     }
+
+    private fun hasMimeFiltered(
+        mimeTypes: List<String>,
+        mime: String,
+    ): Boolean {
+        val normalizedMime = mime.lowercase(Locale.US)
+        val wildCardType = normalizedMime.substringBefore("/") + "/"
+        val isWildCardSearch = normalizedMime.endsWith("/*")
+        mimeTypes.forEach {
+            val normalizedFilter = it.lowercase(Locale.US)
+            if (normalizedFilter.startsWith("*")) {
+                return true
+            } else if ((normalizedFilter.endsWith("/*") || isWildCardSearch) && normalizedFilter.startsWith(wildCardType)) {
+                return true
+            } else if (normalizedFilter == normalizedMime) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun hasVideoType(mimeTypes: List<String>) = hasMimeFiltered(mimeTypes, "video/*")
+
+    fun hasImageType(mimeTypes: List<String>) = hasMimeFiltered(mimeTypes, "image/*")
 
     data class SelectedUri(
         val uri: Uri,

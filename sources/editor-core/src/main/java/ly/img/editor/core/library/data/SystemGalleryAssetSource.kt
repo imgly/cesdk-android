@@ -19,32 +19,34 @@ import ly.img.engine.AssetPayload
 import ly.img.engine.AssetSource
 import ly.img.engine.FindAssetsQuery
 import ly.img.engine.FindAssetsResult
+import java.util.Locale
 
 /**
  * Asset source that exposes media from the user's device gallery.
  *
  * @param context Android context used to access the [MediaStore].
- * @param mimeType Optional mime type filter, e.g. "image/\*" or "video/\*".
+ * @param type Configuration for filtering gallery mime types, e.g. "image/\*" or "video/\*".
  */
 class SystemGalleryAssetSource(
     context: Context,
     type: SystemGalleryAssetSourceType,
 ) : AssetSource(type.sourceId) {
-    private val mimeType = type.mimeTypeFilter
+    private val mimeTypeFilters =
+        type.mimeTypeFilter.ifEmpty { listOf("image/*", "video/*") }
     private val applicationContext: Context = context.applicationContext
 
-    override val supportedMimeTypes: List<String> = listOf(mimeType)
+    override val supportedMimeTypes: List<String> = mimeTypeFilters
 
     override suspend fun findAssets(query: FindAssetsQuery): FindAssetsResult = withContext(Dispatchers.IO) {
         val allowMediaStoreAccess = !SystemGalleryPermission.isManualMode
         val hasPermission = if (allowMediaStoreAccess) {
-            SystemGalleryPermission.hasPermission(applicationContext, mimeType)
+            SystemGalleryPermission.hasPermissionForMimeTypes(applicationContext, mimeTypeFilters)
         } else {
             false
         }
 
         // Ignore MediaStore URIs only when we also enumerate the MediaStore; otherwise we keep everything.
-        val selectedEntries = SystemGalleryPermission.selectedForMimeType(mimeType)
+        val selectedEntries = SystemGalleryPermission.selectedForMimeTypes(mimeTypeFilters)
         val extraSelected = if (allowMediaStoreAccess) {
             selectedEntries.filterNot { isMediaStoreContentUri(it.uri) }
         } else {
@@ -61,14 +63,20 @@ class SystemGalleryAssetSource(
             MediaStore.MediaColumns.MIME_TYPE,
         )
 
+        val normalizedFilters = mimeTypeFilters.map { it.lowercase(Locale.US) }
+        val wantsVideo = normalizedFilters.isEmpty() ||
+            normalizedFilters.any { it.startsWith("video/") || it.startsWith("*") }
+        val wantsImage = normalizedFilters.isEmpty() ||
+            normalizedFilters.any { it.startsWith("image/") || it.startsWith("*") }
+
         val selection: String
         val selectionArgs: Array<String>?
-        when (mimeType) {
-            "image/*" -> {
+        when {
+            wantsImage && !wantsVideo -> {
                 selection = "${MediaStore.Files.FileColumns.MEDIA_TYPE}=?"
                 selectionArgs = arrayOf(MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE.toString())
             }
-            "video/*" -> {
+            wantsVideo && !wantsImage -> {
                 selection = "${MediaStore.Files.FileColumns.MEDIA_TYPE}=?"
                 selectionArgs = arrayOf(MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO.toString())
             }

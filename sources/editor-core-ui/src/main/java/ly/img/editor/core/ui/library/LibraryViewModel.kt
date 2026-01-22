@@ -255,7 +255,7 @@ class LibraryViewModel(
             Log.d(TAG, "onAddUri source=${assetSourceType.sourceId} uri=$uri")
             val asset = uploadToAssetSource(assetSourceType, uri)
             onAddAsset(assetSourceType, asset, addToBackgroundTrack)
-            runCatching { SystemGalleryPermission.addSelected(uri, editor.activity, assetSourceType.mimeTypeFilter) }
+            runCatching { SystemGalleryPermission.addSelected(uri, editor.activity) }
             // Also trigger refresh for gallery source if relevant
             runCatching {
                 if (assetSourceType == AssetSourceType.ImageUploads || assetSourceType == AssetSourceType.VideoUploads) {
@@ -749,9 +749,7 @@ class LibraryViewModel(
                 val shouldShowUpload = uploadSource?.let { source ->
                     when (source) {
                         AssetSourceType.ImageUploads, AssetSourceType.VideoUploads -> {
-                            context?.let { ctx ->
-                                SystemGalleryPermission.hasPermission(ctx, source.mimeTypeFilter)
-                            } ?: true
+                            SystemGalleryPermission.hasPermission(context, source.mimeTypeFilter)
                         }
                         else -> true
                     }

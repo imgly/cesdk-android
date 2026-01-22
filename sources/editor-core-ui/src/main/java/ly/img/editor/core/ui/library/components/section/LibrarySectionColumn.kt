@@ -4,10 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -46,7 +43,6 @@ internal fun LibrarySectionColumn(
         }
     }
 
-    var lastPermissionVersion by remember { mutableStateOf(SystemGalleryPermission.permissionVersion) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         val filters = uiState.sectionItems.flatMap { item ->
             when (item) {
@@ -60,9 +56,8 @@ internal fun LibrarySectionColumn(
         if (filters.isEmpty()) {
             SystemGalleryPermission.hasPermission(context, null)
         } else {
-            filters.forEach { SystemGalleryPermission.hasPermission(context, it) }
+            filters.forEach { SystemGalleryPermission.hasPermissionForMimeTypes(context, it) }
         }
-        lastPermissionVersion = SystemGalleryPermission.permissionVersion
         onLibraryEvent(LibraryEvent.OnFetch(uiState.libraryCategory))
     }
 
@@ -97,7 +92,7 @@ internal fun LibrarySectionColumn(
                     }
                     RequireUserPermission(
                         permissions = permissions,
-                        mimeTypeFilter = (galleryAssetSource as? SystemGalleryAssetSourceType)?.mimeTypeFilter,
+                        mimeTypeFilters = (galleryAssetSource as? SystemGalleryAssetSourceType)?.mimeTypeFilter,
                         permissionGranted = {
                             onLibraryEvent(LibraryEvent.OnFetch(uiState.libraryCategory))
                         },

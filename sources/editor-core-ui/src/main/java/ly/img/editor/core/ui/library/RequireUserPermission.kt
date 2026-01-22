@@ -19,7 +19,7 @@ import ly.img.editor.core.ui.permissions.PermissionManager.Companion.hasAnyPermi
 @Composable
 internal fun RequireUserPermission(
     permissions: Array<String?>?,
-    mimeTypeFilter: String?,
+    mimeTypeFilters: List<String>?,
     permissionGranted: () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -29,9 +29,9 @@ internal fun RequireUserPermission(
     }
     val nonNullPermission = permissions?.filterNotNull()?.toTypedArray()
     val context = LocalContext.current
-    val hasPermissionInitial = remember(mimeTypeFilter, nonNullPermission) {
+    val hasPermissionInitial = remember(mimeTypeFilters, nonNullPermission) {
         when {
-            mimeTypeFilter != null -> SystemGalleryPermission.hasPermission(context, mimeTypeFilter)
+            mimeTypeFilters != null -> SystemGalleryPermission.hasPermissionForMimeTypes(context, mimeTypeFilters)
             nonNullPermission != null -> nonNullPermission.isEmpty() || context.hasAnyPermission(nonNullPermission)
             else -> true
         }
@@ -40,9 +40,9 @@ internal fun RequireUserPermission(
     if (hasPermission) {
         content()
     } else {
-        if (mimeTypeFilter != null) {
+        if (mimeTypeFilters != null) {
             val permissionRequest = rememberGalleryPermissionRequest(
-                mimeTypeFilter = mimeTypeFilter,
+                mimeTypeFilters = mimeTypeFilters,
                 onPermissionChanged = {
                     hasPermission = true
                     permissionGranted()
@@ -53,7 +53,7 @@ internal fun RequireUserPermission(
                 modifier = Modifier
                     .wrapContentSize()
                     .clickable {
-                        if (SystemGalleryPermission.hasPermission(context, mimeTypeFilter)) {
+                        if (SystemGalleryPermission.hasPermissionForMimeTypes(context, mimeTypeFilters)) {
                             hasPermission = true
                             permissionGranted()
                         } else {

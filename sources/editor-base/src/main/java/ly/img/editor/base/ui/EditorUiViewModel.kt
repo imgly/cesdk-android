@@ -1083,8 +1083,7 @@ abstract class EditorUiViewModel(
                         }
                     }
                     galleryUri?.let {
-                        val mimeTypeHint = if (captureVideo) "video/mp4" else "image/jpeg"
-                        runCatching { SystemGalleryPermission.addSelected(it, context, mimeTypeHint) }
+                        runCatching { SystemGalleryPermission.addSelected(it, context) }
                         runCatching { engine.asset.assetSourceContentsChanged(AssetSourceType.GalleryAllVisuals.sourceId) }
                     }
                 }

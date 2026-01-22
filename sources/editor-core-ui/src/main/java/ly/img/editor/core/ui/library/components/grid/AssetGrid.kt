@@ -24,7 +24,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -74,14 +73,11 @@ internal fun AssetGrid(
         }
     }
 
-    var lastPermissionVersion by remember { mutableStateOf(SystemGalleryPermission.permissionVersion) }
     val gridSource = uiState.assetsData.assetSourceType
     if (gridSource is SystemGalleryAssetSourceType) {
         val context = LocalContext.current
         LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-            val currentVersion = SystemGalleryPermission.permissionVersion
-            SystemGalleryPermission.hasPermission(context, gridSource.mimeTypeFilter)
-            lastPermissionVersion = SystemGalleryPermission.permissionVersion
+            SystemGalleryPermission.hasPermissionForMimeTypes(context, gridSource.mimeTypeFilter)
             onLibraryEvent(LibraryEvent.OnFetch(libraryCategory))
         }
     }
@@ -126,14 +122,15 @@ internal fun AssetGrid(
             val assetSource = uiState.assetsData.assetSourceType
             val isSystemGallery = assetSource is SystemGalleryAssetSourceType
             val isManualGallery = isSystemGallery && SystemGalleryPermission.isManualMode
-            val permissions: Array<String?>? = when {
+            val permissions: Array<String?> = when {
                 assetSource is SystemGalleryAssetSourceType && isManualGallery -> emptyArray<String?>()
-                assetSource is SystemGalleryAssetSourceType -> SystemGalleryPermission.requiredPermission(assetSource.mimeTypeFilter)
-                else -> null
+                assetSource is SystemGalleryAssetSourceType ->
+                    SystemGalleryPermission.requiredPermission(assetSource.mimeTypeFilter)
+                else -> emptyArray<String?>()
             }
             RequireUserPermission(
                 permissions = permissions,
-                mimeTypeFilter = (assetSource as? SystemGalleryAssetSourceType)?.mimeTypeFilter,
+                mimeTypeFilters = (assetSource as? SystemGalleryAssetSourceType)?.mimeTypeFilter,
                 permissionGranted = {
                     onLibraryEvent(LibraryEvent.OnFetch(libraryCategory))
                 },
@@ -158,7 +155,7 @@ internal fun AssetGrid(
                         ) {
                             item {
                                 SystemGalleryAddMenu(
-                                    mimeTypeFilter = assetSource.mimeTypeFilter,
+                                    mimeTypeFilters = assetSource.mimeTypeFilter,
                                     launchCamera = launchCamera,
                                     onPermissionChanged = { onLibraryEvent(LibraryEvent.OnFetch(libraryCategory)) },
                                 ) { openTrigger ->
@@ -260,10 +257,10 @@ internal fun AssetGrid(
                             )
                         }
                     } else if (assetSource is SystemGalleryAssetSourceType) {
-                        if (SystemGalleryPermission.hasPermission(context, assetSource.mimeTypeFilter)) {
+                        if (SystemGalleryPermission.hasPermissionForMimeTypes(context, assetSource.mimeTypeFilter)) {
                             item {
                                 SystemGalleryAddMenu(
-                                    mimeTypeFilter = assetSource.mimeTypeFilter,
+                                    mimeTypeFilters = assetSource.mimeTypeFilter,
                                     launchCamera = launchCamera,
                                     onPermissionChanged = { onLibraryEvent(LibraryEvent.OnFetch(libraryCategory)) },
                                 ) { openTrigger ->

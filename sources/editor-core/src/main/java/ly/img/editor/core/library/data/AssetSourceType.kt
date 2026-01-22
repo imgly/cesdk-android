@@ -92,14 +92,14 @@ open class AssetSourceType(
          * Asset source type for accessing the device gallery.
          */
         val GalleryVideo by lazy {
-            SystemGalleryAssetSourceType(sourceId = "ly.img.gallery.video", mimeTypeFilter = "video/*")
+            SystemGalleryAssetSourceType(sourceId = "ly.img.gallery.video", mimeTypeFilter = listOf("video/*"))
         }
 
         /**
          * Asset source type for accessing the device gallery.
          */
         val GalleryImage by lazy {
-            SystemGalleryAssetSourceType(sourceId = "ly.img.gallery.image", mimeTypeFilter = "image/*")
+            SystemGalleryAssetSourceType(sourceId = "ly.img.gallery.image", mimeTypeFilter = listOf("image/*"))
         }
 
         /**
@@ -122,13 +122,18 @@ class UploadAssetSourceType(
 ) : AssetSourceType(sourceId)
 
 /**
- * Same as [AssetSourceType] but for assets from your devices gallery and that have mime type of [mimeTypeFilter].
+ * Same as [AssetSourceType] but for assets from your devices gallery and that have mime types of [mimeTypeFilter].
  *
- * @param mimeTypeFilter the mime type filter that is used to filter out the device assets when system picker is displayed.
+ * @param mimeTypeFilter the mime types that are used to filter out the device assets when system picker is displayed.
  */
 class SystemGalleryAssetSourceType(
     sourceId: String,
-    val mimeTypeFilter: String = "*/*",
+    val mimeTypeFilter: List<String> = listOf("image/*", "video/*"),
 ) : AssetSourceType(sourceId) {
-    fun hasPermission(context: Context): Boolean = SystemGalleryPermission.hasPermission(context, mimeTypeFilter)
+    constructor(
+        sourceId: String,
+        mimeTypeFilter: String,
+    ) : this(sourceId, listOf(mimeTypeFilter))
+
+    fun hasPermission(context: Context): Boolean = SystemGalleryPermission.hasPermissionForMimeTypes(context, mimeTypeFilter)
 }

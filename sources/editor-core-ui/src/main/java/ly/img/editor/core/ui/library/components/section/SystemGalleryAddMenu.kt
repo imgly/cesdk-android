@@ -26,20 +26,20 @@ import ly.img.editor.core.iconpack.IconPack as CoreIconPack
 
 @Composable
 internal fun SystemGalleryAddMenu(
-    mimeTypeFilter: String?,
+    mimeTypeFilters: List<String>,
     launchCamera: (Boolean) -> Unit,
     onPermissionChanged: () -> Unit = {},
     trigger: @Composable ((() -> Unit) -> Unit),
 ) {
-    val isVideoMimeType = mimeTypeFilter?.startsWith("video") == true || mimeTypeFilter?.startsWith("*") != false
-    val isImageMimeType = mimeTypeFilter?.startsWith("image") == true || mimeTypeFilter?.startsWith("*") != false
+    val isVideoMimeType = SystemGalleryPermission.hasVideoType(mimeTypeFilters)
+    val isImageMimeType = SystemGalleryPermission.hasImageType(mimeTypeFilters)
 
     var showMenu by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     val manualMode = SystemGalleryPermission.isManualMode
 
-    val currentPermission = { SystemGalleryPermission.hasPermission(context, mimeTypeFilter) }
+    val currentPermission = { SystemGalleryPermission.hasPermissionForMimeTypes(context, mimeTypeFilters) }
     var lastPermissionState by remember { mutableStateOf(currentPermission()) }
     var resumeCheck by remember { mutableStateOf(false) }
 
@@ -69,13 +69,13 @@ internal fun SystemGalleryAddMenu(
 
     val pickVisualLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            SystemGalleryPermission.addSelected(uri, context, mimeTypeFilter)
+            SystemGalleryPermission.addSelected(uri, context)
             onPermissionChanged()
         }
         showMenu = false
     }
 
-    val manualPickRequest = remember(mimeTypeFilter, isVideoMimeType, isImageMimeType) {
+    val manualPickRequest = remember(mimeTypeFilters, isVideoMimeType, isImageMimeType) {
         when {
             isVideoMimeType && !isImageMimeType -> PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)
             isImageMimeType && !isVideoMimeType -> PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -116,7 +116,7 @@ internal fun SystemGalleryAddMenu(
                     },
                     icon = if (isVideoMimeType) IconPack.Videolibraryoutline else IconPack.Photolibraryoutline,
                 ) {
-                    val perms = SystemGalleryPermission.requiredPermission(mimeTypeFilter)
+                    val perms = SystemGalleryPermission.requiredPermission(mimeTypeFilters)
                         .filterNotNull()
                         .toTypedArray()
                     permissionLauncher.launch(perms)

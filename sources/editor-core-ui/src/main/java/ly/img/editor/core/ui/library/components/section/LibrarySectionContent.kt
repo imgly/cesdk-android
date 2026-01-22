@@ -39,7 +39,7 @@ internal fun LibrarySectionContent(
     val gallerySource = sectionItem.sourceTypes.find { it is SystemGalleryAssetSourceType } as? SystemGalleryAssetSourceType
     val permissionRequest = gallerySource?.let {
         rememberGalleryPermissionRequest(
-            mimeTypeFilter = it.mimeTypeFilter,
+            mimeTypeFilters = it.mimeTypeFilter,
             onPermissionChanged = onPermissionChanged,
         )
     }
@@ -60,7 +60,7 @@ internal fun LibrarySectionContent(
     val manualLeadingContent: (@Composable () -> Unit)? = if (useManualAddTile) {
         {
             ManualGalleryAddTile(
-                mimeTypeFilter = gallerySource?.mimeTypeFilter ?: "*/*",
+                mimeTypeFilters = gallerySource?.mimeTypeFilter ?: listOf("image/*", "video/*"),
                 onPermissionChanged = onPermissionChanged,
                 launchCamera = launchCamera,
                 assetType = sectionItem.assetType,
@@ -96,13 +96,13 @@ internal fun LibrarySectionContent(
 
 @Composable
 private fun ManualGalleryAddTile(
-    mimeTypeFilter: String,
+    mimeTypeFilters: List<String>,
     onPermissionChanged: () -> Unit,
     launchCamera: (Boolean) -> Unit,
     assetType: AssetType,
 ) {
     SystemGalleryAddMenu(
-        mimeTypeFilter = mimeTypeFilter,
+        mimeTypeFilters = mimeTypeFilters,
         launchCamera = launchCamera,
         onPermissionChanged = onPermissionChanged,
     ) { openTrigger ->

@@ -54,27 +54,19 @@ data class GalleryPermissionStatus(
 
 @Composable
 internal fun rememberGalleryPermissionRequest(
-    mimeTypeFilter: String?,
+    mimeTypeFilters: List<String>,
     onPermissionChanged: () -> Unit,
 ): GalleryPermissionRequestState {
     val context = LocalContext.current
     if (SystemGalleryPermission.isManualMode) {
         return GalleryPermissionRequestState(
-            statusState = mutableStateOf(
-                GalleryPermissionStatus(
-                    hasPermission = true,
-                    hasSelections = true,
-                ),
-            ),
-            requestPermission = {},
-            openSettings = {},
-            Dialogs = {},
-        )
-    }
-    if (mimeTypeFilter == null) {
-        return GalleryPermissionRequestState(
             statusState = remember {
-                mutableStateOf(GalleryPermissionStatus(hasPermission = true, hasSelections = true))
+                mutableStateOf(
+                    GalleryPermissionStatus(
+                        hasPermission = true,
+                        hasSelections = true,
+                    ),
+                )
             },
             requestPermission = {},
             openSettings = {},
@@ -88,9 +80,9 @@ internal fun rememberGalleryPermissionRequest(
     var shouldHandleOnResume by remember { mutableStateOf(false) }
 
     fun computeStatus(): GalleryPermissionStatus {
-        val hasPermission = SystemGalleryPermission.hasPermission(context, mimeTypeFilter)
+        val hasPermission = SystemGalleryPermission.hasPermissionForMimeTypes(context, mimeTypeFilters)
         val hasSelections = SystemGalleryPermission.mode == SystemGalleryPermission.Mode.ALL ||
-            SystemGalleryPermission.selectedForMimeType(mimeTypeFilter).isNotEmpty()
+            SystemGalleryPermission.selectedForMimeTypes(mimeTypeFilters).isNotEmpty()
         return GalleryPermissionStatus(hasPermission, hasSelections)
     }
 
@@ -117,10 +109,9 @@ internal fun rememberGalleryPermissionRequest(
     }
 
     val requestPermission: () -> Unit = {
-        val permissions = SystemGalleryPermission.requiredPermission(mimeTypeFilter)
-            ?.filterNotNull()
-            ?.toTypedArray()
-            ?: emptyArray()
+        val permissions = SystemGalleryPermission.requiredPermission(mimeTypeFilters)
+            .filterNotNull()
+            .toTypedArray()
         if (permissions.isEmpty()) {
             showSettingsDialog = true
         } else {

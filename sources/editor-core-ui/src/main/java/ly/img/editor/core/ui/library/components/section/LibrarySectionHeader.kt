@@ -40,6 +40,7 @@ import ly.img.editor.core.ui.iconpack.Videolibraryoutline
 import ly.img.editor.core.ui.library.components.ClipMenuItem
 import ly.img.editor.core.ui.permissions.PermissionManager
 import ly.img.editor.core.ui.utils.lifecycle.LifecycleEventEffect
+import java.util.Locale
 import ly.img.editor.core.iconpack.IconPack as CoreIconPack
 
 @Composable
@@ -55,15 +56,13 @@ internal fun LibrarySectionHeader(
 
     val galleryType = item.systemGalleryAssetSourceType
     val galleryPermissionGranted = galleryType?.let {
-        SystemGalleryPermission.hasPermission(context, it.mimeTypeFilter)
+        SystemGalleryPermission.hasPermissionForMimeTypes(context, it.mimeTypeFilter)
     } ?: true
-    val galleryPermissionRequest = if (!galleryPermissionGranted && galleryType != null) {
+    val galleryPermissionRequest = galleryType?.let {
         rememberGalleryPermissionRequest(
-            mimeTypeFilter = galleryType.mimeTypeFilter,
+            mimeTypeFilters = it.mimeTypeFilter,
             onPermissionChanged = onPermissionChanged,
         )
-    } else {
-        null
     }
     galleryPermissionRequest?.Dialogs?.invoke()
 
@@ -93,20 +92,20 @@ internal fun LibrarySectionHeader(
 
             if (galleryType != null && galleryPermissionGranted && !manualMode) {
                 SystemGalleryAddButton(
-                    mimeTypeFilter = galleryType.mimeTypeFilter,
+                    mimeTypeFilters = galleryType.mimeTypeFilter,
                     launchCamera = launchCamera,
                     onPermissionChanged = onPermissionChanged,
-                    openSettings = galleryPermissionRequest?.openSettings,
                     modifier = Modifier.padding(end = 8.dp),
                 )
             }
 
             if (item.expandContent != null) {
                 val lacksPermission = galleryType != null && !galleryPermissionGranted
+                val permissionRequest = galleryPermissionRequest
                 TextButton(
                     onClick = {
                         if (lacksPermission) {
-                            galleryPermissionRequest?.requestPermission?.invoke()
+                            requireNotNull(permissionRequest).requestPermission()
                         } else {
                             onDrillDown(item.expandContent)
                         }
@@ -217,16 +216,15 @@ internal fun LibrarySectionHeader(
 
 @Composable
 private fun SystemGalleryAddButton(
-    mimeTypeFilter: String?,
+    mimeTypeFilters: List<String>,
     launchCamera: (Boolean) -> Unit,
     onPermissionChanged: () -> Unit,
-    openSettings: (() -> Unit)? = null,
     modifier: Modifier,
 ) {
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
     val manualMode = SystemGalleryPermission.isManualMode
-    val currentPermission = { SystemGalleryPermission.hasPermission(context, mimeTypeFilter) }
+    val currentPermission = { SystemGalleryPermission.hasPermissionForMimeTypes(context, mimeTypeFilters) }
     var lastPermissionState by remember { mutableStateOf(currentPermission()) }
     var resumeCheck by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -251,16 +249,16 @@ private fun SystemGalleryAddButton(
 
     val pickVisualLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            SystemGalleryPermission.addSelected(uri, context, mimeTypeFilter)
+            SystemGalleryPermission.addSelected(uri, context)
             onPermissionChanged()
         }
         showMenu = false
     }
 
-    val isVideoMimeType = mimeTypeFilter?.startsWith("video") == true || mimeTypeFilter?.startsWith("*") != false
-    val isImageMimeType = mimeTypeFilter?.startsWith("image") == true || mimeTypeFilter?.startsWith("*") != false
+    val isVideoMimeType = mimeTypeFilters.supportsVideo()
+    val isImageMimeType = mimeTypeFilters.supportsImage()
 
-    val manualPickRequest = remember(mimeTypeFilter, isVideoMimeType, isImageMimeType) {
+    val manualPickRequest = remember(mimeTypeFilters, isVideoMimeType, isImageMimeType) {
         when {
             isVideoMimeType && !isImageMimeType -> PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)
             isImageMimeType && !isVideoMimeType -> PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -303,10 +301,9 @@ private fun SystemGalleryAddButton(
                         },
                         icon = if (isVideoMimeType) IconPack.Videolibraryoutline else IconPack.Photolibraryoutline,
                     ) {
-                        val perms = SystemGalleryPermission.requiredPermission(mimeTypeFilter)
-                            ?.filterNotNull()
-                            ?.toTypedArray()
-                            ?: emptyArray()
+                        val perms = SystemGalleryPermission.requiredPermission(mimeTypeFilters)
+                            .filterNotNull()
+                            .toTypedArray()
                         permissionLauncher.launch(perms)
                     }
 
@@ -314,13 +311,9 @@ private fun SystemGalleryAddButton(
                         textResourceId = R.string.ly_img_editor_asset_library_button_change_permissions,
                         icon = IconPack.Permission,
                     ) {
-                        if (openSettings != null) {
-                            openSettings()
-                        } else {
-                            resumeCheck = true
-                            lastPermissionState = currentPermission()
-                            PermissionManager(context).openAppSettings()
-                        }
+                        resumeCheck = true
+                        lastPermissionState = currentPermission()
+                        PermissionManager(context).openAppSettings()
                         showMenu = false
                     }
                 }
@@ -349,6 +342,18 @@ private fun SystemGalleryAddButton(
             }
         }
     }
+}
+
+private fun List<String>?.supportsVideo(): Boolean {
+    val normalized = this?.map { it.lowercase(Locale.US) }.orEmpty()
+    if (normalized.isEmpty()) return true
+    return normalized.any { it.startsWith("video/") || it.startsWith("*") }
+}
+
+private fun List<String>?.supportsImage(): Boolean {
+    val normalized = this?.map { it.lowercase(Locale.US) }.orEmpty()
+    if (normalized.isEmpty()) return true
+    return normalized.any { it.startsWith("image/") || it.startsWith("*") }
 }
 
 @Composable
