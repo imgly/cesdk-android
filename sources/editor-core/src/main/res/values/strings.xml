@@ -330,6 +330,7 @@
     <string name="ly_img_editor_sheet_fill_stroke_type_option_solid">Solid</string>
     <string name="ly_img_editor_sheet_filter_label_intensity">Intensity</string>
     <string name="ly_img_editor_sheet_filter_title">Filter</string>
+    <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_auto">Match Language Direction</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_center">Horizontally Align Text to the Center</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_left">Align Text to the Left</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_right">Align Text to the Right</string>

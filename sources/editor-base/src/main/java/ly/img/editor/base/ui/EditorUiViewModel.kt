@@ -1071,7 +1071,18 @@ abstract class EditorUiViewModel(
                     return@LaunchContract
                 }
 
-                editorContext.eventHandler.send(EditorEvent.AddUriToScene(uploadSource, uri))
+                val event = designBlock?.let {
+                    LibraryEvent.OnReplaceUri(
+                        uri = uri,
+                        assetSource = uploadSource,
+                        designBlock = designBlock,
+                    )
+                } ?: LibraryEvent.OnAddUri(
+                    assetSource = uploadSource,
+                    uri = uri,
+                    addToBackgroundTrack = addToBackgroundTrack,
+                )
+                (editorContext.eventHandler as EditorUiViewModel).libraryViewModel.onEvent(event)
 
                 viewModelScope.launch {
                     val galleryUri = withContext(Dispatchers.IO) {

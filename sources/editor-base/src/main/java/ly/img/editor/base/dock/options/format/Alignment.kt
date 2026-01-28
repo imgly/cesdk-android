@@ -6,6 +6,7 @@ enum class HorizontalAlignment : Alignment {
     Left,
     Center,
     Right,
+    Auto,
 }
 
 enum class VerticalAlignment : Alignment {

@@ -330,6 +330,7 @@
     <string name="ly_img_editor_sheet_fill_stroke_type_option_solid">Einfarbig</string>
     <string name="ly_img_editor_sheet_filter_label_intensity">Intensität</string>
     <string name="ly_img_editor_sheet_filter_title">Filter</string>
+    <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_auto">Richtung an Sprache anpassen</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_center">Horizontal zentriert ausrichten</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_left">Nach links ausrichten</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_right">Nach rechts ausrichten</string>

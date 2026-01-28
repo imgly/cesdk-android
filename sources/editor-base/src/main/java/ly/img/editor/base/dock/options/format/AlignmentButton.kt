@@ -31,6 +31,7 @@ fun <T : Alignment> AlignmentButton(
                 HorizontalAlignment.Left -> IconPack.Formatalignleft
                 HorizontalAlignment.Center -> IconPack.Formataligncenter
                 HorizontalAlignment.Right -> IconPack.Formatalignright
+                HorizontalAlignment.Auto -> IconPack.Formatalignleft // Auto uses left-align icon as fallback
                 VerticalAlignment.Bottom -> IconPack.Verticalalignbottom
                 VerticalAlignment.Center -> IconPack.Verticalaligncenter
                 VerticalAlignment.Top -> IconPack.Verticalaligntop
@@ -39,6 +40,7 @@ fun <T : Alignment> AlignmentButton(
                 HorizontalAlignment.Left -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_horizontal_option_left)
                 HorizontalAlignment.Center -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_horizontal_option_center)
                 HorizontalAlignment.Right -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_horizontal_option_right)
+                HorizontalAlignment.Auto -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_horizontal_option_auto)
                 VerticalAlignment.Bottom -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_vertical_option_bottom)
                 VerticalAlignment.Center -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_vertical_option_center)
                 VerticalAlignment.Top -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_vertical_option_top)
