@@ -143,6 +143,9 @@ private fun replaceFilter(
 
             blockApi.setFloat(effect, "$path/intensity", asset.getMeta("intensity", "1").toFloat())
             blockApi.setString(effect, "$path/lutFileURI", asset.getUri())
+            // Set the filterId immediately so the UI can highlight the selected filter
+            // before the engine downloads the LUT file
+            blockApi.setString(effect, "$path/filterId", asset.id)
             blockApi.setInt(effect, "$path/horizontalTileCount", horizontalTileCount)
             blockApi.setInt(effect, "$path/verticalTileCount", verticalTileCount)
         }

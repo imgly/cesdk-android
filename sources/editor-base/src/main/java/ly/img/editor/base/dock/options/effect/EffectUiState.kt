@@ -27,7 +27,6 @@ data class EffectUiState(
     fun getAssetKey(asset: WrappedAsset): String? {
         return when (asset.assetSourceType) {
             AppearanceAssetSourceType.LutFilter -> {
-                // Use asset.id for LUT filters - this matches the filterId stored in the engine
                 asset.asset.id
             }
             AppearanceAssetSourceType.DuoToneFilter -> {
@@ -87,13 +86,8 @@ data class EffectUiState(
                     buildDuotoneUri(darkColor, lightColor)
                 }
                 EffectType.LutFilter -> {
-                    // First try filterId (works after archive load), fall back to lutFileURI
                     val filterId = engine.block.getString(effect.designBlock, "${filterType.key}/filterId")
-                    if (filterId.isNotEmpty()) {
-                        filterId
-                    } else {
-                        engine.block.getString(effect.designBlock, "${filterType.key}/lutFileURI")
-                    }
+                    filterId.ifEmpty { null }
                 }
                 else -> filterType.key
             }
