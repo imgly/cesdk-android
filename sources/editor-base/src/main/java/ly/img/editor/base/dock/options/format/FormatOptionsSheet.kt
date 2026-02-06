@@ -143,6 +143,7 @@ fun FormatOptionsSheet(
                                     AlignmentButton(
                                         alignment = it,
                                         currentAlignment = uiState.horizontalAlignment,
+                                        effectiveAlignment = uiState.effectiveHorizontalAlignment,
                                         changeAlignment = {
                                             onEvent(
                                                 BlockEvent.OnChangeHorizontalAlignment(it),
@@ -304,6 +305,7 @@ fun DefaultPreview() {
             canToggleBold = true,
             canToggleItalic = true,
             horizontalAlignment = HorizontalAlignment.Left,
+            effectiveHorizontalAlignment = HorizontalAlignment.Left,
             verticalAlignment = VerticalAlignment.Top,
             sizeModeRes = R.string.ly_img_editor_sheet_format_text_frame_behavior_option_fixed_size,
             isArrangeResizeAllowed = true,

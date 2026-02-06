@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import ly.img.editor.base.components.ToggleIconButton
 import ly.img.editor.core.R
+import ly.img.editor.core.ui.iconpack.FormatAlignLeftAuto
+import ly.img.editor.core.ui.iconpack.FormatAlignRightAuto
 import ly.img.editor.core.ui.iconpack.Formataligncenter
 import ly.img.editor.core.ui.iconpack.Formatalignleft
 import ly.img.editor.core.ui.iconpack.Formatalignright
@@ -17,6 +19,7 @@ import ly.img.editor.core.ui.iconpack.Verticalaligntop
 fun <T : Alignment> AlignmentButton(
     alignment: Alignment,
     currentAlignment: T,
+    effectiveAlignment: HorizontalAlignment? = null,
     changeAlignment: (T) -> Unit,
 ) {
     ToggleIconButton(
@@ -31,7 +34,10 @@ fun <T : Alignment> AlignmentButton(
                 HorizontalAlignment.Left -> IconPack.Formatalignleft
                 HorizontalAlignment.Center -> IconPack.Formataligncenter
                 HorizontalAlignment.Right -> IconPack.Formatalignright
-                HorizontalAlignment.Auto -> IconPack.Formatalignleft // Auto uses left-align icon as fallback
+                HorizontalAlignment.Auto -> when (effectiveAlignment) {
+                    HorizontalAlignment.Right -> IconPack.FormatAlignRightAuto
+                    else -> IconPack.FormatAlignLeftAuto
+                }
                 VerticalAlignment.Bottom -> IconPack.Verticalalignbottom
                 VerticalAlignment.Center -> IconPack.Verticalaligncenter
                 VerticalAlignment.Top -> IconPack.Verticalaligntop

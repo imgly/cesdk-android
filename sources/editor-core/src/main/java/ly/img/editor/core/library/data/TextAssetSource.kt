@@ -71,7 +71,7 @@ class TextAssetSource(
     override suspend fun applyAsset(asset: Asset): DesignBlock? {
         val textBlock = engine.asset.defaultApplyAsset(asset) ?: return null
         engine.block.setString(textBlock, "text/text", asset.label ?: "Text")
-        engine.block.setEnum(textBlock, "text/horizontalAlignment", "Center")
+        engine.block.setEnum(textBlock, "text/horizontalAlignment", "Auto")
         engine.block.setHeightMode(textBlock, SizeMode.AUTO)
         engine.block.setWidthMode(textBlock, SizeMode.ABSOLUTE)
         engine.block.setBoolean(textBlock, "text/clipLinesOutsideOfFrame", false)

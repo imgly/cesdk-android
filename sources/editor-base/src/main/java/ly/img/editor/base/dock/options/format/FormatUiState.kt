@@ -23,6 +23,7 @@ data class FormatUiState(
     val isItalic: Boolean,
     val casing: TextCase,
     val horizontalAlignment: HorizontalAlignment,
+    val effectiveHorizontalAlignment: HorizontalAlignment,
     val verticalAlignment: VerticalAlignment,
     val fontSize: Float,
     val letterSpacing: Float,
@@ -67,6 +68,9 @@ internal fun createFormatUiState(
         } ?: false,
         horizontalAlignment = HorizontalAlignment.valueOf(
             engine.block.getEnum(designBlock, "text/horizontalAlignment"),
+        ),
+        effectiveHorizontalAlignment = HorizontalAlignment.valueOf(
+            engine.block.getTextEffectiveHorizontalAlignment(designBlock),
         ),
         verticalAlignment = VerticalAlignment.valueOf(
             engine.block.getEnum(designBlock, "text/verticalAlignment"),
