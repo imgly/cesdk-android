@@ -1,0 +1,120 @@
+apply plugin: 'org.jetbrains.dokka'
+
+// Chrome blocks many of the functionality if you open index.html from the file system.
+// Instead open the file from AS directly. It creates a local server before opening the file.
+// Port 63342 is the default port that Jetbrains uses.
+String apiReferenceBasePath
+if (System.getenv("DOCS_BASE_URL") != null) {
+    apiReferenceBasePath = System.getenv("DOCS_BASE_URL") + "/android/api-reference"
+} else {
+    def projectName = rootProject.name.replace(" ", "%20")
+    apiReferenceBasePath = "http://localhost:63342/$projectName/build/dokka/htmlCustom"
+}
+
+static Set<Project> transitiveProjectDependencies(Project start) {
+    Set<Project> visited = [] as Set<Project>
+    Set<String> visitedPaths = [] as Set<String>
+    def visit
+    visit = { Project project ->
+        if (!visited.add(project)) return
+        project.configurations.configureEach { configuration ->
+            configuration.dependencies.withType(ProjectDependency).configureEach { dep ->
+                if (visitedPaths.add(dep.path)) {
+                    def depProject = project.rootProject.findProject(dep.path)
+                    if (depProject != null) {
+                        visit(depProject)
+                    }
+                }
+            }
+        }
+    }
+    visit(start)
+    visited.remove(start)
+    return visited
+}
+
+void configureDokkaFiles(File docsDir) {
+    // Copy `dokka-assets/logo-link.js` file to the file hierarchy of docs to reference in index.html.
+    copy {
+        from("${rootProject.projectDir}/sources/dokka-assets/logo-link.js")
+        into(new File(docsDir, "scripts"))
+    }
+    // Override `dokka-assets/logo-icon.svg` file to change the logo.
+    copy {
+        from("${rootProject.projectDir}/sources/dokka-assets/logo-icon.svg")
+        into(new File(docsDir, "images"))
+    }
+    // Override favicon used by the docs.
+    copy {
+        from("${rootProject.projectDir}/sources/dokka-assets/favicon.ico")
+        into(new File(docsDir, "images"))
+    }
+    // Inject loader that resolves via Dokka's `pathToRoot` so nested pages work.
+    def scriptTag = '<script>(function(){var r=(typeof pathToRoot==="string")?pathToRoot:"";var s=document.createElement("script");s.src=r+"scripts/logo-link.js";document.body.appendChild(s);}())</script>'
+    docsDir.eachFileRecurse { file ->
+        if (!file.isFile()) return
+        if (!file.name.endsWith(".html")) return
+
+        def html = file.getText("UTF-8")
+        if (html.contains(scriptTag)) return
+        if (!html.contains("</body>")) return
+
+        file.write(html.replace("</body>", "${scriptTag}</body>"), "UTF-8")
+    }
+}
+
+tasks.named("dokkaHtml") {
+    moduleName.set("ly.img:${project.name}")
+
+    def dependencies = transitiveProjectDependencies(project)
+        .findAll { it.plugins.hasPlugin("org.jetbrains.dokka") }
+    def dependencyTasks = dependencies
+        .collect {it.tasks.named("dokkaHtmlCustom") }
+    def docsLocalDir = rootProject.layout.buildDirectory.dir("dokka/htmlCustom").get().asFile
+    // Wait for dependent editor modules' dokka generation
+    dependsOn(dependencyTasks)
+    // Wait for engine dokka generation
+    dependsOn(tasks.named("dokkaHtmlCustomEngine"))
+    doFirst {
+        dokkaSourceSets.configureEach {
+            def engineDependencies = docsLocalDir
+                .listFiles()
+                .findAll { it.name.startsWith("engine") }
+                .collect { it.name }
+            (dependencies.collect { it.name } + engineDependencies).each { name ->
+                def uri = new URI("$apiReferenceBasePath/$name")
+                def packageListUri = new File(docsLocalDir, "$name/ly.img[58]$name/package-list").toURI()
+                externalDocumentationLink {
+                    url.set(uri.toURL())
+                    packageListUrl.set(packageListUri.toURL())
+                }
+            }
+        }
+    }
+    doLast {
+        configureDokkaFiles(project.layout.buildDirectory.dir("dokka/html").get().asFile)
+    }
+}
+
+tasks.register("dokkaHtmlCustomEngine") {
+    def dependency = gradle.includedBuild("engine").task(":dokkaHtmlCustom")
+    def engineDocsDir = new File(rootDir, "../../bindings/android/build/dokka/htmlCustom")
+    def editorDocsDir = rootProject.layout.buildDirectory.dir("dokka/htmlCustom").get().asFile
+    dependsOn(dependency)
+    doLast {
+        engineDocsDir.listFiles().each {
+            configureDokkaFiles(it)
+        }
+        copy {
+            from(engineDocsDir)
+            into(editorDocsDir)
+        }
+    }
+}
+
+tasks.register("dokkaHtmlCustom", Copy) {
+    group = "documentation"
+    dependsOn(tasks.named("dokkaHtml"))
+    from(project.layout.buildDirectory.dir("dokka/html"))
+    into(rootProject.layout.buildDirectory.dir("dokka/htmlCustom/${project.name}"))
+}

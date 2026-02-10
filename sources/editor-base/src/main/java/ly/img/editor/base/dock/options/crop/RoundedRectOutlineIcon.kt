@@ -84,7 +84,7 @@ fun roundedRectOutlineIcon(
                     offsetY,
                 )
                 close()
-            }.getNodes(),
+            }.nodes,
             stroke = SolidColor(color),
             fill = null,
             strokeLineWidth = strokeWidth,

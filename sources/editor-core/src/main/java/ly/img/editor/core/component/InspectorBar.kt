@@ -124,6 +124,7 @@ class InspectorBar private constructor(
                 add { Button.rememberFillStroke() } // Page, Video, Image, Shape, Text
                 add { Button.rememberTextBackground() } // Text
                 add { Button.rememberVolume() } // Video, Audio
+                add { Button.rememberClipSpeed() } // Video
                 add { Button.rememberCrop() } // Video, Image
                 add { Button.rememberAnimations() } // Video, Image, Sticker, Shape, Text
                 add { Button.rememberAdjustments() } // Video, Image
@@ -782,6 +783,7 @@ class InspectorBar private constructor(
          * - InspectorBar.Button.rememberFormatText // Text
          * - InspectorBar.Button.rememberFillStroke // Page, Video, Image, Shape, Text
          * - InspectorBar.Button.rememberVolume // Video, Audio (video scenes only)
+         * - InspectorBar.Button.rememberClipSpeed // Video
          * - InspectorBar.Button.rememberCrop // Video, Image
          *
          * - InspectorBar.Button.rememberAdjustments // Video, Image
@@ -887,6 +889,7 @@ class InspectorBar private constructor(
          *             add { InspectorBar.Button.rememberFormatText() }
          *             add { InspectorBar.Button.rememberFillStroke() }
          *             add { InspectorBar.Button.rememberVolume() }
+         *             add { InspectorBar.Button.rememberClipSpeed() }
          *             add { InspectorBar.Button.rememberCrop() }
          *             add {
          *                 InspectorBar.Button.rememberAdjustments(

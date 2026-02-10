@@ -135,6 +135,7 @@
     <string name="ly_img_editor_inspector_bar_button_adjustments">Farbkorrektur</string>
     <string name="ly_img_editor_inspector_bar_button_animations">Animationen</string>
     <string name="ly_img_editor_inspector_bar_button_blur">Weichzeichner</string>
+    <string name="ly_img_editor_inspector_bar_button_clip_speed">Clip-Geschwindigkeit</string>
     <string name="ly_img_editor_inspector_bar_button_close">Schließen</string>
     <string name="ly_img_editor_inspector_bar_button_crop">Zuschneiden</string>
     <string name="ly_img_editor_inspector_bar_button_delete">Löschen</string>
@@ -167,6 +168,8 @@
     <string name="ly_img_editor_navigation_bar_button_toggle_preview_mode">Vorschau umschalten</string>
     <string name="ly_img_editor_navigation_bar_button_undo">Rückgängig</string>
     <string name="ly_img_editor_navigation_bar_button_write">Schreiben</string>
+    <string name="ly_img_editor_notification_speed_clamped_duration">Geschwindigkeit begrenzt. Dauer auf erreichbaren Wert angepasst.</string>
+    <string name="ly_img_editor_notification_speed_no_audio_at_speed">Kein Ton bei dieser Geschwindigkeit</string>
     <string name="ly_img_editor_pages_view_mode_dock_button_add_page">Seite hinzufügen</string>
     <string name="ly_img_editor_pages_view_mode_dock_button_delete">Löschen</string>
     <string name="ly_img_editor_pages_view_mode_dock_button_duplicate">Duplizieren</string>
@@ -245,6 +248,7 @@
     <string name="ly_img_editor_sheet_blur_title">Weichzeichner</string>
     <string name="ly_img_editor_sheet_button_back">Zurück</string>
     <string name="ly_img_editor_sheet_button_close">Schließen</string>
+    <string name="ly_img_editor_sheet_clip_speed_title">Clip-Geschwindigkeit</string>
     <string name="ly_img_editor_sheet_color_picker_label_hue">Farbton</string>
     <string name="ly_img_editor_sheet_color_picker_label_opacity">Deckkraft</string>
     <string name="ly_img_editor_sheet_crop_button_flip">Spiegeln</string>
@@ -255,6 +259,8 @@
     <string name="ly_img_editor_sheet_crop_fill_mode_option_fit">Einpassen</string>
     <string name="ly_img_editor_sheet_crop_label_straighten">Begradigen</string>
     <string name="ly_img_editor_sheet_crop_title">Zuschneiden</string>
+    <string name="ly_img_editor_sheet_duration_label">Dauer</string>
+    <string name="ly_img_editor_sheet_duration_suffix">s</string>
     <string name="ly_img_editor_sheet_effect_label_cross_cut_horizontal_cuts">Horizontale Schnitte</string>
     <string name="ly_img_editor_sheet_effect_label_cross_cut_horizontal_offset">Horizontaler Versatz</string>
     <string name="ly_img_editor_sheet_effect_label_cross_cut_variation">Varianz</string>
@@ -419,6 +425,8 @@
     <string name="ly_img_editor_sheet_shape_label_round_corners">Ecken abrunden</string>
     <string name="ly_img_editor_sheet_shape_label_sides">Seiten</string>
     <string name="ly_img_editor_sheet_shape_title">Form</string>
+    <string name="ly_img_editor_sheet_speed_label">Geschwindigkeit</string>
+    <string name="ly_img_editor_sheet_speed_suffix">×</string>
     <string name="ly_img_editor_sheet_text_background_label_color">Farbe</string>
     <string name="ly_img_editor_sheet_text_background_label_horizontal_padding">Horizontaler Abstand</string>
     <string name="ly_img_editor_sheet_text_background_label_round_corners">Ecken abrunden</string>

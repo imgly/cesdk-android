@@ -12,9 +12,9 @@ import ly.img.editor.base.timeline.clip.Clip
 import ly.img.editor.base.timeline.clip.ClipType
 import ly.img.editor.base.timeline.thumbnail.ThumbnailsManager
 import ly.img.editor.base.timeline.track.Track
+import ly.img.editor.core.engine.getPlaybackControlBlock
 import ly.img.editor.core.ui.engine.BlockKind
 import ly.img.editor.core.ui.engine.Scope
-import ly.img.editor.core.ui.engine.getBackgroundTrack
 import ly.img.editor.core.ui.engine.getCurrentPage
 import ly.img.editor.core.ui.engine.getFillType
 import ly.img.editor.core.ui.engine.getKindEnum
@@ -140,21 +140,33 @@ class TimelineState(
 
     private fun refresh() {
         dataSource.reset()
-        pageChildren.forEach(::refresh)
+        pageChildren.forEach { refresh(it) }
     }
 
     private fun refresh(
         designBlock: DesignBlock,
         existingClip: Clip? = null,
+        targetTrack: Track? = null,
     ) {
         if (!engine.block.isValid(designBlock)) {
             thumbnailsManager.destroyProvider(designBlock)
             return
         }
 
-        if (designBlock == engine.getBackgroundTrack()) {
-            engine.block.getChildren(designBlock).forEach {
-                refresh(it, dataSource.findClip(it))
+        val type = DesignBlockType.get(engine.block.getType(designBlock))
+        if (type == DesignBlockType.Track || type == DesignBlockType.CaptionTrack) {
+            val children = engine.block.getChildren(designBlock)
+            if (children.isEmpty()) return
+            if (engine.block.isPageDurationSource(designBlock)) {
+                children.forEach { child ->
+                    refresh(child, dataSource.findClip(child))
+                }
+            } else {
+                val track = Track()
+                addTrackForChildren(children, track)
+                children.forEach { child ->
+                    refresh(child, dataSource.findClip(child), track)
+                }
             }
             return
         }
@@ -237,6 +249,10 @@ class TimelineState(
         val timeOffset = engine.block.getTimeOffset(designBlock).seconds
 
         val allowsTrimming = engine.block.hasTrim(trimmableId)
+        val playbackSpeed =
+            engine.block.getPlaybackControlBlock(designBlock)
+                ?.let(engine.block::getPlaybackSpeed)
+                ?: 1f
 
         val trimOffset = if (allowsTrimming) {
             // The trimOffset isn't known until the resource has loaded
@@ -295,6 +311,7 @@ class TimelineState(
             title = title,
             duration = duration,
             footageDuration = footageDuration,
+            playbackSpeed = playbackSpeed,
             timeOffset = timeOffset,
             allowsTrimming = allowsTrimming,
             allowsSelecting = allowsSelecting,
@@ -312,6 +329,8 @@ class TimelineState(
             dataSource.backgroundTrack
         } else if (existingClip != null) {
             dataSource.findTrack(existingClip)
+        } else if (targetTrack != null) {
+            targetTrack
         } else {
             Track()
         }
@@ -319,12 +338,26 @@ class TimelineState(
         updateClip(track, clip, existingClip)
 
         // If this is a freshly created non-background clip, we need to add the newly created track
-        if (existingClip == null && !clip.isInBackgroundTrack) {
+        if (existingClip == null && !clip.isInBackgroundTrack && targetTrack == null) {
             if (clipType == ClipType.Audio) {
                 dataSource.addAudioTrack(track)
             } else {
                 dataSource.addTrack(track)
             }
+        }
+    }
+
+    private fun addTrackForChildren(
+        children: List<DesignBlock>,
+        track: Track,
+    ) {
+        val isAudioTrack = children.all { child ->
+            engine.block.getType(child) == DesignBlockType.Audio.key
+        }
+        if (isAudioTrack) {
+            dataSource.addAudioTrack(track)
+        } else {
+            dataSource.addTrack(track)
         }
     }
 

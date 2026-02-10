@@ -270,6 +270,16 @@ interface SheetType {
     ) : SheetType
 
     /**
+     * A sheet that is used to control the playback speed of video clips.
+     *
+     * @param style the style that should be used to display the sheet.
+     * Default value is the default [SheetStyle].
+     */
+    class Speed(
+        override val style: SheetStyle = SheetStyle(),
+    ) : SheetType
+
+    /**
      * A sheet that is used to control the volume of audio/video.
      *
      * @param style the style that should be used to display the sheet.

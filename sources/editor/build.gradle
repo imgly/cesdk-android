@@ -1,4 +1,5 @@
 apply from: "$projectDir/../editor-library.gradle"
+apply from: "$projectDir/../dokka.gradle"
 
 buildConfig {
     className "EditorBuildConfig"

@@ -10,6 +10,7 @@ plugins {
     id 'com.github.gmazzo.buildconfig' version libs.versions.buildConfig apply false
     id 'com.google.firebase.appdistribution' version libs.versions.appDistributionPlugin apply false
     id 'com.google.firebase.crashlytics' version libs.versions.gradleCrashlytics apply false
+    id 'org.jetbrains.dokka' version libs.versions.dokka
 }
 
 subprojects {

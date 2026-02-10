@@ -35,6 +35,7 @@ import ly.img.editor.core.component.data.SolidFill
 import ly.img.editor.core.component.data.nothing
 import ly.img.editor.core.component.data.unsafeLazy
 import ly.img.editor.core.compose.rememberLastValue
+import ly.img.editor.core.engine.getPlaybackControlBlock
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.iconpack.Adjustments
 import ly.img.editor.core.iconpack.Animation
@@ -50,6 +51,7 @@ import ly.img.editor.core.iconpack.GroupEnter
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.iconpack.Keyboard
 import ly.img.editor.core.iconpack.LayersOutline
+import ly.img.editor.core.iconpack.Rabbit
 import ly.img.editor.core.iconpack.ReorderHorizontally
 import ly.img.editor.core.iconpack.Replace
 import ly.img.editor.core.iconpack.SelectGroup
@@ -71,6 +73,7 @@ import ly.img.engine.ShapeType
 
 private const val KIND_STICKER = "sticker"
 private const val KIND_ANIMATED_STICKER = "animatedSticker"
+private const val VOLUME_SPEED_CUTOFF = 3f
 
 private fun Selection.isAnyKindOfSticker(): Boolean = this.kind == KIND_STICKER || this.kind == KIND_ANIMATED_STICKER
 
@@ -129,7 +132,8 @@ val Button.Id.Companion.reorder by unsafeLazy {
  * @param tint the tint color of the content. If null then no tint is applied.
  * Default value is null.
  * @param enabled whether the button is enabled.
- * Default value is always true.
+ * Default value is true for non-video selections and for video clips with playback speed
+ * at or below [VOLUME_SPEED_CUTOFF].
  * @param onClick the callback that is invoked when the button is clicked.
  * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Reorder].
  * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
@@ -639,7 +643,31 @@ fun Button.Companion.rememberVolume(
     vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.VolumeHigh },
     text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_volume) },
     tint: (@Composable ButtonScope.() -> Color)? = null,
-    enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
+    enabled: @Composable ButtonScope.() -> Boolean = {
+        val selection = editorContext.selection
+        if (selection.fillType != FillType.Video) {
+            true
+        } else {
+            val playbackBlock = editorContext.engine.block.getPlaybackControlBlock(selection.designBlock)
+            if (playbackBlock == null) {
+                true
+            } else {
+                val initialSpeed = remember(selection.designBlock) {
+                    editorContext.engine.block.getPlaybackSpeed(playbackBlock)
+                }
+                val speed by remember(selection.designBlock, playbackBlock) {
+                    editorContext.engine.event.subscribe(listOf(playbackBlock))
+                        .filter {
+                            // Ignore updates if selection changed while flow is still active.
+                            selection.designBlock == editorContext.engine.block.findAllSelected().firstOrNull()
+                        }
+                        .map { editorContext.engine.block.getPlaybackSpeed(playbackBlock) }
+                        .onStart { emit(initialSpeed) }
+                }.collectAsState(initial = initialSpeed)
+                speed <= VOLUME_SPEED_CUTOFF
+            }
+        }
+    },
     onClick: ButtonScope.() -> Unit = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Volume()))
     },
@@ -647,6 +675,109 @@ fun Button.Companion.rememberVolume(
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.volume,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    contentDescription = contentDescription,
+    `_` = `_`,
+)
+
+/**
+ * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberClipSpeed].
+ */
+val Button.Id.Companion.clipSpeed by unsafeLazy {
+    EditorComponentId("ly.img.component.inspectorBar.button.clipSpeed")
+}
+
+/**
+ * A helper function that returns an [InspectorBar.Button] that opens clip speed sheet via [EditorEvent.Sheet.Open].
+ *
+ * @param scope the scope of this component. Every new value will trigger recomposition of all functions with
+ * signature @Composable Scope.() -> {}.
+ * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
+ * By default it is updated only when the parent component scope ([InspectorBar.scope], accessed via [LocalEditorScope]) is updated.
+ * @param visible whether the button should be visible.
+ * By default the value is true when the scene mode is [SceneMode.VIDEO] and the selected design block
+ * is [DesignBlockType.Audio] or has a fill type [FillType.Video] (either on selection or its playback fill),
+ * and an enabled engine scope "fill/change".
+ * @param enterTransition transition of the button when it enters the parent composable.
+ * Default value is always no enter transition.
+ * @param exitTransition transition of the button when it exits the parent composable.
+ * Default value is always no exit transition.
+ * @param decoration decoration of the button. Useful when you want to add custom background, foreground, shadow, paddings etc.
+ * Default value is always no decoration.
+ * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
+ * Default value is always [IconPack.Rabbit].
+ * @param text the text content of the button as a string. If null then text is not rendered.
+ * Default value is always [R.string.ly_img_editor_inspector_bar_button_clip_speed].
+ * @param tint the tint color of the content. If null then no tint is applied.
+ * Default value is null.
+ * @param enabled whether the button is enabled.
+ * Default value is always true.
+ * @param onClick the callback that is invoked when the button is clicked.
+ * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Speed].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
+ * @return a button that will be displayed in the inspector bar.
+ */
+@Composable
+fun Button.Companion.rememberClipSpeed(
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
+    visible: @Composable ButtonScope.() -> Boolean = {
+        remember(this) {
+            val selection = editorContext.selection
+            val designBlock = selection.designBlock
+            val playbackBlock =
+                when {
+                    editorContext.engine.block.supportsPlaybackControl(designBlock) -> designBlock
+                    editorContext.engine.block.supportsFill(designBlock) -> {
+                        val fill = editorContext.engine.block.getFill(designBlock)
+                        fill.takeIf { editorContext.engine.block.supportsPlaybackControl(it) }
+                    }
+
+                    else -> null
+                }
+            if (playbackBlock == null) {
+                false
+            } else {
+                val playbackFillType =
+                    playbackBlock
+                        .takeIf { editorContext.engine.block.supportsFill(it) }
+                        ?.let { FillType.get(editorContext.engine.block.getType(it)) }
+                val isAudio = selection.type == DesignBlockType.Audio
+                val isVideoScene = editorContext.engine.scene.getMode() == SceneMode.VIDEO
+                isVideoScene &&
+                    (isAudio || selection.fillType == FillType.Video || playbackFillType == FillType.Video) &&
+                    editorContext.engine.block.isAllowedByScope(designBlock, "fill/change")
+            }
+        }
+    },
+    enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
+    exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
+    decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
+    vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Rabbit },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_inspector_bar_button_clip_speed) },
+    tint: (@Composable ButtonScope.() -> Color)? = null,
+    enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
+    onClick: ButtonScope.() -> Unit = {
+        editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Speed()))
+    },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
+    `_`: Nothing = nothing,
+): Button = remember(
+    id = Button.Id.clipSpeed,
     scope = scope,
     visible = visible,
     enterTransition = enterTransition,

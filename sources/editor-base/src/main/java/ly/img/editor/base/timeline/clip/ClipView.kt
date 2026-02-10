@@ -220,7 +220,8 @@ fun ClipView(
                         if (hasReachedMaxWidth != null) {
                             return if (hasReachedMaxWidth) IconStyle.Neutral else IconStyle.Right
                         }
-                        return if (((clip.footageDuration ?: 0.seconds) - clip.trimOffset - clip.duration).almostEquals(0.seconds)) {
+                        val maxDuration = (clip.effectiveFootageDuration ?: 0.seconds) - clip.trimOffset - clip.duration
+                        return if (maxDuration.almostEquals(0.seconds)) {
                             IconStyle.Neutral
                         } else {
                             IconStyle.Right
@@ -359,8 +360,9 @@ fun ClipView(
                             .pointerInput(clip, zoomState.zoomLevel) {
                                 if (!clip.hasLoaded) return@pointerInput
                                 val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minClipDuration))
-                                val maxWidth = if (clip.footageDuration != null) {
-                                    zoomState.toPx(clip.footageDuration - clip.trimOffset)
+                                val effectiveFootageDuration = clip.effectiveFootageDuration
+                                val maxWidth = if (effectiveFootageDuration != null) {
+                                    zoomState.toPx(effectiveFootageDuration - clip.trimOffset)
                                 } else {
                                     Float.POSITIVE_INFINITY
                                 }

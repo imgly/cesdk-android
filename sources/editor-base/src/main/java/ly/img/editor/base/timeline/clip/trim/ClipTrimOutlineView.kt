@@ -28,13 +28,14 @@ fun ClipTrimOutlineView(
     realtimeWidth: Float,
     height: Dp,
 ) {
-    if (clipDragType != null && clipDragType != ClipDragType.Move && clip.footageDuration != null) {
+    val effectiveFootageDuration = clip.effectiveFootageDuration
+    if (clipDragType != null && clipDragType != ClipDragType.Move && effectiveFootageDuration != null) {
         Box(
             modifier = Modifier
                 .wrapContentSize(unbounded = true, align = Alignment.CenterStart)
                 .width(
                     zoomState
-                        .toPx(clip.footageDuration)
+                        .toPx(effectiveFootageDuration)
                         .toDp(),
                 )
                 .height(height)

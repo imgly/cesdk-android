@@ -27,11 +27,15 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -87,6 +91,8 @@ import ly.img.editor.base.dock.options.postcard.size.PostcardGreetingSizeSheet
 import ly.img.editor.base.dock.options.reorder.ReorderBottomSheetContent
 import ly.img.editor.base.dock.options.reorder.ReorderSheet
 import ly.img.editor.base.dock.options.shapeoptions.ShapeOptionsSheet
+import ly.img.editor.base.dock.options.speed.SpeedBottomSheetContent
+import ly.img.editor.base.dock.options.speed.SpeedSheet
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheet
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheetContent
 import ly.img.editor.base.dock.options.volume.VolumeBottomSheetContent
@@ -104,6 +110,8 @@ import ly.img.editor.core.component.EditorComponent
 import ly.img.editor.core.compose.rememberLastValue
 import ly.img.editor.core.engine.EngineRenderTarget
 import ly.img.editor.core.event.EditorEvent
+import ly.img.editor.core.iconpack.Close
+import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.navbar.SystemNavBar
 import ly.img.editor.core.sheet.SheetStyle
 import ly.img.editor.core.theme.surface1
@@ -318,11 +326,12 @@ fun EditorUi(
                     }
                 }
 
-                is SingleEvent.Error -> {
+                is SingleEvent.Snackbar -> {
                     uiScope.launch {
                         snackbarHostState.showSnackbar(
                             // stringResource() doesn't work inside of a LaunchedEffect as it is not a composable
                             message = activity.resources.getString(it.text),
+                            duration = it.duration,
                         )
                     }
                 }
@@ -538,6 +547,7 @@ fun EditorUi(
                                             onColorPickerActiveChanged = onColorPickerActiveChanged,
                                             onEvent = viewModel::send,
                                         )
+                                    is SpeedBottomSheetContent -> SpeedSheet(content.uiState, viewModel::send)
                                     is VolumeBottomSheetContent -> VolumeSheet(content.uiState, viewModel::send)
                                     is ReorderBottomSheetContent -> ReorderSheet(content.timelineState, viewModel::send)
                                     is AnimationBottomSheetContent -> AnimationSheet(content.uiState, viewModel::send)
@@ -579,9 +589,6 @@ fun EditorUi(
                                 EditorComponent(component = it(editorScope))
                             }
                         }
-                    },
-                    snackbarHost = {
-                        SnackbarHost(snackbarHostState)
                     },
                 ) { paddingValues ->
                     contentPadding = paddingValues
@@ -701,6 +708,24 @@ fun EditorUi(
                 .fillMaxWidth()
                 .height(navigationBarHeight),
         ) {}
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(12.dp),
+            snackbar = { snackbarData ->
+                Snackbar(
+                    action = {
+                        IconButton(onClick = { snackbarData.dismiss() }) {
+                            Icon(IconPack.Close, contentDescription = null)
+                        }
+                    },
+                    actionOnNewLine = false,
+                    content = { Text(snackbarData.visuals.message) },
+                )
+            },
+        )
         editorContext.overlay?.invoke(editorScope, externalState.value)
 
         if (showCameraPermissionsView) {

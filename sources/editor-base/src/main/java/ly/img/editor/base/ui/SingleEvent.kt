@@ -1,6 +1,7 @@
 package ly.img.editor.base.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.material3.SnackbarDuration
 import ly.img.editor.compose.bottomsheet.ModalBottomSheetValue
 
 /**
@@ -18,7 +19,8 @@ sealed interface SingleEvent {
 
     data object HideScrimSheet : SingleEvent
 
-    data class Error(
+    data class Snackbar(
         @StringRes val text: Int,
+        val duration: SnackbarDuration = SnackbarDuration.Short,
     ) : SingleEvent
 }

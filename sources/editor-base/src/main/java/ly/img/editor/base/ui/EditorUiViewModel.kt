@@ -65,6 +65,8 @@ import ly.img.editor.base.dock.options.postcard.size.PostcardGreetingSizeBottomS
 import ly.img.editor.base.dock.options.postcard.size.PostcardGreetingSizeUiState
 import ly.img.editor.base.dock.options.reorder.ReorderBottomSheetContent
 import ly.img.editor.base.dock.options.shapeoptions.createShapeOptionsUiState
+import ly.img.editor.base.dock.options.speed.SpeedBottomSheetContent
+import ly.img.editor.base.dock.options.speed.SpeedUiState
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheetContent
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundUiState
 import ly.img.editor.base.dock.options.volume.VolumeBottomSheetContent
@@ -91,6 +93,7 @@ import ly.img.editor.base.ui.handler.blockEvents
 import ly.img.editor.base.ui.handler.blockFillEvents
 import ly.img.editor.base.ui.handler.cropEvents
 import ly.img.editor.base.ui.handler.shapeOptionEvents
+import ly.img.editor.base.ui.handler.speedEvents
 import ly.img.editor.base.ui.handler.strokeEvents
 import ly.img.editor.base.ui.handler.textBlockEvents
 import ly.img.editor.base.ui.handler.timelineEvents
@@ -263,6 +266,13 @@ abstract class EditorUiViewModel(
             engine = ::engine,
             block = ::requireDesignBlockForEvents,
         )
+        speedEvents(
+            engine = ::engine,
+            block = ::requireDesignBlockForEvents,
+            showToast = {
+                sendSingleEvent(SingleEvent.Snackbar(it))
+            },
+        )
         volumeEvents(
             engine = ::engine,
             block = ::requireDesignBlockForEvents,
@@ -273,7 +283,7 @@ abstract class EditorUiViewModel(
                 requireNotNull(timelineState)
             },
             showError = {
-                sendSingleEvent(SingleEvent.Error(it))
+                sendSingleEvent(SingleEvent.Snackbar(it))
             },
         )
         editorEvents()
@@ -284,6 +294,7 @@ abstract class EditorUiViewModel(
 
     private fun EventsHandler.editorEvents() {
         register<Event.OnError> { onError(it.throwable) }
+        register<Event.OnToast> { sendSingleEvent(SingleEvent.Snackbar(it.text)) }
         register<Event.OnBackPress> {
             onBackPress(
                 bottomSheetOffset = it.bottomSheetOffset,
@@ -620,6 +631,13 @@ abstract class EditorUiViewModel(
                         uiState = EffectUiState.create(designBlock, engine, AppearanceLibraryCategory.Blur),
                     )
                 }
+                is SheetType.Speed -> {
+                    timelineState?.clampPlayheadPositionToSelectedClip()
+                    SpeedBottomSheetContent(
+                        type = type,
+                        uiState = SpeedUiState.create(designBlock, engine),
+                    )
+                }
                 is SheetType.Volume -> {
                     timelineState?.clampPlayheadPositionToSelectedClip()
                     VolumeBottomSheetContent(
@@ -824,6 +842,13 @@ abstract class EditorUiViewModel(
                         VolumeBottomSheetContent(
                             type = content.type,
                             uiState = VolumeUiState.create(designBlock, engine),
+                        )
+                    }
+
+                    is SpeedBottomSheetContent -> {
+                        SpeedBottomSheetContent(
+                            type = content.type,
+                            uiState = SpeedUiState.create(designBlock, engine),
                         )
                     }
 

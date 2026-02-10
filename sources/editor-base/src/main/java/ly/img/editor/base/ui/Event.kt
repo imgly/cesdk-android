@@ -1,6 +1,7 @@
 package ly.img.editor.base.ui
 
 import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -29,6 +30,10 @@ import kotlin.time.Duration
 interface Event : EditorEvent {
     data class OnError(
         val throwable: Throwable,
+    ) : Event
+
+    data class OnToast(
+        @StringRes val text: Int,
     ) : Event
 
     class OnBackPress(
@@ -364,6 +369,12 @@ interface BlockEvent : Event {
     data class OnCropStraighten(
         val angle: Float,
         val scaleRatio: Float,
+    ) : BlockEvent
+    // endregion
+
+    // region Speed Events
+    data class OnPlaybackSpeedChange(
+        val speed: Float,
     ) : BlockEvent
     // endregion
 

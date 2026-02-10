@@ -15,6 +15,7 @@ data class Clip(
     val title: String = "",
     val duration: Duration = 5.seconds,
     val footageDuration: Duration? = null,
+    val playbackSpeed: Float = 1f,
     val timeOffset: Duration = 0.seconds,
     val allowsTrimming: Boolean = false,
     val allowsSelecting: Boolean = true,
@@ -25,7 +26,16 @@ data class Clip(
     val isInBackgroundTrack: Boolean = false,
     val hasLoaded: Boolean = false,
     val hasAnimation: Boolean = false,
-)
+) {
+    val effectiveFootageDuration: Duration?
+        get() = footageDuration?.let {
+            if (playbackSpeed > 0f) {
+                it / playbackSpeed.toDouble()
+            } else {
+                it
+            }
+        }
+}
 
 enum class ClipType {
     Audio,
