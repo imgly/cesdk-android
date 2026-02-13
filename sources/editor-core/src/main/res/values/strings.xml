@@ -132,6 +132,7 @@
     <string name="ly_img_editor_dock_button_stickers">Stickers</string>
     <string name="ly_img_editor_dock_button_text">Text</string>
     <string name="ly_img_editor_edit_text_title">Edit Text</string>
+    <string name="ly_img_editor_error_activity_not_found">No app available to complete this action.</string>
     <string name="ly_img_editor_inspector_bar_button_adjustments">Adjustments</string>
     <string name="ly_img_editor_inspector_bar_button_animations">Animations</string>
     <string name="ly_img_editor_inspector_bar_button_blur">Blur</string>
@@ -248,6 +249,8 @@
     <string name="ly_img_editor_sheet_blur_title">Blur</string>
     <string name="ly_img_editor_sheet_button_back">Back</string>
     <string name="ly_img_editor_sheet_button_close">Close</string>
+    <string name="ly_img_editor_sheet_clip_speed_duration_label">Duration</string>
+    <string name="ly_img_editor_sheet_clip_speed_speed_label">Speed</string>
     <string name="ly_img_editor_sheet_clip_speed_title">Clip Speed</string>
     <string name="ly_img_editor_sheet_color_picker_label_hue">Hue</string>
     <string name="ly_img_editor_sheet_color_picker_label_opacity">Opacity</string>

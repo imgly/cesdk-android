@@ -1,6 +1,7 @@
 package ly.img.editor.base.ui
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.res.Configuration
 import android.os.Parcelable
 import androidx.activity.compose.BackHandler
@@ -106,6 +107,7 @@ import ly.img.editor.compose.bottomsheet.ModalBottomSheetValue
 import ly.img.editor.compose.bottomsheet.rememberModalBottomSheetState
 import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
+import ly.img.editor.core.R
 import ly.img.editor.core.component.EditorComponent
 import ly.img.editor.core.compose.rememberLastValue
 import ly.img.editor.core.engine.EngineRenderTarget
@@ -380,7 +382,11 @@ fun EditorUi(
         if (contract is DummyContract) return
         if (openContract.launched) return
         openContract.launched = true
-        launcher.launch(openContract.input)
+        try {
+            launcher.launch(openContract.input)
+        } catch (e: ActivityNotFoundException) {
+            viewModel.send(Event.OnToast(R.string.ly_img_editor_error_activity_not_found))
+        }
     }
     LaunchedEffect(contract) {
         val isSystemCameraContract = contract is ActivityResultContracts.CaptureVideo ||

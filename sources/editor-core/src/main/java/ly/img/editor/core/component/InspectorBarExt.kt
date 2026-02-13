@@ -739,25 +739,13 @@ fun Button.Companion.rememberClipSpeed(
         remember(this) {
             val selection = editorContext.selection
             val designBlock = selection.designBlock
-            val playbackBlock =
-                when {
-                    editorContext.engine.block.supportsPlaybackControl(designBlock) -> designBlock
-                    editorContext.engine.block.supportsFill(designBlock) -> {
-                        val fill = editorContext.engine.block.getFill(designBlock)
-                        fill.takeIf { editorContext.engine.block.supportsPlaybackControl(it) }
-                    }
-
-                    else -> null
-                }
+            val playbackBlock = editorContext.engine.block.getPlaybackControlBlock(designBlock)
             if (playbackBlock == null) {
                 false
             } else {
-                val playbackFillType =
-                    playbackBlock
-                        .takeIf { editorContext.engine.block.supportsFill(it) }
-                        ?.let { FillType.get(editorContext.engine.block.getType(it)) }
-                val isAudio = selection.type == DesignBlockType.Audio
                 val isVideoScene = editorContext.engine.scene.getMode() == SceneMode.VIDEO
+                val isAudio = selection.type == DesignBlockType.Audio
+                val playbackFillType = editorContext.engine.block.getFillType(playbackBlock)
                 isVideoScene &&
                     (isAudio || selection.fillType == FillType.Video || playbackFillType == FillType.Video) &&
                     editorContext.engine.block.isAllowedByScope(designBlock, "fill/change")

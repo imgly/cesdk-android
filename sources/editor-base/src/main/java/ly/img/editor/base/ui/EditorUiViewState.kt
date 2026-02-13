@@ -38,6 +38,8 @@ object DummyContract : ActivityResultContract<Unit, Unit>() {
         resultCode: Int,
         intent: Intent?,
     ) {
-        error("Should never enter")
+        // FIXME: We should never enter here, but in the case of process restoration, we actually do reach here because we don't have a way
+        //  to restore the originally registered contract correctly at the moment.
+        // No-op. The result will simply be ignored.
     }
 }
