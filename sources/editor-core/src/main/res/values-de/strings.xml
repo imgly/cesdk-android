@@ -136,7 +136,7 @@
     <string name="ly_img_editor_inspector_bar_button_adjustments">Farbkorrektur</string>
     <string name="ly_img_editor_inspector_bar_button_animations">Animationen</string>
     <string name="ly_img_editor_inspector_bar_button_blur">Weichzeichner</string>
-    <string name="ly_img_editor_inspector_bar_button_clip_speed">Clip-Geschwindigkeit</string>
+    <string name="ly_img_editor_inspector_bar_button_clip_speed">Geschwindigkeit</string>
     <string name="ly_img_editor_inspector_bar_button_close">Schließen</string>
     <string name="ly_img_editor_inspector_bar_button_crop">Zuschneiden</string>
     <string name="ly_img_editor_inspector_bar_button_delete">Löschen</string>
@@ -251,7 +251,7 @@
     <string name="ly_img_editor_sheet_button_close">Schließen</string>
     <string name="ly_img_editor_sheet_clip_speed_duration_label">Dauer</string>
     <string name="ly_img_editor_sheet_clip_speed_speed_label">Geschwindigkeit</string>
-    <string name="ly_img_editor_sheet_clip_speed_title">Clip-Geschwindigkeit</string>
+    <string name="ly_img_editor_sheet_clip_speed_title">Geschwindigkeit</string>
     <string name="ly_img_editor_sheet_color_picker_label_hue">Farbton</string>
     <string name="ly_img_editor_sheet_color_picker_label_opacity">Deckkraft</string>
     <string name="ly_img_editor_sheet_crop_button_flip">Spiegeln</string>

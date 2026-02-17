@@ -136,7 +136,7 @@
     <string name="ly_img_editor_inspector_bar_button_adjustments">Adjustments</string>
     <string name="ly_img_editor_inspector_bar_button_animations">Animations</string>
     <string name="ly_img_editor_inspector_bar_button_blur">Blur</string>
-    <string name="ly_img_editor_inspector_bar_button_clip_speed">Clip Speed</string>
+    <string name="ly_img_editor_inspector_bar_button_clip_speed">Speed</string>
     <string name="ly_img_editor_inspector_bar_button_close">Close</string>
     <string name="ly_img_editor_inspector_bar_button_crop">Crop</string>
     <string name="ly_img_editor_inspector_bar_button_delete">Delete</string>
@@ -251,7 +251,7 @@
     <string name="ly_img_editor_sheet_button_close">Close</string>
     <string name="ly_img_editor_sheet_clip_speed_duration_label">Duration</string>
     <string name="ly_img_editor_sheet_clip_speed_speed_label">Speed</string>
-    <string name="ly_img_editor_sheet_clip_speed_title">Clip Speed</string>
+    <string name="ly_img_editor_sheet_clip_speed_title">Speed</string>
     <string name="ly_img_editor_sheet_color_picker_label_hue">Hue</string>
     <string name="ly_img_editor_sheet_color_picker_label_opacity">Opacity</string>
     <string name="ly_img_editor_sheet_crop_button_flip">Flip</string>
