@@ -40,7 +40,6 @@ fun ApparelUi(
 
     val libraryViewModel = viewModel {
         LibraryViewModel(
-            editorScope = editorScope,
             onUpload = onUpload,
         )
     }

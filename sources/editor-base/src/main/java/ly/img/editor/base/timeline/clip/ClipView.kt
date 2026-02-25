@@ -32,7 +32,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -61,6 +63,7 @@ fun ClipView(
     modifier: Modifier = Modifier,
     clip: Clip,
     timelineState: TimelineState,
+    scrollContentOffset: () -> Int = { 0 },
     onEvent: (Event) -> Unit,
 ) {
     val isSelected by remember(clip.id) {
@@ -80,8 +83,11 @@ fun ClipView(
             mutableStateOf(zoomState.toPx(clip.duration))
         }
 
-        val totalDurationWidth by remember(timelineState.totalDuration, zoomState.zoomLevel) {
-            mutableStateOf(zoomState.toPx(timelineState.totalDuration))
+        val overlayDuration = timelineState.playerState.maxPlaybackDuration
+            ?.takeIf { it < timelineState.totalDuration }
+            ?: timelineState.totalDuration
+        val overlayDurationWidth by remember(overlayDuration, zoomState.zoomLevel) {
+            mutableStateOf(zoomState.toPx(overlayDuration))
         }
 
         BoxWithConstraints(
@@ -101,6 +107,7 @@ fun ClipView(
                     }
                 },
         ) {
+            val density = LocalDensity.current
             var clipDurationText by remember(isSelected, clip.duration) {
                 mutableStateOf(
                     if (isSelected) {
@@ -112,6 +119,18 @@ fun ClipView(
             }
 
             var clipDragType: ClipDragType? by remember { mutableStateOf(null) }
+            var labelWidth by remember { mutableStateOf(0.dp) }
+
+            val pinOffsetDp by remember(clip.timeOffset, clip.duration, zoomState.zoomLevel) {
+                derivedStateOf {
+                    val clipLeftCutoff = (scrollContentOffset() - offset).coerceAtLeast(0f)
+                    val labelWidthPx = with(density) { labelWidth.toPx() }
+                    val rightEdgePadding = with(density) { TimelineConfiguration.clipPadding.toPx() }
+                    val maxPinOffset = (width - labelWidthPx - rightEdgePadding).coerceAtLeast(0f)
+                    with(density) { minOf(clipLeftCutoff, maxPinOffset).toDp() }
+                }
+            }
+
             val draggingColor = LocalExtendedColorScheme.current.yellow.color
             val selectedColor = MaterialTheme.colorScheme.primary
             val draggingIconColor = LocalExtendedColorScheme.current.yellow.onColor
@@ -136,24 +155,29 @@ fun ClipView(
                 clip = clip,
                 timelineState = timelineState,
                 inTimeline = true,
+                labelWidth = labelWidth,
+                clipWidth = maxWidth,
+                clipDragType = clipDragType,
+                pinOffset = pinOffsetDp,
             )
 
-            val overlayWidth = width + offset - totalDurationWidth
+            val overlayWidth = (width + offset - overlayDurationWidth).coerceAtMost(width)
             ClipForegroundView(
                 clip = clip,
                 isSelected = isSelected,
-                zoomState = zoomState,
                 clipDurationText = clipDurationText,
+                pinOffset = pinOffsetDp,
                 overlayWidth = overlayWidth.toDp(),
                 overlayShape = if (overlayWidth <= 0) {
                     null
                 } else {
-                    if (offset > totalDurationWidth) {
+                    if (offset > overlayDurationWidth) {
                         MaterialTheme.shapes.small
                     } else {
                         MaterialTheme.shapes.small.copy(topStart = CornerSize(0.dp), bottomStart = CornerSize(0.dp))
                     }
                 },
+                onLabelWidthMeasured = remember { { measuredWidth: Dp -> labelWidth = measuredWidth } },
             )
 
             if (isSelected) {
@@ -407,7 +431,7 @@ fun ClipView(
         if (!clip.isInBackgroundTrack) {
             ClipOverlay(
                 modifier = Modifier
-                    .offset(totalDurationWidth.toDp())
+                    .offset(overlayDurationWidth.toDp())
                     .height(TimelineConfiguration.clipHeight)
                     .fillMaxWidth()
                     .align(Alignment.TopEnd),

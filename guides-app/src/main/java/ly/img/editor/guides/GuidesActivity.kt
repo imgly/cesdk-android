@@ -1,6 +1,7 @@
 package ly.img.editor.guides
 
 import CustomPanelSolution
+import ForceTrimVideoSolution
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -35,17 +36,26 @@ private fun GuidesApp() {
     Surface(color = MaterialTheme.colorScheme.background) {
         NavHost(navController = navController, startDestination = "home") {
             composable("home") {
-                DockDemoHome(onOpenDemo = { navController.navigate("dock-demo") })
+                GuidesHome(
+                    onOpenDockDemo = { navController.navigate("dock-demo") },
+                    onOpenForceTrimDemo = { navController.navigate("force-trim") },
+                )
             }
             composable("dock-demo") {
                 CustomPanelSolution(navController = navController)
+            }
+            composable("force-trim") {
+                ForceTrimVideoSolution(navController = navController)
             }
         }
     }
 }
 
 @Composable
-private fun DockDemoHome(onOpenDemo: () -> Unit) {
+private fun GuidesHome(
+    onOpenDockDemo: () -> Unit,
+    onOpenForceTrimDemo: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -57,14 +67,20 @@ private fun DockDemoHome(onOpenDemo: () -> Unit) {
             style = MaterialTheme.typography.headlineSmall,
         )
         Text(
-            text = "Open the Dock Button Demo to see the custom dock button launching a panel.",
+            text = "Pick a demo to preview the guide examples.",
             style = MaterialTheme.typography.bodyMedium,
         )
         Button(
             modifier = Modifier.fillMaxWidth(),
-            onClick = onOpenDemo,
+            onClick = onOpenDockDemo,
         ) {
             Text("Dock Button Demo")
+        }
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onOpenForceTrimDemo,
+        ) {
+            Text("Force Trim Demo")
         }
     }
 }

@@ -12,6 +12,7 @@ fun TrackView(
     track: Track,
     timelineState: TimelineState,
     modifier: Modifier = Modifier,
+    scrollContentOffset: () -> Int = { 0 },
     onEvent: (Event) -> Unit,
 ) {
     Box(
@@ -21,6 +22,7 @@ fun TrackView(
             ClipView(
                 clip = clip,
                 timelineState = timelineState,
+                scrollContentOffset = scrollContentOffset,
                 onEvent = onEvent,
             )
         }

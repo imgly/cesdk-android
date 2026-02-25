@@ -92,7 +92,13 @@ fun EngineConfiguration.Companion.rememberForPhoto(
         }
     },
     onExport = {
-        EditorDefaults.onExport(editorContext.engine, editorContext.eventHandler, MimeType.PNG)
+        EditorDefaults.onExport(
+            engine = editorContext.engine,
+            eventHandler = editorContext.eventHandler,
+            mimeType = MimeType.PNG,
+            minimumVideoDuration = editorContext.minimumVideoDuration,
+            maximumVideoDuration = editorContext.maximumVideoDuration,
+        )
     },
 )
 

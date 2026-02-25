@@ -7,6 +7,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.FileProvider
@@ -142,6 +143,8 @@ import java.io.File
 import java.io.FileOutputStream
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
 
 abstract class EditorUiViewModel(
     private val onCreate: suspend EditorScope.() -> Unit,
@@ -159,6 +162,8 @@ abstract class EditorUiViewModel(
     val engine: Engine
         get() = editor.engine
     protected var timelineState: TimelineState? = null
+    private var videoDurationConstraintsJob: Job? = null
+    private var currentVideoDurationConstraints: VideoDurationConstraints? = null
 
     private var firstLoad = true
     private var uiInsets = Rect.Zero
@@ -1687,6 +1692,34 @@ abstract class EditorUiViewModel(
         }
     }
 
+    private fun observeVideoDurationConstraints() {
+        if (videoDurationConstraintsJob != null) return
+        videoDurationConstraintsJob = viewModelScope.launch {
+            snapshotFlow {
+                VideoDurationConstraints(
+                    minimumVideoDuration = editor.minimumVideoDuration,
+                    maximumVideoDuration = editor.maximumVideoDuration,
+                )
+            }.distinctUntilChanged().collect { constraints ->
+                updateVideoDurationConstraints(constraints)
+            }
+        }
+    }
+
+    private fun updateVideoDurationConstraints(constraints: VideoDurationConstraints) {
+        currentVideoDurationConstraints = constraints
+        applyVideoDurationConstraintsToTimeline()
+    }
+
+    private fun applyVideoDurationConstraintsToTimeline() {
+        val constraints = currentVideoDurationConstraints ?: return
+        val minDuration = constraints.minimumVideoDuration?.takeIf { it > ZERO }
+        val maxDuration = constraints.maximumVideoDuration
+            ?.takeIf { it > ZERO }
+            ?.takeIf { minDuration == null || it >= minDuration }
+        timelineState?.playerState?.maxPlaybackDuration = maxDuration
+    }
+
     private fun observeActiveScene() {
         viewModelScope.launch {
             isSceneLoaded.first { it }
@@ -1696,6 +1729,7 @@ abstract class EditorUiViewModel(
                 initiallySetEditorSelectGlobalScope = engine.editor.getGlobalScope(Scope.EditorSelect)
                 if (engine.isSceneModeVideo) {
                     timelineState = TimelineState(engine, viewModelScope)
+                    applyVideoDurationConstraintsToTimeline()
                 }
                 showPage(pageIndex.value)
                 setEditMode(EditorViewMode.Edit()).join()
@@ -1807,6 +1841,8 @@ abstract class EditorUiViewModel(
 
     fun setEditorScope(editorScope: EditorScope) {
         this.editorScope = editorScope
+        libraryViewModel.setEditorScope(editorScope)
+        observeVideoDurationConstraints()
     }
 
     private fun onPostcardGreetingSizeChange(
@@ -1856,4 +1892,9 @@ abstract class EditorUiViewModel(
     private companion object {
         const val DEFAULT_PAGE_INSET = 16F
     }
+
+    private data class VideoDurationConstraints(
+        val minimumVideoDuration: Duration?,
+        val maximumVideoDuration: Duration?,
+    )
 }

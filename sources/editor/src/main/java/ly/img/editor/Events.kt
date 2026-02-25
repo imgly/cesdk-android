@@ -4,6 +4,7 @@ import android.net.Uri
 import ly.img.editor.core.event.EditorEvent
 import ly.img.engine.MimeType
 import java.io.File
+import kotlin.time.Duration
 
 /**
  * An event that is invoked in the default implementations of [EngineConfiguration.onCreate] and [EngineConfiguration.onExport]
@@ -43,6 +44,20 @@ class ShowVideoExportSuccessEvent(
     val uri: Uri,
     val mimeType: String,
 ) : EditorEvent
+
+/**
+ * An event that is invoked in the default implementation of [EngineConfiguration.onExport] for a video scene
+ * when the scene duration is below the minimum length requirement.
+ */
+class ShowVideoMinLengthDialogEvent(
+    val minimumDuration: Duration,
+) : EditorEvent
+
+/**
+ * An event that is invoked for hiding the minimum video length dialog previously triggered by the
+ * [ShowVideoMinLengthDialogEvent] event.
+ */
+object DismissVideoMinLengthDialogEvent : EditorEvent
 
 /**
  * An event that is invoked for canceling the export of a video scene.

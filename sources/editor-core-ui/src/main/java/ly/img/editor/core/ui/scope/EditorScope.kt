@@ -6,7 +6,10 @@ import android.os.Parcelable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.RememberObserver
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
@@ -25,6 +28,7 @@ import ly.img.editor.core.state.EditorState
 import ly.img.editor.core.ui.utils.activity
 import ly.img.engine.Engine
 import ly.img.engine.UnstableEngineApi
+import kotlin.time.Duration
 
 @Composable
 fun EditorScope(
@@ -67,6 +71,23 @@ class EditorContextImpl(
     override val canvasMenu: (@Composable (EditorScope.() -> CanvasMenu))?,
     override val navigationBar: @Composable (EditorScope.() -> NavigationBar)?,
 ) : EditorContext {
+    private var minimumVideoDurationState by mutableStateOf<Duration?>(null)
+    private var maximumVideoDurationState by mutableStateOf<Duration?>(null)
+
+    override val minimumVideoDuration: Duration?
+        get() = minimumVideoDurationState
+
+    override val maximumVideoDuration: Duration?
+        get() = maximumVideoDurationState
+
+    override fun setVideoDurationConstraints(
+        minimumVideoDuration: Duration?,
+        maximumVideoDuration: Duration?,
+    ) {
+        minimumVideoDurationState = minimumVideoDuration
+        maximumVideoDurationState = maximumVideoDuration
+    }
+
     @OptIn(UnstableEngineApi::class)
     override val engine: Engine by lazy {
         Engine.getInstance(id = "ly.img.editor").also {

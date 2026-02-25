@@ -75,6 +75,7 @@ android {
             def includeDirs = [
                 "editor-guides-configuration-dock",
                 "editor-guides-configuration-panel",
+                "editor-guides-video-force-trim",
             ]
             includeDirs.each { name ->
                 def dir = new File(exampleRoot, name)

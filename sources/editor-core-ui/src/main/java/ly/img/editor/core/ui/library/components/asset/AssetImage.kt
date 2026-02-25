@@ -40,6 +40,7 @@ internal fun AssetImage(
         contentPadding = AssetLibraryUiConfig.contentPadding(assetType),
         contentScale = AssetLibraryUiConfig.contentScale(assetType),
         tintImages = AssetLibraryUiConfig.shouldTintImages(assetType),
+        contentDescription = wrappedAsset.asset.label,
         overlayContent = {
             if (wrappedAsset.asset.getMeta("kind") == "video") {
                 val duration = wrappedAsset.asset.getFormattedDuration()

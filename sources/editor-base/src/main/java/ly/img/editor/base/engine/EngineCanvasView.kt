@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import kotlinx.coroutines.CancellationException
 import ly.img.editor.base.R
 import ly.img.editor.core.engine.EngineRenderTarget
 import ly.img.editor.core.theme.surface1
@@ -111,8 +112,6 @@ fun EngineCanvasView(
     LaunchedEffect(Unit) {
         runCatching {
             engine.start(license = license, userId = userId, savedStateRegistryOwner = savedStateRegistryOwner)
-        }.onFailure {
-            onLicenseValidationError(it)
         }.onSuccess {
             engine.editor.setAppIsPaused(appIsPaused)
             engine.setClearColor(clearColor)
@@ -121,6 +120,11 @@ fun EngineCanvasView(
             }
             bind()
             loadScene()
+        }.onFailure {
+            if (it is CancellationException) {
+                throw it
+            }
+            onLicenseValidationError(it)
         }
     }
     DisposableEffect(Unit) {

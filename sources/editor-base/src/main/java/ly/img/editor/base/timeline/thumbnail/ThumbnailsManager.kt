@@ -7,6 +7,13 @@ import ly.img.editor.base.timeline.clip.ClipType
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
 
+/**
+ * Manages thumbnail providers for timeline clips.
+ * Creates the appropriate provider type based on clip type:
+ * - ThumbnailsImageProvider: For video, image, sticker, shape, group clips
+ * - ThumbnailsTextProvider: For text clips
+ * - ThumbnailsAudioProvider: For audio clips (real waveform visualization)
+ */
 class ThumbnailsManager(
     private val engine: Engine,
     private val scope: CoroutineScope,
@@ -24,11 +31,18 @@ class ThumbnailsManager(
         clip: Clip,
         width: Dp,
     ) {
-        if (clip.clipType == ClipType.Audio) return
-
         val provider = providers.getOrPut(clip.id) {
-            ThumbnailsProvider(engine, scope)
+            createProvider(clip.clipType)
         }
-        provider.loadThumbnails(clip, width)
+        provider.loadContent(clip, width)
+    }
+
+    /**
+     * Creates the appropriate provider based on clip type.
+     */
+    private fun createProvider(clipType: ClipType): ThumbnailsProvider = when (clipType) {
+        ClipType.Text -> ThumbnailsTextProvider(engine)
+        ClipType.Audio -> ThumbnailsAudioProvider(engine, scope)
+        else -> ThumbnailsImageProvider(engine, scope)
     }
 }

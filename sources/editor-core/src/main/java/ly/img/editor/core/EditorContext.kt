@@ -15,6 +15,7 @@ import ly.img.editor.core.event.EditorEventHandler
 import ly.img.editor.core.library.AssetLibrary
 import ly.img.editor.core.state.EditorState
 import ly.img.engine.Engine
+import kotlin.time.Duration
 
 /**
  * An umbrella interface containing all the useful properties and functions of the current editor:
@@ -50,6 +51,27 @@ interface EditorContext {
      * The assetLibrary provided via [ly.img.editor.EditorConfiguration.assetLibrary].
      */
     val assetLibrary: AssetLibrary
+
+    /**
+     * The minimum video duration constraint applied to video scenes.
+     */
+    @UnstableEditorApi
+    val minimumVideoDuration: Duration?
+
+    /**
+     * The maximum video duration constraint applied to video scenes.
+     */
+    @UnstableEditorApi
+    val maximumVideoDuration: Duration?
+
+    /**
+     * Updates the minimum and maximum video duration constraints at runtime.
+     */
+    @UnstableEditorApi
+    fun setVideoDurationConstraints(
+        minimumVideoDuration: Duration?,
+        maximumVideoDuration: Duration?,
+    )
 
     /**
      * The overlay provided via [ly.img.editor.EditorConfiguration.overlay].

@@ -111,6 +111,9 @@
     <string name="ly_img_editor_dialog_resize_unit_option_inch">Inch</string>
     <string name="ly_img_editor_dialog_resize_unit_option_millimeter">Millimeter</string>
     <string name="ly_img_editor_dialog_resize_unit_option_pixel">Pixel</string>
+    <string name="ly_img_editor_dialog_video_min_length_button">OK</string>
+    <string name="ly_img_editor_dialog_video_min_length_text">The video must be at least %s long.</string>
+    <string name="ly_img_editor_dialog_video_min_length_title">Video too short</string>
     <string name="ly_img_editor_dock_button_adjustments">Adjustments</string>
     <string name="ly_img_editor_dock_button_audio">Audio</string>
     <string name="ly_img_editor_dock_button_blur">Blur</string>
@@ -448,4 +451,7 @@
     <string name="ly_img_editor_timeline_button_show_timeline">Timeline</string>
     <string name="ly_img_editor_timeline_error_split_out_of_range">Please move the selected clip under the playhead.</string>
     <string name="ly_img_editor_timeline_error_split_short_duration">Can\'t split because one of the clips would become too short.</string>
+    <string name="ly_img_editor_timeline_maximum_video_length">Maximum video length</string>
+    <string name="ly_img_editor_timeline_minimum_video_length">Minimum video length</string>
+    <string name="ly_img_editor_timeline_video_length_too_short">Video length too short</string>
 </resources>

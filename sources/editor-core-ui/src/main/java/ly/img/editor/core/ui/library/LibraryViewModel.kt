@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.library.AssetType
 import ly.img.editor.core.library.LibraryCategory
@@ -69,6 +70,7 @@ import ly.img.engine.AssetDefinition
 import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
+import ly.img.engine.Engine
 import ly.img.engine.FillType
 import ly.img.engine.FindAssetsQuery
 import ly.img.engine.FindAssetsResult
@@ -84,12 +86,19 @@ import kotlin.time.Duration
 import kotlin.time.DurationUnit
 
 class LibraryViewModel(
-    private val editorScope: EditorScope,
     private val onUpload: suspend EditorScope.(AssetDefinition, UploadAssetSourceType) -> AssetDefinition,
 ) : ViewModel() {
+    private lateinit var editorScope: EditorScope
     private val imageLoader = Environment.getImageLoader()
-    private val editor = editorScope.run { editorContext }
-    private val engine = editor.engine
+    private val editor: EditorContext
+        get() = editorScope.run { editorContext }
+    private val engine: Engine
+        get() = editor.engine
+
+    fun setEditorScope(editorScope: EditorScope) {
+        this.editorScope = editorScope
+    }
+
     private val typefaceProvider = TypefaceProvider()
     private val fontDataMapper = FontDataMapper()
 

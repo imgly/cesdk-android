@@ -63,6 +63,7 @@ import ly.img.editor.core.ui.iconpack.Cloudalertoutline
 import ly.img.editor.core.ui.iconpack.Erroroutline
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.WifiCancel
+import ly.img.editor.core.ui.utils.formatForClip
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
 import ly.img.engine.EngineException
@@ -75,6 +76,10 @@ import java.io.File
 import java.nio.ByteBuffer
 import java.util.UUID
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
 
 /**
  * A helper class that provides implementations of some of the properties in [EngineConfiguration] and [EditorConfiguration].
@@ -234,23 +239,36 @@ object EditorDefaults {
      * @param engine the engine that is used in the editor.
      * @param eventHandler the object that can send [EditorEvent]s.
      * @param mimeType the mime type of the export. The default is based on the [SceneMode].
+     * @param minimumVideoDuration the minimum duration constraint for video scenes. If null, there is no minimum constraint.
+     * @param maximumVideoDuration the maximum duration constraint for video scenes. If null, there is no maximum constraint.
      */
     suspend fun onExport(
         engine: Engine,
         eventHandler: EditorEventHandler,
         mimeType: MimeType = if (engine.isSceneModeVideo) MimeType.MP4 else MimeType.PDF,
+        minimumVideoDuration: Duration? = null,
+        maximumVideoDuration: Duration? = null,
     ) {
         EditorDefaults.run {
             val context = engine.applicationContext
             if (engine.isSceneModeVideo) {
                 val page = engine.scene.getCurrentPage() ?: engine.scene.getPages()[0]
+                val normalizedMinDuration = minimumVideoDuration?.takeIf { it > ZERO }
+                val normalizedMaxDuration = maximumVideoDuration?.takeIf { it > ZERO }
+                    ?.takeIf { normalizedMinDuration == null || it >= normalizedMinDuration }
+                val pageDuration = engine.block.getDuration(page).seconds
+                if (normalizedMinDuration != null && pageDuration < normalizedMinDuration) {
+                    eventHandler.send(ShowVideoMinLengthDialogEvent(normalizedMinDuration))
+                    return
+                }
+                val exportDuration = normalizedMaxDuration?.let { minOf(pageDuration, it) } ?: pageDuration
                 var exportProgress = 0f
                 eventHandler.send(ShowVideoExportProgressEvent(exportProgress))
                 runCatching {
                     val buffer = engine.block.exportVideo(
                         block = page,
                         timeOffset = 0.0,
-                        duration = engine.block.getDuration(page),
+                        duration = exportDuration.toDouble(DurationUnit.SECONDS),
                         mimeType = mimeType,
                         progressCallback = { progress ->
                             val newProgress = progress.encodedFrames.toFloat() / progress.totalFrames
@@ -364,6 +382,14 @@ object EditorDefaults {
             state.copy(videoExportStatus = VideoExportStatus.Success(event.uri, event.mimeType))
         }
 
+        is ShowVideoMinLengthDialogEvent -> {
+            state.copy(minimumVideoDurationDialog = event.minimumDuration)
+        }
+
+        is DismissVideoMinLengthDialogEvent -> {
+            state.copy(minimumVideoDurationDialog = null)
+        }
+
         is DismissVideoExportEvent -> {
             state.copy(videoExportStatus = VideoExportStatus.Idle)
         }
@@ -401,6 +427,12 @@ object EditorDefaults {
         }
         if (state.showCloseConfirmationDialog) {
             CloseConfirmationDialog(eventHandler = eventHandler)
+        }
+        state.minimumVideoDurationDialog?.let { minimumDuration ->
+            MinimumVideoDurationDialog(
+                minimumDuration = minimumDuration,
+                eventHandler = eventHandler,
+            )
         }
         val exportStatus = state.videoExportStatus
         if (exportStatus != VideoExportStatus.Idle) {
@@ -484,6 +516,41 @@ object EditorDefaults {
                 }
             },
             properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+        )
+    }
+
+    /**
+     * A helper composable function for displaying a dialog when the video is below the minimum duration requirement.
+     *
+     * @param minimumDuration the minimum duration required for export.
+     * @param eventHandler the object that can send [EditorEvent]s.
+     */
+    @Composable
+    fun MinimumVideoDurationDialog(
+        minimumDuration: Duration,
+        eventHandler: EditorEventHandler,
+    ) {
+        AlertDialog(
+            onDismissRequest = { eventHandler.send(DismissVideoMinLengthDialogEvent) },
+            title = {
+                Text(text = stringResource(R.string.ly_img_editor_dialog_video_min_length_title))
+            },
+            text = {
+                Text(
+                    text = stringResource(
+                        R.string.ly_img_editor_dialog_video_min_length_text,
+                        minimumDuration.formatForClip(),
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { eventHandler.send(DismissVideoMinLengthDialogEvent) },
+                ) {
+                    Text(stringResource(R.string.ly_img_editor_dialog_video_min_length_button))
+                }
+            },
+            properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true),
         )
     }
 

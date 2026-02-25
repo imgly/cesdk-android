@@ -20,4 +20,9 @@ object TimelineConfiguration {
     val rulerHeight = 16.dp
 
     val headerHeight = 48.dp
+
+    val textContentHorizontalPadding = 4.dp
+
+    val audioWaveformBarWidth = 1.dp
+    val audioWaveformBarGap = 1.dp
 }

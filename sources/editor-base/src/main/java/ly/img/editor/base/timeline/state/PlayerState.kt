@@ -23,6 +23,8 @@ class PlayerState(
 
     var isLooping: Boolean by mutableStateOf(false)
 
+    var maxPlaybackDuration: Duration? by mutableStateOf(null)
+
     val formattedPlayheadPosition by derivedStateOf {
         playheadPosition.formatForPlayer()
     }
@@ -30,13 +32,32 @@ class PlayerState(
     private val page = engine.getCurrentPage()
 
     fun refresh() {
+        val playbackTime = engine.block.getPlaybackTime(page).seconds
+        val maxDuration = maxPlaybackDuration
         isPlaying = engine.block.isPlaying(page)
-        playheadPosition = engine.block.getPlaybackTime(page).seconds
         isLooping = engine.block.isLooping(page)
+        if (maxDuration != null && playbackTime > maxDuration) {
+            if (isPlaying) {
+                if (isLooping) {
+                    setPlaybackTime(0.seconds)
+                    playheadPosition = 0.seconds
+                } else {
+                    pause()
+                    isPlaying = false
+                    setPlaybackTime(maxDuration)
+                    playheadPosition = maxDuration
+                }
+            } else {
+                setPlaybackTime(maxDuration)
+                playheadPosition = maxDuration
+            }
+        } else {
+            playheadPosition = playbackTime
+        }
     }
 
     fun play() {
-        val duration = engine.block.getDuration(page).seconds
+        val duration = maxPlaybackDuration ?: engine.block.getDuration(page).seconds
         if (duration == ZERO) return
         if (playheadPosition >= duration) {
             setPlaybackTime(0.seconds)
@@ -61,6 +82,7 @@ class PlayerState(
     }
 
     fun setPlaybackTime(duration: Duration) {
-        engine.block.setPlaybackTime(page, duration.toDouble(DurationUnit.SECONDS))
+        val clampedDuration = maxPlaybackDuration?.let { duration.coerceAtMost(it) } ?: duration
+        engine.block.setPlaybackTime(page, clampedDuration.toDouble(DurationUnit.SECONDS))
     }
 }

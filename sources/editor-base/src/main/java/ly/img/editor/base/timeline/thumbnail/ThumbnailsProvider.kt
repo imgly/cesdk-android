@@ -1,61 +1,34 @@
 package ly.img.editor.base.timeline.thumbnail
 
-import android.content.res.Resources
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.unit.Dp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
-import ly.img.editor.base.engine.getAspectRatio
 import ly.img.editor.base.timeline.clip.Clip
-import ly.img.editor.base.timeline.state.TimelineConfiguration
-import ly.img.engine.Engine
-import ly.img.engine.EngineException
-import ly.img.engine.VideoThumbnailResult
-import kotlin.math.ceil
-import kotlin.math.roundToInt
-import kotlin.time.DurationUnit
 
-class ThumbnailsProvider(
-    private val engine: Engine,
-    private val scope: CoroutineScope,
-) {
-    private var _thumbnails = mutableStateOf(emptyList<VideoThumbnailResult>())
-    val thumbnails: List<VideoThumbnailResult>
-        get() = _thumbnails.value
+/**
+ * Sealed interface for timeline thumbnail providers.
+ * Each clip type that needs visual representation has its own provider implementation:
+ * - ThumbnailsImageProvider: For video/image/sticker/shape clips (generates thumbnails)
+ * - ThumbnailsTextProvider: For text clips (fetches text content)
+ * - ThumbnailsAudioProvider: For audio clips (generates waveform data)
+ */
+sealed interface ThumbnailsProvider {
+    /**
+     * Whether the provider is currently loading content.
+     * Used to show shimmer/loading state in the UI.
+     */
+    val isLoading: Boolean
 
-    private var thumbHeight = TimelineConfiguration.clipHeight
-
-    private var job: Job? = null
-
-    fun loadThumbnails(
+    /**
+     * Loads the content for the given clip.
+     * @param clip The clip to load content for
+     * @param width The available width for display
+     */
+    fun loadContent(
         clip: Clip,
         width: Dp,
-    ) {
-        val aspectRatio = engine.block.getAspectRatio(clip.id)
-        val thumbWidth = thumbHeight * aspectRatio
-        val numberOfFrames = ceil(width / thumbWidth).toInt()
+    )
 
-        job?.cancel()
-        job = scope.launch {
-            try {
-                engine.block.generateVideoThumbnailSequence(
-                    block = clip.id,
-                    thumbnailHeight = (thumbHeight.value * Resources.getSystem().displayMetrics.density).roundToInt(),
-                    timeBegin = 0.0,
-                    timeEnd = clip.duration.toDouble(DurationUnit.SECONDS),
-                    numberOfFrames = numberOfFrames,
-                ).toList().let {
-                    _thumbnails.value = it
-                }
-            } catch (_: EngineException) {
-                // do nothing, can happen in case the block is deleted while thumbs were being generated
-            }
-        }
-    }
-
-    fun cancel() {
-        job?.cancel()
-    }
+    /**
+     * Cancels any ongoing loading operations.
+     */
+    fun cancel()
 }

@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -17,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.core.iconpack.Animation
 import ly.img.editor.core.iconpack.GroupEnter
 import ly.img.editor.core.iconpack.ImageOutline
@@ -47,15 +47,14 @@ fun ClipLabelView(
 
     Box(
         modifier = modifier
-            .padding(2.dp)
+            .padding(start = TimelineConfiguration.clipPadding, top = 2.dp, end = 2.dp, bottom = 2.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(backgroundColor),
     ) {
         Row(
             modifier = Modifier
-                .height(16.dp)
                 .wrapContentWidth(align = Alignment.Start, unbounded = true)
-                .padding(horizontal = 4.dp),
+                .padding(horizontal = 5.dp, vertical = 1.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

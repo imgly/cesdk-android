@@ -19,6 +19,7 @@ data class EditorUiState(
     val showCloseConfirmationDialog: Boolean = false,
     val error: Throwable? = null,
     val videoExportStatus: VideoExportStatus = VideoExportStatus.Idle,
+    val minimumVideoDurationDialog: kotlin.time.Duration? = null,
     val sceneIsLoaded: Boolean = false,
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
@@ -30,6 +31,7 @@ data class EditorUiState(
             VideoExportStatus::class.java.classLoader,
             VideoExportStatus::class.java,
         )!!,
+        minimumVideoDurationDialog = null, // minimumVideoDurationDialog should never be stored
         sceneIsLoaded = false, // sceneIsLoaded should never be stored
     )
 

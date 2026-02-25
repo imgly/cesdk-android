@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -21,15 +23,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ly.img.editor.base.components.scrollbar.LazyColumnScrollbar
 import ly.img.editor.base.components.scrollbar.RowScrollbar
 import ly.img.editor.base.components.scrollbar.ScrollbarSettings
+import ly.img.editor.base.timeline.clip.ClipOverlay
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.timeline.track.TrackView
+import ly.img.editor.core.LocalEditorScope
 import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.iconpack.AddAudio
@@ -38,6 +44,8 @@ import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.theme.surface3
 import ly.img.editor.core.ui.library.LibraryViewModel
 import ly.img.editor.core.ui.utils.roundToPx
+import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.ZERO
 
 @Composable
 fun TimelineContentView(
@@ -49,8 +57,25 @@ fun TimelineContentView(
         timelineState = timelineState,
         onEvent = onEvent,
     ) { horizontalScrollState ->
+        val editorScope = LocalEditorScope.current
+        val editorContext = editorScope.run { editorContext }
+        val minDuration = editorContext.minimumVideoDuration?.takeIf { it > ZERO }
+        val maxDuration = editorContext.maximumVideoDuration
+            ?.takeIf { it > ZERO }
+            ?.takeIf { minDuration == null || it >= minDuration }
         val overlayWidth = maxWidth / 2
+        val viewportWidth = maxWidth
         val overlayWidthPx = overlayWidth.roundToPx()
+        val isPlayheadStickyToMax by remember(maxDuration) {
+            derivedStateOf {
+                val maxPlaybackPx = maxDuration?.let { timelineState.zoomState.toPx(it) } ?: return@derivedStateOf false
+                horizontalScrollState.value.toFloat() >= maxPlaybackPx
+            }
+        }
+
+        val scrollContentOffset: () -> Int = remember(overlayWidthPx) {
+            { horizontalScrollState.value - overlayWidthPx }
+        }
 
         val backgroundTrackGuideline = TimelineConfiguration.clipHeight + TimelineConfiguration.clipPadding * 2
 
@@ -101,6 +126,7 @@ fun TimelineContentView(
                             TrackView(
                                 track = track,
                                 timelineState = timelineState,
+                                scrollContentOffset = scrollContentOffset,
                                 onEvent = onEvent,
                             )
                         }
@@ -137,17 +163,48 @@ fun TimelineContentView(
                             .padding(vertical = TimelineConfiguration.clipPadding),
                     ) {
                         val backgroundTrack = timelineState.dataSource.backgroundTrack
+                        val maxOverlayWidth = if (maxDuration != null && timelineState.totalDuration > maxDuration) {
+                            (durationWidth - timelineState.zoomState.toDp(maxDuration)).coerceAtLeast(0.dp)
+                        } else {
+                            0.dp
+                        }
+                        val selectionInBackgroundTrack = timelineState.selectedClip?.isInBackgroundTrack == true
                         TrackView(
+                            modifier = Modifier.zIndex(if (selectionInBackgroundTrack) 1f else 0f),
                             track = backgroundTrack,
                             timelineState = timelineState,
+                            scrollContentOffset = scrollContentOffset,
                             onEvent = onEvent,
                         )
+                        if (maxOverlayWidth > 0.dp) {
+                            ClipOverlay(
+                                modifier = Modifier
+                                    .offset(x = timelineState.zoomState.toDp(maxDuration!!))
+                                    .height(TimelineConfiguration.clipHeight)
+                                    .width(maxOverlayWidth)
+                                    .clip(RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp))
+                                    .zIndex(if (selectionInBackgroundTrack) 0f else 1f),
+                            )
+                        }
                         AddClipButton(
                             modifier = Modifier.offset(x = if (backgroundTrack.clips.isEmpty()) 1.dp else durationWidth),
                             onEvent = onEvent,
                         )
                     }
                 }
+                TimelineDurationConstraintsView(
+                    modifier = Modifier
+                        .width(overlayWidth + durationWidth + overlayWidth)
+                        .fillMaxHeight(),
+                    timelineState = timelineState,
+                    scrollState = horizontalScrollState,
+                    viewportWidth = viewportWidth,
+                    showMaxTooltipWhileSticky = isPlayheadStickyToMax,
+                    minDuration = minDuration,
+                    maxDuration = maxDuration,
+                    overlayWidth = overlayWidth,
+                    rulerHeight = timelineRulerHeight,
+                )
             }
         }
 
@@ -176,9 +233,27 @@ fun TimelineContentView(
             visibleLengthDp = maxWidth,
         )
 
+        val playheadOffsetPx by remember {
+            derivedStateOf {
+                val playheadPositionPx = timelineState.zoomState.toPx(timelineState.playerState.playheadPosition)
+                val maxPlaybackPx = timelineState.playerState.maxPlaybackDuration?.let {
+                    timelineState.zoomState.toPx(it)
+                }
+                val scrollPx = horizontalScrollState.value.toFloat()
+                val offsetPx = if (maxPlaybackPx != null && scrollPx >= maxPlaybackPx) {
+                    maxPlaybackPx - scrollPx
+                } else if (horizontalScrollState.isScrollInProgress) {
+                    0f
+                } else {
+                    playheadPositionPx - scrollPx
+                }
+                offsetPx.roundToInt()
+            }
+        }
         PlayheadView(
             modifier = Modifier
                 .align(Alignment.Center)
+                .offset { IntOffset(x = playheadOffsetPx, y = 0) }
                 .padding(top = timelineRulerHeight - 1.dp),
         )
     }

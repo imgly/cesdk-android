@@ -40,7 +40,6 @@ fun PhotoUi(
 
     val libraryViewModel = viewModel {
         LibraryViewModel(
-            editorScope = editorScope,
             onUpload = onUpload,
         )
     }

@@ -101,11 +101,7 @@ class EngineConfiguration private constructor(
          * The default baseUri value used in [EngineConfiguration].
          */
         val defaultBaseUri: Uri by lazy {
-            if (EditorBuildConfig.VERSION.contains("nightly")) {
-                "https://cdn.img.ly/nightlies/${EditorBuildConfig.VERSION}/packages/imgly/cesdk-engine/${EditorBuildConfig.VERSION}/assets"
-            } else {
-                "https://cdn.img.ly/packages/imgly/cesdk-engine/${EditorBuildConfig.VERSION}/assets"
-            }.toUri()
+            "https://cdn.img.ly/packages/imgly/cesdk-android/${EditorBuildConfig.VERSION}/assets".toUri()
         }
 
         /**
@@ -202,7 +198,12 @@ class EngineConfiguration private constructor(
             onCreate: suspend EditorScope.() -> Unit,
             onLoaded: suspend EditorScope.() -> Unit = {},
             onExport: suspend EditorScope.() -> Unit = {
-                EditorDefaults.onExport(editorContext.engine, editorContext.eventHandler)
+                EditorDefaults.onExport(
+                    engine = editorContext.engine,
+                    eventHandler = editorContext.eventHandler,
+                    minimumVideoDuration = editorContext.minimumVideoDuration,
+                    maximumVideoDuration = editorContext.maximumVideoDuration,
+                )
             },
             onUpload: suspend EditorScope.(
                 AssetDefinition,

@@ -41,7 +41,6 @@ fun VideoUi(
 
     val libraryViewModel = viewModel {
         LibraryViewModel(
-            editorScope = editorScope,
             onUpload = onUpload,
         )
     }

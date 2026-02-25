@@ -50,6 +50,7 @@ internal fun LibraryImageCard(
     contentPadding: Dp = 0.dp,
     contentScale: ContentScale,
     tintImages: Boolean,
+    contentDescription: String? = null,
     cornerRadius: Dp = 12.0.dp,
     overlayContent: @Composable (BoxScope.() -> Unit)? = null,
 ) {
@@ -87,7 +88,7 @@ internal fun LibraryImageCard(
                     )
                 },
                 contentScale = contentScale,
-                contentDescription = null,
+                contentDescription = contentDescription,
                 placeholder = if (LocalInspectionMode.current) {
                     GradientPainter(
                         Brush.linearGradient(
