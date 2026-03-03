@@ -148,8 +148,8 @@ fun SpeedSheet(
             durationInput = uiState.durationSeconds?.let(::formatDurationValue) ?: ""
         }
     }
-    val speedSuffix = stringResource(id = R.string.ly_img_editor_sheet_speed_suffix)
-    val durationSuffix = stringResource(id = R.string.ly_img_editor_sheet_duration_suffix)
+    val speedSuffix = stringResource(id = R.string.ly_img_editor_sheet_clip_speed_speed_suffix)
+    val durationSuffix = stringResource(id = R.string.ly_img_editor_sheet_clip_speed_duration_suffix)
 
     fun applySpeed(newSpeed: Float) {
         if (!isSpeedMatch(newSpeed, uiState.speed)) {
@@ -207,7 +207,7 @@ fun SpeedSheet(
                         .fillMaxWidth(),
             ) {
                 SpeedStepperRow(
-                    title = stringResource(id = R.string.ly_img_editor_sheet_speed_label),
+                    title = stringResource(id = R.string.ly_img_editor_sheet_clip_speed_speed_label),
                     value = speedInput,
                     previousValueProvider = previousSpeedProvider,
                     nextValueProvider = nextSpeedProvider,
@@ -223,7 +223,7 @@ fun SpeedSheet(
                 Divider(Modifier.padding(horizontal = 16.dp))
 
                 DurationRow(
-                    title = stringResource(id = R.string.ly_img_editor_sheet_duration_label),
+                    title = stringResource(id = R.string.ly_img_editor_sheet_clip_speed_duration_label),
                     value = durationInput,
                     isEnabled = durationState.isEnabled,
                     onValueChange = { durationInput = sanitizeDecimalInput(it, DURATION_INPUT_DECIMALS) },
