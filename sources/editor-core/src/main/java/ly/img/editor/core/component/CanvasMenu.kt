@@ -759,7 +759,12 @@ class CanvasMenu private constructor(
                 }
 
                 remember(this, selection, isScenePlayingTrigger) {
-                    Scope(parentScope = this, selection = selection)
+                    // isScenePlayingTrigger (driven by page events) can change before the selection Flow
+                    // emits null after a block deletion, causing a new Scope with a stale selection.
+                    val validSelection = selection?.takeIf {
+                        editorContext.engine.block.isValid(it.designBlock)
+                    }
+                    Scope(parentScope = this, selection = validSelection)
                 }
             }
 
