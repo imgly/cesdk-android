@@ -297,12 +297,13 @@ object EditorDefaults {
                     val buffer = engine.block.export(
                         block = requireNotNull(engine.scene.get()),
                         mimeType = mimeType,
-                    ) {
-                        scene.getPages().forEach {
-                            block.setScopeEnabled(it, key = "layer/visibility", enabled = true)
-                            block.setVisible(it, visible = true)
-                        }
-                    }
+                        onPreExport = {
+                            scene.getPages().forEach { page ->
+                                block.setScopeEnabled(page, key = "layer/visibility", enabled = true)
+                                block.setVisible(page, visible = true)
+                            }
+                        },
+                    )
                     val file = writeToTempFile(buffer, mimeType)
                     withContext(Dispatchers.IO) {
                         FileProvider.getUriForFile(context, "${context.packageName}.ly.img.editor.fileprovider", file)
