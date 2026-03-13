@@ -183,13 +183,13 @@ private fun Property.getUpdatedProperty(
     assetProperty: AssetProperty,
 ) = when (this.valueType) {
     is PropertyValueType.Int -> (assetProperty as? AssetIntProperty)?.run {
-        PropertyValueType.Int(min..max)
+        PropertyValueType.Int(min..max, step)
     }
     is PropertyValueType.Float -> (assetProperty as? AssetFloatProperty)?.run {
-        PropertyValueType.Float(min..max)
+        PropertyValueType.Float(min..max, step)
     }
     is PropertyValueType.Double -> (assetProperty as? AssetDoubleProperty)?.run {
-        PropertyValueType.Double(min..max)
+        PropertyValueType.Double(min..max, step)
     }
     is PropertyValueType.StringEnum -> (assetProperty as? AssetEnumProperty)?.run {
         PropertyValueType.StringEnum(this@getUpdatedProperty.valueType.options)

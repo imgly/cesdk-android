@@ -25,6 +25,8 @@ import ly.img.editor.core.iconpack.PlayBoxOutline
 import ly.img.editor.core.iconpack.ShapesOutline
 import ly.img.editor.core.iconpack.StickerEmojiOutline
 import ly.img.editor.core.iconpack.TextFields
+import ly.img.editor.core.theme.LocalExtendedColorScheme
+import ly.img.editor.core.theme.surface2
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Lockoutline
 import ly.img.editor.core.ui.iconpack.LoopClip
@@ -38,7 +40,10 @@ fun ClipLabelView(
     duration: String,
     isSelected: Boolean,
 ) {
-    val backgroundColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
+    val backgroundColor = when (clip.clipType) {
+        ClipType.Audio -> LocalExtendedColorScheme.current.purple.onColor.copy(alpha = 0.24f)
+        else -> MaterialTheme.colorScheme.surface2.copy(alpha = 0.75f)
+    }
 
     Box(
         modifier = modifier

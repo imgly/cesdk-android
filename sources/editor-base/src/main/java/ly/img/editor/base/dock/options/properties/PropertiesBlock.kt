@@ -32,6 +32,7 @@ import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.ui.UiDefaults
 import ly.img.editor.core.ui.sheetScrollableContentModifier
 import ly.img.engine.DesignBlock
+import kotlin.math.log10
 import kotlin.math.roundToInt
 
 @Composable
@@ -112,6 +113,7 @@ private fun IntProperty(
             ).let { onEvent(it) }
         },
         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
+        decimalPlaces = 0,
     )
 }
 
@@ -122,10 +124,11 @@ private fun FloatProperty(
     onEvent: (EditorEvent) -> Unit,
 ) {
     val (property, value) = propertyAndValue
+    val valueType = property.valueType as PropertyValueType.Float
     PropertySlider(
         title = property.titleRes,
         value = (value as PropertyValue.Float).value,
-        valueRange = (property.valueType as PropertyValueType.Float).range,
+        valueRange = valueType.range,
         onValueChange = { newValue ->
             BlockEvent.OnChangeProperty(
                 designBlock = designBlock,
@@ -134,6 +137,7 @@ private fun FloatProperty(
             ).let { onEvent(it) }
         },
         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
+        decimalPlaces = decimalPlacesFromStep(valueType.step),
     )
 }
 
@@ -144,11 +148,12 @@ private fun DoubleProperty(
     onEvent: (EditorEvent) -> Unit,
 ) {
     val (property, value) = propertyAndValue
+    val valueType = property.valueType as PropertyValueType.Double
     PropertySlider(
         title = property.titleRes,
         value = (value as PropertyValue.Double).value.toFloat(),
-        valueRange = remember((property.valueType as PropertyValueType.Double).range) {
-            property.valueType.range.let {
+        valueRange = remember(valueType.range) {
+            valueType.range.let {
                 it.start.toFloat()..it.endInclusive.toFloat()
             }
         },
@@ -160,6 +165,7 @@ private fun DoubleProperty(
             ).let { onEvent(it) }
         },
         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
+        decimalPlaces = decimalPlacesFromStep(valueType.step.toFloat()),
     )
 }
 
@@ -311,3 +317,8 @@ private fun StringEnumProperty(
         )
     }
 }
+
+private fun decimalPlacesFromStep(
+    step: Float,
+    minDecimals: Int = 1,
+): Int = if (step >= 1f) minDecimals else maxOf(minDecimals, -log10(step.toDouble()).toInt()).coerceAtMost(2)
