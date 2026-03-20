@@ -28,7 +28,10 @@ import ly.img.engine.Engine
 import ly.img.engine.EngineException
 import ly.img.engine.FillType
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.seconds
+
+private const val VOICEOVER_KIND = "voiceover"
 
 class TimelineState(
     private val engine: Engine,
@@ -100,6 +103,14 @@ class TimelineState(
     }
 
     fun onHistoryUpdated() {
+        // Rebuild clips from engine state first. Voiceover recording mutates a draft audio block
+        // in place, so a provider-only refresh can otherwise keep stale draft metadata.
+        cleanUpEmptyTracks()
+        pageChildren = engine.block.getChildren(page)
+        refresh()
+        updateSelection(engine.block.findAllSelected().firstOrNull())
+        updateDuration()
+        playerState.refresh()
         refreshThumbnails()
     }
 
@@ -131,7 +142,7 @@ class TimelineState(
             dataSource.findClip(designBlock)
         }
 
-        if (selection != null && selection != selectedClip) {
+        if (selection != null && selection.id != selectedClip?.id) {
             playerState.pause()
         }
 
@@ -141,6 +152,10 @@ class TimelineState(
     private fun refresh() {
         dataSource.reset()
         pageChildren.forEach { refresh(it) }
+        thumbnailsManager.destroyProvidersExcept(
+            dataSource.allClips()
+                .mapTo(linkedSetOf()) { clip -> clip.id },
+        )
     }
 
     private fun refresh(
@@ -247,6 +262,12 @@ class TimelineState(
 
         val duration = engine.block.getDuration(designBlock).seconds
         val timeOffset = engine.block.getTimeOffset(designBlock).seconds
+        val audioFileUri = if (clipType == ClipType.Audio) {
+            runCatching { engine.block.getString(designBlock, "audio/fileURI") }.getOrDefault("")
+        } else {
+            ""
+        }
+        val isLiveBufferAudio = audioFileUri.startsWith("buffer://")
 
         val allowsTrimming = engine.block.hasTrim(trimmableId)
         val playbackSpeed =
@@ -254,7 +275,7 @@ class TimelineState(
                 ?.let(engine.block::getPlaybackSpeed)
                 ?: 1f
 
-        val trimOffset = if (allowsTrimming) {
+        val trimOffset = if (allowsTrimming && !isLiveBufferAudio) {
             // The trimOffset isn't known until the resource has loaded
             try {
                 engine.block.getTrimOffset(trimmableId).seconds
@@ -279,7 +300,10 @@ class TimelineState(
                 hasLoaded = true
             }.onFailure {
                 footageDuration = duration
-                hasLoaded = false
+                hasLoaded = isLiveBufferAudio
+                if (isLiveBufferAudio) {
+                    return@onFailure
+                }
                 // Currently, engine doesn't trigger an event when the resource is loaded. So, we force load and refresh explicitly
                 // after waiting for it to load.
                 coroutineScope.launch {
@@ -297,12 +321,17 @@ class TimelineState(
         }
 
         val allowsSelecting = engine.block.isAllowedByScope(designBlock, Scope.EditorSelect)
+        val isVoiceOver = clipType == ClipType.Audio &&
+            runCatching { engine.block.getKind(designBlock) == VOICEOVER_KIND }.getOrDefault(false)
+        val hasAudioResource = clipType == ClipType.Audio && audioFileUri.isNotBlank()
         val anyAnimationBlock = engine.block.getInAnimation(designBlock).takeIf { engine.block.isValid(it) }
             ?: engine.block.getOutAnimation(designBlock).takeIf { engine.block.isValid(it) }
             ?: engine.block.getLoopAnimation(designBlock).takeIf { engine.block.isValid(it) }
         val clip = Clip(
             id = designBlock,
             clipType = clipType,
+            isVoiceOver = isVoiceOver,
+            hasAudioResource = hasAudioResource,
             trimmableId = trimmableId,
             fillId = fillId,
             shapeId = shapeId,
@@ -369,12 +398,19 @@ class TimelineState(
         if (existingClip != null) {
             val index = track.clips.indexOf(existingClip)
             track.clips[index] = newClip
-            if (existingClip.duration != newClip.duration) {
+            val audioResourceChanged = newClip.clipType == ClipType.Audio &&
+                existingClip.hasAudioResource != newClip.hasAudioResource
+            val audioLoadStateChanged = newClip.clipType == ClipType.Audio &&
+                existingClip.hasLoaded != newClip.hasLoaded
+            if (existingClip.duration != newClip.duration || audioResourceChanged || audioLoadStateChanged) {
                 // This means that the duration of the clip has been updated.
                 // Currently, the thumbnails are refreshed when a history event is created.
                 // In certain scenarios, it may happen that the duration of the clip is updated after the call to onHistoryUpdated(),
                 // this results in thumbnails being generated for the previous known duration.
                 // So, we force a refresh again here.
+                if (audioResourceChanged) {
+                    thumbnailsManager.destroyProvider(newClip.id)
+                }
                 thumbnailsManager.refreshThumbnails(clip = newClip, width = zoomState.toDp(newClip.duration))
             }
         } else {
@@ -394,6 +430,19 @@ class TimelineState(
     }
 
     private fun updateDuration() {
-        totalDuration = engine.block.getDuration(page).seconds
+        val pageDuration = engine.block.getDuration(page).seconds
+        val clipsDuration = dataSource.allClips()
+            .maxOfOrNull { clip -> clip.timeOffset + clip.duration }
+            ?: ZERO
+        val hasBackgroundTrack = pageChildren.any { block ->
+            engine.block.isValid(block) &&
+                DesignBlockType.get(engine.block.getType(block)) == DesignBlockType.Track &&
+                engine.block.isPageDurationSource(block)
+        }
+        totalDuration = if (hasBackgroundTrack) {
+            pageDuration
+        } else {
+            maxOf(pageDuration, clipsDuration)
+        }
     }
 }

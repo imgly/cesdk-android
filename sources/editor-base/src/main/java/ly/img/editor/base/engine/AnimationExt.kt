@@ -107,16 +107,6 @@ fun AnimationType.getAvailableProperties() = when (this) {
         duration,
         intensity(),
     )
-    AnimationType.ScaleLoop -> listOf(
-        duration,
-        easing,
-        directionScaleLoop(),
-        startScale(),
-        endScale(),
-        startDelay(),
-        holdDuration(),
-        easingDuration(),
-    )
     AnimationType.TypewriterText -> listOf(
         duration,
         writingStyleShort(),
@@ -267,50 +257,4 @@ private fun AnimationType.zoomIntensity() = Property(
     titleRes = R.string.ly_img_editor_sheet_animations_label_zoom_intensity,
     key = "$key/zoomIntensity",
     valueType = PropertyValueType.Float(),
-)
-
-private fun AnimationType.directionScaleLoop() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_direction,
-    key = "$key/direction",
-    valueType = PropertyValueType.StringEnum(
-        options = listOf(
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_all, "All"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_horizontal, "Horizontal"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_vertical, "Vertical"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_top_left, "TopLeft"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_top_right, "TopRight"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_bottom_left, "BottomLeft"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_bottom_right, "BottomRight"),
-        ),
-    ),
-)
-
-private fun AnimationType.startScale() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_start_scale,
-    key = "$key/startScale",
-    valueType = PropertyValueType.Float(),
-)
-
-private fun AnimationType.endScale() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_end_scale,
-    key = "$key/endScale",
-    valueType = PropertyValueType.Float(),
-)
-
-private fun AnimationType.startDelay() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_start_delay,
-    key = "$key/startDelay",
-    valueType = PropertyValueType.Double(),
-)
-
-private fun AnimationType.holdDuration() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_hold_duration,
-    key = "$key/holdDuration",
-    valueType = PropertyValueType.Double(),
-)
-
-private fun AnimationType.easingDuration() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_easing_duration,
-    key = "$key/easingDuration",
-    valueType = PropertyValueType.Double(),
 )

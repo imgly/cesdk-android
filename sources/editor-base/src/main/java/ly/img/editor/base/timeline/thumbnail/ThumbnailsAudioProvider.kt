@@ -1,14 +1,15 @@
 package ly.img.editor.base.timeline.thumbnail
-
+import android.os.SystemClock
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.unit.Dp
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ly.img.editor.base.timeline.clip.Clip
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.engine.Engine
-import ly.img.engine.EngineException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
@@ -55,6 +56,9 @@ class ThumbnailsAudioProvider(
     private var requestedTrimOffset: Duration = 0.seconds
     private var requestedDuration: Duration = 0.seconds
     private var requestedNumberOfSamples: Int = 0
+    private var requestedHasAudioResource: Boolean = false
+    private var requestedAudioUri: String = ""
+    private var lastLiveBufferRefreshRealtimeMs: Long = 0L
 
     override fun loadContent(
         clip: Clip,
@@ -62,43 +66,112 @@ class ThumbnailsAudioProvider(
     ) {
         val barStride = TimelineConfiguration.audioWaveformBarWidth + TimelineConfiguration.audioWaveformBarGap
         val numberOfSamples = (width / barStride).toInt().coerceAtLeast(1)
+        val audioUri = if (clip.hasAudioResource) {
+            runCatching { engine.block.getString(clip.id, "audio/fileURI") }.getOrDefault("")
+        } else {
+            ""
+        }
+        val isLiveBufferResource = audioUri.startsWith("buffer://")
+        val now = SystemClock.elapsedRealtime()
 
         val sameRequest = clip.trimOffset == requestedTrimOffset &&
             clip.duration == requestedDuration &&
-            numberOfSamples == requestedNumberOfSamples
+            numberOfSamples == requestedNumberOfSamples &&
+            clip.hasAudioResource == requestedHasAudioResource &&
+            audioUri == requestedAudioUri
 
         if (sameRequest) {
             if (job?.isActive == true) return
             if (_loadedTrimOffset.value == clip.trimOffset && loadedDuration.value == clip.duration) return
         }
 
+        if (
+            isLiveBufferResource &&
+            _samples.value.isNotEmpty() &&
+            now - lastLiveBufferRefreshRealtimeMs < LIVE_BUFFER_THUMBNAIL_REFRESH_INTERVAL_MS
+        ) {
+            return
+        }
+
         job?.cancel()
         requestedTrimOffset = clip.trimOffset
         requestedDuration = clip.duration
         requestedNumberOfSamples = numberOfSamples
+        requestedHasAudioResource = clip.hasAudioResource
+        requestedAudioUri = audioUri
 
-        job = scope.launch {
-            try {
-                val trimOffsetSeconds = clip.trimOffset.toDouble(DurationUnit.SECONDS)
-                val durationSeconds = clip.duration.toDouble(DurationUnit.SECONDS)
-                val timeEnd = trimOffsetSeconds + durationSeconds
+        // Draft voiceover clips do not have an audio resource yet.
+        // Avoid hammering engine thumbnail generation with failing requests.
+        if (!clip.hasAudioResource) {
+            _samples.value = listOf(0f)
+            _loadedTrimOffset.value = clip.trimOffset
+            loadedDuration.value = clip.duration
+            return
+        }
+
+        val trimOffset = clip.trimOffset
+        val duration = clip.duration
+        val trimOffsetSeconds = trimOffset.toDouble(DurationUnit.SECONDS)
+        val durationSeconds = duration.toDouble(DurationUnit.SECONDS)
+        val timeEnd = trimOffsetSeconds + durationSeconds
+
+        suspend fun loadWaveformSamples(): Boolean {
+            val samples = buildList<Float> {
                 engine.block.generateAudioThumbnailSequence(
-                    block = clip.id,
+                    block = clip.trimmableId,
                     samplesPerChunk = numberOfSamples,
                     timeBegin = trimOffsetSeconds,
                     timeEnd = timeEnd,
                     numberOfSamples = numberOfSamples,
                     numberOfChannels = 1,
                 ).collect { result ->
-                    _samples.value = result.samples
-                    _loadedTrimOffset.value = clip.trimOffset
-                    loadedDuration.value = clip.duration
+                    addAll(result.samples)
                 }
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: EngineException) {
-                _samples.value = emptyList()
             }
+            if (samples.isEmpty()) return false
+            _samples.value = if (samples.size <= numberOfSamples) {
+                samples
+            } else {
+                samples.subList(0, numberOfSamples)
+            }
+            _loadedTrimOffset.value = trimOffset
+            loadedDuration.value = duration
+            return true
+        }
+
+        suspend fun tryLoadWaveformSamples(): Boolean = runCatching {
+            loadWaveformSamples()
+        }.getOrElse { throwable ->
+            if (throwable is CancellationException) throw throwable
+            false
+        }
+
+        job = scope.launch {
+            if (isLiveBufferResource) {
+                if (tryLoadWaveformSamples()) {
+                    lastLiveBufferRefreshRealtimeMs = SystemClock.elapsedRealtime()
+                }
+                return@launch
+            }
+
+            if (tryLoadWaveformSamples()) return@launch
+
+            runCatching { engine.block.forceLoadAVResource(clip.trimmableId) }
+
+            repeat(20) { attempt ->
+                if (attempt > 0) {
+                    delay(100)
+                }
+                val isResourceLoaded = runCatching {
+                    engine.block.isAVResourceLoaded(clip.trimmableId)
+                }.getOrDefault(false)
+                if (!isResourceLoaded) {
+                    return@repeat
+                }
+                if (tryLoadWaveformSamples()) return@launch
+            }
+
+            _samples.value = emptyList()
         }
     }
 
@@ -106,3 +179,5 @@ class ThumbnailsAudioProvider(
         job?.cancel()
     }
 }
+
+private const val LIVE_BUFFER_THUMBNAIL_REFRESH_INTERVAL_MS = 400L

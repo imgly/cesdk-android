@@ -41,6 +41,7 @@ import androidx.compose.ui.zIndex
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
+import ly.img.editor.base.dock.options.voiceover.isVoiceOverRecordingInProgress
 import ly.img.editor.base.timeline.clip.trim.ClipDragType
 import ly.img.editor.base.timeline.clip.trim.ClipSelectionView
 import ly.img.editor.base.timeline.clip.trim.ClipTrimHandleIconView
@@ -50,6 +51,7 @@ import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.base.ui.Event
+import ly.img.editor.core.LocalEditorScope
 import ly.img.editor.core.theme.LocalExtendedColorScheme
 import ly.img.editor.core.ui.utils.almostEquals
 import ly.img.editor.core.ui.utils.formatForClip
@@ -66,13 +68,27 @@ fun ClipView(
     scrollContentOffset: () -> Int = { 0 },
     onEvent: (Event) -> Unit,
 ) {
+    val editorContext = with(LocalEditorScope.current) { editorContext }
+    val isVoiceOverRecordingInProgress = editorContext.isVoiceOverRecordingInProgress
     val isSelected by remember(clip.id) {
         derivedStateOf {
             clip.id == timelineState.selectedClip?.id
         }
     }
+    val showSelectionUi by remember(
+        isSelected,
+        clip.id,
+        clip.isVoiceOver,
+        clip.hasAudioResource,
+        isVoiceOverRecordingInProgress,
+    ) {
+        derivedStateOf {
+            isSelected &&
+                !(clip.isVoiceOver && (!clip.hasAudioResource || isVoiceOverRecordingInProgress))
+        }
+    }
 
-    Box(modifier = modifier.zIndex(if (isSelected) 1f else 0f)) {
+    Box(modifier = modifier.zIndex(if (showSelectionUi) 1f else 0f)) {
         val zoomState = timelineState.zoomState
 
         var offset by remember(clip.timeOffset, zoomState.zoomLevel, clip.duration) {
@@ -97,7 +113,7 @@ fun ClipView(
                 }
                 .height(TimelineConfiguration.clipHeight)
                 .width(width.toDp())
-                .zIndex(if (isSelected) 1f else 0f)
+                .zIndex(if (showSelectionUi) 1f else 0f)
                 .absolutePadding(right = 1.dp)
                 .pointerInput(clip.id, clip.allowsSelecting) {
                     if (clip.allowsSelecting) {
@@ -108,9 +124,9 @@ fun ClipView(
                 },
         ) {
             val density = LocalDensity.current
-            var clipDurationText by remember(isSelected, clip.duration) {
+            var clipDurationText by remember(showSelectionUi, clip.duration) {
                 mutableStateOf(
-                    if (isSelected) {
+                    if (showSelectionUi) {
                         clip.duration.formatForClip()
                     } else {
                         ""
@@ -164,7 +180,7 @@ fun ClipView(
             val overlayWidth = (width + offset - overlayDurationWidth).coerceAtMost(width)
             ClipForegroundView(
                 clip = clip,
-                isSelected = isSelected,
+                isSelected = showSelectionUi,
                 clipDurationText = clipDurationText,
                 pinOffset = pinOffsetDp,
                 overlayWidth = overlayWidth.toDp(),
@@ -180,7 +196,7 @@ fun ClipView(
                 onLabelWidthMeasured = remember { { measuredWidth: Dp -> labelWidth = measuredWidth } },
             )
 
-            if (isSelected) {
+            if (showSelectionUi) {
                 val handleWidth = 20.dp
                 val verticalInset = 2.dp
 

@@ -61,6 +61,7 @@ import ly.img.editor.core.component.data.EditorIcon
 import ly.img.editor.core.component.data.Nothing
 import ly.img.editor.core.component.data.Selection
 import ly.img.editor.core.component.data.nothing
+import ly.img.editor.core.compose.rememberLastValue
 import ly.img.editor.core.iconpack.Close
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.ui.IconTextButton
@@ -118,6 +119,7 @@ class InspectorBar private constructor(
              */
             @Composable
             fun remember(): HorizontalListBuilder<Item<*>> = HorizontalListBuilder.remember {
+                add { Button.rememberVoiceover() } // Voiceover Audio
                 add { Button.rememberReplace() } // Video, Image, Sticker, Audio
                 add { Button.rememberEditText() } // Text
                 add { Button.rememberFormatText() } // Text
@@ -618,9 +620,16 @@ class InspectorBar private constructor(
         val defaultScope: Scope
             @Composable
             get() = LocalEditorScope.current.run {
-                fun getSelectedDesignBlock(): DesignBlock? = editorContext.engine.block.findAllSelected().firstOrNull()
+                fun getSelectedDesignBlock(): DesignBlock? = editorContext.engine.block.findAllSelected()
+                    .firstOrNull { selected ->
+                        editorContext.engine.block.isValid(selected)
+                    }
 
-                val initialSelection = remember { getSelectedDesignBlock()?.let { Selection.getDefault(editorContext.engine, it) } }
+                val initialSelection = remember {
+                    getSelectedDesignBlock()?.let { selected ->
+                        runCatching { Selection.getDefault(editorContext.engine, selected) }.getOrNull()
+                    }
+                }
                 val selection by remember(this) {
                     editorContext.engine.block.onSelectionChanged()
                         .flatMapLatest {
@@ -642,8 +651,16 @@ class InspectorBar private constructor(
                         .distinctUntilChanged()
                         .onStart { emit(editorContext.engine.editor.getEditMode()) }
                 }.collectAsState(initial = initialEditMode)
-                remember(this, selection, editMode) {
-                    Scope(parentScope = this, selection = selection, editMode = editMode)
+                rememberLastValue(this, selection, editMode) {
+                    val stableSelection = selection
+                    when {
+                        stableSelection == null -> Scope(parentScope = this@run, selection = null, editMode = editMode)
+                        editorContext.engine.block.isValid(stableSelection.designBlock) -> {
+                            Scope(parentScope = this@run, selection = stableSelection, editMode = editMode)
+                        }
+                        isValueSet -> lastValue
+                        else -> Scope(parentScope = this@run, selection = null, editMode = editMode)
+                    }
                 }
             }
 

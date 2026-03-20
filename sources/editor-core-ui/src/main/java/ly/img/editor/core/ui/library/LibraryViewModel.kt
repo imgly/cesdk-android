@@ -338,9 +338,10 @@ class LibraryViewModel(
                     engine.block.setLooping(fill, looping = asset.getMeta("looping").toBoolean())
                 }
             }
-            asset.getMeta("kind")?.let { kind ->
-                engine.block.setKind(designBlock, kind = kind)
-            }
+            val defaultKind = DesignBlockType.get(engine.block.getType(designBlock)).key
+            val currentKind = runCatching { engine.block.getKind(designBlock) }.getOrDefault(defaultKind)
+            val replacementKind = asset.getMeta("kind") ?: currentKind.takeUnless { it == VOICEOVER_KIND } ?: defaultKind
+            engine.block.setKind(designBlock, kind = replacementKind)
             engine.asset.applyAssetSourceAsset(assetSourceType.sourceId, asset, designBlock)
             if (assetType == AssetType.Sticker) {
                 engine.overrideAndRestore(designBlock, Scope.LayerCrop) {
@@ -1093,5 +1094,6 @@ class LibraryViewModel(
 
     companion object {
         private const val TAG = "LibraryViewModel"
+        private const val VOICEOVER_KIND = "voiceover"
     }
 }

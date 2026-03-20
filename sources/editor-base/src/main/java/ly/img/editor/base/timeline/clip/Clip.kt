@@ -7,6 +7,8 @@ import kotlin.time.Duration.Companion.seconds
 data class Clip(
     val id: DesignBlock,
     val clipType: ClipType,
+    val isVoiceOver: Boolean = false,
+    val hasAudioResource: Boolean = false,
     val trimmableId: DesignBlock = id,
     val fillId: DesignBlock? = null,
     val shapeId: DesignBlock? = null,

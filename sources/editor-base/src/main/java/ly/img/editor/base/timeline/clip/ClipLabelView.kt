@@ -28,6 +28,7 @@ import ly.img.editor.core.iconpack.TextFields
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Lockoutline
 import ly.img.editor.core.ui.iconpack.LoopClip
+import ly.img.editor.core.ui.iconpack.Mic
 import ly.img.editor.core.ui.iconpack.Volumeoff
 import ly.img.editor.core.iconpack.IconPack as CoreIconPack
 
@@ -73,7 +74,7 @@ fun ClipLabelView(
                 )
             }
             ClipIcon(clip)
-            if (clip.clipType == ClipType.Audio) {
+            if (clip.clipType == ClipType.Audio && isSelected) {
                 Text(
                     text = clip.title,
                     style = MaterialTheme.typography.bodySmall,
@@ -89,7 +90,7 @@ private fun ClipIcon(clip: Clip) {
         IconPack.Lockoutline
     } else {
         when (clip.clipType) {
-            ClipType.Audio -> ly.img.editor.core.iconpack.IconPack.Music
+            ClipType.Audio -> if (clip.isVoiceOver) IconPack.Mic else CoreIconPack.Music
             ClipType.Image -> ly.img.editor.core.iconpack.IconPack.ImageOutline
             ClipType.Shape -> ly.img.editor.core.iconpack.IconPack.ShapesOutline
             ClipType.Sticker -> ly.img.editor.core.iconpack.IconPack.StickerEmojiOutline

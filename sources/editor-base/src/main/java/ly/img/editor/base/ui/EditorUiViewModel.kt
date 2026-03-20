@@ -7,6 +7,9 @@ import android.os.Environment
 import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -70,6 +73,8 @@ import ly.img.editor.base.dock.options.speed.SpeedBottomSheetContent
 import ly.img.editor.base.dock.options.speed.SpeedUiState
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheetContent
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundUiState
+import ly.img.editor.base.dock.options.voiceover.VoiceoverOptionsSheet
+import ly.img.editor.base.dock.options.voiceover.VoiceoverUiStateFactory
 import ly.img.editor.base.dock.options.volume.VolumeBottomSheetContent
 import ly.img.editor.base.dock.options.volume.VolumeUiState
 import ly.img.editor.base.engine.CROP_EDIT_MODE
@@ -222,6 +227,8 @@ abstract class EditorUiViewModel(
 
     protected open val defaultCropSheetType = SheetType.Crop(mode = SheetType.Crop.Mode.Element)
     private var currentCropSheetType: SheetType.Crop? = null
+    internal var isVoiceOverRecordingInProgress by mutableStateOf(false)
+    internal var voiceOverSheetTargetBlock: DesignBlock? by mutableStateOf(null)
 
     private val eventHandler = EventsHandler(coroutineScope = viewModelScope) {
         cropEvents(
@@ -441,7 +448,9 @@ abstract class EditorUiViewModel(
         }
         register<EditorEvent.Selection.Delete> {
             timelineState?.playerState?.pause()
-            getBlockForEvents()?.designBlock?.let(engine::delete)
+            getBlockForEvents()?.designBlock?.let { designBlock ->
+                send(BlockEvent.OnDeleteNonSelected(designBlock))
+            }
         }
         register<EditorEvent.Selection.BringForward> {
             timelineState?.playerState?.pause()
@@ -516,6 +525,19 @@ abstract class EditorUiViewModel(
                         type = type,
                         content = type.content,
                     )
+                }
+                is SheetType.Voiceover -> {
+                    VoiceoverUiStateFactory.create(editorScope)?.let { uiState ->
+                        CustomBottomSheetContent(
+                            type = type,
+                            content = {
+                                VoiceoverOptionsSheet(
+                                    uiState = uiState,
+                                    onEvent = editorContext.eventHandler::send,
+                                )
+                            },
+                        )
+                    }
                 }
                 is SheetType.Layer -> {
                     timelineState?.clampPlayheadPositionToSelectedClip()
@@ -721,7 +743,8 @@ abstract class EditorUiViewModel(
 
     private fun requireDesignBlockForEvents(): DesignBlock = checkNotNull(getBlockForEvents()?.designBlock)
 
-    protected open fun getSelectedBlock(): DesignBlock? = engine.block.findAllSelected().firstOrNull()
+    protected open fun getSelectedBlock(): DesignBlock? = engine.block.findAllSelected()
+        .firstOrNull { selected -> engine.block.isValid(selected) }
 
     protected open fun setSelectedBlock(block: Block?) {
         selectedBlock.update { block }
@@ -1055,6 +1078,7 @@ abstract class EditorUiViewModel(
             setViewMode(publicState.value.viewMode)
         } else {
             observeSelectedBlock()
+            observeClicked()
             observeHistory()
             observeUiStateChanges()
             observeEvents()
@@ -1540,6 +1564,7 @@ abstract class EditorUiViewModel(
     }
 
     private var cursorPos = 0f
+    private var lastTextCursorRange: IntRange? = null
 
     private fun observeEvents() {
         viewModelScope.launch {
@@ -1563,6 +1588,26 @@ abstract class EditorUiViewModel(
                     cursorPos = textCursorPositionInScreenSpaceY
                     zoomToText()
                 }
+                val formatSheet = bottomSheetContent.value as? FormatBottomSheetContent
+                if (formatSheet != null) {
+                    val cursorRange = runCatching { engine.block.getTextCursorRange() }.getOrNull()
+                    val designBlock = getBlockForEvents()?.designBlock
+                    val engineListStyle = if (designBlock != null && cursorRange != null) {
+                        runCatching {
+                            val idx =
+                                engine.block.getTextParagraphIndices(designBlock, cursorRange.first, cursorRange.last).firstOrNull() ?: 0
+                            engine.block.getTextListStyle(designBlock, idx)
+                        }.getOrNull()
+                    } else {
+                        null
+                    }
+                    if (cursorRange != lastTextCursorRange ||
+                        (engineListStyle != null && engineListStyle != formatSheet.uiState.listStyle)
+                    ) {
+                        lastTextCursorRange = cursorRange
+                        updateBottomSheetUiState()
+                    }
+                }
             }
         }
     }
@@ -1578,7 +1623,10 @@ abstract class EditorUiViewModel(
             engine.editor.onStateChanged().map { engine.editor.getEditMode() }.distinctUntilChanged().collect { editMode ->
                 onEditModeChanged(editMode)
                 when (editMode) {
-                    TEXT_EDIT_MODE -> send(EditorEvent.Sheet.Close(animate = false))
+                    TEXT_EDIT_MODE -> {
+                        lastTextCursorRange = null
+                        send(EditorEvent.Sheet.Close(animate = false))
+                    }
                     CROP_EDIT_MODE -> {
                         val block = engine.block.findAllSelected().single()
                         defaultPinchAction = engine.editor.getSettingEnum("touch/pinchAction")
@@ -1656,22 +1704,53 @@ abstract class EditorUiViewModel(
                 // Even if the block is the same, this will update the fill/stroke color in the dock option
                 setSelectedBlock(block)
                 if (oldBlock != block?.designBlock) {
-                    if (block != null && engine.isPlaceholder(block.designBlock)) {
-                        val libraryCategory = when (block.type) {
-                            BlockType.Sticker -> libraryViewModel.assetLibrary.stickers(libraryViewModel.sceneMode)
-                            BlockType.Image -> libraryViewModel.assetLibrary.images(libraryViewModel.sceneMode)
-                            BlockType.Audio -> libraryViewModel.assetLibrary.audios(libraryViewModel.sceneMode)
-                            BlockType.Video -> libraryViewModel.assetLibrary.videos(libraryViewModel.sceneMode)
-                            else -> throw IllegalArgumentException(
-                                "Replace is not supported for ${block.type.name}.",
-                            )
+                    if (bottomSheetContent.value?.type is SheetType.Voiceover) {
+                        val activeVoiceOverTarget = voiceOverSheetTargetBlock
+                        if (block?.designBlock != null && block.designBlock != activeVoiceOverTarget) {
+                            send(EditorEvent.Sheet.Close(animate = false))
                         }
-                        send(EditorEvent.Sheet.Open(SheetType.LibraryReplace(libraryCategory = libraryCategory)))
+                        return@collect
+                    }
+                    if (block != null &&
+                        bottomSheetContent.value is LibraryReplaceBottomSheetContent &&
+                        engine.isPlaceholder(block.designBlock)
+                    ) {
+                        // The replace sheet is already open and we switched to another placeholder.
+                        // Update the sheet's target block so the replacement applies to the new selection.
+                        openPlaceholderSheetIfNeeded(block.designBlock)
                     } else if (block == null || bottomSheetContent.value != null) {
                         send(EditorEvent.Sheet.Close(animate = false))
                     }
                 }
             }
+        }
+    }
+
+    private fun observeClicked() {
+        viewModelScope.launch {
+            engine.block.onClicked().filter { _isSceneLoaded.value }.collect { clickedBlock ->
+                openPlaceholderSheetIfNeeded(clickedBlock)
+            }
+        }
+    }
+
+    private fun openPlaceholderSheetIfNeeded(designBlock: DesignBlock) {
+        if (!engine.isPlaceholder(designBlock)) return
+        val block = createBlock(designBlock, engine)
+        val libraryCategory = when (block.type) {
+            BlockType.Sticker -> libraryViewModel.assetLibrary.stickers(libraryViewModel.sceneMode)
+            BlockType.Image -> libraryViewModel.assetLibrary.images(libraryViewModel.sceneMode)
+            BlockType.Audio -> libraryViewModel.assetLibrary.audios(libraryViewModel.sceneMode)
+            BlockType.Video -> libraryViewModel.assetLibrary.videos(libraryViewModel.sceneMode)
+            else -> return
+        }
+        val sheetType = SheetType.LibraryReplace(libraryCategory = libraryCategory)
+        setBottomSheetContent {
+            LibraryReplaceBottomSheetContent(
+                type = sheetType,
+                libraryCategory = libraryCategory,
+                designBlock = designBlock,
+            )
         }
     }
 
@@ -1736,6 +1815,14 @@ abstract class EditorUiViewModel(
                 engine.resetHistory()
             }
         }
+    }
+
+    internal fun updateVoiceOverRecordingInProgress(value: Boolean) {
+        isVoiceOverRecordingInProgress = value
+    }
+
+    internal fun updateVoiceOverSheetTarget(targetBlock: DesignBlock?) {
+        voiceOverSheetTargetBlock = targetBlock
     }
 
     private fun onClose() {

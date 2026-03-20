@@ -87,6 +87,7 @@ import ly.img.editor.core.iconpack.SizeLCircled
 import ly.img.editor.core.iconpack.SizeMCircled
 import ly.img.editor.core.iconpack.SizeSCircled
 import ly.img.editor.core.iconpack.Typeface
+import ly.img.editor.core.iconpack.Voiceoveradd
 import ly.img.editor.core.library.data.AssetSourceType
 import ly.img.editor.core.sheet.SheetStyle
 import ly.img.editor.core.sheet.SheetType
@@ -431,6 +432,7 @@ fun Dock.ListBuilder.Companion.rememberForVideo(): HorizontalListBuilder<Item<*>
     add { Button.rememberTextLibrary() }
     add { Button.rememberStickersAndShapesLibrary() }
     add { Button.rememberAudiosLibrary() }
+    add { Button.rememberVoiceoverRecord() }
     add { Button.rememberResizeAll() }
     add { Button.rememberReorder() }
 }
@@ -1427,6 +1429,13 @@ val Button.Id.Companion.audiosLibrary by unsafeLazy {
 }
 
 /**
+ * The id of the dock button returned by [Dock.Button.Companion.rememberVoiceoverRecord].
+ */
+val Button.Id.Companion.voiceoverRecord by unsafeLazy {
+    EditorComponentId("ly.img.component.dock.button.voiceOverRecord")
+}
+
+/**
  * A composable helper function that creates and remembers a [Dock.Button] that
  * opens a library sheet with audios via [EditorEvent.Sheet.Open].
  *
@@ -1487,6 +1496,72 @@ fun Button.Companion.rememberAudiosLibrary(
     `_`: Nothing = nothing,
 ): Button = remember(
     id = Button.Id.audiosLibrary,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    contentDescription = contentDescription,
+    `_` = `_`,
+)
+
+/**
+ * A composable helper function that creates and remembers a [Dock.Button] that
+ * opens the voiceover recording sheet via [EditorEvent.Sheet.Open].
+ *
+ * @param scope the scope of this component. Every new value will trigger recomposition of all the lambda parameters.
+ * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
+ * Consider using Compose [androidx.compose.runtime.State] objects in the lambdas for
+ * granular recompositions over updating the scope, since scope change triggers full recomposition of the button.
+ * Ideally, scope should be updated when the parent scope (scope of the parent component [Dock] - [Dock.Scope]) is updated
+ * and when you want to observe changes from the [Engine].
+ * By default the scope is updated only when the parent component scope ([Dock.scope], accessed via [LocalEditorScope]) is updated.
+ * @param visible whether the button should be visible.
+ * Default value is always true.
+ * @param enterTransition transition of the button when it enters the parent composable.
+ * Default value is always no enter transition.
+ * @param exitTransition transition of the button when it exits the parent composable.
+ * Default value is always no exit transition.
+ * @param decoration decoration of the button. Useful when you want to add custom background, foreground, shadow, paddings etc.
+ * Default value is always no decoration.
+ * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
+ * Default value is always [IconPack.Voiceoveradd].
+ * @param text the text content of the button as a string. If null then text is not rendered.
+ * Default value is always [R.string.ly_img_editor_dock_button_voiceover].
+ * @param tint the tint color of the content. If null then no tint is applied.
+ * Default value is null.
+ * @param enabled whether the button is enabled.
+ * Default value is always true.
+ * @param onClick the callback that is invoked when the button is clicked.
+ * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Voiceover].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
+ * @return a button that will be displayed in the dock.
+ */
+@Composable
+fun Button.Companion.rememberVoiceoverRecord(
+    scope: ButtonScope = LocalEditorScope.current.run { ButtonScope(parentScope = this) },
+    visible: @Composable ButtonScope.() -> Boolean = alwaysVisible,
+    enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
+    exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
+    decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
+    vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Voiceoveradd },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_dock_button_voiceover) },
+    tint: (@Composable ButtonScope.() -> Color)? = null,
+    enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
+    onClick: ButtonScope.() -> Unit = {
+        editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Voiceover()))
+    },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
+    `_`: Nothing = nothing,
+): Button = remember(
+    id = Button.Id.voiceoverRecord,
     scope = scope,
     visible = visible,
     enterTransition = enterTransition,

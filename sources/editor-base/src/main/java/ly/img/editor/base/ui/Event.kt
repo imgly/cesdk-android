@@ -20,6 +20,7 @@ import ly.img.engine.BlendMode
 import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignUnit
+import ly.img.engine.ListStyle
 import ly.img.engine.TextCase
 import ly.img.engine.Typeface
 import kotlin.time.Duration
@@ -292,12 +293,20 @@ interface BlockEvent : Event {
 
     data object OnItalicToggle : BlockEvent
 
+    data object OnUnderlineToggle : BlockEvent
+
+    data object OnStrikethroughToggle : BlockEvent
+
     data class OnChangeHorizontalAlignment(
         val alignment: HorizontalAlignment,
     ) : BlockEvent
 
     data class OnChangeLetterCasing(
         val casing: TextCase,
+    ) : BlockEvent
+
+    data class OnChangeListStyle(
+        val listStyle: ListStyle,
     ) : BlockEvent
 
     data class OnChangeVerticalAlignment(

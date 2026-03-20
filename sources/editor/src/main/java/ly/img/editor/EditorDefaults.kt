@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -160,8 +161,9 @@ object EditorDefaults {
             }
             val scene = checkNotNull(engine.scene.get())
             onSceneCreated(scene, this)
+            val baseUri = engine.editor.getSettingString("basePath").toUri()
             launch {
-                engine.addDefaultAssetSources()
+                engine.addDefaultAssetSources(baseUri = baseUri)
                 val defaultTypeface = TypefaceProvider().provideTypeface(engine, "Roboto")
                 requireNotNull(defaultTypeface)
                 engine.asset.addSource(TextAssetSource(engine, defaultTypeface))
@@ -170,6 +172,7 @@ object EditorDefaults {
                 engine.addDemoAssetSources(
                     sceneMode = engine.scene.getMode(),
                     withUploadAssetSources = true,
+                    baseUri = baseUri,
                 )
             }
         }

@@ -27,7 +27,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.viewmodel.compose.viewModel
 import ly.img.editor.base.components.scrollbar.LazyColumnScrollbar
 import ly.img.editor.base.components.scrollbar.RowScrollbar
 import ly.img.editor.base.components.scrollbar.ScrollbarSettings
@@ -36,13 +35,8 @@ import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.timeline.track.TrackView
 import ly.img.editor.core.LocalEditorScope
-import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
-import ly.img.editor.core.iconpack.AddAudio
-import ly.img.editor.core.iconpack.IconPack
-import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.theme.surface3
-import ly.img.editor.core.ui.library.LibraryViewModel
 import ly.img.editor.core.ui.utils.roundToPx
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.ZERO
@@ -86,7 +80,6 @@ fun TimelineContentView(
         )
 
         val timelineRulerHeight = TimelineConfiguration.rulerHeight
-        val libraryViewModel = viewModel<LibraryViewModel>()
         Row(
             modifier = Modifier.horizontalScroll(horizontalScrollState),
         ) {
@@ -138,23 +131,13 @@ fun TimelineContentView(
                                 }
                             }
 
-                            TimelineButton(
-                                id = R.string.ly_img_editor_timeline_button_add_audio,
-                                icon = IconPack.AddAudio,
+                            AddAudioButton(
                                 modifier = Modifier
                                     .offset {
                                         IntOffset(x = audioButtonOffset, y = 0)
                                     }
                                     .padding(start = 1.dp),
-                            ) {
-                                onEvent(
-                                    EditorEvent.Sheet.Open(
-                                        SheetType.LibraryAdd(
-                                            libraryCategory = libraryViewModel.assetLibrary.audios(libraryViewModel.sceneMode),
-                                        ),
-                                    ),
-                                )
-                            }
+                            )
                         }
                     }
                     Box(

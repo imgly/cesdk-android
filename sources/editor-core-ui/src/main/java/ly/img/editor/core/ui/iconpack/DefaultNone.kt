@@ -11,13 +11,13 @@ import androidx.compose.ui.graphics.vector.ImageVector.Builder
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-public val IconPack.Nonecasing: ImageVector
+public val IconPack.DefaultNone: ImageVector
     get() {
-        if (nonecasing != null) {
-            return nonecasing!!
+        if (defaultNone != null) {
+            return defaultNone!!
         }
-        nonecasing = Builder(
-            name = "Nonecasing",
+        defaultNone = Builder(
+            name = "DefaultNone",
             defaultWidth = 24.0.dp,
             defaultHeight = 25.0.dp,
             viewportWidth = 24.0f,
@@ -39,10 +39,10 @@ public val IconPack.Nonecasing: ImageVector
                 close()
             }
         }.build()
-        return nonecasing!!
+        return defaultNone!!
     }
 
-private var nonecasing: ImageVector? = null
+private var defaultNone: ImageVector? = null
 
 @Composable
-private fun Preview() = IconPack.Nonecasing.IconPreview()
+private fun Preview() = IconPack.DefaultNone.IconPreview()

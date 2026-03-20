@@ -9,9 +9,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import ly.img.editor.base.components.ToggleIconButton
 import ly.img.editor.core.R
 import ly.img.editor.core.ui.iconpack.Capitalizecasing
+import ly.img.editor.core.ui.iconpack.DefaultNone
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Lowercasing
-import ly.img.editor.core.ui.iconpack.Nonecasing
 import ly.img.editor.core.ui.iconpack.Uppercasing
 import ly.img.editor.core.ui.library.data.font.FontData
 import ly.img.engine.TextCase
@@ -38,7 +38,7 @@ fun TextCaseButton(
 
         Icon(
             imageVector = when (casing) {
-                TextCase.NORMAL -> IconPack.Nonecasing
+                TextCase.NORMAL -> IconPack.DefaultNone
                 TextCase.UPPER_CASE -> IconPack.Uppercasing
                 TextCase.LOWER_CASE -> IconPack.Lowercasing
                 TextCase.TITLE_CASE -> IconPack.Capitalizecasing

@@ -71,8 +71,8 @@ class EditorContextImpl(
     override val canvasMenu: (@Composable (EditorScope.() -> CanvasMenu))?,
     override val navigationBar: @Composable (EditorScope.() -> NavigationBar)?,
 ) : EditorContext {
-    private var minimumVideoDurationState by mutableStateOf<Duration?>(null)
-    private var maximumVideoDurationState by mutableStateOf<Duration?>(null)
+    private var minimumVideoDurationState: Duration? by mutableStateOf(null)
+    private var maximumVideoDurationState: Duration? by mutableStateOf(null)
 
     override val minimumVideoDuration: Duration?
         get() = minimumVideoDurationState

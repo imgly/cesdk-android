@@ -27,6 +27,16 @@ class ThumbnailsManager(
         provider?.cancel()
     }
 
+    fun destroyProvidersExcept(designBlocks: Set<DesignBlock>) {
+        val iterator = providers.iterator()
+        while (iterator.hasNext()) {
+            val (designBlock, provider) = iterator.next()
+            if (designBlocks.contains(designBlock)) continue
+            iterator.remove()
+            provider.cancel()
+        }
+    }
+
     fun refreshThumbnails(
         clip: Clip,
         width: Dp,

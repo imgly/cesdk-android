@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,17 +31,24 @@ import ly.img.editor.base.components.PropertySwitch
 import ly.img.editor.base.components.SectionHeader
 import ly.img.editor.base.components.ToggleIconButton
 import ly.img.editor.base.ui.BlockEvent
+import ly.img.editor.base.ui.BlockEvent.OnChangeListStyle
 import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.ui.SheetHeader
 import ly.img.editor.core.ui.UiDefaults
+import ly.img.editor.core.ui.iconpack.DefaultNone
 import ly.img.editor.core.ui.iconpack.Formatbold
 import ly.img.editor.core.ui.iconpack.Formatitalic
+import ly.img.editor.core.ui.iconpack.Formatstrikethrough
+import ly.img.editor.core.ui.iconpack.Formatunderlined
 import ly.img.editor.core.ui.iconpack.IconPack
+import ly.img.editor.core.ui.iconpack.Listbullet
+import ly.img.editor.core.ui.iconpack.Listnumber
 import ly.img.editor.core.ui.sheetScrollableContentModifier
 import ly.img.engine.FontStyle
 import ly.img.engine.FontWeight
+import ly.img.engine.ListStyle
 import ly.img.engine.TextCase
 
 @Composable
@@ -108,6 +117,32 @@ fun FormatOptionsSheet(
                                         ),
                                     )
                                 }
+                                ToggleIconButton(
+                                    checked = uiState.isUnderline,
+                                    onCheckedChange = {
+                                        onEvent(BlockEvent.OnUnderlineToggle)
+                                    },
+                                ) {
+                                    Icon(
+                                        IconPack.Formatunderlined,
+                                        contentDescription = stringResource(
+                                            R.string.ly_img_editor_sheet_format_text_button_underline,
+                                        ),
+                                    )
+                                }
+                                ToggleIconButton(
+                                    checked = uiState.isStrikethrough,
+                                    onCheckedChange = {
+                                        onEvent(BlockEvent.OnStrikethroughToggle)
+                                    },
+                                ) {
+                                    Icon(
+                                        IconPack.Formatstrikethrough,
+                                        contentDescription = stringResource(
+                                            R.string.ly_img_editor_sheet_format_text_button_strikethrough,
+                                        ),
+                                    )
+                                }
                             }
 
                             PropertyLink(
@@ -168,46 +203,6 @@ fun FormatOptionsSheet(
                             }
                         }
                     }
-                    if (uiState.isArrangeResizeAllowed) {
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Card(
-                            colors = UiDefaults.cardColors,
-                        ) {
-                            PropertyPicker(
-                                title = stringResource(R.string.ly_img_editor_sheet_format_text_label_frame_behaviour),
-                                propertyTextRes = uiState.sizeModeRes,
-                                properties = sizeModeList,
-                                onPropertyPicked = { onEvent(BlockEvent.OnChangeSizeMode(it)) },
-                            )
-                            if (uiState.hasClippingOption) {
-                                PropertySwitch(
-                                    title = stringResource(R.string.ly_img_editor_sheet_format_text_label_frame_clipping),
-                                    isChecked = uiState.isClipped,
-                                    onPropertyChange = {
-                                        onEvent(BlockEvent.OnChangeClipping(it))
-                                    },
-                                )
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(16.dp))
-                    PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_sheet_format_text_label_line_height),
-                        value = uiState.lineHeight,
-                        onValueChange = { onEvent(BlockEvent.OnChangeLineHeight(it)) },
-                        onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
-                        valueRange = 0.5f..2.5f,
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_sheet_format_text_label_paragraph_spacing),
-                        value = uiState.paragraphSpacing,
-                        onValueChange = { onEvent(BlockEvent.OnChangeParagraphSpacing(it)) },
-                        onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
-                        valueRange = -0.15f..1.4f,
-                    )
-
                     Spacer(Modifier.height(16.dp))
                     SectionHeader(text = stringResource(R.string.ly_img_editor_sheet_format_text_label_letter_case))
                     Card(
@@ -241,6 +236,113 @@ fun FormatOptionsSheet(
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = -0.15f..1.4f,
                     )
+
+                    Spacer(Modifier.height(16.dp))
+                    Card(
+                        colors = UiDefaults.cardColors,
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.ly_img_editor_sheet_format_text_label_list_style),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            Row {
+                                ToggleIconButton(
+                                    checked = uiState.listStyle == ListStyle.NONE,
+                                    onCheckedChange = {
+                                        if (uiState.listStyle != ListStyle.NONE) {
+                                            onEvent(OnChangeListStyle(ListStyle.NONE))
+                                        }
+                                    },
+                                ) {
+                                    Icon(
+                                        IconPack.DefaultNone,
+                                        contentDescription = stringResource(
+                                            R.string.ly_img_editor_sheet_format_text_list_style_option_none,
+                                        ),
+                                    )
+                                }
+                                ToggleIconButton(
+                                    checked = uiState.listStyle == ListStyle.UNORDERED,
+                                    onCheckedChange = {
+                                        if (uiState.listStyle != ListStyle.UNORDERED) {
+                                            onEvent(OnChangeListStyle(ListStyle.UNORDERED))
+                                        }
+                                    },
+                                ) {
+                                    Icon(
+                                        IconPack.Listbullet,
+                                        contentDescription = stringResource(
+                                            R.string.ly_img_editor_sheet_format_text_list_style_option_unordered,
+                                        ),
+                                    )
+                                }
+                                ToggleIconButton(
+                                    checked = uiState.listStyle == ListStyle.ORDERED,
+                                    onCheckedChange = {
+                                        if (uiState.listStyle != ListStyle.ORDERED) {
+                                            onEvent(OnChangeListStyle(ListStyle.ORDERED))
+                                        }
+                                    },
+                                ) {
+                                    Icon(
+                                        IconPack.Listnumber,
+                                        contentDescription = stringResource(
+                                            R.string.ly_img_editor_sheet_format_text_list_style_option_ordered,
+                                        ),
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+                    PropertySlider(
+                        title = stringResource(R.string.ly_img_editor_sheet_format_text_label_line_height),
+                        value = uiState.lineHeight,
+                        onValueChange = { onEvent(BlockEvent.OnChangeLineHeight(it)) },
+                        onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
+                        valueRange = 0.5f..2.5f,
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    PropertySlider(
+                        title = stringResource(R.string.ly_img_editor_sheet_format_text_label_paragraph_spacing),
+                        value = uiState.paragraphSpacing,
+                        onValueChange = { onEvent(BlockEvent.OnChangeParagraphSpacing(it)) },
+                        onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
+                        valueRange = -0.15f..1.4f,
+                    )
+
+                    if (uiState.isArrangeResizeAllowed) {
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Card(
+                            colors = UiDefaults.cardColors,
+                        ) {
+                            PropertyPicker(
+                                title = stringResource(R.string.ly_img_editor_sheet_format_text_label_frame_behaviour),
+                                propertyTextRes = uiState.sizeModeRes,
+                                properties = sizeModeList,
+                                onPropertyPicked = { onEvent(BlockEvent.OnChangeSizeMode(it)) },
+                            )
+                            if (uiState.hasClippingOption) {
+                                PropertySwitch(
+                                    title = stringResource(R.string.ly_img_editor_sheet_format_text_label_frame_clipping),
+                                    isChecked = uiState.isClipped,
+                                    onPropertyChange = {
+                                        onEvent(BlockEvent.OnChangeClipping(it))
+                                    },
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -302,6 +404,8 @@ fun DefaultPreview() {
             lineHeight = 1f,
             isBold = true,
             isItalic = false,
+            isUnderline = false,
+            isStrikethrough = false,
             canToggleBold = true,
             canToggleItalic = true,
             horizontalAlignment = HorizontalAlignment.Left,
@@ -311,6 +415,7 @@ fun DefaultPreview() {
             isArrangeResizeAllowed = true,
             libraryCategory = LibraryCategory.Text,
             casing = TextCase.UPPER_CASE,
+            listStyle = ListStyle.NONE,
             paragraphSpacing = 0f,
             fontFamilyWeight = FontWeight.NORMAL,
             availableWeights = emptyList(),

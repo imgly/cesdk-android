@@ -52,6 +52,7 @@ import ly.img.editor.core.component.EditorComponent.ListBuilder.Companion.modify
 import ly.img.editor.core.component.data.Nothing
 import ly.img.editor.core.component.data.Selection
 import ly.img.editor.core.component.data.nothing
+import ly.img.editor.core.compose.rememberLastValue
 import ly.img.editor.core.ui.IconTextButton
 import ly.img.editor.core.ui.toPx
 import ly.img.engine.DesignBlock
@@ -719,9 +720,16 @@ class CanvasMenu private constructor(
         val defaultScope: Scope
             @Composable
             get() = LocalEditorScope.current.run {
-                fun getSelectedDesignBlock(): DesignBlock? = editorContext.engine.block.findAllSelected().firstOrNull()
+                fun getSelectedDesignBlock(): DesignBlock? = editorContext.engine.block.findAllSelected()
+                    .firstOrNull { selected ->
+                        editorContext.engine.block.isValid(selected)
+                    }
 
-                val initial = remember { getSelectedDesignBlock()?.let { Selection.getDefault(editorContext.engine, it) } }
+                val initial = remember {
+                    getSelectedDesignBlock()?.let { selected ->
+                        runCatching { Selection.getDefault(editorContext.engine, selected) }.getOrNull()
+                    }
+                }
                 val camera = editorContext.engine.block.findByType(DesignBlockType.Camera).first()
                 val selection by remember(this) {
                     editorContext.engine.block.onSelectionChanged()
@@ -758,13 +766,16 @@ class CanvasMenu private constructor(
                         }.collect()
                 }
 
-                remember(this, selection, isScenePlayingTrigger) {
-                    // isScenePlayingTrigger (driven by page events) can change before the selection Flow
-                    // emits null after a block deletion, causing a new Scope with a stale selection.
-                    val validSelection = selection?.takeIf {
-                        editorContext.engine.block.isValid(it.designBlock)
+                rememberLastValue(this, selection, isScenePlayingTrigger) {
+                    val stableSelection = selection
+                    when {
+                        stableSelection == null -> Scope(parentScope = this@run, selection = null)
+                        editorContext.engine.block.isValid(stableSelection.designBlock) -> {
+                            Scope(parentScope = this@run, selection = stableSelection)
+                        }
+                        isValueSet -> lastValue
+                        else -> Scope(parentScope = this@run, selection = null)
                     }
-                    Scope(parentScope = this, selection = validSelection)
                 }
             }
 

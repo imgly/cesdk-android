@@ -13,16 +13,20 @@ import ly.img.editor.base.ui.BlockEvent.OnChangeLetterCasing
 import ly.img.editor.base.ui.BlockEvent.OnChangeLetterSpacing
 import ly.img.editor.base.ui.BlockEvent.OnChangeLineHeight
 import ly.img.editor.base.ui.BlockEvent.OnChangeLineWidth
+import ly.img.editor.base.ui.BlockEvent.OnChangeListStyle
 import ly.img.editor.base.ui.BlockEvent.OnChangeParagraphSpacing
 import ly.img.editor.base.ui.BlockEvent.OnChangeSizeMode
 import ly.img.editor.base.ui.BlockEvent.OnChangeTypeface
 import ly.img.editor.base.ui.BlockEvent.OnChangeVerticalAlignment
 import ly.img.editor.base.ui.BlockEvent.OnItalicToggle
+import ly.img.editor.base.ui.BlockEvent.OnStrikethroughToggle
+import ly.img.editor.base.ui.BlockEvent.OnUnderlineToggle
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
+import ly.img.engine.ListStyle
 import ly.img.engine.SizeMode
 import ly.img.engine.Typeface
 
@@ -70,6 +74,16 @@ fun EventsHandler.textBlockEvents(
         engine.editor.addUndoStep()
     }
 
+    fun onUnderlineToggle() {
+        engine.block.toggleTextDecorationUnderline(block = block)
+        engine.editor.addUndoStep()
+    }
+
+    fun onStrikethroughToggle() {
+        engine.block.toggleTextDecorationStrikethrough(block = block)
+        engine.editor.addUndoStep()
+    }
+
     register<OnChangeLineWidth> {
         engine.block.setWidth(block, engine.block.getFrameWidth(block))
         engine.block.setHeight(block, it.width)
@@ -86,6 +100,14 @@ fun EventsHandler.textBlockEvents(
 
     register<OnItalicToggle> {
         onItalicToggle()
+    }
+
+    register<OnUnderlineToggle> {
+        onUnderlineToggle()
+    }
+
+    register<OnStrikethroughToggle> {
+        onStrikethroughToggle()
     }
 
     register<OnChangeFont> {
@@ -166,5 +188,27 @@ fun EventsHandler.textBlockEvents(
             engine.block.setTextCase(block, it.casing)
             engine.editor.addUndoStep()
         }
+    }
+
+    register<OnChangeListStyle> {
+        val cursorRange = engine.block.getTextCursorRange()
+        val paragraphIndices = if (cursorRange != null) {
+            engine.block.getTextParagraphIndices(block, cursorRange.first, cursorRange.last)
+        } else {
+            null
+        }
+        val currentStyle = runCatching {
+            val referenceIndex = paragraphIndices?.firstOrNull() ?: 0
+            engine.block.getTextListStyle(block, referenceIndex)
+        }.getOrDefault(ListStyle.NONE)
+        val newStyle = if (currentStyle == it.listStyle) ListStyle.NONE else it.listStyle
+        if (paragraphIndices != null) {
+            paragraphIndices.forEach { index ->
+                engine.block.setTextListStyle(block, newStyle, paragraphIndex = index)
+            }
+        } else {
+            engine.block.setTextListStyle(block, newStyle, paragraphIndex = -1)
+        }
+        engine.editor.addUndoStep()
     }
 }

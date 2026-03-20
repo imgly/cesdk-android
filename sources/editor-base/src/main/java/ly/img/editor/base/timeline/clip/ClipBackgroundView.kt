@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -57,8 +58,13 @@ fun ClipBackgroundView(
     clipDragType: ClipDragType? = null,
     pinOffset: Dp = 0.dp,
 ) {
+    val extendedColors = LocalExtendedColorScheme.current
     val backgroundColor = when (clip.clipType) {
-        ClipType.Audio -> LocalExtendedColorScheme.current.purple.colorContainer
+        ClipType.Audio -> if (clip.isVoiceOver) {
+            extendedColors.rose.colorContainer
+        } else {
+            extendedColors.purple.colorContainer
+        }
         else -> null
     }
 
@@ -119,14 +125,28 @@ fun ClipBackgroundView(
                 // positions — the trim handle appears to pass through the static waveform.
                 // After gesture end (clipDragType == null) compensate for the stale loaded data
                 // until new samples arrive.
-                val audioDrawOffset = when (clipDragType) {
-                    ClipDragType.Leading -> clipWidth - clipDurationDp
-                    ClipDragType.Trailing -> 0.dp
-                    else -> timelineState.zoomState.toDp(provider.loadedTrimOffset) -
-                        timelineState.zoomState.toDp(clip.trimOffset)
+                val providerTrimOffsetDp = timelineState.zoomState.toDp(provider.loadedTrimOffset)
+                val clipTrimOffsetDp = timelineState.zoomState.toDp(clip.trimOffset)
+                val audioDrawOffset = remember(
+                    clipDragType,
+                    clipWidth,
+                    clipDurationDp,
+                    providerTrimOffsetDp,
+                    clipTrimOffsetDp,
+                ) {
+                    when (clipDragType) {
+                        ClipDragType.Leading -> clipWidth - clipDurationDp
+                        ClipDragType.Trailing -> 0.dp
+                        else -> providerTrimOffsetDp - clipTrimOffsetDp
+                    }
                 }
                 AudioWaveformView(
                     samples = provider.samples,
+                    barColor = if (clip.isVoiceOver) {
+                        extendedColors.rose.color
+                    } else {
+                        extendedColors.purple.color
+                    },
                     drawOffsetDp = audioDrawOffset,
                     modifier = Modifier
                         .fillMaxSize()

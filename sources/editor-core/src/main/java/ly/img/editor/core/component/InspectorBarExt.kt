@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
@@ -58,6 +59,7 @@ import ly.img.editor.core.iconpack.SelectGroup
 import ly.img.editor.core.iconpack.ShapeIcon
 import ly.img.editor.core.iconpack.Split
 import ly.img.editor.core.iconpack.Typeface
+import ly.img.editor.core.iconpack.Voiceoveradd
 import ly.img.editor.core.iconpack.VolumeHigh
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.ui.EditorIcon
@@ -73,11 +75,36 @@ import ly.img.engine.ShapeType
 
 private const val KIND_STICKER = "sticker"
 private const val KIND_ANIMATED_STICKER = "animatedSticker"
+private const val KIND_VOICEOVER = "voiceover"
 private const val VOLUME_SPEED_CUTOFF = 3f
 
 private fun Selection.isAnyKindOfSticker(): Boolean = this.kind == KIND_STICKER || this.kind == KIND_ANIMATED_STICKER
 
 private fun Selection.isNotAnyKindOfSticker() = !this.isAnyKindOfSticker()
+
+private fun Selection.isVoiceoverSelection(): Boolean = type == DesignBlockType.Audio && kind == KIND_VOICEOVER
+
+private fun Selection.isReadyVoiceoverSelection(engine: Engine): Boolean = !isVoiceoverSelection() ||
+    runCatching {
+        engine.block.getString(designBlock, "audio/fileURI")
+    }.getOrDefault("").isNotBlank()
+
+@Composable
+private fun ButtonScope.rememberIsReadyVoiceoverSelection(selection: Selection): Boolean {
+    val initialReadyState = remember(selection.designBlock) {
+        selection.isReadyVoiceoverSelection(editorContext.engine)
+    }
+    val isReady by remember(selection.designBlock) {
+        editorContext.engine.event.subscribe(listOf(selection.designBlock))
+            .filter {
+                selection.designBlock == editorContext.engine.block.findAllSelected().firstOrNull()
+            }
+            .map { selection.isReadyVoiceoverSelection(editorContext.engine) }
+            .onStart { emit(initialReadyState) }
+            .distinctUntilChanged()
+    }.collectAsState(initial = initialReadyState)
+    return isReady
+}
 
 /**
  * An extension function for checking whether the [designBlock] is a background track.
@@ -632,9 +659,12 @@ fun Button.Companion.rememberVolume(
         }
     },
     visible: @Composable ButtonScope.() -> Boolean = {
-        remember(this) {
-            (editorContext.selection.type == DesignBlockType.Audio || editorContext.selection.fillType == FillType.Video) &&
-                editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "fill/change")
+        val selection = editorContext.selection
+        val isReadyVoiceoverSelection = rememberIsReadyVoiceoverSelection(selection)
+        remember(selection, isReadyVoiceoverSelection) {
+            (selection.type == DesignBlockType.Audio || selection.fillType == FillType.Video) &&
+                editorContext.engine.block.isAllowedByScope(selection.designBlock, "fill/change") &&
+                isReadyVoiceoverSelection
         }
     },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
@@ -736,8 +766,9 @@ fun Button.Companion.rememberClipSpeed(
         }
     },
     visible: @Composable ButtonScope.() -> Boolean = {
-        remember(this) {
-            val selection = editorContext.selection
+        val selection = editorContext.selection
+        val isReadyVoiceoverSelection = rememberIsReadyVoiceoverSelection(selection)
+        remember(selection, isReadyVoiceoverSelection) {
             val designBlock = selection.designBlock
             val playbackBlock = editorContext.engine.block.getPlaybackControlBlock(designBlock)
             if (playbackBlock == null) {
@@ -747,8 +778,10 @@ fun Button.Companion.rememberClipSpeed(
                 val isAudio = selection.type == DesignBlockType.Audio
                 val playbackFillType = editorContext.engine.block.getFillType(playbackBlock)
                 isVideoScene &&
+                    !selection.isVoiceoverSelection() &&
                     (isAudio || selection.fillType == FillType.Video || playbackFillType == FillType.Video) &&
-                    editorContext.engine.block.isAllowedByScope(designBlock, "fill/change")
+                    editorContext.engine.block.isAllowedByScope(designBlock, "fill/change") &&
+                    isReadyVoiceoverSelection
             }
         }
     },
@@ -914,9 +947,12 @@ fun Button.Companion.rememberDuplicate(
         }
     },
     visible: @Composable ButtonScope.() -> Boolean = {
-        remember(this) {
-            editorContext.selection.type != DesignBlockType.Page &&
-                editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/duplicate")
+        val selection = editorContext.selection
+        val isReadyVoiceoverSelection = rememberIsReadyVoiceoverSelection(selection)
+        remember(selection, isReadyVoiceoverSelection) {
+            selection.type != DesignBlockType.Page &&
+                editorContext.engine.block.isAllowedByScope(selection.designBlock, "lifecycle/duplicate") &&
+                isReadyVoiceoverSelection
         }
     },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
@@ -1082,9 +1118,12 @@ fun Button.Companion.rememberSplit(
         }
     },
     visible: @Composable ButtonScope.() -> Boolean = {
-        remember(this) {
-            editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/duplicate") &&
-                editorContext.engine.scene.getMode() == SceneMode.VIDEO
+        val selection = editorContext.selection
+        val isReadyVoiceoverSelection = rememberIsReadyVoiceoverSelection(selection)
+        remember(selection, isReadyVoiceoverSelection) {
+            editorContext.engine.block.isAllowedByScope(selection.designBlock, "lifecycle/duplicate") &&
+                editorContext.engine.scene.getMode() == SceneMode.VIDEO &&
+                isReadyVoiceoverSelection
         }
     },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
@@ -1525,6 +1564,86 @@ val Button.Id.Companion.replace by unsafeLazy {
 }
 
 /**
+ * The id of the inspector bar button returned by [InspectorBar.Button.Companion.rememberVoiceover].
+ */
+val Button.Id.Companion.voiceover by unsafeLazy {
+    EditorComponentId("ly.img.component.inspectorBar.button.voiceover")
+}
+
+/**
+ * A helper function that returns an [InspectorBar.Button] that opens the voiceover recording sheet via
+ * [EditorEvent.Sheet.Open].
+ *
+ * @param scope the scope of this component. Every new value will trigger recomposition of all functions with
+ * signature @Composable Scope.() -> {}.
+ * If you need to access [EditorScope] to construct the scope, use [LocalEditorScope].
+ * By default it is updated only when the parent component scope ([InspectorBar.scope], accessed via [LocalEditorScope]) is updated.
+ * @param visible whether the button should be visible.
+ * By default the value is true when the selected design block is a ready voiceover audio block.
+ * @param enterTransition transition of the button when it enters the parent composable.
+ * Default value is always no enter transition.
+ * @param exitTransition transition of the button when it exits the parent composable.
+ * Default value is always no exit transition.
+ * @param decoration decoration of the button. Useful when you want to add custom background, foreground, shadow, paddings etc.
+ * Default value is always no decoration.
+ * @param vectorIcon the icon content of the button as a vector. If null then icon is not rendered.
+ * Default value is always [IconPack.Voiceoveradd].
+ * @param text the text content of the button as a string. If null then text is not rendered.
+ * Default value is always [R.string.ly_img_editor_sheet_voiceover_button_add_recording].
+ * @param tint the tint color of the content. If null then no tint is applied.
+ * Default value is null.
+ * @param enabled whether the button is enabled.
+ * Default value is always true.
+ * @param onClick the callback that is invoked when the button is clicked.
+ * By default [EditorEvent.Sheet.Open] is invoked with sheet type [SheetType.Voiceover].
+ * @param contentDescription the content description of the [vectorIcon] that is used by accessibility services to describe what
+ * this icon represents. Having both [text] and [contentDescription] as null will cause a crash.
+ * Default value is null.
+ * @return a button that will be displayed in the inspector bar.
+ */
+@Composable
+fun Button.Companion.rememberVoiceover(
+    scope: ButtonScope = (LocalEditorScope.current as InspectorBar.Scope).run {
+        rememberLastValue(this) {
+            if (editorContext.safeSelection == null) lastValue else ButtonScope(parentScope = this@run)
+        }
+    },
+    visible: @Composable ButtonScope.() -> Boolean = {
+        val selection = editorContext.selection
+        val isReadyVoiceoverSelection = rememberIsReadyVoiceoverSelection(selection)
+        remember(selection, isReadyVoiceoverSelection) {
+            selection.isVoiceoverSelection() && isReadyVoiceoverSelection
+        }
+    },
+    enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
+    exitTransition: @Composable ButtonScope.() -> ExitTransition = noneExitTransition,
+    decoration: @Composable ButtonScope.(@Composable () -> Unit) -> Unit = { it() },
+    vectorIcon: (@Composable ButtonScope.() -> ImageVector)? = { IconPack.Voiceoveradd },
+    text: (@Composable ButtonScope.() -> String)? = { stringResource(R.string.ly_img_editor_sheet_voiceover_button_add_recording) },
+    tint: (@Composable ButtonScope.() -> Color)? = null,
+    enabled: @Composable ButtonScope.() -> Boolean = alwaysEnabled,
+    onClick: ButtonScope.() -> Unit = {
+        editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Voiceover()))
+    },
+    contentDescription: (@Composable ButtonScope.() -> String)? = null,
+    `_`: Nothing = nothing,
+): Button = remember(
+    id = Button.Id.voiceover,
+    scope = scope,
+    visible = visible,
+    enterTransition = enterTransition,
+    exitTransition = exitTransition,
+    decoration = decoration,
+    vectorIcon = vectorIcon,
+    text = text,
+    tint = tint,
+    enabled = enabled,
+    onClick = onClick,
+    contentDescription = contentDescription,
+    `_` = `_`,
+)
+
+/**
  * A helper function that returns an [InspectorBar.Button] that opens a library sheet via [EditorEvent.Sheet.Open].
  * Selected asset will replace the content of the currently selected design block.
  * By default [DesignBlockType], [FillType] and kind of the selected design block are used to find the library in
@@ -1569,16 +1688,19 @@ fun Button.Companion.rememberReplace(
         }
     },
     visible: @Composable ButtonScope.() -> Boolean = {
-        remember(this) {
+        val selection = editorContext.selection
+        val isReadyVoiceoverSelection = rememberIsReadyVoiceoverSelection(selection)
+        remember(selection, isReadyVoiceoverSelection) {
             (
-                editorContext.selection.type == DesignBlockType.Audio ||
+                selection.type == DesignBlockType.Audio ||
                     (
-                        editorContext.selection.type == DesignBlockType.Graphic &&
-                            (editorContext.selection.fillType == FillType.Image || editorContext.selection.fillType == FillType.Video)
+                        selection.type == DesignBlockType.Graphic &&
+                            (selection.fillType == FillType.Image || selection.fillType == FillType.Video)
                     ) &&
-                    editorContext.selection.isNotAnyKindOfSticker() &&
-                    editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "fill/change")
-            )
+                    selection.isNotAnyKindOfSticker() &&
+                    editorContext.engine.block.isAllowedByScope(selection.designBlock, "fill/change")
+            ) &&
+                isReadyVoiceoverSelection
         }
     },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,
@@ -1834,9 +1956,12 @@ fun Button.Companion.rememberDelete(
         }
     },
     visible: @Composable ButtonScope.() -> Boolean = {
-        remember(this) {
-            editorContext.selection.type != DesignBlockType.Page &&
-                editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/destroy")
+        val selection = editorContext.selection
+        val isReadyVoiceoverSelection = rememberIsReadyVoiceoverSelection(selection)
+        remember(selection, isReadyVoiceoverSelection) {
+            selection.type != DesignBlockType.Page &&
+                editorContext.engine.block.isAllowedByScope(selection.designBlock, "lifecycle/destroy") &&
+                isReadyVoiceoverSelection
         }
     },
     enterTransition: @Composable ButtonScope.() -> EnterTransition = noneEnterTransition,

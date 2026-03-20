@@ -9,8 +9,10 @@ import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
 import ly.img.engine.FontStyle
 import ly.img.engine.FontWeight
+import ly.img.engine.ListStyle
 import ly.img.engine.SizeMode
 import ly.img.engine.TextCase
+import ly.img.engine.TextDecorationLine
 
 data class FormatUiState(
     val libraryCategory: LibraryCategory,
@@ -21,7 +23,10 @@ data class FormatUiState(
     val canToggleItalic: Boolean,
     val isBold: Boolean,
     val isItalic: Boolean,
+    val isUnderline: Boolean,
+    val isStrikethrough: Boolean,
     val casing: TextCase,
+    val listStyle: ListStyle?,
     val horizontalAlignment: HorizontalAlignment,
     val effectiveHorizontalAlignment: HorizontalAlignment,
     val verticalAlignment: VerticalAlignment,
@@ -36,6 +41,30 @@ data class FormatUiState(
     val availableWeights: List<FontData>,
     val subFamily: String,
 )
+
+private fun resolveListStyle(
+    designBlock: DesignBlock,
+    engine: Engine,
+): ListStyle? {
+    val cursorRange = runCatching { engine.block.getTextCursorRange() }.getOrNull()
+    val paragraphIndices = if (cursorRange != null) {
+        runCatching {
+            engine.block.getTextParagraphIndices(designBlock, cursorRange.first, cursorRange.last)
+        }.getOrNull()
+    } else {
+        runCatching {
+            val text = engine.block.getString(designBlock, "text/text")
+            engine.block.getTextParagraphIndices(designBlock, 0, text.length)
+        }.getOrNull()
+    }
+    if (paragraphIndices.isNullOrEmpty()) return ListStyle.NONE
+    val styles = paragraphIndices.mapNotNull { index ->
+        runCatching { engine.block.getTextListStyle(designBlock, index) }.getOrNull()
+    }
+    if (styles.isEmpty()) return ListStyle.NONE
+    val first = styles.first()
+    return if (styles.all { it == first }) first else null
+}
 
 internal fun createFormatUiState(
     designBlock: DesignBlock,
@@ -66,6 +95,12 @@ internal fun createFormatUiState(
         isItalic = typeface?.let {
             engine.block.getTextFontStyles(designBlock).contains(FontStyle.ITALIC)
         } ?: false,
+        isUnderline = runCatching {
+            engine.block.getTextDecorations(designBlock).any { it.lines.contains(TextDecorationLine.UNDERLINE) }
+        }.getOrDefault(false),
+        isStrikethrough = runCatching {
+            engine.block.getTextDecorations(designBlock).any { it.lines.contains(TextDecorationLine.STRIKETHROUGH) }
+        }.getOrDefault(false),
         horizontalAlignment = HorizontalAlignment.valueOf(
             engine.block.getEnum(designBlock, "text/horizontalAlignment"),
         ),
@@ -93,6 +128,7 @@ internal fun createFormatUiState(
         isClipped = engine.block.getBoolean(designBlock, "text/clipLinesOutsideOfFrame"),
         isArrangeResizeAllowed = engine.block.isAllowedByScope(designBlock, Scope.LayerResize),
         casing = engine.block.getTextCases(designBlock).firstOrNull() ?: TextCase.NORMAL,
+        listStyle = resolveListStyle(designBlock, engine),
         paragraphSpacing = engine.block.getFloat(designBlock, "text/paragraphSpacing"),
         fontFamilyWeight = fontWeight,
         availableWeights = typeface?.fonts?.sortedBy { it.weight.value + if (it.style == FontStyle.ITALIC) 1000 else 0 }?.map {

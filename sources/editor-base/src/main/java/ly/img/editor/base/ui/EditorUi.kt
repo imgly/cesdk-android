@@ -52,6 +52,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
@@ -116,6 +117,7 @@ import ly.img.editor.core.iconpack.Close
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.navbar.SystemNavBar
 import ly.img.editor.core.sheet.SheetStyle
+import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.theme.surface1
 import ly.img.editor.core.theme.surface2
 import ly.img.editor.core.ui.AnyComposable
@@ -440,7 +442,7 @@ fun EditorUi(
                                         }
                                     }
                                 }
-                                if (content !is CustomBottomSheetContent) {
+                                if (content !is CustomBottomSheetContent && content.type !is SheetType.Voiceover) {
                                     Spacer(Modifier.height(8.dp))
                                 }
                                 when (content) {
@@ -580,7 +582,9 @@ fun EditorUi(
                                         )
                                     is CustomBottomSheetContent -> content.content(editorScope)
                                 }
-                                Spacer(Modifier.height(8.dp))
+                                if (content !is CustomBottomSheetContent && content.type !is SheetType.Voiceover) {
+                                    Spacer(Modifier.height(8.dp))
+                                }
                             }
                         }
                     }
@@ -600,13 +604,15 @@ fun EditorUi(
                     contentPadding = paddingValues
                     BoxWithConstraints {
                         val orientation = LocalConfiguration.current.orientation
+                        val blocksCanvasAndTimelineInteraction =
+                            bottomSheetContent?.type is SheetType.Voiceover
                         EngineCanvasView(
                             license = editorContext.license,
                             userId = editorContext.userId,
                             renderTarget = renderTarget,
                             engine = viewModel.engine,
                             isCanvasVisible = uiState.isSceneLoaded,
-                            passTouches = uiState.allowEditorInteraction,
+                            passTouches = uiState.allowEditorInteraction && !blocksCanvasAndTimelineInteraction,
                             onLicenseValidationError = {
                                 viewModel.send(Event.OnError(it))
                             },
@@ -676,10 +682,28 @@ fun EditorUi(
                                 EditorComponent(component = it(editorScope))
                             }
 
-                            editorContext.inspectorBar?.let {
-                                Box(modifier = Modifier.align(Alignment.BottomStart)) {
-                                    EditorComponent(component = it(editorScope))
+                            if (bottomSheetContent?.type !is SheetType.Voiceover) {
+                                editorContext.inspectorBar?.let {
+                                    Box(modifier = Modifier.align(Alignment.BottomStart)) {
+                                        EditorComponent(component = it(editorScope))
+                                    }
                                 }
+                            }
+
+                            if (blocksCanvasAndTimelineInteraction) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .pointerInput(Unit) {
+                                            awaitPointerEventScope {
+                                                while (true) {
+                                                    awaitPointerEvent().changes.forEach { change ->
+                                                        change.consume()
+                                                    }
+                                                }
+                                            }
+                                        },
+                                )
                             }
                         }
                     }

@@ -9,6 +9,11 @@ object TimelineConfiguration {
         AddClipOption.Library,
     )
 
+    var addAudioOptions: List<AddAudioOption> = listOf(
+        AddAudioOption.Library,
+        AddAudioOption.Voiceover,
+    )
+
     val minClipDuration = 1.seconds
 
     val clipHeight = 40.dp
