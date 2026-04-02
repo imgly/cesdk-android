@@ -3,7 +3,6 @@ package ly.img.editor.base.ui
 import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.base.dock.options.format.HorizontalAlignment
 import ly.img.editor.base.dock.options.format.VerticalAlignment
@@ -14,6 +13,7 @@ import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.library.data.UploadAssetSourceType
+import ly.img.editor.core.sheet.SheetState
 import ly.img.editor.core.ui.library.state.WrappedAsset
 import ly.img.engine.Asset
 import ly.img.engine.BlendMode
@@ -80,26 +80,49 @@ interface Event : EditorEvent {
     ) : Event
 
     data class OnLoadScene(
-        val height: Float,
-        val insets: Rect,
         val inPortraitMode: Boolean,
     ) : Event
 
     object OnCanvasTouch : Event
 
-    object OnResetZoom : Event
-
     data class EnableHistory(
         val enable: Boolean,
     ) : Event
 
-    data class OnBottomSheetHeightChange(
-        val sheetHeightInDp: Float,
-        val sheetMaxHeightInDp: Float,
+    object OnResetZoom : Event
+
+    data class OnBottomSheetStateChange(
+        val state: SheetState,
     ) : Event
 
-    data class OnTimelineHeightChange(
-        val timelineHeightInDp: Float,
+    data class OnBottomSheetHeightChange(
+        val sheetHeightDp: Float,
+        val sheetMaxHeightDp: Float,
+    ) : Event
+
+    data class OnEditorSizeChange(
+        val widthDp: Float,
+        val heightDp: Float,
+    ) : Event
+
+    data class OnNavigationBarSizeChange(
+        val widthDp: Float,
+        val heightDp: Float,
+    ) : Event
+
+    data class OnBottomPanelSizeChange(
+        val widthDp: Float,
+        val heightDp: Float,
+    ) : Event
+
+    data class OnDockSizeChange(
+        val widthDp: Float,
+        val heightDp: Float,
+    ) : Event
+
+    data class OnInspectorBarSizeChange(
+        val widthDp: Float,
+        val heightDp: Float,
     ) : Event
 
     data class OnPage(
@@ -122,20 +145,20 @@ interface Event : EditorEvent {
     ) : Event
 
     @UnstableEditorApi
-    data class OnPostcardGreetingTypefaceChange(
+    data class OnTypefaceChange(
         val designBlock: DesignBlock,
         val typeface: Typeface,
     ) : Event
 
     @UnstableEditorApi
-    data class OnPostcardGreetingSizeChange(
+    data class OnFontSizeChange(
         val designBlock: DesignBlock,
         val size: Float,
     ) : Event
 
     @UnstableEditorApi
-    data class OnPostcardColorChange(
-        val name: String,
+    data class OnColorChange(
+        val designBlock: DesignBlock,
         val color: Color,
     ) : Event
 }

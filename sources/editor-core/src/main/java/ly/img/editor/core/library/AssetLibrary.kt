@@ -2,7 +2,6 @@ package ly.img.editor.core.library
 
 import ly.img.editor.core.library.LibraryCategory.Companion.sourceTypes
 import ly.img.editor.core.library.data.SystemGalleryAssetSourceType
-import ly.img.engine.SceneMode
 
 /**
  * Configuration class for the asset library.
@@ -20,31 +19,40 @@ import ly.img.engine.SceneMode
  * @param stickersAndShapes a provider for the category that is displayed when inserting stickers and shapes.
  */
 data class AssetLibrary(
-    val tabs: (SceneMode) -> List<LibraryCategory>,
-    val elements: (SceneMode) -> LibraryCategory = { LibraryCategory.getElements(it) },
-    val images: (SceneMode) -> LibraryCategory = { LibraryCategory.Images },
-    val videos: (SceneMode) -> LibraryCategory = { LibraryCategory.Video },
-    val gallery: (SceneMode) -> LibraryCategory = { LibraryCategory.getGallery(it) },
-    val audios: (SceneMode) -> LibraryCategory = { LibraryCategory.Audio },
-    val text: (SceneMode) -> LibraryCategory = { LibraryCategory.Text },
-    val shapes: (SceneMode) -> LibraryCategory = { LibraryCategory.Shapes },
-    val stickers: (SceneMode) -> LibraryCategory = { LibraryCategory.Stickers },
-    val overlays: (SceneMode) -> LibraryCategory = {
+    val tabs: () -> List<LibraryCategory>,
+    val images: () -> LibraryCategory = { LibraryCategory.Images },
+    val videos: () -> LibraryCategory = { LibraryCategory.Video },
+    val gallery: () -> LibraryCategory = { LibraryCategory.getGallery(includeAVResources = false) },
+    val audios: () -> LibraryCategory = { LibraryCategory.Audio },
+    val text: () -> LibraryCategory = { LibraryCategory.Text },
+    val shapes: () -> LibraryCategory = { LibraryCategory.Shapes },
+    val stickers: () -> LibraryCategory = { LibraryCategory.Stickers },
+    val overlays: () -> LibraryCategory = {
         createOverlaysCategory(
-            videos = videos(it).withoutSystemGallerySections(),
-            images = images(it).withoutSystemGallerySections(),
+            videos = videos().withoutSystemGallerySections(),
+            images = images().withoutSystemGallerySections(),
         )
     },
-    val clips: (SceneMode) -> LibraryCategory = {
+    val clips: () -> LibraryCategory = {
         createClipsCategory(
-            videos = videos(it).withoutSystemGallerySections(),
-            images = images(it).withoutSystemGallerySections(),
+            videos = videos().withoutSystemGallerySections(),
+            images = images().withoutSystemGallerySections(),
         )
     },
-    val stickersAndShapes: (SceneMode) -> LibraryCategory = {
+    val elements: () -> LibraryCategory = {
+        LibraryCategory.getElements(
+            images = images(),
+            videos = videos(),
+            audios = audios(),
+            text = text(),
+            shapes = shapes(),
+            stickers = stickers(),
+        )
+    },
+    val stickersAndShapes: () -> LibraryCategory = {
         createStickersAndShapesCategory(
-            stickers = stickers(it),
-            shapes = shapes(it),
+            stickers = stickers(),
+            shapes = shapes(),
         )
     },
 ) {
@@ -68,6 +76,7 @@ data class AssetLibrary(
          * or modifying using the helper functions [LibraryCategory.addSection], [LibraryCategory.dropSection] and
          * [LibraryCategory.replaceSection].
          *
+         * @param includeAVResources whether to include audio and video resources in the library.
          * @param tabs the list of tabs that should be displayed. The tabs are displayed in the same order as that of this list.
          * @param images the images category that is used in the tabs and the [images].
          * @param videos the videos category that is used in the tabs and the [videos].
@@ -80,6 +89,7 @@ data class AssetLibrary(
          * @param stickersAndShapes the stickers and shapes category.
          */
         fun getDefault(
+            includeAVResources: Boolean = false,
             tabs: List<Tab> = Tab.entries,
             images: LibraryCategory = LibraryCategory.Images,
             videos: LibraryCategory = LibraryCategory.Video,
@@ -96,10 +106,10 @@ data class AssetLibrary(
                 images = images.withoutSystemGallerySections(),
             ),
             stickersAndShapes: LibraryCategory = createStickersAndShapesCategory(stickers = stickers, shapes = shapes),
-            gallery: (SceneMode) -> LibraryCategory = { LibraryCategory.getGallery(it) },
+            gallery: LibraryCategory = LibraryCategory.getGallery(includeAVResources),
         ): AssetLibrary {
-            fun getElements(sceneMode: SceneMode): LibraryCategory = LibraryCategory.getElements(
-                sceneMode = sceneMode,
+            fun getElements(): LibraryCategory = LibraryCategory.getElements(
+                includeAVResources = includeAVResources,
                 images = images,
                 videos = videos,
                 audios = audios,
@@ -108,13 +118,13 @@ data class AssetLibrary(
                 stickers = stickers,
             )
             return AssetLibrary(
-                tabs = { sceneMode ->
+                tabs = {
                     tabs.mapNotNull {
                         when (it) {
-                            Tab.ELEMENTS -> getElements(sceneMode)
+                            Tab.ELEMENTS -> getElements()
                             Tab.IMAGES -> images
-                            Tab.VIDEOS -> if (sceneMode == SceneMode.VIDEO) videos else null
-                            Tab.AUDIOS -> if (sceneMode == SceneMode.VIDEO) audios else null
+                            Tab.VIDEOS -> if (includeAVResources) videos else null
+                            Tab.AUDIOS -> if (includeAVResources) audios else null
                             Tab.TEXT -> text
                             Tab.SHAPES -> shapes
                             Tab.STICKERS -> stickers
@@ -124,7 +134,7 @@ data class AssetLibrary(
                 elements = ::getElements,
                 images = { images },
                 videos = { videos },
-                gallery = gallery,
+                gallery = { gallery },
                 audios = { audios },
                 text = { text },
                 shapes = { shapes },

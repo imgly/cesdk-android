@@ -6,10 +6,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,40 +15,32 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Modifier
 import kotlinx.coroutines.flow.filterNotNull
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.core.event.EditorEvent
-import ly.img.editor.core.theme.surface1
 import ly.img.editor.core.ui.utils.Easing
 
 @Composable
 fun TimelineView(
-    modifier: Modifier = Modifier,
     timelineState: TimelineState,
-    expanded: Boolean,
-    onToggleExpand: () -> Unit,
     onEvent: (EditorEvent) -> Unit,
 ) {
-    Column(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.surface1),
-    ) {
+    Column {
         PlayerHeader(
             timelineState = timelineState,
-            expanded = expanded,
-            onToggleExpand = onToggleExpand,
+            expanded = timelineState.expanded,
+            onToggleExpand = { timelineState.expanded = timelineState.expanded.not() },
         )
 
         val verticalScrollState = rememberLazyListState()
         var hasAppliedInitialBottomScroll by remember { mutableStateOf(false) }
 
         LaunchedEffect(
-            expanded,
+            timelineState.expanded,
             timelineState.dataSource.tracks.size,
             timelineState.dataSource.backgroundTrack.clips.size,
         ) {
-            if (!expanded || hasAppliedInitialBottomScroll) return@LaunchedEffect
+            if (!timelineState.expanded || hasAppliedInitialBottomScroll) return@LaunchedEffect
             val hasTimelineContent = timelineState.dataSource.tracks.isNotEmpty() ||
                 timelineState.dataSource.backgroundTrack.clips.isNotEmpty()
             if (!hasTimelineContent) return@LaunchedEffect
@@ -74,7 +64,7 @@ fun TimelineView(
                 }
         }
         AnimatedVisibility(
-            visible = expanded,
+            visible = timelineState.expanded,
             enter = enterTransition(),
             exit = exitTransition(),
         ) {

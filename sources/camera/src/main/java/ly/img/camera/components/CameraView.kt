@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,9 +81,15 @@ internal fun BoxScope.CameraView(
     }
 
     var showCloseDialog by remember { mutableStateOf(false) }
+    val isCloseConfirmationRequired by remember {
+        derivedStateOf {
+            recordingManager.hasStartedRecording ||
+                recordingManager.state.recordings.isNotEmpty()
+        }
+    }
 
     fun close() {
-        if (recordingManager.hasStartedRecording || recordingManager.state.recordings.isNotEmpty()) {
+        if (isCloseConfirmationRequired) {
             showCloseDialog = true
         } else {
             checkNotNull(context.activity).finish()
@@ -100,7 +107,7 @@ internal fun BoxScope.CameraView(
         )
     }
 
-    BackHandler(onBack = ::close)
+    BackHandler(enabled = isCloseConfirmationRequired, onBack = ::close)
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_STOP) {
         recordingManager.stop()

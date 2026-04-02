@@ -2,9 +2,7 @@ package ly.img.editor.core.ui.engine
 
 object Scope {
     const val FillChange = "fill/change"
-    const val FillChangeType = "fill/changeType"
     const val StrokeChange = "stroke/change"
-    const val ShapeChange = "shape/change"
 
     const val LayerMove = "layer/move"
     const val LayerResize = "layer/resize"
@@ -24,9 +22,4 @@ object Scope {
 
     const val LifecycleDuplicate = "lifecycle/duplicate"
     const val LifecycleDestroy = "lifecycle/destroy"
-
-    const val AppearanceAdjustment = "appearance/adjustments"
-    const val AppearanceFilter = "appearance/filter"
-    const val AppearanceEffect = "appearance/effect"
-    const val AppearanceBlur = "appearance/blur"
 }

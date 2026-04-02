@@ -10,8 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import ly.img.editor.base.components.colorpicker.ColorPickerButton
-import ly.img.editor.base.components.colorpicker.fillAndStrokeColors
 import ly.img.editor.core.theme.EditorTheme
+import ly.img.editor.core.theme.fillAndStrokeColors
 import ly.img.editor.core.ui.ColorButton
 import ly.img.editor.core.ui.utils.ThemePreview
 

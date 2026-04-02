@@ -1,9 +1,9 @@
 package ly.img.editor.base.ui.handler
 
+import ly.img.editor.base.engine.getPlaybackControlBlock
 import ly.img.editor.base.engine.isParentBackgroundTrack
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.core.R
-import ly.img.editor.core.engine.getPlaybackControlBlock
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.engine.getCurrentPage
 import ly.img.editor.core.ui.inject
