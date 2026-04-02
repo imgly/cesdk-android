@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
+import ly.img.editor.core.currentLanguageCode
 import ly.img.editor.core.library.AssetType
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.library.LibraryContent
@@ -917,7 +918,7 @@ class LibraryViewModel(
             query = query,
             page = page,
             groups = groups,
-            locale = "en",
+            locale = editor.currentLanguageCode,
         ),
     )
 
@@ -1013,7 +1014,7 @@ class LibraryViewModel(
         val assetDefinition = AssetDefinition(
             id = uuid,
             meta = meta,
-            label = if (label != null) mapOf("en" to label!!) else null,
+            label = if (label != null) mapOf(editor.currentLanguageCode to label!!) else null,
         ).let {
             onUpload(editorScope, it, assetSourceType)
         }

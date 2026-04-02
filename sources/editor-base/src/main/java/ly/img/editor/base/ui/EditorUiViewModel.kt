@@ -110,6 +110,7 @@ import ly.img.editor.core.EditorScope
 import ly.img.editor.core.component.Dock
 import ly.img.editor.core.component.rememberImglyCamera
 import ly.img.editor.core.component.rememberSystemCamera
+import ly.img.editor.core.currentLanguageCode
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.event.EditorEventHandler
 import ly.img.editor.core.library.data.AssetSourceType
@@ -676,7 +677,7 @@ abstract class EditorUiViewModel(
                     timelineState?.clampPlayheadPositionToSelectedClip()
                     AnimationBottomSheetContent(
                         type = type,
-                        uiState = AnimationUiState.create(designBlock, engine),
+                        uiState = AnimationUiState.create(designBlock, engine, editor.currentLanguageCode),
                     )
                 }
                 is SheetType.TextBackground -> {
@@ -883,7 +884,7 @@ abstract class EditorUiViewModel(
                     is AnimationBottomSheetContent -> {
                         AnimationBottomSheetContent(
                             type = content.type,
-                            uiState = AnimationUiState.create(designBlock, engine),
+                            uiState = AnimationUiState.create(designBlock, engine, editor.currentLanguageCode),
                         )
                     }
 

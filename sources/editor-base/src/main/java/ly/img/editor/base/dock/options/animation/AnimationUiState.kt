@@ -39,6 +39,7 @@ data class AnimationUiState(
             engine: Engine,
             group: String,
             animationDesignBlock: DesignBlock,
+            locale: String,
         ): TabItem<Category> {
             val animations = engine.asset.findAssets(
                 sourceId = ANIMATIONS_SOURCE_ID,
@@ -46,7 +47,7 @@ data class AnimationUiState(
                     perPage = Int.MAX_VALUE,
                     page = 0,
                     groups = listOf(group),
-                    locale = "en",
+                    locale = locale,
                 ),
             ).assets.map {
                 WrappedAsset.GenericAsset(
@@ -88,6 +89,7 @@ data class AnimationUiState(
         suspend fun create(
             designBlock: DesignBlock,
             engine: Engine,
+            locale: String,
         ): AnimationUiState {
             val isTextBlock = engine.block.getType(designBlock) == DesignBlockType.Text.key
             val defaultAssetSourcesBaseUri = engine.defaultAssetSourcesBaseUri
@@ -104,6 +106,7 @@ data class AnimationUiState(
                         group = "in",
                         animationDesignBlock = engine.block.getInAnimation(designBlock),
                         engine = engine,
+                        locale = locale,
                     ),
                     getTabItem(
                         titleRes = R.string.ly_img_editor_sheet_animations_tab_loop,
@@ -111,6 +114,7 @@ data class AnimationUiState(
                         group = "loop",
                         animationDesignBlock = engine.block.getLoopAnimation(designBlock),
                         engine = engine,
+                        locale = locale,
                     ),
                     getTabItem(
                         titleRes = R.string.ly_img_editor_sheet_animations_tab_out,
@@ -118,6 +122,7 @@ data class AnimationUiState(
                         group = "out",
                         animationDesignBlock = engine.block.getOutAnimation(designBlock),
                         engine = engine,
+                        locale = locale,
                     ),
                 ),
             )

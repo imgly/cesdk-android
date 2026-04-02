@@ -139,9 +139,7 @@ fun CustomAssetList(
         }
     }
     LaunchedEffect(libraryCategory) {
-        if (uiState.value.loadState == CategoryLoadState.Idle) {
-            viewModel.onEvent(LibraryEvent.OnFetch(libraryCategory))
-        }
+        viewModel.onEvent(LibraryEvent.OnFetch(libraryCategory))
     }
 
     suspend fun centerSelectedItem(
