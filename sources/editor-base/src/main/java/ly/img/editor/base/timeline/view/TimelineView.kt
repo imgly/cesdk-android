@@ -12,6 +12,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.flow.filterNotNull
@@ -38,7 +42,21 @@ fun TimelineView(
             onToggleExpand = onToggleExpand,
         )
 
-        val verticalScrollState = rememberLazyListState(initialFirstVisibleItemIndex = Int.MAX_VALUE)
+        val verticalScrollState = rememberLazyListState()
+        var hasAppliedInitialBottomScroll by remember { mutableStateOf(false) }
+
+        LaunchedEffect(
+            expanded,
+            timelineState.dataSource.tracks.size,
+            timelineState.dataSource.backgroundTrack.clips.size,
+        ) {
+            if (!expanded || hasAppliedInitialBottomScroll) return@LaunchedEffect
+            val hasTimelineContent = timelineState.dataSource.tracks.isNotEmpty() ||
+                timelineState.dataSource.backgroundTrack.clips.isNotEmpty()
+            if (!hasTimelineContent) return@LaunchedEffect
+            verticalScrollState.scrollToItem(timelineState.dataSource.tracks.size)
+            hasAppliedInitialBottomScroll = true
+        }
 
         LaunchedEffect(Unit) {
             snapshotFlow { timelineState.selectedClip }

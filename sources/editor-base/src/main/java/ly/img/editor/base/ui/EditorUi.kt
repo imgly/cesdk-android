@@ -605,7 +605,8 @@ fun EditorUi(
                     BoxWithConstraints {
                         val orientation = LocalConfiguration.current.orientation
                         val blocksCanvasAndTimelineInteraction =
-                            bottomSheetContent?.type is SheetType.Voiceover
+                            bottomSheetContent?.type is SheetType.Voiceover &&
+                                viewModel.isVoiceOverRecordingInProgress
                         EngineCanvasView(
                             license = editorContext.license,
                             userId = editorContext.userId,
@@ -682,7 +683,9 @@ fun EditorUi(
                                 EditorComponent(component = it(editorScope))
                             }
 
-                            if (bottomSheetContent?.type !is SheetType.Voiceover) {
+                            val isVoiceoverSheetClosing = bottomSheetContent?.type is SheetType.Voiceover &&
+                                bottomSheetState.targetValue == ModalBottomSheetValue.Hidden
+                            if (bottomSheetContent?.type !is SheetType.Voiceover || isVoiceoverSheetClosing) {
                                 editorContext.inspectorBar?.let {
                                     Box(modifier = Modifier.align(Alignment.BottomStart)) {
                                         EditorComponent(component = it(editorScope))

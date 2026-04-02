@@ -249,7 +249,9 @@ internal class VoiceoverRecordController {
                 progressJob?.cancelAndJoin()
                 progressJob = null
                 val engine = editorContext.engine
-                val durationMs = recorder.stop()
+                val durationMs = withContext(Dispatchers.IO) {
+                    recorder.stop()
+                }
                 recordingBuffer.flush(
                     engine = engine,
                     targetBlock = targetBlock,
@@ -318,8 +320,9 @@ internal class VoiceoverRecordController {
                     engine.block.setMetadata(
                         targetBlock,
                         "name",
-                        editorContext.activity.getString(CoreR.string.ly_img_editor_sheet_voiceover_title),
+                        editorContext.activity.getString(CoreR.string.ly_img_editor_timeline_clip_voiceover_title),
                     )
+
                     engine.block.setAlwaysOnTop(targetBlock, true)
                     engine.block.setTimeOffset(targetBlock, recordingStartCursorMs.coerceAtLeast(0L) / 1000.0)
                 }.onFailure {

@@ -11,7 +11,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -29,11 +29,21 @@ fun PropertySlider(
     onValueChangeFinished: () -> Unit,
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     steps: Int = 0,
-    decimalPlaces: Int = 1,
+    step: Float? = null,
+    disableAutoPercentage: Boolean = false,
 ) {
+    val min = valueRange.start
+    val max = valueRange.endInclusive
+    val showPercentage = remember(disableAutoPercentage, min, max) {
+        !disableAutoPercentage && PercentageSliderHelper.isPercentageSlider(min, max)
+    }
+    val effectiveStep = remember(step, min, max) {
+        step ?: PercentageSliderHelper.stepFromMinMax(min, max)
+    }
+
     Column {
         SectionHeader(text = title)
-        var sliderValue by remember(value) { mutableStateOf(value) }
+        var sliderValue by remember(value) { mutableFloatStateOf(value) }
         Card(
             colors = UiDefaults.cardColors,
         ) {
@@ -56,8 +66,15 @@ fun PropertySlider(
                         }
                     },
                 )
+                val formattedText = remember(showPercentage, sliderValue, min, max, effectiveStep) {
+                    if (showPercentage) {
+                        "${PercentageSliderHelper.valueToPercentage(sliderValue, min, max).toInt()}"
+                    } else {
+                        PercentageSliderHelper.formatValue(sliderValue, effectiveStep)
+                    }
+                }
                 Text(
-                    text = String.format("%.${decimalPlaces}f", sliderValue),
+                    text = formattedText,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.End,
@@ -76,7 +93,8 @@ fun PropertySlider(
     onValueChangeFinished: () -> Unit,
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     steps: Int = 0,
-    decimalPlaces: Int = 1,
+    step: Float? = null,
+    disableAutoPercentage: Boolean = false,
 ) = PropertySlider(
     title = stringResource(title),
     value = value,
@@ -84,5 +102,6 @@ fun PropertySlider(
     onValueChangeFinished = onValueChangeFinished,
     valueRange = valueRange,
     steps = steps,
-    decimalPlaces = decimalPlaces,
+    step = step,
+    disableAutoPercentage = disableAutoPercentage,
 )

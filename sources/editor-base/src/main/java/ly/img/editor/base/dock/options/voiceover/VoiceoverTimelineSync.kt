@@ -27,6 +27,13 @@ internal object VoiceoverTimelineSync {
         if (contentEnd > PLAYBACK_END_EPSILON_SECONDS) {
             runCatching { engine.block.setDuration(page, contentEnd) }
         }
+        // When we set the page duration manually, it becomes the duration source.
+        // We need to unset it so the engine can always calculate the page duration correctly.
+        runCatching {
+            if (engine.block.isPageDurationSource(page)) {
+                engine.block.removePageDurationSource(page)
+            }
+        }
     }
 
     private fun calculateContentEndDuration(

@@ -402,7 +402,7 @@ fun ClipView(
                                 val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minClipDuration))
                                 val effectiveFootageDuration = clip.effectiveFootageDuration
                                 val maxWidth = if (effectiveFootageDuration != null) {
-                                    zoomState.toPx(effectiveFootageDuration - clip.trimOffset)
+                                    zoomState.toPx(effectiveFootageDuration - clip.trimOffset).coerceAtLeast(minWidth)
                                 } else {
                                     Float.POSITIVE_INFINITY
                                 }
@@ -414,7 +414,11 @@ fun ClipView(
                                         val newProposedWidth = width + drag
 
                                         if (trailingTrimHandleOvershoot.value == 0f) {
-                                            width = newProposedWidth.coerceIn(minWidth, maxWidth)
+                                            width = if (maxWidth.isFinite()) {
+                                                newProposedWidth.coerceIn(minWidth, maxWidth)
+                                            } else {
+                                                newProposedWidth.coerceAtLeast(minWidth)
+                                            }
                                             onDrag(width)
                                         }
                                         if (width != newProposedWidth) {

@@ -778,7 +778,6 @@ fun Button.Companion.rememberClipSpeed(
                 val isAudio = selection.type == DesignBlockType.Audio
                 val playbackFillType = editorContext.engine.block.getFillType(playbackBlock)
                 isVideoScene &&
-                    !selection.isVoiceoverSelection() &&
                     (isAudio || selection.fillType == FillType.Video || playbackFillType == FillType.Video) &&
                     editorContext.engine.block.isAllowedByScope(designBlock, "fill/change") &&
                     isReadyVoiceoverSelection
@@ -1692,7 +1691,10 @@ fun Button.Companion.rememberReplace(
         val isReadyVoiceoverSelection = rememberIsReadyVoiceoverSelection(selection)
         remember(selection, isReadyVoiceoverSelection) {
             (
-                selection.type == DesignBlockType.Audio ||
+                (
+                    selection.type == DesignBlockType.Audio &&
+                        selection.kind != KIND_VOICEOVER
+                ) ||
                     (
                         selection.type == DesignBlockType.Graphic &&
                             (selection.fillType == FillType.Image || selection.fillType == FillType.Video)

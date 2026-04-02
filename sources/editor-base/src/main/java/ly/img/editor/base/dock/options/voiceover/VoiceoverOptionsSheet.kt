@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import ly.img.editor.base.ui.Event
@@ -35,6 +36,7 @@ import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Muteotheraudio
 import ly.img.editor.core.ui.iconpack.Muteotheraudiooff
 import ly.img.editor.core.ui.permissions.PermissionManager.Companion.hasMicPermission
+import ly.img.editor.core.ui.utils.lifecycle.LifecycleEventEffect
 import ly.img.engine.DesignBlock
 import ly.img.editor.core.ui.iconpack.IconPack as CoreUiIconPack
 
@@ -85,6 +87,15 @@ internal fun VoiceoverOptionsSheet(
             closeVoiceoverOptionsSheet(onEvent)
         }
         return
+    }
+
+    LifecycleEventEffect(event = Lifecycle.Event.ON_PAUSE) {
+        if (controller.isRecording && !controller.isSaving) {
+            controller.stopAndPersist(
+                editorContext = editorContext,
+                coroutineScope = coroutineScope,
+            )
+        }
     }
 
     BoxWithConstraints(

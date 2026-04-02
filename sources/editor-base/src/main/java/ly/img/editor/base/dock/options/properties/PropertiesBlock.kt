@@ -32,7 +32,6 @@ import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.ui.UiDefaults
 import ly.img.editor.core.ui.sheetScrollableContentModifier
 import ly.img.engine.DesignBlock
-import kotlin.math.log10
 import kotlin.math.roundToInt
 
 @Composable
@@ -113,7 +112,7 @@ private fun IntProperty(
             ).let { onEvent(it) }
         },
         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
-        decimalPlaces = 0,
+        step = 1f,
     )
 }
 
@@ -137,7 +136,7 @@ private fun FloatProperty(
             ).let { onEvent(it) }
         },
         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
-        decimalPlaces = decimalPlacesFromStep(valueType.step),
+        step = valueType.step,
     )
 }
 
@@ -165,7 +164,7 @@ private fun DoubleProperty(
             ).let { onEvent(it) }
         },
         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
-        decimalPlaces = decimalPlacesFromStep(valueType.step.toFloat()),
+        step = valueType.step.toFloat(),
     )
 }
 
@@ -317,8 +316,3 @@ private fun StringEnumProperty(
         )
     }
 }
-
-private fun decimalPlacesFromStep(
-    step: Float,
-    minDecimals: Int = 1,
-): Int = if (step >= 1f) minDecimals else maxOf(minDecimals, -log10(step.toDouble()).toInt()).coerceAtMost(2)

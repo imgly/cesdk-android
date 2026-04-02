@@ -7,6 +7,7 @@ import android.media.MediaRecorder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
@@ -96,11 +97,12 @@ internal class VoiceOverRecordSegmentRecorder {
         if (!active.get()) return 0L
         active.set(false)
         val record = audioRecord
-        runCatching { record?.stop() }
-        runCatching { writingJob?.join() }
-        writingJob = null
-        runCatching { record?.release() }
         audioRecord = null
+        runCatching { record?.stop() }
+        runCatching { record?.release() }
+        val job = writingJob
+        writingJob = null
+        runCatching { job?.cancelAndJoin() }
         val sampleCount = bytesWritten / PCM_BYTES_PER_SAMPLE
         return ((sampleCount * 1000L) / SAMPLE_RATE.toLong()).coerceAtLeast(0L)
     }
