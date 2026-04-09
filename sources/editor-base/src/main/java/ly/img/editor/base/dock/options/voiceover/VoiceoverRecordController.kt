@@ -320,7 +320,7 @@ internal class VoiceoverRecordController {
                     engine.block.setMetadata(
                         targetBlock,
                         "name",
-                        editorContext.activity.getString(CoreR.string.ly_img_editor_sheet_voiceover_title),
+                        editorContext.activity.getString(CoreR.string.ly_img_editor_timeline_clip_voiceover_title),
                     )
 
                     engine.block.setAlwaysOnTop(targetBlock, true)

@@ -26,7 +26,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ly.img.editor.base.components.SectionHeader
 import ly.img.editor.core.R
-import ly.img.editor.core.theme.fillAndStrokeColors
 import ly.img.editor.core.ui.ColorButton
 
 @Composable

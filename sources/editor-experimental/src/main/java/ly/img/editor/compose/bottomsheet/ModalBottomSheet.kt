@@ -36,10 +36,12 @@ import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -60,38 +62,57 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import ly.img.editor.compose.bottomsheet.ModalBottomSheetState.Companion.Saver
-import ly.img.editor.core.sheet.SheetValue
-import ly.img.editor.core.sheet.SheetValue.Expanded
-import ly.img.editor.core.sheet.SheetValue.HalfExpanded
-import ly.img.editor.core.sheet.SheetValue.Hidden
+import ly.img.editor.compose.bottomsheet.ModalBottomSheetValue.Expanded
+import ly.img.editor.compose.bottomsheet.ModalBottomSheetValue.HalfExpanded
+import ly.img.editor.compose.bottomsheet.ModalBottomSheetValue.Hidden
 import kotlin.math.max
 import kotlin.math.roundToInt
 
+/**
+ * Possible values of [ModalBottomSheetState].
+ */
+enum class ModalBottomSheetValue {
+    /**
+     * The bottom sheet is not visible.
+     */
+    Hidden,
+
+    /**
+     * The bottom sheet is visible at full height.
+     */
+    Expanded,
+
+    /**
+     * The bottom sheet is partially visible at 50% of the screen height. This state is only
+     * enabled if the height of the bottom sheet is more than 50% of the screen height.
+     */
+    HalfExpanded,
+}
 
 /**
  * State of the [ModalBottomSheetLayout] composable.
  *
  * @param initialValue The initial value of the state. <b>Must not be set to
- * [SheetValue.HalfExpanded] if [isSkipHalfExpanded] is set to true.</b>
+ * [ModalBottomSheetValue.HalfExpanded] if [isSkipHalfExpanded] is set to true.</b>
  * @param animationSpec The default animation that will be used to animate to a new state.
  * @param confirmValueChange Optional callback invoked to confirm or veto a pending state change.
  * @param isSkipHalfExpanded Whether the half expanded state, if the sheet is tall enough, should
  * be skipped. If true, the sheet will always expand to the [Expanded] state and move to the
  * [Hidden] state when hiding the sheet, either programmatically or by user interaction.
- * <b>Must not be set to true if the initialValue is [SheetValue.HalfExpanded].</b>
- * If supplied with [SheetValue.HalfExpanded] for the initialValue, an
+ * <b>Must not be set to true if the initialValue is [ModalBottomSheetValue.HalfExpanded].</b>
+ * If supplied with [ModalBottomSheetValue.HalfExpanded] for the initialValue, an
  * [IllegalArgumentException] will be thrown.
  */
 @Suppress("Deprecation")
 fun ModalBottomSheetState(
-    initialValue: SheetValue,
+    initialValue: ModalBottomSheetValue,
     animationSpec: AnimationSpec<Float> = SwipeableDefaults.AnimationSpec,
-    confirmValueChange: (SheetValue) -> Boolean = { true },
+    confirmValueChange: (ModalBottomSheetValue) -> Boolean = { true },
     isSkipHalfExpanded: Boolean = false,
 ) = ModalBottomSheetState(
     initialValue = initialValue,
@@ -104,13 +125,13 @@ fun ModalBottomSheetState(
  * State of the [ModalBottomSheetLayout] composable.
  *
  * @param initialValue The initial value of the state. <b>Must not be set to
- * [SheetValue.HalfExpanded] if [isSkipHalfExpanded] is set to true.</b>
+ * [ModalBottomSheetValue.HalfExpanded] if [isSkipHalfExpanded] is set to true.</b>
  * @param animationSpec The default animation that will be used to animate to a new state.
  * @param isSkipHalfExpanded Whether the half expanded state, if the sheet is tall enough, should
  * be skipped. If true, the sheet will always expand to the [Expanded] state and move to the
  * [Hidden] state when hiding the sheet, either programmatically or by user interaction.
- * <b>Must not be set to true if the initialValue is [SheetValue.HalfExpanded].</b>
- * If supplied with [SheetValue.HalfExpanded] for the initialValue, an
+ * <b>Must not be set to true if the initialValue is [ModalBottomSheetValue.HalfExpanded].</b>
+ * If supplied with [ModalBottomSheetValue.HalfExpanded] for the initialValue, an
  * [IllegalArgumentException] will be thrown.
  * @param confirmStateChange Optional callback invoked to confirm or veto a pending state change.
  */
@@ -126,16 +147,16 @@ class ModalBottomSheetState
             ),
     )
     constructor(
-        val swipeableState: SwipeableV2State,
+        val swipeableState: SwipeableV2State<ModalBottomSheetValue>,
         internal val animationSpec: AnimationSpec<Float> = SwipeableDefaults.AnimationSpec,
         internal val isSkipHalfExpanded: Boolean = false,
     ) {
 
         constructor(
-            initialValue: SheetValue,
+            initialValue: ModalBottomSheetValue,
             animationSpec: AnimationSpec<Float> = SwipeableDefaults.AnimationSpec,
             isSkipHalfExpanded: Boolean,
-            confirmStateChange: (SheetValue) -> Boolean,
+            confirmStateChange: (ModalBottomSheetValue) -> Boolean,
         ) : this (
             swipeableState = SwipeableV2State(
                 initialValue = initialValue,
@@ -154,10 +175,10 @@ class ModalBottomSheetState
             }
         }
 
-        val currentValue: SheetValue
+        val currentValue: ModalBottomSheetValue
             get() = swipeableState.currentValue
 
-        val targetValue: SheetValue
+        val targetValue: ModalBottomSheetValue
             get() = swipeableState.targetValue
 
         /**
@@ -220,11 +241,11 @@ class ModalBottomSheetState
         suspend fun hide() = animateTo(Hidden)
 
         suspend fun animateTo(
-            target: SheetValue,
+            target: ModalBottomSheetValue,
             velocity: Float = swipeableState.lastVelocity,
         ) = swipeableState.animateTo(target, velocity)
 
-        suspend fun snapTo(target: SheetValue) = swipeableState.snapTo(target)
+        suspend fun snapTo(target: ModalBottomSheetValue) = swipeableState.snapTo(target)
 
         internal fun requireOffset() = swipeableState.requireOffset()
 
@@ -240,7 +261,7 @@ class ModalBottomSheetState
              */
             fun Saver(
                 animationSpec: AnimationSpec<Float>,
-                confirmValueChange: (SheetValue) -> Boolean,
+                confirmValueChange: (ModalBottomSheetValue) -> Boolean,
                 skipHalfExpanded: Boolean,
             ): Saver<ModalBottomSheetState, *> =
                 Saver(
@@ -266,15 +287,15 @@ class ModalBottomSheetState
  * @param skipHalfExpanded Whether the half expanded state, if the sheet is tall enough, should
  * be skipped. If true, the sheet will always expand to the [Expanded] state and move to the
  * [Hidden] state when hiding the sheet, either programmatically or by user interaction.
- * <b>Must not be set to true if the [initialValue] is [SheetValue.HalfExpanded].</b>
- * If supplied with [SheetValue.HalfExpanded] for the [initialValue], an
+ * <b>Must not be set to true if the [initialValue] is [ModalBottomSheetValue.HalfExpanded].</b>
+ * If supplied with [ModalBottomSheetValue.HalfExpanded] for the [initialValue], an
  * [IllegalArgumentException] will be thrown.
  */
 @Composable
 fun rememberModalBottomSheetState(
-    initialValue: SheetValue,
+    initialValue: ModalBottomSheetValue,
     animationSpec: AnimationSpec<Float> = SwipeableDefaults.AnimationSpec,
-    confirmValueChange: (SheetValue) -> Boolean = { true },
+    confirmValueChange: (ModalBottomSheetValue) -> Boolean = { true },
     skipHalfExpanded: Boolean = false,
 ): ModalBottomSheetState {
     // Key the rememberSaveable against the initial value. If it changed we don't want to attempt
@@ -508,7 +529,7 @@ object ModalBottomSheetDefaults {
 }
 
 private fun ConsumeSwipeWithinBottomSheetBoundsNestedScrollConnection(
-    state: SwipeableV2State,
+    state: SwipeableV2State<*>,
     orientation: Orientation,
 ): NestedScrollConnection =
     object : NestedScrollConnection {
@@ -571,9 +592,9 @@ private fun ConsumeSwipeWithinBottomSheetBoundsNestedScrollConnection(
 
 private fun ModalBottomSheetAnchorChangeHandler(
     state: ModalBottomSheetState,
-    animateTo: (target: SheetValue, velocity: Float) -> Unit,
-    snapTo: (target: SheetValue) -> Unit,
-) = AnchorChangeHandler { previousTarget, previousAnchors, newAnchors ->
+    animateTo: (target: ModalBottomSheetValue, velocity: Float) -> Unit,
+    snapTo: (target: ModalBottomSheetValue) -> Unit,
+) = AnchorChangeHandler<ModalBottomSheetValue> { previousTarget, previousAnchors, newAnchors ->
     val previousTargetOffset = previousAnchors[previousTarget]
     val newTarget =
         when (previousTarget) {

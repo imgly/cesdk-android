@@ -20,7 +20,7 @@ import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.iconpack.AddAudio
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.iconpack.Plus
-import ly.img.editor.core.iconpack.VoiceoverAdd
+import ly.img.editor.core.iconpack.Voiceoveradd
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.ui.library.components.ClipMenuItem
 
@@ -37,10 +37,13 @@ fun AddAudioButton(
 
     fun handleClickOf(option: AddAudioOption) = when (option) {
         AddAudioOption.Library -> {
-            val assetLibrary = requireNotNull(editorContext.configuration.value?.assetLibrary)
             editorContext.eventHandler.send(
                 EditorEvent.Sheet.Open(
-                    SheetType.LibraryAdd(libraryCategory = assetLibrary.audios()),
+                    SheetType.LibraryAdd(
+                        libraryCategory = editorContext.assetLibrary.audios(
+                            editorContext.engine.scene.getMode(),
+                        ),
+                    ),
                 ),
             )
         }
@@ -85,7 +88,7 @@ fun AddAudioButton(
                         AddAudioOption.Voiceover -> {
                             ClipMenuItem(
                                 textResourceId = R.string.ly_img_editor_timeline_add_audio_option_voiceover,
-                                icon = IconPack.VoiceoverAdd,
+                                icon = IconPack.Voiceoveradd,
                             ) {
                                 showAudioMenu = false
                                 handleClickOf(option)

@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ly.img.editor.compose.bottomsheet.ModalBottomSheetValue
 import ly.img.editor.compose.bottomsheet.SwipeableV2State
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.ui.AnyComposable
@@ -32,7 +33,7 @@ internal class OffsetWrapper(
 
 @Composable
 fun AddLibraryTabsSheet(
-    swipeableState: SwipeableV2State,
+    swipeableState: SwipeableV2State<ModalBottomSheetValue>,
     onClose: () -> Unit,
     onCloseAssetDetails: () -> Unit,
     onSearchFocus: () -> Unit,

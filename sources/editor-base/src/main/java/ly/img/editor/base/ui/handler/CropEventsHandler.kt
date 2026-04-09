@@ -1,18 +1,18 @@
 package ly.img.editor.base.ui.handler
 
 import android.util.Log
+import ly.img.editor.PAGE_BLOCK_TYPE
 import ly.img.editor.base.dock.options.crop.getNormalizedDegrees
 import ly.img.editor.base.dock.options.crop.getRotationDegrees
 import ly.img.editor.base.ui.BlockEvent
-import ly.img.editor.base.withTemporaryPageResizeInteraction
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.engine.getScene
 import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register
+import ly.img.editor.withTemporaryPageResizeInteraction
 import ly.img.engine.AssetTransformPreset
 import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
-import ly.img.engine.DesignBlockType
 import ly.img.engine.DesignUnit
 import ly.img.engine.Engine
 
@@ -71,7 +71,7 @@ fun EventsHandler.cropEvents(
         if (cropAsset != null) {
             bewarePageState {
                 val isPage = try {
-                    engine.block.getType(block) == DesignBlockType.Page.key
+                    engine.block.getType(block) == PAGE_BLOCK_TYPE
                 } catch (_: Throwable) {
                     false
                 }

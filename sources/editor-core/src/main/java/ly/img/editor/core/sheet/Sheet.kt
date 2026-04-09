@@ -1,13 +1,14 @@
 package ly.img.editor.core.sheet
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.R
 import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.component.data.Height
 import ly.img.editor.core.library.LibraryCategory
-import ly.img.engine.DesignBlock
+import ly.img.editor.core.sheet.SheetType.Custom
 
 /**
  * An interface representing different types of sheets used in the editor.
@@ -162,7 +163,7 @@ interface SheetType {
                 override val titleRes = R.string.ly_img_editor_sheet_crop_title
 
                 override val hasCropAsset: Boolean = true
-                override val hasPageAsset: Boolean = false
+                override val hasPageAsset: Boolean = true
 
                 override val hasResetButton: Boolean = true
                 override var hasResizeOption: Boolean = true
@@ -324,49 +325,38 @@ interface SheetType {
     ) : SheetType
 
     /**
-     * A sheet that is used to control the font of the text [designBlock].
+     * A sheet that is used to control greeting font in [ly.img.editor.PostcardEditor].
      *
-     * @param designBlock the target design block.
-     * @param fontFamilies the list of font families that should be displayed in the sheet, i.e. //ly.img.typeface/caveat,
-     * If null, then the sheet will display default font families.
      * @param style the style that should be used to display the sheet.
      * Default value is the default [SheetStyle].
      */
     @UnstableEditorApi
-    class Font(
+    class PostcardGreetingFont(
         override val style: SheetStyle = SheetStyle(),
-        val designBlock: DesignBlock,
-        val fontFamilies: List<String>? = null,
     ) : SheetType
 
     /**
-     * A sheet that is used to control the font size of the [designBlock].
+     * A sheet that is used to control greeting font size in [ly.img.editor.PostcardEditor].
      *
-     * @param designBlock the target design block.
      * @param style the style that should be used to display the sheet.
      * Default value is the default [SheetStyle].
      */
     @UnstableEditorApi
-    class FontSize(
+    class PostcardGreetingSize(
         override val style: SheetStyle = SheetStyle(),
-        val designBlock: DesignBlock,
     ) : SheetType
 
     /**
-     * A sheet that is used to control the fill and stroke color of design blocks.
-     * Selected color is tried to be applied to both fill and stroke. It is applied to:
-     * - fill if both [ly.img.engine.BlockApi.supportsFill] and [ly.img.engine.BlockApi.isFillEnabled] are true.
-     * - stroke if both [ly.img.engine.BlockApi.supportsStroke] and [ly.img.engine.BlockApi.isStrokeEnabled] are true.
-     * In case the target design block has a name (via [ly.img.engine.BlockApi.getName]), it is displayed as title for the section.
+     * A sheet that is used to control greeting the colors [ly.img.editor.PostcardEditor].
      *
-     * @param designBlocks the target design blocks.
      * @param style the style that should be used to display the sheet.
      * Default value is the default [SheetStyle].
+     * @param colorMapping the mappings between design block name and current color that should be displayed.
      */
     @UnstableEditorApi
-    class Colors(
+    class PostcardColors(
         override val style: SheetStyle = SheetStyle(),
-        val designBlocks: List<DesignBlock>,
+        val colorMapping: Map<String, Color>,
     ) : SheetType
 }
 

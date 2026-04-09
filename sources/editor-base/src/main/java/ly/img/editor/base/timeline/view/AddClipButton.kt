@@ -49,17 +49,16 @@ fun AddClipButton(
         }
         AddClipOption.Gallery -> {
             showClipMenu = false
-            val assetLibrary = requireNotNull(libraryViewModel.assetLibrary)
-            val galleryCategory = assetLibrary.gallery()
+            val sceneMode = libraryViewModel.sceneMode
+            val galleryCategory = libraryViewModel.assetLibrary.gallery(sceneMode)
             val sheetType = LibraryAddToBackgroundTrackSheetType(libraryCategory = galleryCategory)
             onEvent(EditorEvent.Sheet.Open(sheetType))
         }
         AddClipOption.Library -> {
-            val assetLibrary = requireNotNull(libraryViewModel.assetLibrary)
             onEvent(
                 EditorEvent.Sheet.Open(
                     LibraryAddToBackgroundTrackSheetType(
-                        libraryCategory = assetLibrary.clips(),
+                        libraryCategory = libraryViewModel.assetLibrary.clips(libraryViewModel.sceneMode),
                     ),
                 ),
             )

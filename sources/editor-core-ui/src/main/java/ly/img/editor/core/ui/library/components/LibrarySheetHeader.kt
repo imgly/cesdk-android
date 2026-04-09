@@ -55,8 +55,8 @@ import ly.img.editor.compose.material3.TopAppBar
 import ly.img.editor.core.R
 import ly.img.editor.core.iconpack.ArrowBack
 import ly.img.editor.core.iconpack.Close
-import ly.img.editor.core.iconpack.ExpandMore
 import ly.img.editor.core.theme.surface3
+import ly.img.editor.core.ui.iconpack.Expandmore
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Search
 import ly.img.editor.core.ui.library.state.AssetLibraryUiState
@@ -237,7 +237,7 @@ internal fun LibrarySearchHeader(
             onClick = onBack,
             Modifier.padding(end = 4.dp),
         ) {
-            Icon(CoreIconPack.ExpandMore, contentDescription = stringResource(id = R.string.ly_img_editor_asset_library_button_back))
+            Icon(IconPack.Expandmore, contentDescription = stringResource(id = R.string.ly_img_editor_asset_library_button_back))
         }
     }
 }

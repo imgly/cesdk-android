@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -54,15 +53,10 @@ fun TimelineContentView(
     ) { horizontalScrollState ->
         val editorScope = LocalEditorScope.current
         val editorContext = editorScope.run { editorContext }
-        val state by editorContext.state.collectAsState()
-        val minDuration = remember(state.minVideoDuration) {
-            state.minVideoDuration?.takeIf { it > ZERO }
-        }
-        val maxDuration = remember(minDuration, state.maxVideoDuration) {
-            state.maxVideoDuration
-                ?.takeIf { it > ZERO }
-                ?.takeIf { minDuration == null || it >= minDuration }
-        }
+        val minDuration = editorContext.minimumVideoDuration?.takeIf { it > ZERO }
+        val maxDuration = editorContext.maximumVideoDuration
+            ?.takeIf { it > ZERO }
+            ?.takeIf { minDuration == null || it >= minDuration }
         val overlayWidth = maxWidth / 2
         val viewportWidth = maxWidth
         val overlayWidthPx = overlayWidth.roundToPx()

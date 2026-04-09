@@ -6,7 +6,7 @@ This repository contains the Android version of the IMG.LY UI for the _Creative 
 The Creative Engine enables you to build any design editing UI, automation and creative workflow in Kotlin.
 It offers performant and robust graphics processing capabilities combining the best of layout, typography and image processing with advanced workflows centered around templating and adaptation.
 
-The Creative Engine seamlessly integrates into any Android app whether you are building a photo editor, template-based design tool or scalable automation of content creation for your app.
+The Creative Engine seamlessly integrates into any iOS app whether you are building a photo editor, template-based design tool or scalable automation of content creation for your app.
 
 Visit our [documentation](https://img.ly/docs/cesdk) for more tutorials on how to integrate and
 customize the engine for your specific use case.
@@ -22,23 +22,24 @@ The CreativeEditor SDK is a commercial product. You can purchase a license at ht
 ```Kotlin
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
-import ly.img.editor.Editor
-import ly.img.editor.core.configuration.EditorConfiguration
-import ly.img.editor.core.configuration.remember
+import ly.img.editor.DesignEditor
+import ly.img.editor.EditorConfiguration
+import ly.img.editor.EngineConfiguration
+import ly.img.editor.rememberForDesign
 
 // Add this composable to your NavHost
 @Composable
 fun EditorIntegration(navController: NavHostController) {
-    Editor(
-        license = null, // pass null or empty for evaluation mode with watermark
-        userId = "<your unique user id>",
-        configuration = {
-            EditorConfiguration.remember {
-                onCreate = {
-                    // Create or load scene, add asset sources etc.
-                }
-            }
-        },
+    val engineConfiguration =
+        EngineConfiguration.rememberForDesign(
+            license = "<your license here>",
+            userId = "<your unique user id>",
+        )
+    val editorConfiguration = EditorConfiguration.rememberForDesign()
+    // Also available PhotoEditor, VideoEditor, PostcardEditor and CaptureVideo contract for camera
+    DesignEditor(
+        engineConfiguration = engineConfiguration,
+        editorConfiguration = editorConfiguration,
     ) {
         // You can set result here
         navController.popBackStack()
