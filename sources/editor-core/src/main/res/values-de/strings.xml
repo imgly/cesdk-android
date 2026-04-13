@@ -187,11 +187,6 @@
     <string name="ly_img_editor_permission_view_button_microphone">Mikrofon erlauben</string>
     <string name="ly_img_editor_permission_view_title_camera">Bitte erlauben Sie den Zugriff auf die Kamera.</string>
     <string name="ly_img_editor_permission_view_title_camera_and_microphone">Bitte erlauben Sie den Zugriff auf Kamera und Mikrofon.</string>
-    <string name="ly_img_editor_postcard_sheet_colors_title">Farben</string>
-    <string name="ly_img_editor_postcard_sheet_font_title">Schriftart</string>
-    <string name="ly_img_editor_postcard_sheet_size_label_message">Nachricht</string>
-    <string name="ly_img_editor_postcard_sheet_size_title">Größe</string>
-    <string name="ly_img_editor_postcard_sheet_template_colors_color_picker_title">%s Farbe</string>
     <string name="ly_img_editor_sheet_adjustments_label_blacks">Schwarz</string>
     <string name="ly_img_editor_sheet_adjustments_label_brightness">Helligkeit</string>
     <string name="ly_img_editor_sheet_adjustments_label_clarity">Klarheit</string>
@@ -269,6 +264,8 @@
     <string name="ly_img_editor_sheet_clip_speed_title">Geschwindigkeit</string>
     <string name="ly_img_editor_sheet_color_picker_label_hue">Farbton</string>
     <string name="ly_img_editor_sheet_color_picker_label_opacity">Deckkraft</string>
+    <string name="ly_img_editor_sheet_color_picker_title">%s Farbe</string>
+    <string name="ly_img_editor_sheet_colors_title">Farben</string>
     <string name="ly_img_editor_sheet_crop_button_flip">Spiegeln</string>
     <string name="ly_img_editor_sheet_crop_button_reset">Zurücksetzen</string>
     <string name="ly_img_editor_sheet_crop_button_rotate_90">90° drehen</string>
@@ -352,6 +349,9 @@
     <string name="ly_img_editor_sheet_fill_stroke_type_option_solid">Einfarbig</string>
     <string name="ly_img_editor_sheet_filter_label_intensity">Intensität</string>
     <string name="ly_img_editor_sheet_filter_title">Filter</string>
+    <string name="ly_img_editor_sheet_font_size_label_message">Nachricht</string>
+    <string name="ly_img_editor_sheet_font_size_title">Größe</string>
+    <string name="ly_img_editor_sheet_font_title">Schriftart</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_auto">Richtung an Sprache anpassen</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_center">Horizontal zentriert ausrichten</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_left">Nach links ausrichten</string>
@@ -456,6 +456,7 @@
     <string name="ly_img_editor_sheet_voiceover_button_mute">Anderes Audio aus</string>
     <string name="ly_img_editor_sheet_voiceover_button_record">Aufnehmen</string>
     <string name="ly_img_editor_sheet_voiceover_button_unmute">Anderes Audio an</string>
+    <string name="ly_img_editor_sheet_voiceover_title">Voiceover</string>
     <string name="ly_img_editor_sheet_volume_title">Lautstärke</string>
     <string name="ly_img_editor_timeline_add_audio_option_voiceover">Voiceover</string>
     <string name="ly_img_editor_timeline_add_clip_option_camera">Kamera</string>
@@ -468,7 +469,6 @@
     <string name="ly_img_editor_timeline_button_pause">Pause</string>
     <string name="ly_img_editor_timeline_button_play">Abspielen</string>
     <string name="ly_img_editor_timeline_button_show_timeline">Zeitleiste</string>
-    <string name="ly_img_editor_timeline_clip_voiceover_title">Voiceover</string>
     <string name="ly_img_editor_timeline_error_split_out_of_range">Bitte bewegen Sie den ausgewählten Clip unter den Abspielkopf.</string>
     <string name="ly_img_editor_timeline_error_split_short_duration">Teilung nicht möglich, da einer der Clips zu kurz werden würde.</string>
     <string name="ly_img_editor_timeline_maximum_video_length">Maximale Videolänge</string>

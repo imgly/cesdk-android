@@ -20,6 +20,8 @@ class ThumbnailsManager(
 ) {
     private val providers = hashMapOf<DesignBlock, ThumbnailsProvider>()
 
+    fun hasProviders(): Boolean = providers.isNotEmpty()
+
     fun getProvider(designBlock: DesignBlock): ThumbnailsProvider? = providers[designBlock]
 
     fun destroyProvider(designBlock: DesignBlock) {

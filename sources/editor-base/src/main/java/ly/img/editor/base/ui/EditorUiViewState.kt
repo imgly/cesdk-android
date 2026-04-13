@@ -9,16 +9,15 @@ import ly.img.editor.core.event.EditorEvent
 
 @Stable
 data class EditorUiViewState(
-    val isInPreviewMode: Boolean = false,
     val allowEditorInteraction: Boolean = false,
-    val selectedBlock: Block? = null,
     val isEditingText: Boolean = false,
-    val timelineMaxHeightInDp: Float = Float.MAX_VALUE,
+    val bottomPanelMaxHeightInDp: Float = Float.MAX_VALUE,
     val timelineState: TimelineState? = null,
     val pageCount: Int = 0,
     val isSceneLoaded: Boolean = false,
     val timelineTrigger: Boolean = false,
     val pagesState: EditorPagesState? = null,
+    val isClippedInEditMode: Boolean = false,
     val openContract: EditorEvent.LaunchContract<*, *> = EditorEvent.LaunchContract(
         contract = DummyContract,
         input = Unit,

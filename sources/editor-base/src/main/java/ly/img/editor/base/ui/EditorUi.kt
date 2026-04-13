@@ -3,7 +3,6 @@ package ly.img.editor.base.ui
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.res.Configuration
-import android.os.Parcelable
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -11,7 +10,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -39,7 +37,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,7 +48,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
@@ -59,10 +55,12 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import ly.img.editor.base.components.EditingTextCard
 import ly.img.editor.base.dock.AdjustmentSheetContent
@@ -78,18 +76,18 @@ import ly.img.editor.base.dock.OptionsBottomSheetContent
 import ly.img.editor.base.dock.options.adjustment.AdjustmentOptionsSheet
 import ly.img.editor.base.dock.options.animation.AnimationBottomSheetContent
 import ly.img.editor.base.dock.options.animation.AnimationSheet
+import ly.img.editor.base.dock.options.colors.ColorsBottomSheetContent
+import ly.img.editor.base.dock.options.colors.ColorsSheet
 import ly.img.editor.base.dock.options.crop.CropBottomSheetContent
 import ly.img.editor.base.dock.options.crop.CropSheet
 import ly.img.editor.base.dock.options.effect.EffectSelectionSheet
 import ly.img.editor.base.dock.options.fillstroke.FillStrokeOptionsSheet
+import ly.img.editor.base.dock.options.font.FontBottomSheetContent
+import ly.img.editor.base.dock.options.font.FontSheet
+import ly.img.editor.base.dock.options.fontSize.FontSizeBottomSheetContent
+import ly.img.editor.base.dock.options.fontSize.FontSizeSheet
 import ly.img.editor.base.dock.options.format.FormatOptionsSheet
 import ly.img.editor.base.dock.options.layer.LayerOptionsSheet
-import ly.img.editor.base.dock.options.postcard.colors.PostcardColorsBottomSheetContent
-import ly.img.editor.base.dock.options.postcard.colors.PostcardColorsSheet
-import ly.img.editor.base.dock.options.postcard.font.PostcardGreetingFontBottomSheetContent
-import ly.img.editor.base.dock.options.postcard.font.PostcardGreetingFontSheet
-import ly.img.editor.base.dock.options.postcard.size.PostcardGreetingSizeBottomSheetContent
-import ly.img.editor.base.dock.options.postcard.size.PostcardGreetingSizeSheet
 import ly.img.editor.base.dock.options.reorder.ReorderBottomSheetContent
 import ly.img.editor.base.dock.options.reorder.ReorderSheet
 import ly.img.editor.base.dock.options.shapeoptions.ShapeOptionsSheet
@@ -100,17 +98,16 @@ import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheetC
 import ly.img.editor.base.dock.options.volume.VolumeBottomSheetContent
 import ly.img.editor.base.dock.options.volume.VolumeSheet
 import ly.img.editor.base.engine.EngineCanvasView
-import ly.img.editor.base.timeline.view.TimelineView
 import ly.img.editor.compose.bottomsheet.ModalBottomSheetDefaults
 import ly.img.editor.compose.bottomsheet.ModalBottomSheetLayout
 import ly.img.editor.compose.bottomsheet.ModalBottomSheetState
-import ly.img.editor.compose.bottomsheet.ModalBottomSheetValue
 import ly.img.editor.compose.bottomsheet.rememberModalBottomSheetState
-import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.R
+import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.component.EditorComponent
 import ly.img.editor.core.compose.rememberLastValue
+import ly.img.editor.core.configuration.EditorConfiguration
 import ly.img.editor.core.engine.EngineRenderTarget
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.iconpack.Close
@@ -118,6 +115,7 @@ import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.navbar.SystemNavBar
 import ly.img.editor.core.sheet.SheetStyle
 import ly.img.editor.core.sheet.SheetType
+import ly.img.editor.core.sheet.SheetValue
 import ly.img.editor.core.theme.surface1
 import ly.img.editor.core.theme.surface2
 import ly.img.editor.core.ui.AnyComposable
@@ -127,41 +125,33 @@ import ly.img.editor.core.ui.library.ReplaceLibrarySheet
 import ly.img.editor.core.ui.permissions.PermissionManager.Companion.hasCameraPermission
 import ly.img.editor.core.ui.permissions.PermissionManager.Companion.hasCameraPermissionInManifest
 import ly.img.editor.core.ui.permissions.PermissionsView
-import ly.img.editor.core.ui.scope.EditorContextImpl
 import ly.img.editor.core.ui.sheet.Sheet
 import ly.img.editor.core.ui.utils.activity
 import ly.img.editor.core.ui.utils.lifecycle.LifecycleEventEffect
 import ly.img.editor.core.ui.utils.toPx
 
-@OptIn(FlowPreview::class)
+@OptIn(FlowPreview::class, UnstableEditorApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun EditorUi(
-    initialExternalState: Parcelable,
+fun EditorScope.EditorUi(
+    configuration: EditorConfiguration,
     renderTarget: EngineRenderTarget,
     uiState: EditorUiViewState,
-    editorScope: EditorScope,
-    editorContext: EditorContext,
-    onEvent: EditorScope.(Parcelable, EditorEvent) -> Parcelable,
-    viewModel: EditorUiViewModel,
-    close: (Throwable?) -> Unit,
 ) {
-    SideEffect {
-        viewModel.setEditorScope(editorScope)
-    }
-    val externalState = rememberSaveable { mutableStateOf(initialExternalState) }
+    val viewModel = viewModel<EditorUiViewModel>()
+    // Passing onEvent via params causes unnecessary recompositions which affects performance.
+    // Reason is unknown.
+    val onEvent = remember(viewModel) { { event: EditorEvent -> viewModel.send(event) } }
     val uiScope = rememberCoroutineScope()
     val bottomSheetContent by viewModel.bottomSheetContent.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-    var timelineExpanded by remember { mutableStateOf(true) }
-
+    val snackBarHostState = remember { SnackbarHostState() }
     var sheetStyle by remember(bottomSheetContent?.type) { mutableStateOf(bottomSheetContent?.type?.style) }
     val bottomSheetState = rememberLastValue<ModalBottomSheetState>(sheetStyle) {
         val internalSheetStyle = sheetStyle
         val initialValue = when {
-            internalSheetStyle == null -> ModalBottomSheetValue.Hidden
-            internalSheetStyle.isHalfExpandingEnabled && internalSheetStyle.isHalfExpandedInitially -> ModalBottomSheetValue.HalfExpanded
-            else -> ModalBottomSheetValue.Expanded
+            internalSheetStyle == null -> SheetValue.Hidden
+            internalSheetStyle.isHalfExpandingEnabled && internalSheetStyle.isHalfExpandedInitially -> SheetValue.HalfExpanded
+            else -> SheetValue.Expanded
         }
         if (isValueSet) {
             ModalBottomSheetState(
@@ -170,13 +160,17 @@ fun EditorUi(
             )
         } else {
             ModalBottomSheetState(
-                initialValue = if (sheetStyle?.animateInitialValue == true) ModalBottomSheetValue.Hidden else initialValue,
+                initialValue = if (sheetStyle?.animateInitialValue == true) SheetValue.Hidden else initialValue,
                 isSkipHalfExpanded = sheetStyle?.isHalfExpandingEnabled?.not() ?: true,
             )
+        }.also {
+            viewModel.send(Event.OnBottomSheetStateChange(state = it.swipeableState))
         }
     }
 
-    BackHandler(true) {
+    val isBackHandlerEnabledFlow = remember { editorContext.state.map { it.isBackHandlerEnabled } }
+    val isBackHandlerEnabled by isBackHandlerEnabledFlow.collectAsState(false)
+    BackHandler(isBackHandlerEnabled) {
         viewModel.send(
             Event.OnBackPress(
                 bottomSheetOffset = bottomSheetState.swipeableState.offset ?: Float.MAX_VALUE,
@@ -185,7 +179,7 @@ fun EditorUi(
         )
     }
     LaunchedEffect(bottomSheetContent?.type) {
-        if (bottomSheetContent == null && bottomSheetState.isVisible) bottomSheetState.snapTo(ModalBottomSheetValue.Hidden)
+        if (bottomSheetContent == null && bottomSheetState.isVisible) bottomSheetState.snapTo(SheetValue.Hidden)
         val sheetContent = bottomSheetContent
         if (sheetContent != null && sheetStyle?.animateInitialValue == true) {
             if (sheetContent.isHalfExpandingEnabled && sheetContent.isInitialExpandHalf) {
@@ -210,25 +204,6 @@ fun EditorUi(
     var navigationBarColor by remember {
         mutableStateOf(surfaceColor)
     }
-    LaunchedEffect(bottomSheetContent, uiState.selectedBlock, uiState.pagesState, anyComposable) {
-        navigationBarColor = when {
-            anyComposable != null -> surfaceColor
-            bottomSheetContent == null -> {
-                when {
-                    uiState.pagesState != null -> libraryColor
-                    uiState.selectedBlock != null -> surfaceColor
-                    else -> canvasColor
-                }
-            }
-            bottomSheetContent is LibraryTabsBottomSheetContent -> {
-                libraryColor
-            }
-            else -> {
-                surfaceColor
-            }
-        }
-    }
-
     var navigationBarHeightPx by remember {
         mutableStateOf(0F)
     }
@@ -240,14 +215,6 @@ fun EditorUi(
         "Unable to find the activity. This is an internal error. Please report this issue."
     }
     val oneDpInPx = 1.dp.toPx()
-    remember {
-        (editorContext as EditorContextImpl).init(
-            activity = activity,
-            eventHandler = viewModel,
-            state = viewModel.publicState,
-        )
-        mutableStateOf(Unit)
-    }
     LaunchedEffect(bottomSheetState) {
         val swipeableState = bottomSheetState.swipeableState
         launch {
@@ -259,14 +226,14 @@ fun EditorUi(
                 .collect { offset ->
                     bottomSheetContent?.let {
                         if (swipeableState.offset == swipeableState.maxOffset &&
-                            swipeableState.targetValue == ModalBottomSheetValue.Hidden
+                            swipeableState.targetValue == SheetValue.Hidden
                         ) {
                             viewModel.send(EditorEvent.Sheet.OnClosed(it.type))
                         }
-                        if (offset == 0F && swipeableState.currentValue == ModalBottomSheetValue.Expanded) {
+                        if (offset == 0F && swipeableState.currentValue == SheetValue.Expanded) {
                             viewModel.send(EditorEvent.Sheet.OnExpanded(it.type))
                         }
-                        if (offset == swipeableState.maxOffset / 2 && swipeableState.currentValue == ModalBottomSheetValue.HalfExpanded) {
+                        if (offset == swipeableState.maxOffset / 2 && swipeableState.currentValue == SheetValue.HalfExpanded) {
                             viewModel.send(EditorEvent.Sheet.OnHalfExpanded(it.type))
                         }
                     }
@@ -286,7 +253,7 @@ fun EditorUi(
         }
     }
 
-    val scrimBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val scrimBottomSheetState = rememberModalBottomSheetState(SheetValue.Hidden)
 
     val showScrimBottomSheet = remember {
         { composable: AnyComposable ->
@@ -310,10 +277,6 @@ fun EditorUi(
     LaunchedEffect(bottomSheetState) {
         viewModel.uiEvent.collect {
             when (it) {
-                is SingleEvent.Exit -> {
-                    close(it.throwable)
-                }
-
                 is SingleEvent.ChangeSheetState -> {
                     uiScope.launch {
                         if (it.animate) {
@@ -332,22 +295,18 @@ fun EditorUi(
 
                 is SingleEvent.Snackbar -> {
                     uiScope.launch {
-                        snackbarHostState.showSnackbar(
+                        snackBarHostState.showSnackbar(
                             // stringResource() doesn't work inside of a LaunchedEffect as it is not a composable
                             message = activity.resources.getString(it.text),
                             duration = it.duration,
                         )
                     }
                 }
+                else -> {}
             }
         }
     }
-
-    LaunchedEffect(Unit) {
-        viewModel.externalEvent.collect {
-            externalState.value = onEvent(editorScope, externalState.value, it)
-        }
-    }
+    var isOverlayVisible by remember { mutableStateOf(false) }
     var contentPadding by remember {
         mutableStateOf<PaddingValues?>(null)
     }
@@ -373,7 +332,7 @@ fun EditorUi(
             viewModel.send(
                 Event.OnLaunchContractResult(
                     onResult = it,
-                    editorScope = editorScope,
+                    editorScope = this,
                     result = result,
                 ),
             )
@@ -400,7 +359,13 @@ fun EditorUi(
         }
     }
 
-    Box(modifier = Modifier.background(colorScheme.surface)) {
+    Box(
+        modifier = Modifier
+            .background(colorScheme.surface)
+            .onSizeChanged {
+                viewModel.send(Event.OnEditorSizeChange(it.width / oneDpInPx, it.height / oneDpInPx))
+            },
+    ) {
         ModalBottomSheetLayout(
             sheetState = scrimBottomSheetState,
             sheetContent = {
@@ -435,7 +400,7 @@ fun EditorUi(
                                                 animateInitialValue = false,
                                             )
                                         } else {
-                                            val isHalfExpandingEnabled = bottomSheetState.currentValue == ModalBottomSheetValue.HalfExpanded
+                                            val isHalfExpandingEnabled = bottomSheetState.currentValue == SheetValue.HalfExpanded
                                             content.type.style.copy(
                                                 isHalfExpandingEnabled = isHalfExpandingEnabled,
                                             )
@@ -492,7 +457,7 @@ fun EditorUi(
                                                     uploadAssetSourceType = uploadAssetSourceType,
                                                     designBlock = designBlock,
                                                     addToBackgroundTrack = content.addToBackgroundTrack,
-                                                ).let(viewModel::send)
+                                                ).let(onEvent)
                                             },
                                             launchCamera = { captureVideo, designBlock ->
                                                 viewModel.send(
@@ -526,7 +491,7 @@ fun EditorUi(
                                                     mimeType = mimeType,
                                                     uploadAssetSourceType = uploadAssetSourceType,
                                                     designBlock = designBlock,
-                                                ).let(viewModel::send)
+                                                ).let(onEvent)
                                             },
                                             launchCamera = { captureVideo, designBlock ->
                                                 viewModel.send(
@@ -538,49 +503,49 @@ fun EditorUi(
                                             },
                                         )
 
-                                    is LayerBottomSheetContent -> LayerOptionsSheet(content.uiState, viewModel::send)
+                                    is LayerBottomSheetContent -> LayerOptionsSheet(content.uiState, onEvent)
                                     is FillStrokeBottomSheetContent ->
                                         FillStrokeOptionsSheet(
                                             uiState = content.uiState,
                                             onColorPickerActiveChanged = onColorPickerActiveChanged,
-                                            onEvent = viewModel::send,
+                                            onEvent = onEvent,
                                         )
-                                    is OptionsBottomSheetContent -> ShapeOptionsSheet(content.uiState, viewModel::send)
-                                    is FormatBottomSheetContent -> FormatOptionsSheet(content.uiState, viewModel::send)
-                                    is CropBottomSheetContent -> CropSheet(content.uiState, viewModel::send)
-                                    is AdjustmentSheetContent -> AdjustmentOptionsSheet(content.uiState, viewModel::send)
+                                    is OptionsBottomSheetContent -> ShapeOptionsSheet(content.uiState, onEvent)
+                                    is FormatBottomSheetContent -> FormatOptionsSheet(content.uiState, onEvent)
+                                    is CropBottomSheetContent -> CropSheet(content.uiState, onEvent)
+                                    is AdjustmentSheetContent -> AdjustmentOptionsSheet(content.uiState, onEvent)
                                     is EffectSheetContent ->
                                         EffectSelectionSheet(
                                             uiState = content.uiState,
                                             onColorPickerActiveChanged = onColorPickerActiveChanged,
-                                            onEvent = viewModel::send,
+                                            onEvent = onEvent,
                                         )
-                                    is SpeedBottomSheetContent -> SpeedSheet(content.uiState, viewModel::send)
-                                    is VolumeBottomSheetContent -> VolumeSheet(content.uiState, viewModel::send)
-                                    is ReorderBottomSheetContent -> ReorderSheet(content.timelineState, viewModel::send)
-                                    is AnimationBottomSheetContent -> AnimationSheet(content.uiState, viewModel::send)
+                                    is SpeedBottomSheetContent -> SpeedSheet(content.uiState, onEvent)
+                                    is VolumeBottomSheetContent -> VolumeSheet(content.uiState, onEvent)
+                                    is ReorderBottomSheetContent -> ReorderSheet(content.timelineState, onEvent)
+                                    is AnimationBottomSheetContent -> AnimationSheet(content.uiState, onEvent)
                                     is TextBackgroundBottomSheetContent -> TextBackgroundBottomSheet(
                                         uiState = content.uiState,
                                         onColorPickerActiveChanged = onColorPickerActiveChanged,
-                                        onEvent = viewModel::send,
+                                        onEvent = onEvent,
                                     )
-                                    is PostcardGreetingFontBottomSheetContent ->
-                                        PostcardGreetingFontSheet(
+                                    is FontBottomSheetContent ->
+                                        FontSheet(
                                             uiState = content.uiState,
-                                            onEvent = viewModel::send,
+                                            onEvent = onEvent,
                                         )
-                                    is PostcardGreetingSizeBottomSheetContent ->
-                                        PostcardGreetingSizeSheet(
+                                    is FontSizeBottomSheetContent ->
+                                        FontSizeSheet(
                                             uiState = content.uiState,
-                                            onEvent = viewModel::send,
+                                            onEvent = onEvent,
                                         )
-                                    is PostcardColorsBottomSheetContent ->
-                                        PostcardColorsSheet(
+                                    is ColorsBottomSheetContent ->
+                                        ColorsSheet(
                                             uiState = content.uiState,
                                             onColorPickerActiveChanged = onColorPickerActiveChanged,
-                                            onEvent = viewModel::send,
+                                            onEvent = onEvent,
                                         )
-                                    is CustomBottomSheetContent -> content.content(editorScope)
+                                    is CustomBottomSheetContent -> content.content(this@EditorUi)
                                 }
                                 if (content !is CustomBottomSheetContent && content.type !is SheetType.Voiceover) {
                                     Spacer(Modifier.height(8.dp))
@@ -595,76 +560,72 @@ fun EditorUi(
                     modifier = Modifier.navigationBarsPadding(),
                     topBar = {
                         if (uiState.isSceneLoaded) {
-                            editorContext.navigationBar?.let {
-                                EditorComponent(component = it(editorScope))
+                            configuration.navigationBar?.let {
+                                EditorComponent(
+                                    modifier = Modifier.onSizeChanged {
+                                        viewModel.send(Event.OnNavigationBarSizeChange(it.width / oneDpInPx, it.height / oneDpInPx))
+                                    },
+                                    component = it,
+                                    onHide = {
+                                        viewModel.send(Event.OnNavigationBarSizeChange(0F, 0F))
+                                    },
+                                )
                             }
                         }
                     },
                 ) { paddingValues ->
                     contentPadding = paddingValues
-                    BoxWithConstraints {
+                    Box {
                         val orientation = LocalConfiguration.current.orientation
                         val blocksCanvasAndTimelineInteraction =
                             bottomSheetContent?.type is SheetType.Voiceover &&
                                 viewModel.isVoiceOverRecordingInProgress
                         EngineCanvasView(
-                            license = editorContext.license,
-                            userId = editorContext.userId,
                             renderTarget = renderTarget,
                             engine = viewModel.engine,
                             isCanvasVisible = uiState.isSceneLoaded,
                             passTouches = uiState.allowEditorInteraction && !blocksCanvasAndTimelineInteraction,
-                            onLicenseValidationError = {
-                                viewModel.send(Event.OnError(it))
-                            },
                             onMoveStart = { viewModel.send(Event.OnCanvasMove(true)) },
                             onMoveEnd = { viewModel.send(Event.OnCanvasMove(false)) },
                             onTouch = { viewModel.send(Event.OnCanvasTouch) },
                             onSizeChanged = { viewModel.send(Event.OnResetZoom) },
                             loadScene = {
-                                val topInsets = 64f // 64 for toolbar
-                                val bottomInsets = 84f // 84 for dock
-                                val sideInsets = 0f
-                                val insets = Rect(
-                                    left = sideInsets,
-                                    top = topInsets,
-                                    right = sideInsets,
-                                    bottom = bottomInsets,
-                                )
+                                isOverlayVisible = true
                                 viewModel.send(
                                     Event.OnLoadScene(
-                                        height = maxHeight.value,
-                                        insets = insets,
                                         inPortraitMode = orientation != Configuration.ORIENTATION_LANDSCAPE,
                                     ),
                                 )
-                            },
-                            onDisposed = {
-                                (editorContext as EditorContextImpl).clear()
                             },
                         )
                         if (uiState.isSceneLoaded) {
                             Column(
                                 Modifier
                                     .fillMaxWidth()
-                                    .heightIn(max = uiState.timelineMaxHeightInDp.dp)
-                                    .align(Alignment.BottomStart)
-                                    .onSizeChanged {
-                                        viewModel.send(Event.OnTimelineHeightChange(it.height / oneDpInPx))
-                                    },
+                                    .heightIn(max = uiState.bottomPanelMaxHeightInDp.dp)
+                                    .align(Alignment.BottomStart),
                             ) {
-                                uiState.timelineState?.let { timelineState ->
-                                    TimelineView(
-                                        timelineState = timelineState,
-                                        expanded = timelineExpanded,
-                                        onToggleExpand = {
-                                            timelineExpanded = timelineExpanded.not()
+                                configuration.bottomPanel?.let {
+                                    EditorComponent(
+                                        modifier = Modifier.onSizeChanged {
+                                            viewModel.send(Event.OnBottomPanelSizeChange(it.width / oneDpInPx, it.height / oneDpInPx))
                                         },
-                                        onEvent = viewModel::send,
+                                        component = it,
+                                        onHide = {
+                                            viewModel.send(Event.OnBottomPanelSizeChange(0F, 0F))
+                                        },
                                     )
                                 }
-                                editorContext.dock?.let {
-                                    EditorComponent(component = it(editorScope))
+                                configuration.dock?.let {
+                                    EditorComponent(
+                                        modifier = Modifier.onSizeChanged {
+                                            viewModel.send(Event.OnDockSizeChange(it.width / oneDpInPx, it.height / oneDpInPx))
+                                        },
+                                        component = it,
+                                        onHide = {
+                                            viewModel.send(Event.OnDockSizeChange(0F, 0F))
+                                        },
+                                    )
                                 }
                             }
 
@@ -679,16 +640,39 @@ fun EditorUi(
                                 )
                             }
 
-                            editorContext.canvasMenu?.let {
-                                EditorComponent(component = it(editorScope))
+                            configuration.canvasMenu?.let {
+                                EditorComponent(component = it)
                             }
 
-                            val isVoiceoverSheetClosing = bottomSheetContent?.type is SheetType.Voiceover &&
-                                bottomSheetState.targetValue == ModalBottomSheetValue.Hidden
-                            if (bottomSheetContent?.type !is SheetType.Voiceover || isVoiceoverSheetClosing) {
-                                editorContext.inspectorBar?.let {
-                                    Box(modifier = Modifier.align(Alignment.BottomStart)) {
-                                        EditorComponent(component = it(editorScope))
+                            val inspectorBar = configuration.inspectorBar
+                            inspectorBar?.let {
+                                EditorComponent(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomStart)
+                                        .onSizeChanged {
+                                            viewModel.send(Event.OnInspectorBarSizeChange(it.width / oneDpInPx, it.height / oneDpInPx))
+                                        },
+                                    component = it,
+                                    onHide = {
+                                        viewModel.send(Event.OnInspectorBarSizeChange(0F, 0F))
+                                    },
+                                )
+                            }
+                            LaunchedEffect(bottomSheetContent, inspectorBar?.visible, uiState.pagesState, anyComposable) {
+                                navigationBarColor = when {
+                                    anyComposable != null -> surfaceColor
+                                    bottomSheetContent == null -> {
+                                        when {
+                                            uiState.pagesState != null -> libraryColor
+                                            inspectorBar?.visible == true -> surfaceColor
+                                            else -> canvasColor
+                                        }
+                                    }
+                                    bottomSheetContent is LibraryTabsBottomSheetContent -> {
+                                        libraryColor
+                                    }
+                                    else -> {
+                                        surfaceColor
                                     }
                                 }
                             }
@@ -719,7 +703,7 @@ fun EditorUi(
                                 .padding(top = it.calculateTopPadding(), bottom = it.calculateBottomPadding() + 84.dp)
                                 .fillMaxSize(),
                             state = uiState.pagesState,
-                            onEvent = viewModel::send,
+                            onEvent = onEvent,
                         )
                         EditorPagesDock(
                             modifier = Modifier
@@ -727,7 +711,7 @@ fun EditorUi(
                                 .systemBarsPadding()
                                 .height(84.dp),
                             state = uiState.pagesState,
-                            onEvent = viewModel::send,
+                            onEvent = onEvent,
                         )
                     }
                 }
@@ -742,7 +726,7 @@ fun EditorUi(
                 .height(navigationBarHeight),
         ) {}
         SnackbarHost(
-            hostState = snackbarHostState,
+            hostState = snackBarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
@@ -759,7 +743,12 @@ fun EditorUi(
                 )
             },
         )
-        editorContext.overlay?.invoke(editorScope, externalState.value)
+
+        if (isOverlayVisible) {
+            configuration.overlay?.let {
+                EditorComponent(component = it)
+            }
+        }
 
         if (showCameraPermissionsView) {
             Column(

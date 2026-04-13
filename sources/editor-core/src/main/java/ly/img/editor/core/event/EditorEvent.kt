@@ -3,6 +3,8 @@ package ly.img.editor.core.event
 import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContract
 import ly.img.editor.core.EditorScope
+import ly.img.editor.core.UnstableEditorApi
+import ly.img.editor.core.component.data.ForceCropConfiguration
 import ly.img.editor.core.library.data.UploadAssetSourceType
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.state.EditorViewMode
@@ -172,16 +174,21 @@ interface EditorEvent {
 
     /**
      * An event for setting the view mode of the editor to a new value.
-     *
-     * Note that some view modes may look weird or cause unexpected behaviors in some of the solutions.
-     * The following mapping shows the best [EditorViewMode] - solution combinations:
-     * [EditorViewMode.Edit] - best used in all solutions.
-     * [EditorViewMode.Preview] - best used in [ly.img.editor.PhotoEditor], [ly.img.editor.ApparelEditor] and [ly.img.editor.PostcardEditor].
-     * [EditorViewMode.Pages] - best used in [ly.img.editor.DesignEditor].
      */
     class SetViewMode(
         val viewMode: EditorViewMode,
     ) : EditorEvent
+
+    class Insets {
+        /**
+         * Sets extra canvas insets on top of what is already calculated based on system status and navigation bars,
+         * IMG.LY dock and navigation bars, currently open sheet, timeline, system keyboard etc.
+         * The value will be reflected on [ly.img.editor.core.state.EditorState.insets].
+         */
+        class SetExtra(
+            val insets: ly.img.editor.core.component.data.Insets,
+        ) : EditorEvent
+    }
 
     /**
      * An event for launching any contract via [ActivityResultContract] API.
@@ -245,6 +252,30 @@ interface EditorEvent {
     class AddCameraRecordingsToScene(
         val uploadAssetSourceType: UploadAssetSourceType,
         val recordings: List<Pair<Uri, Duration>>,
+    ) : EditorEvent
+
+    /**
+     * An event for applying a force crop configuration to a specific [designBlock].
+     *
+     * @param designBlock the design block to apply the force crop [configuration].
+     * @param configuration the configuration that should be applied.
+     */
+    @UnstableEditorApi
+    class ApplyForceCrop(
+        val designBlock: DesignBlock,
+        val configuration: ForceCropConfiguration,
+    ) : EditorEvent
+
+    /**
+     * An event for applying video duration constraints.
+     *
+     * @param minDuration the minimum constraint value. If null, then constraint is ignored.
+     * @param maxDuration the maximum constraint value. If null, then constraint is ignored.
+     */
+    @UnstableEditorApi
+    class ApplyVideoDurationConstraints(
+        val minDuration: Duration? = null,
+        val maxDuration: Duration? = null,
     ) : EditorEvent
 
     /**

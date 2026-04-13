@@ -14,7 +14,6 @@ import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
 import ly.img.engine.FillType
 import ly.img.engine.RGBAColor
-import ly.img.engine.SceneMode
 
 suspend fun Engine.awaitEngineAndSceneLoad() {
     awaitStart()
@@ -22,20 +21,6 @@ suspend fun Engine.awaitEngineAndSceneLoad() {
         scene.onActiveChanged().first()
     }
 }
-
-/**
- * An extension function that tells whether the engine scene mode is a [ly.img.engine.SceneMode.VIDEO].
- * Note that the function returns false if there is no active scene.
- *
- * @return true if there is an active scene and it has scene mode [ly.img.engine.SceneMode.VIDEO], false otherwise.
- */
-val Engine.isSceneModeVideo: Boolean
-    get() = try {
-        scene.getMode() == SceneMode.VIDEO
-    } catch (ex: IllegalArgumentException) {
-        // In case we don't have any active scene
-        false
-    }
 
 fun Engine.deselectAllBlocks() {
     block.findAllSelected().forEach {

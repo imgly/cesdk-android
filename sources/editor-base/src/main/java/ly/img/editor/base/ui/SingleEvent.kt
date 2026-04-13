@@ -2,7 +2,7 @@ package ly.img.editor.base.ui
 
 import androidx.annotation.StringRes
 import androidx.compose.material3.SnackbarDuration
-import ly.img.editor.compose.bottomsheet.ModalBottomSheetValue
+import ly.img.editor.core.sheet.SheetValue
 
 /**
  * To communicate one-time events from the ViewModel to the UI. These are not part of the state.
@@ -13,7 +13,7 @@ sealed interface SingleEvent {
     ) : SingleEvent
 
     data class ChangeSheetState(
-        val state: ModalBottomSheetValue,
+        val state: SheetValue,
         val animate: Boolean,
     ) : SingleEvent
 

@@ -1,65 +1,21 @@
 package ly.img.editor.base.engine
 
-import android.R.attr.name
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
-import ly.img.editor.core.ui.engine.BlockKind
+import ly.img.editor.core.component.data.Insets
 import ly.img.editor.core.ui.engine.Scope
-import ly.img.editor.core.ui.engine.deselectAllBlocks
 import ly.img.editor.core.ui.engine.dpToCanvasUnit
 import ly.img.editor.core.ui.engine.getCamera
-import ly.img.editor.core.ui.engine.getKindEnum
 import ly.img.editor.core.ui.engine.getPage
-import ly.img.editor.core.ui.engine.getScene
 import ly.img.editor.core.ui.engine.getStackOrNull
 import ly.img.editor.core.ui.engine.overrideAndRestore
-import ly.img.editor.core.ui.engine.toRGBColor
-import ly.img.engine.BlendMode
+import ly.img.engine.BlockApi
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
 import ly.img.engine.PositionMode
-import ly.img.engine.ShapeType
-import ly.img.engine.SizeMode
-import ly.img.engine.StrokeStyle
 
 fun Engine.setClearColor(color: Color) {
     editor.setSettingColor("clearColor", color.toEngineColor())
-}
-
-fun Engine.addOutline(
-    designBlock: DesignBlock,
-    parent: DesignBlock,
-) {
-    block.findByName(OUTLINE_BLOCK_NAME).firstOrNull() ?: run {
-        val outline = block.create(DesignBlockType.Graphic)
-        block.setShape(outline, block.createShape(ShapeType.Rect))
-        val width = block.getWidth(parent)
-        val height = block.getHeight(parent)
-        block.setName(outline, OUTLINE_BLOCK_NAME)
-        block.setHeightMode(outline, SizeMode.ABSOLUTE)
-        block.setHeight(outline, height)
-        block.setWidthMode(outline, SizeMode.ABSOLUTE)
-        block.setWidth(outline, width)
-        block.appendChild(designBlock, outline)
-
-        block.setFillEnabled(outline, false)
-        block.setStrokeEnabled(outline, true)
-        block.setStrokeColor(outline, Color.White.toEngineColor())
-        block.setStrokeStyle(outline, StrokeStyle.DOTTED)
-        block.setStrokeWidth(outline, 1.0f)
-        block.setBlendMode(outline, BlendMode.DIFFERENCE)
-        block.setScopeEnabled(outline, Scope.EditorSelect, false)
-    }
-}
-
-fun Engine.showOutline(
-    show: Boolean,
-    name: String = OUTLINE_BLOCK_NAME,
-) {
-    val outline = block.findByName(name).firstOrNull() ?: return
-    block.setVisible(outline, show)
-    block.setOpacity(outline, if (show) 1f else 0f)
 }
 
 fun Engine.resetHistory() {
@@ -172,34 +128,26 @@ fun Engine.isDuplicateAllowed(designBlock: DesignBlock): Boolean = block.isAllow
  */
 fun Engine.isDeleteAllowed(designBlock: DesignBlock): Boolean = block.isAllowedByScope(designBlock, Scope.LifecycleDestroy)
 
-fun Engine.getFillColor(designBlock: DesignBlock): Color? {
-    if (!block.supportsFill(designBlock)) return null
-    return block.getColor(designBlock, "fill/solid/color")
-        .toRGBColor(this)
-        .toComposeColor()
-}
-
 fun Engine.zoomToPage(
     pageIndex: Int,
-    insets: Rect,
+    insets: Insets,
 ) {
-    zoomToBlock(getPage(pageIndex), insets)
-}
-
-fun Engine.zoomToScene(insets: Rect) {
-    zoomToBlock(getScene(), insets)
-}
-
-fun Engine.zoomToBackdrop(insets: Rect) {
-    zoomToBlock(getBackdropImage(), insets)
+    scene.immediateZoomToBlock(
+        block = getPage(pageIndex),
+        paddingLeft = insets.left.value,
+        paddingTop = insets.top.value,
+        paddingRight = insets.right.value,
+        paddingBottom = insets.bottom.value,
+        forceUpdate = true,
+    )
 }
 
 fun Engine.zoomToSelectedText(
-    insets: Rect,
+    insets: Insets,
     canvasHeight: Float,
 ) {
-    val paddingTop = insets.top
-    val paddingBottom = insets.bottom
+    val paddingTop = insets.top.value
+    val paddingBottom = insets.bottom.value
 
     val overlapTop = 50
     val overlapBottom = 50
@@ -222,52 +170,29 @@ fun Engine.zoomToSelectedText(
     }
 }
 
-fun Engine.showAllPages(axis: LayoutAxis) {
-    showPage(index = null, axis = axis, spacing = 16f)
-}
-
-fun Engine.showPage(
-    index: Int?,
-    axis: LayoutAxis = LayoutAxis.Depth,
-    spacing: Float? = null,
-) {
-    deselectAllBlocks()
-
+fun Engine.showPage(index: Int) {
     getStackOrNull()?.let { stack ->
-        block.setEnum(stack, "stack/axis", axis.name)
-        spacing?.let {
-            block.setFloat(stack, "stack/spacing", spacing)
-        }
+        block.setEnum(stack, "stack/axis", LayoutAxis.Depth.name)
     }
-
-    val pages = scene.getPages()
-    val allPages = index == null
-    pages.forEachIndexed { idx, page ->
+    scene.getPages().forEachIndexed { idx, page ->
         overrideAndRestore(page, Scope.LayerVisibility) {
-            block.setVisible(block = it, visible = allPages || idx == index)
+            block.setVisible(block = it, visible = idx == index)
         }
     }
 }
 
-private fun Engine.zoomToBlock(
-    designBlock: DesignBlock,
-    insets: Rect,
-) {
-    scene.immediateZoomToBlock(
-        block = designBlock,
-        paddingLeft = insets.left,
-        paddingTop = insets.top,
-        paddingRight = insets.right,
-        paddingBottom = insets.bottom,
-        forceUpdate = true,
-    )
-}
-
-// Note: Backdrop Images are not officially supported yet.
-// The backdrop image is the only image that is a direct child of the scene block.
-private fun Engine.getBackdropImage(): DesignBlock {
-    val children = block.getChildren(getScene())
-    return children.first {
-        block.getKindEnum(it) == BlockKind.Image
+/**
+ * Returns the block that exposes playback control for the given [designBlock].
+ */
+fun BlockApi.getPlaybackControlBlock(designBlock: DesignBlock): DesignBlock? = when {
+    supportsPlaybackControl(designBlock) -> designBlock
+    supportsFill(designBlock) -> {
+        val fill = getFill(designBlock)
+        if (supportsPlaybackControl(fill)) {
+            fill
+        } else {
+            null
+        }
     }
+    else -> null
 }
