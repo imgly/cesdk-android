@@ -51,15 +51,43 @@ void configureDokkaFiles(File docsDir) {
     }
     // Inject loader that resolves via Dokka's `pathToRoot` so nested pages work.
     def scriptTag = '<script>(function(){var r=(typeof pathToRoot==="string")?pathToRoot:"";var s=document.createElement("script");s.src=r+"scripts/logo-link.js";document.body.appendChild(s);}())</script>'
+
+    // Dokka emits purely relative asset URLs (`href="../../styles/style.css"`)
+    // and assumes the page is served from a directory URL with a trailing
+    // slash. The Vercel-hosted live deploy at https://img.ly/docs/cesdk strips
+    // trailing slashes from directory URLs (e.g. `/.../ly.img.engine/` 308s to
+    // `/.../ly.img.engine`), which shifts the browser's URL resolution base up
+    // one level and breaks every relative `<link>` and `<script>`.
+    //
+    // To compensate, inject a tiny inline script as the very first child of
+    // `<head>`. When (and only when) the document URL has no trailing slash
+    // and isn't a direct `.html` hit, the script `document.write`s a `<base>`
+    // tag pointing at the current path's last segment with a trailing slash
+    // appended. Because `document.write` runs synchronously during head
+    // parsing, the resulting `<base>` is in scope for every subsequent
+    // `<link>` and `<script>` element. On hosts that keep the trailing slash
+    // (the develop and archive deploys, local file:// access) the script is a
+    // noop and behavior is unchanged.
+    def baseFixTag = '<script>(function(){var p=location.pathname;if(!p.endsWith("/")&&!p.endsWith(".html")){document.write(\'<base href="\'+p.substring(p.lastIndexOf("/")+1)+\'/">\');}})();</script>'
+
     docsDir.eachFileRecurse { file ->
         if (!file.isFile()) return
         if (!file.name.endsWith(".html")) return
 
         def html = file.getText("UTF-8")
-        if (html.contains(scriptTag)) return
-        if (!html.contains("</body>")) return
+        def patched = html
 
-        file.write(html.replace("</body>", "${scriptTag}</body>"), "UTF-8")
+        if (!patched.contains(baseFixTag) && patched.contains("<head>")) {
+            patched = patched.replace("<head>", "<head>${baseFixTag}")
+        }
+
+        if (!patched.contains(scriptTag) && patched.contains("</body>")) {
+            patched = patched.replace("</body>", "${scriptTag}</body>")
+        }
+
+        if (patched != html) {
+            file.write(patched, "UTF-8")
+        }
     }
 }
 

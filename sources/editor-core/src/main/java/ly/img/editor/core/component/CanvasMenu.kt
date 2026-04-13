@@ -803,14 +803,15 @@ class CanvasMenu private constructor(
             crossinline content: @Composable () -> Unit,
         ) {
             val editorState by editorContext.state.collectAsState()
-            val selectedBlockRect = editorContext.selection.screenSpaceBoundingBoxRect
+            val blockSelection = editorContext.selection
+            val selectedBlockRect = blockSelection.screenSpaceBoundingBoxRect
             if (selectedBlockRect.width().isNaN().not() && selectedBlockRect.height().isNaN().not()) {
                 val rotateHandleSizePx = rotateHandleSize.toPx()
-                val dy = remember(editorState, editorContext.selection, rotateHandleSize) {
+                val dy = remember(blockSelection, rotateHandleSize) {
                     val isGizmoPresent = editorContext.engine.editor.getSettingBoolean("controlGizmo/showRotateHandles") ||
                         editorContext.engine.editor.getSettingBoolean("controlGizmo/showMoveHandles")
                     if (isGizmoPresent) {
-                        val rotation = editorContext.engine.block.getRotation(editorContext.selection.designBlock)
+                        val rotation = editorContext.engine.block.getRotation(blockSelection.designBlock)
                         (cos(rotation) * rotateHandleSizePx).roundToInt()
                     } else {
                         0

@@ -1476,40 +1476,42 @@ abstract class EditorUiViewModel(
                         // The delay acts as a debouncing mechanism.
                         delay(8)
 
-                        val boundingBoxRect = engine.block.getScreenSpaceBoundingBoxRect(listOf(selectedDesignBlock))
-                        val bottomSheetTop = canvasHeight - _publicState.value.canvasInsets.bottom
-                        val camera = engine.getCamera()
-                        val oldCameraPosX = engine.block.getPositionX(camera)
-                        val oldCameraPosY = engine.block.getPositionY(camera)
-                        var newCameraPosX = oldCameraPosX
-                        var newCameraPosY = oldCameraPosY
-                        val canvasWidthDp = engine.block.getFloat(camera, "camera/resolution/width") /
-                            engine.block.getFloat(camera, "camera/pixelRatio")
-                        val selectedBlockCenterX = boundingBoxRect.centerX()
+                        if (engine.block.isValid(selectedDesignBlock)) {
+                            val boundingBoxRect = engine.block.getScreenSpaceBoundingBoxRect(listOf(selectedDesignBlock))
+                            val bottomSheetTop = canvasHeight - _publicState.value.canvasInsets.bottom
+                            val camera = engine.getCamera()
+                            val oldCameraPosX = engine.block.getPositionX(camera)
+                            val oldCameraPosY = engine.block.getPositionY(camera)
+                            var newCameraPosX = oldCameraPosX
+                            var newCameraPosY = oldCameraPosY
+                            val canvasWidthDp = engine.block.getFloat(camera, "camera/resolution/width") /
+                                engine.block.getFloat(camera, "camera/pixelRatio")
+                            val selectedBlockCenterX = boundingBoxRect.centerX()
 
-                        if (selectedBlockCenterX > canvasWidthDp) {
-                            newCameraPosX = oldCameraPosX +
-                                engine.dpToCanvasUnit(
-                                    (canvasWidthDp / 2 - boundingBoxRect.width() / 2) + (boundingBoxRect.right - canvasWidthDp),
-                                )
-                        } else if (selectedBlockCenterX < 0) {
-                            newCameraPosX = oldCameraPosX -
-                                engine.dpToCanvasUnit(
-                                    (canvasWidthDp / 2 - boundingBoxRect.width() / 2) - boundingBoxRect.left,
-                                )
-                        }
+                            if (selectedBlockCenterX > canvasWidthDp) {
+                                newCameraPosX = oldCameraPosX +
+                                    engine.dpToCanvasUnit(
+                                        (canvasWidthDp / 2 - boundingBoxRect.width() / 2) + (boundingBoxRect.right - canvasWidthDp),
+                                    )
+                            } else if (selectedBlockCenterX < 0) {
+                                newCameraPosX = oldCameraPosX -
+                                    engine.dpToCanvasUnit(
+                                        (canvasWidthDp / 2 - boundingBoxRect.width() / 2) - boundingBoxRect.left,
+                                    )
+                            }
 
-                        // bottom sheet is covering more than 50% of selected block
-                        if (bottomSheetTop < boundingBoxRect.centerY()) {
-                            newCameraPosY = oldCameraPosY + engine.dpToCanvasUnit(48 + boundingBoxRect.bottom - bottomSheetTop)
-                        } else if (boundingBoxRect.centerY() < 64) {
-                            newCameraPosY = oldCameraPosY - engine.dpToCanvasUnit(48 + bottomSheetTop - boundingBoxRect.bottom)
-                        }
+                            // bottom sheet is covering more than 50% of selected block
+                            if (bottomSheetTop < boundingBoxRect.centerY()) {
+                                newCameraPosY = oldCameraPosY + engine.dpToCanvasUnit(48 + boundingBoxRect.bottom - bottomSheetTop)
+                            } else if (boundingBoxRect.centerY() < 64) {
+                                newCameraPosY = oldCameraPosY - engine.dpToCanvasUnit(48 + bottomSheetTop - boundingBoxRect.bottom)
+                            }
 
-                        if (newCameraPosX != oldCameraPosX || newCameraPosY != oldCameraPosY) {
-                            engine.overrideAndRestore(camera, Scope.LayerMove) {
-                                engine.block.setPositionX(it, newCameraPosX)
-                                engine.block.setPositionY(it, newCameraPosY)
+                            if (newCameraPosX != oldCameraPosX || newCameraPosY != oldCameraPosY) {
+                                engine.overrideAndRestore(camera, Scope.LayerMove) {
+                                    engine.block.setPositionX(it, newCameraPosX)
+                                    engine.block.setPositionY(it, newCameraPosY)
+                                }
                             }
                         }
                     }
