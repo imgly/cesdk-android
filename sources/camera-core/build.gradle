@@ -21,7 +21,7 @@ tasks.named("preBuild").configure { dependsOn(updateLocalizationTask) }
 tasks.named("build").configure { dependsOn(updateLocalizationTask) }
 
 dependencies {
-    api platform(libs.compose.bom)
-    api libs.compose.material3
-    api libs.androidx.activity
+    implementation platform(libs.compose.bom)
+    implementation libs.compose.material3
+    implementation libs.androidx.activity
 }

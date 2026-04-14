@@ -1,6 +1,6 @@
 package ly.img.editor.base.dock.options.voiceover
 
-import ly.img.editor.base.engine.getPlaybackControlBlock
+import ly.img.editor.core.engine.getPlaybackControlBlock
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine

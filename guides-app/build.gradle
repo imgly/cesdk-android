@@ -110,6 +110,9 @@ dependencies {
     implementation composeBom
     implementation libs.compose.material3
     implementation libs.compose.navigation
+    implementation(libs.material) {
+        because "MaterialComponents DayNight theme"
+    }
 
     androidTestImplementation composeBom
     androidTestImplementation libs.test.androidx.runner

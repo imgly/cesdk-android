@@ -7,7 +7,6 @@
     <application>
         <activity
             android:name=".CameraActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
             android:screenOrientation="portrait"
             android:exported="false" />
     </application>

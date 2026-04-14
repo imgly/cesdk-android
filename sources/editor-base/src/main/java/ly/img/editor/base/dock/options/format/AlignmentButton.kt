@@ -34,11 +34,8 @@ fun <T : Alignment> AlignmentButton(
                 HorizontalAlignment.Left -> IconPack.Formatalignleft
                 HorizontalAlignment.Center -> IconPack.Formataligncenter
                 HorizontalAlignment.Right -> IconPack.Formatalignright
-                HorizontalAlignment.Auto -> when {
-                    // Only use effectiveAlignment when stored alignment is Auto, because that's
-                    // when getTextEffectiveHorizontalAlignment resolves based on actual text direction.
-                    currentAlignment == HorizontalAlignment.Auto &&
-                        effectiveAlignment == HorizontalAlignment.Right -> IconPack.FormatAlignRightAuto
+                HorizontalAlignment.Auto -> when (effectiveAlignment) {
+                    HorizontalAlignment.Right -> IconPack.FormatAlignRightAuto
                     else -> IconPack.FormatAlignLeftAuto
                 }
                 VerticalAlignment.Bottom -> IconPack.Verticalalignbottom

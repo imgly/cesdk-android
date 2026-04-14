@@ -24,15 +24,15 @@ dependencies {
     api libs.cesdk.engine
     api libs.androidx.activity
 
-    api platform(libs.compose.bom)
-    api libs.compose.material3
-    api libs.compose.viewmodel
-    api libs.compose.preview
-    api (libs.compose.activity) {
+    implementation platform(libs.compose.bom)
+    implementation libs.compose.material3
+    implementation libs.compose.viewmodel
+    implementation libs.compose.preview
+    implementation(libs.compose.activity) {
         because "WindowCompat.getInsetsController"
     }
     debugImplementation libs.compose.tooling
-    api libs.kotlin.coroutines
+    implementation libs.kotlin.coroutines
     implementation libs.shimmer
 
     compileOnly(project(":camera-core"))

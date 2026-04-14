@@ -24,14 +24,13 @@ import androidx.compose.ui.unit.dp
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.core.R
-import ly.img.editor.core.iconpack.ExpandMore
+import ly.img.editor.core.ui.iconpack.Expandmore
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Pause
 import ly.img.editor.core.ui.iconpack.Play
 import ly.img.editor.core.ui.iconpack.Repeat
 import ly.img.editor.core.ui.iconpack.RepeatOff
 import ly.img.editor.core.ui.iconpack.Timeline
-import ly.img.editor.core.iconpack.IconPack as CoreIconPack
 
 @Composable
 fun PlayerHeader(
@@ -114,7 +113,7 @@ fun PlayerHeader(
                     .align(Alignment.CenterEnd)
                     .padding(horizontal = 4.dp),
             ) {
-                Icon(CoreIconPack.ExpandMore, contentDescription = stringResource(R.string.ly_img_editor_timeline_button_hide_timeline))
+                Icon(IconPack.Expandmore, contentDescription = stringResource(R.string.ly_img_editor_timeline_button_hide_timeline))
             }
         } else {
             TextButton(

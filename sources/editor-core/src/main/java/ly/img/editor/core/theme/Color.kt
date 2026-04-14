@@ -1,21 +1,6 @@
 package ly.img.editor.core.theme
 
 import androidx.compose.ui.graphics.Color
-import ly.img.editor.core.UnstableEditorApi
-
-/**
- * The fill and stroke colors.
- */
-@UnstableEditorApi
-val fillAndStrokeColors by lazy {
-    listOf(
-        Color(0xFF4A67FF),
-        Color(0xFFFFD333),
-        Color(0xFFC41230),
-        Color(0xFF000000),
-        Color(0xFFFFFFFF),
-    )
-}
 
 internal val md_theme_light_primary = Color(0xFF2A4BE6)
 internal val md_theme_light_onPrimary = Color(0xFFFFFFFF)

@@ -2,49 +2,101 @@ package ly.img.editor.core
 
 import android.app.Activity
 import android.net.Uri
+import android.os.Parcelable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.remember
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.flow.StateFlow
-import ly.img.editor.core.component.TimelineOwner
-import ly.img.editor.core.configuration.EditorConfiguration
+import ly.img.editor.core.component.CanvasMenu
+import ly.img.editor.core.component.Dock
+import ly.img.editor.core.component.InspectorBar
+import ly.img.editor.core.component.NavigationBar
 import ly.img.editor.core.event.EditorEventHandler
+import ly.img.editor.core.library.AssetLibrary
 import ly.img.editor.core.state.EditorState
 import ly.img.engine.Engine
-import ly.img.engine.UnstableEngineApi
+import kotlin.time.Duration
 
 /**
  * An umbrella interface containing all the useful properties and functions of the current editor:
  * Following can be found:
  *
- * 1. Properties that were provided when calling the Editor composable.
+ * 1. Properties that were provided via [ly.img.editor.EngineConfiguration] and [ly.img.editor.EditorConfiguration]
  * 2. [Engine], [EditorEventHandler] and [Activity] of the current editor.
- * 3. [CoroutineScope] of the current editor.
- * 4. Collectable [EditorState] of the editor.
+ * 3. Useful functions for getting information on the current state of the editor.
  */
 @Stable
 interface EditorContext {
     /**
-     * The license provided via param when launching the editor.
+     * The license provided via [ly.img.editor.EngineConfiguration.license].
      */
     val license: String?
 
     /**
-     * The userId provided via param when launching the editor.
+     * The userId provided via [ly.img.editor.EngineConfiguration.userId].
      */
     val userId: String?
 
     /**
-     * The baseUri provided via param when launching the editor.
+     * The baseUri provided via [ly.img.editor.EngineConfiguration.baseUri].
      */
     val baseUri: Uri
 
     /**
-     * The configuration of the current editor.
+     * The colorPalette provided via [ly.img.editor.EditorConfiguration.colorPalette].
      */
-    val configuration: StateFlow<EditorConfiguration?>
+    val colorPalette: List<Color>
+
+    /**
+     * The assetLibrary provided via [ly.img.editor.EditorConfiguration.assetLibrary].
+     */
+    val assetLibrary: AssetLibrary
+
+    /**
+     * The minimum video duration constraint applied to video scenes.
+     */
+    @UnstableEditorApi
+    val minimumVideoDuration: Duration?
+
+    /**
+     * The maximum video duration constraint applied to video scenes.
+     */
+    @UnstableEditorApi
+    val maximumVideoDuration: Duration?
+
+    /**
+     * Updates the minimum and maximum video duration constraints at runtime.
+     */
+    @UnstableEditorApi
+    fun setVideoDurationConstraints(
+        minimumVideoDuration: Duration?,
+        maximumVideoDuration: Duration?,
+    )
+
+    /**
+     * The overlay provided via [ly.img.editor.EditorConfiguration.overlay].
+     */
+    val overlay: (@Composable (EditorScope.(Parcelable) -> Unit))?
+
+    /**
+     * The dock provided via [ly.img.editor.EditorConfiguration.dock].
+     */
+    val dock: (@Composable (EditorScope.() -> Dock))?
+
+    /**
+     * The inspector bar provided via [ly.img.editor.EditorConfiguration.inspectorBar].
+     */
+    val inspectorBar: @Composable ((EditorScope.() -> InspectorBar))?
+
+    /**
+     * The canvas menu provided via [ly.img.editor.EditorConfiguration.canvasMenu].
+     */
+    val canvasMenu: @Composable ((EditorScope.() -> CanvasMenu))?
+
+    /**
+     * The navigation bar provided via [ly.img.editor.EditorConfiguration.navigationBar].
+     */
+    val navigationBar: @Composable ((EditorScope.() -> NavigationBar))?
 
     /**
      * The engine of the current editor.
@@ -57,115 +109,12 @@ interface EditorContext {
     val activity: Activity
 
     /**
-     * The coroutine scope that is always alive while editor is running. It also survives configuration
-     * changes.
-     */
-    val coroutineScope: CoroutineScope
-
-    /**
      * The event handler of the current editor.
      */
     val eventHandler: EditorEventHandler
 
     /**
-     * The state flow of the [EditorState].
+     * The state flow of the [EditorState]. state.current returns the current state of the editor.
      */
     val state: StateFlow<EditorState>
-}
-
-interface MutableEditorContext : EditorContext {
-    override val state: MutableStateFlow<EditorState>
-
-    @OptIn(UnstableEditorApi::class)
-    fun init(
-        license: String?,
-        userId: String?,
-        baseUri: Uri,
-        activity: Activity,
-        eventHandler: EditorEventHandler,
-        coroutineScope: CoroutineScope,
-        timelineOwnerProvider: () -> TimelineOwner,
-    )
-
-    fun updateConfiguration(configuration: EditorConfiguration)
-
-    fun clear()
-}
-
-@OptIn(UnstableEditorApi::class)
-@Stable
-internal class EditorContextImpl :
-    MutableEditorContext,
-    TimelineOwner {
-    @OptIn(UnstableEngineApi::class)
-    override val engine: Engine by lazy {
-        Engine.getInstance(id = "ly.img.editor").also {
-            it.idlingEnabled = true
-        }
-    }
-
-    override var license: String? = null
-
-    override var userId: String? = null
-
-    private var _baseUri: Uri? = null
-    override val baseUri: Uri
-        get() = requireNotNull(_baseUri) { "baseUri is not initialized yet." }
-
-    override val configuration: MutableStateFlow<EditorConfiguration?> = MutableStateFlow(null)
-
-    private var _activity: Activity? = null
-    override val activity: Activity
-        get() = requireNotNull(_activity) { "Activity is not initialized yet." }
-
-    private var _eventHandler: EditorEventHandler? = null
-    override val eventHandler: EditorEventHandler
-        get() = requireNotNull(_eventHandler) { "EditorEventHandler is not initialized yet." }
-
-    private var _coroutineScope: CoroutineScope? = null
-    override val coroutineScope: CoroutineScope
-        get() = requireNotNull(_coroutineScope) { "CoroutineScope is not initialized yet." }
-
-    override val state: MutableStateFlow<EditorState> = MutableStateFlow(EditorState())
-
-    private var timelineOwnerProvider: (() -> TimelineOwner)? = null
-
-    override fun init(
-        license: String?,
-        userId: String?,
-        baseUri: Uri,
-        activity: Activity,
-        eventHandler: EditorEventHandler,
-        coroutineScope: CoroutineScope,
-        timelineOwnerProvider: () -> TimelineOwner,
-    ) {
-        this.license = license
-        this.userId = userId
-        _baseUri = baseUri
-        _activity = activity
-        _eventHandler = eventHandler
-        _coroutineScope = coroutineScope
-        this.timelineOwnerProvider = timelineOwnerProvider
-    }
-
-    override fun updateConfiguration(configuration: EditorConfiguration) {
-        this.configuration.value = configuration
-    }
-
-    @Composable
-    override fun TimelineContent() {
-        remember { requireNotNull(timelineOwnerProvider)() }.TimelineContent()
-    }
-
-    override fun clear() {
-        license = null
-        userId = null
-        configuration.value = null
-        _baseUri = null
-        _activity = null
-        _eventHandler = null
-        _coroutineScope = null
-        timelineOwnerProvider = null
-        state.value = EditorState()
-    }
 }

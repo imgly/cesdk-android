@@ -14,9 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ly.img.editor.core.iconpack.ArrowBack
-import ly.img.editor.core.iconpack.ExpandMore
-import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.ui.UiDefaults
+import ly.img.editor.core.ui.iconpack.Expandmore
+import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.R as coreR
 import ly.img.editor.core.iconpack.IconPack as CoreIconPack
 
@@ -51,7 +51,7 @@ fun NestedSheetHeader(
             onClick = onClose,
         ) {
             Icon(
-                imageVector = IconPack.ExpandMore,
+                imageVector = IconPack.Expandmore,
                 contentDescription = stringResource(coreR.string.ly_img_editor_sheet_button_close),
             )
         }

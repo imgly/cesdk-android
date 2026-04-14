@@ -13,12 +13,12 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-public val IconPack.VoiceoverAdd: ImageVector
+public val IconPack.Voiceoveradd: ImageVector
     get() {
-        if (voiceoverAdd != null) {
-            return voiceoverAdd!!
+        if (voiceoveradd != null) {
+            return voiceoveradd!!
         }
-        voiceoverAdd = Builder(
+        voiceoveradd = Builder(
             name = "Voiceoveradd",
             defaultWidth = 20.0.dp,
             defaultHeight = 21.0.dp,
@@ -104,11 +104,11 @@ public val IconPack.VoiceoverAdd: ImageVector
                 close()
             }
         }.build()
-        return voiceoverAdd!!
+        return voiceoveradd!!
     }
 
-private var voiceoverAdd: ImageVector? = null
+private var voiceoveradd: ImageVector? = null
 
 @Preview
 @Composable
-private fun Preview() = IconPack.VoiceoverAdd.IconPreview()
+private fun Preview() = IconPack.Voiceoveradd.IconPreview()

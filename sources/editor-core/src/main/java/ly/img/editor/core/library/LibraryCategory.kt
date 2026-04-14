@@ -18,6 +18,7 @@ import ly.img.editor.core.iconpack.StickerEmoji
 import ly.img.editor.core.iconpack.StickerEmojiOutline
 import ly.img.editor.core.iconpack.TextFields
 import ly.img.editor.core.library.data.AssetSourceType
+import ly.img.engine.SceneMode
 
 /**
  * Configuration class of the UI of each library category. Each category contains a title (check [tabTitleRes]) and a [content]
@@ -44,99 +45,103 @@ data class LibraryCategory(
          * A helper function to construct an abstract "Elements" category that is a combination of categories.
          */
         fun getElements(
-            includeAVResources: Boolean = false,
+            sceneMode: SceneMode,
             images: LibraryCategory = Images,
             videos: LibraryCategory = Video,
             audios: LibraryCategory = Audio,
             text: LibraryCategory = Text,
             shapes: LibraryCategory = Shapes,
             stickers: LibraryCategory = Stickers,
-        ): LibraryCategory = LibraryCategory(
-            tabTitleRes = R.string.ly_img_editor_asset_library_title_elements,
-            tabSelectedIcon = IconPack.LibraryElements,
-            tabUnselectedIcon = IconPack.LibraryElementsOutline,
-            content = LibraryContent.Sections(
-                titleRes = R.string.ly_img_editor_asset_library_title_elements,
-                sections = buildList {
-                    val gallerySource = if (includeAVResources) {
-                        listOf(AssetSourceType.GalleryAllVisuals)
-                    } else {
-                        listOf(AssetSourceType.GalleryImage)
-                    }
-                    LibraryContent.Section(
-                        titleRes = R.string.ly_img_editor_asset_library_section_gallery,
-                        sourceTypes = gallerySource,
-                        showUpload = false,
-                        assetType = AssetType.Gallery,
-                        expandContent = LibraryContent.Grid(
+        ): LibraryCategory {
+            val isSceneModeVideo = sceneMode == SceneMode.VIDEO
+            return LibraryCategory(
+                tabTitleRes = R.string.ly_img_editor_asset_library_title_elements,
+                tabSelectedIcon = IconPack.LibraryElements,
+                tabUnselectedIcon = IconPack.LibraryElementsOutline,
+                content = LibraryContent.Sections(
+                    titleRes = R.string.ly_img_editor_asset_library_title_elements,
+                    sections = buildList {
+                        val gallerySource = if (isSceneModeVideo) {
+                            listOf(AssetSourceType.GalleryAllVisuals)
+                        } else {
+                            listOf(AssetSourceType.GalleryImage)
+                        }
+                        LibraryContent.Section(
                             titleRes = R.string.ly_img_editor_asset_library_section_gallery,
-                            sourceType = gallerySource.first(),
+                            sourceTypes = gallerySource,
+                            showUpload = false,
                             assetType = AssetType.Gallery,
-                        ),
-                    ).let(::add)
+                            expandContent = LibraryContent.Grid(
+                                titleRes = R.string.ly_img_editor_asset_library_section_gallery,
+                                sourceType = gallerySource.first(),
+                                assetType = AssetType.Gallery,
+                            ),
+                        ).let(::add)
 
-                    if (includeAVResources) {
-                        videos.apply {
+                        if (isSceneModeVideo) {
+                            videos.apply {
+                                LibraryContent.Section(
+                                    titleRes = R.string.ly_img_editor_asset_library_section_videos,
+                                    sourceTypes = content.sourceTypes,
+                                    assetType = AssetType.Video,
+                                    expandContent = content,
+                                ).let(::add)
+                            }
+                            audios.apply {
+                                LibraryContent.Section(
+                                    titleRes = R.string.ly_img_editor_asset_library_section_audio,
+                                    sourceTypes = content.sourceTypes,
+                                    count = 3,
+                                    assetType = AssetType.Audio,
+                                    expandContent = content,
+                                ).let(::add)
+                            }
+                        }
+
+                        images.apply {
                             LibraryContent.Section(
-                                titleRes = R.string.ly_img_editor_asset_library_section_videos,
+                                titleRes = R.string.ly_img_editor_asset_library_section_images,
                                 sourceTypes = content.sourceTypes,
-                                assetType = AssetType.Video,
+                                assetType = AssetType.Image,
                                 expandContent = content,
                             ).let(::add)
                         }
-                        audios.apply {
+
+                        text.apply {
                             LibraryContent.Section(
-                                titleRes = R.string.ly_img_editor_asset_library_section_audio,
+                                titleRes = R.string.ly_img_editor_asset_library_section_text,
                                 sourceTypes = content.sourceTypes,
-                                count = 3,
-                                assetType = AssetType.Audio,
+                                excludedPreviewSourceTypes = listOf(AssetSourceType.TextComponents),
+                                assetType = AssetType.Text,
                                 expandContent = content,
                             ).let(::add)
                         }
-                    }
 
-                    images.apply {
-                        LibraryContent.Section(
-                            titleRes = R.string.ly_img_editor_asset_library_section_images,
-                            sourceTypes = content.sourceTypes,
-                            assetType = AssetType.Image,
-                            expandContent = content,
-                        ).let(::add)
-                    }
+                        shapes.apply {
+                            LibraryContent.Section(
+                                titleRes = R.string.ly_img_editor_asset_library_section_shapes,
+                                sourceTypes = content.sourceTypes,
+                                assetType = AssetType.Shape,
+                                expandContent = content,
+                            ).let(::add)
+                        }
 
-                    text.apply {
-                        LibraryContent.Section(
-                            titleRes = R.string.ly_img_editor_asset_library_section_text,
-                            sourceTypes = content.sourceTypes,
-                            excludedPreviewSourceTypes = listOf(AssetSourceType.TextComponents),
-                            assetType = AssetType.Text,
-                            expandContent = content,
-                        ).let(::add)
-                    }
+                        stickers.apply {
+                            LibraryContent.Section(
+                                titleRes = R.string.ly_img_editor_asset_library_title_stickers,
+                                sourceTypes = content.sourceTypes,
+                                assetType = AssetType.Sticker,
+                                expandContent = content,
+                            ).let(::add)
+                        }
+                    },
+                ),
+            )
+        }
 
-                    shapes.apply {
-                        LibraryContent.Section(
-                            titleRes = R.string.ly_img_editor_asset_library_section_shapes,
-                            sourceTypes = content.sourceTypes,
-                            assetType = AssetType.Shape,
-                            expandContent = content,
-                        ).let(::add)
-                    }
-
-                    stickers.apply {
-                        LibraryContent.Section(
-                            titleRes = R.string.ly_img_editor_asset_library_title_stickers,
-                            sourceTypes = content.sourceTypes,
-                            assetType = AssetType.Sticker,
-                            expandContent = content,
-                        ).let(::add)
-                    }
-                },
-            ),
-        )
-
-        fun getGallery(includeAVResources: Boolean): LibraryCategory {
-            val sections = if (includeAVResources) {
+        fun getGallery(sceneMode: SceneMode): LibraryCategory {
+            val isVideoScene = sceneMode == SceneMode.VIDEO
+            val sections = if (isVideoScene) {
                 listOf(
                     LibraryContent.Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_gallery,

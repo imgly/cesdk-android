@@ -41,9 +41,17 @@ new File(rootDir, "sources").listFiles().each {
 }
 
 // Internal use only
-def engineDir = file("../../bindings/android")
-if (engineDir.exists() && System.getenv("UBQ_ANDROID_USE_ARTIFACTS") != "true") {
-    includeBuild(engineDir) {
+def ubqRootPath = "../../"
+def useLocalEngine = {
+    def propertiesFile = new File(rootDir, "local.properties")
+    if (!propertiesFile.exists()) return false
+    def properties = new Properties()
+    properties.load(propertiesFile.newDataInputStream())
+    properties.containsKey("useLocalEngine") && properties.getProperty("useLocalEngine").toBoolean()
+}
+
+if (System.getenv("UBQ_USE_LOCAL_ENGINE") == "true" || useLocalEngine()) {
+    includeBuild("$ubqRootPath/bindings/android") {
         name = "engine"
         dependencySubstitution {
             substitute module('ly.img:engine') using project(':engine')

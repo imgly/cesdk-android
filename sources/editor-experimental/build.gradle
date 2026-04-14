@@ -6,7 +6,6 @@ android {
 
 dependencies {
     implementation platform(libs.compose.bom)
-    implementation project(":editor-core")
     implementation libs.compose.material3
     implementation libs.compose.ui.util
 }

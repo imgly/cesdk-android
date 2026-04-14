@@ -4,7 +4,7 @@
         android:allowBackup="false"
         android:label="CE.SDK Guides"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.DayNight.NoActionBar">
+        android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar">
         <activity
             android:name=".GuidesActivity"
             android:exported="true">

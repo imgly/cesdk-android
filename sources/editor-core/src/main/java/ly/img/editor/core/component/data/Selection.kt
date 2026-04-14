@@ -2,9 +2,9 @@ package ly.img.editor.core.component.data
 
 import android.graphics.RectF
 import androidx.compose.runtime.Stable
-import ly.img.editor.core.EditorContext
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
+import ly.img.engine.Engine
 import ly.img.engine.FillType
 
 /**
@@ -18,36 +18,31 @@ import ly.img.engine.FillType
  * @param indexInParent the index of the [designBlock] in [parentDesignBlock]. If [parentDesignBlock] is null, the value is -1.
  * @param screenSpaceBoundingBoxRect the rect of the [designBlock] in screen space.
  * @param isVisibleAtCurrentPlaybackTime whether the [designBlock] is visible at current playback time.
+ * The value is always true for [ly.img.engine.SceneMode.DESIGN] scenes.
  */
 @Stable
 data class Selection(
-    val `_`: Nothing = nothing,
     val designBlock: DesignBlock,
     val parentDesignBlock: DesignBlock?,
     val type: DesignBlockType,
     val fillType: FillType?,
     val kind: String?,
     val indexInParent: Int,
-    val screenSpaceBoundingBoxRect: RectF?,
+    val screenSpaceBoundingBoxRect: RectF,
     val isVisibleAtCurrentPlaybackTime: Boolean,
-    val `__`: Nothing = nothing,
 ) {
     companion object {
         /**
          * Default implementation of [Selection] for a given [designBlock].
          *
-         * @param editorContext the context of the current editor.
+         * @param engine the engine of the current editor.
          * @param designBlock the design block for which [Selection] should be constructed.
          */
         fun getDefault(
-            editorContext: EditorContext,
+            engine: Engine,
             designBlock: DesignBlock,
         ): Selection {
-            val engine = editorContext.engine
             val parentDesignBlock = engine.block.getParent(designBlock)
-            val shouldEvaluateRect = editorContext.state.value.isTouchActive.not() &&
-                editorContext.state.value.activeSheet == null &&
-                editorContext.engine.editor.getEditMode() == "Transform"
             return Selection(
                 designBlock = designBlock,
                 parentDesignBlock = parentDesignBlock,
@@ -59,11 +54,7 @@ data class Selection(
                 },
                 kind = engine.block.getKind(designBlock),
                 indexInParent = parentDesignBlock?.let { engine.block.getChildren(it).indexOf(designBlock) } ?: -1,
-                screenSpaceBoundingBoxRect = if (shouldEvaluateRect) {
-                    engine.block.getScreenSpaceBoundingBoxRect(listOf(designBlock))
-                } else {
-                    null
-                },
+                screenSpaceBoundingBoxRect = engine.block.getScreenSpaceBoundingBoxRect(listOf(designBlock)),
                 isVisibleAtCurrentPlaybackTime = engine.block.isVisibleAtCurrentPlaybackTime(designBlock),
             )
         }

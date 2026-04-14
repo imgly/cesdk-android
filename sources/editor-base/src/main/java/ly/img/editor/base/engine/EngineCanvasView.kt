@@ -18,9 +18,11 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import kotlinx.coroutines.CancellationException
 import ly.img.editor.base.R
 import ly.img.editor.core.engine.EngineRenderTarget
 import ly.img.editor.core.theme.surface1
@@ -29,17 +31,22 @@ import ly.img.engine.Engine
 
 @Composable
 fun EngineCanvasView(
+    license: String?,
+    userId: String?,
     renderTarget: EngineRenderTarget,
     engine: Engine,
     isCanvasVisible: Boolean,
     passTouches: Boolean,
+    onLicenseValidationError: (Throwable) -> Unit,
     onMoveStart: () -> Unit,
     onMoveEnd: () -> Unit,
     loadScene: () -> Unit,
     onTouch: () -> Unit,
     onSizeChanged: () -> Unit,
+    onDisposed: () -> Unit,
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
+    val savedStateRegistryOwner = LocalSavedStateRegistryOwner.current
     val activity = requireNotNull(LocalContext.current.activity) {
         "Unable to find the activity. This is an internal error. Please report this issue."
     }
@@ -103,13 +110,22 @@ fun EngineCanvasView(
             },
     )
     LaunchedEffect(Unit) {
-        engine.editor.setAppIsPaused(appIsPaused)
-        engine.setClearColor(clearColor)
-        if (renderTarget == EngineRenderTarget.SURFACE_VIEW) {
-            renderViewHandler?.addCallback(onSizeChanged)
+        runCatching {
+            engine.start(license = license, userId = userId, savedStateRegistryOwner = savedStateRegistryOwner)
+        }.onSuccess {
+            engine.editor.setAppIsPaused(appIsPaused)
+            engine.setClearColor(clearColor)
+            if (renderTarget == EngineRenderTarget.SURFACE_VIEW) {
+                renderViewHandler?.addCallback(onSizeChanged)
+            }
+            bind()
+            loadScene()
+        }.onFailure {
+            if (it is CancellationException) {
+                throw it
+            }
+            onLicenseValidationError(it)
         }
-        bind()
-        loadScene()
     }
     DisposableEffect(Unit) {
         val observer = LifecycleEventObserver { _, event ->
@@ -138,6 +154,7 @@ fun EngineCanvasView(
                 engine.unbind()
             }
             renderViewHandler?.removeCallback()
+            onDisposed()
         }
     }
 }
