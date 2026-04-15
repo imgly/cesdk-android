@@ -5,6 +5,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.util.Log
 import android.webkit.MimeTypeMap
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.request.SuccessResult
@@ -39,7 +40,6 @@ import ly.img.editor.core.ui.engine.dpToCanvasUnit
 import ly.img.editor.core.ui.engine.getCamera
 import ly.img.editor.core.ui.engine.getCurrentPage
 import ly.img.editor.core.ui.engine.getSafeBackgroundTrack
-import ly.img.editor.core.ui.engine.isSceneModeVideo
 import ly.img.editor.core.ui.engine.overrideAndRestore
 import ly.img.editor.core.ui.library.components.section.LibrarySectionItem
 import ly.img.editor.core.ui.library.data.font.FontDataMapper
@@ -76,7 +76,6 @@ import ly.img.engine.FillType
 import ly.img.engine.FindAssetsQuery
 import ly.img.engine.FindAssetsResult
 import ly.img.engine.PositionMode
-import ly.img.engine.SceneMode
 import ly.img.engine.ShapeType
 import java.util.Locale
 import java.util.Stack
@@ -86,19 +85,15 @@ import kotlin.math.min
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 
+@Stable
 class LibraryViewModel(
-    private val onUpload: suspend EditorScope.(AssetDefinition, UploadAssetSourceType) -> AssetDefinition,
+    private val editorScope: EditorScope,
 ) : ViewModel() {
-    private lateinit var editorScope: EditorScope
     private val imageLoader = Environment.getImageLoader()
     private val editor: EditorContext
         get() = editorScope.run { editorContext }
     private val engine: Engine
         get() = editor.engine
-
-    fun setEditorScope(editorScope: EditorScope) {
-        this.editorScope = editorScope
-    }
 
     private val typefaceProvider = TypefaceProvider()
     private val fontDataMapper = FontDataMapper()
@@ -106,14 +101,11 @@ class LibraryViewModel(
     private val _uiEvent = Channel<LibraryUiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
 
-    val sceneMode: SceneMode
-        get() = engine.scene.getMode()
-
     val assetLibrary
-        get() = editor.assetLibrary
+        get() = editor.configuration.value?.assetLibrary
 
     val navBarItems
-        get() = assetLibrary.tabs(sceneMode)
+        get() = assetLibrary?.tabs?.invoke() ?: emptyList()
 
     private val libraryStackDataMapping by lazy {
         hashMapOf<LibraryCategory, LibraryCategoryStackData>()
@@ -247,11 +239,11 @@ class LibraryViewModel(
                 runCatching { engine.asset.assetSourceContentsChanged(AssetSourceType.GalleryAllVisuals.sourceId) }
             }
 
-            if (engine.isSceneModeVideo) {
-                setupAssetForVideo(resolvedAsset, finalDesignBlock, addToBackgroundTrack)
-            } else {
-                placeDesignBlock(finalDesignBlock)
-            }
+            placeDesignBlock(
+                asset = resolvedAsset,
+                designBlock = finalDesignBlock,
+                inBackgroundTrack = addToBackgroundTrack,
+            )
         }
     }
 
@@ -333,7 +325,7 @@ class LibraryViewModel(
         viewModelScope.launch {
             engine.awaitEngineAndSceneLoad()
             // TODO: Setting asset kind and looping should be handled by the engine
-            if (engine.isSceneModeVideo && engine.block.supportsFill(designBlock)) {
+            if (engine.block.supportsFill(designBlock)) {
                 val fill = engine.block.getFill(designBlock)
                 if (engine.block.supportsPlaybackControl(fill)) {
                     engine.block.setLooping(fill, looping = asset.getMeta("looping").toBoolean())
@@ -396,7 +388,7 @@ class LibraryViewModel(
         }
     }
 
-    private suspend fun setupAssetForVideo(
+    private suspend fun placeDesignBlock(
         asset: Asset,
         designBlock: DesignBlock,
         inBackgroundTrack: Boolean,
@@ -1016,7 +1008,8 @@ class LibraryViewModel(
             meta = meta,
             label = if (label != null) mapOf(editor.currentLanguageCode to label!!) else null,
         ).let {
-            onUpload(editorScope, it, assetSourceType)
+            val onUpload = requireNotNull(editor.configuration.value?.onUpload)
+            onUpload.invoke(editorScope, it, assetSourceType)
         }
 
         Log.d(TAG, "uploadToAssetSource metaPrepared source=${assetSourceType.sourceId} uuid=$uuid meta=${assetDefinition.meta}")

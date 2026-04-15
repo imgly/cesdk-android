@@ -1,0 +1,21 @@
+apply from: "$projectDir/../editor-library.gradle"
+
+android {
+    namespace = 'ly.img.editor.debug.menu'
+}
+
+dependencies {
+    implementation platform(libs.compose.bom)
+    implementation libs.compose.material3
+    implementation libs.compose.viewmodel
+    implementation libs.compose.preview
+    implementation libs.compose.activity
+    implementation libs.data.store
+    debugImplementation libs.compose.tooling
+
+    implementation platform(libs.firebase.bom)
+    implementation libs.firebase.analytics
+    implementation libs.play.services.auth
+    implementation libs.installer
+    implementation libs.installer.ktx
+}

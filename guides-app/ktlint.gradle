@@ -12,7 +12,12 @@ dependencies {
 
 def ktlintFiles = "../../../**/*.kt"
 // We exclude editor-experimental as it contains copied source files and we'd like to preserve the original formatting
-def ktlintExcludeFiles = ["!../../../**/editor-experimental/**/*", "!../../../**/build/**/*", "!../../../config/conan/**/*"]
+def ktlintExcludeFiles = [
+    "!../../../**/editor-experimental/**/*",
+    "!../../../**/build/**/*",
+    "!../../../config/conan/**/*",
+    "!../../../apps/cesdk_react_native_examples/showcases/node_modules/**/*"
+]
 
 tasks.register("ktlintCheck", JavaExec) {
     group = "verification"

@@ -44,6 +44,7 @@ internal fun setSettingsForEditorUi(
         setSettingEnum("doubleClickSelectionMode", DOUBLE_CLICK_SELECTION_MODE_DIRECT)
         setSettingEnum("camera/clamping/overshootMode", CAMERA_OVERSHOOT_MODE_CENTER)
         setSettingColor("placeholderHighlightColor", getSettingColor("highlightColor"))
+        setSettingBoolean("features/removeForegroundTracksOnSceneLoad", true)
 
         scopes.forEach {
             setGlobalScope(it, GlobalScope.DEFER)

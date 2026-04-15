@@ -46,12 +46,12 @@ import ly.img.editor.base.dock.BottomSheetContent
 import ly.img.editor.base.dock.CustomBottomSheetContent
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.compose.bottomsheet.ModalBottomSheetState
-import ly.img.editor.compose.bottomsheet.ModalBottomSheetValue
 import ly.img.editor.compose.bottomsheet.SwipeableDefaults
 import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.iconpack.Resize
 import ly.img.editor.core.sheet.SheetType
+import ly.img.editor.core.sheet.SheetValue
 import ly.img.editor.core.ui.IconTextRowButton
 import ly.img.editor.core.ui.SheetHeader
 import ly.img.editor.core.ui.UiDefaults
@@ -416,14 +416,14 @@ fun SheetPreview(mode: SheetType.Crop.Mode = SheetType.Crop.Mode.ImageCrop) {
     val style: SheetType.Crop = SheetType.Crop(mode = mode)
     val scrimBottomSheetState = remember(mode) {
         ModalBottomSheetState(
-            initialValue = ModalBottomSheetValue.Hidden,
+            initialValue = SheetValue.Hidden,
             animationSpec = SwipeableDefaults.AnimationSpec,
             confirmValueChange = { true },
             isSkipHalfExpanded = false,
         )
     }
     LaunchedEffect(mode) {
-        scrimBottomSheetState.snapTo(ModalBottomSheetValue.HalfExpanded)
+        scrimBottomSheetState.snapTo(SheetValue.HalfExpanded)
     }
     val bottomSheetContentState by MutableStateFlow<BottomSheetContent?>(
         CustomBottomSheetContent(
