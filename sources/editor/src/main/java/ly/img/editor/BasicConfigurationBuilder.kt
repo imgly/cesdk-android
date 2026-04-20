@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -63,23 +62,35 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
     /**
      * Whether the in-app system gallery integration is active.
      */
-    var systemGalleryConfiguration by mutableStateOf(SystemGalleryConfiguration.Disabled)
+    var systemGalleryConfiguration: SystemGalleryConfiguration by editorContext.mutableStateOf(
+        key = "ly.img.editor.state.systemGalleryConfiguration",
+        initial = SystemGalleryConfiguration.Disabled,
+    )
 
     /**
      * Whether [Loading] composable should be visible in the overlay.
      */
-    var showLoading by mutableStateOf(true)
+    var showLoading: Boolean by editorContext.mutableStateOf(
+        key = "ly.img.editor.state.showLoading",
+        initial = false,
+    )
 
     /**
      * Whether [CloseConfirmationDialog] composable should be visible in the overlay.
      */
-    var showCloseConfirmationDialog: Boolean by mutableStateOf(false)
+    var showCloseConfirmationDialog: Boolean by editorContext.mutableStateOf(
+        key = "ly.img.editor.state.showCloseConfirmationDialog",
+        initial = false,
+    )
 
     /**
      * Latest error of the editor. Depending on the type, [NoInternetDialog] or [ErrorDialog]
      * composable is visible in the overlay.
      */
-    var error: Throwable? by mutableStateOf(null)
+    var error: Throwable? by editorContext.mutableStateOf(
+        key = "ly.img.editor.state.error",
+        initial = null,
+    )
 
     /**
      * A helper function that returns the currently active scene or creates it from the given [sceneUri].

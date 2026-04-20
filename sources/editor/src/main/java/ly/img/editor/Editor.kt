@@ -41,7 +41,7 @@ import ly.img.engine.DesignBlockType
  * The default baseUri value used in [Editor] composable.
  */
 val defaultBaseUri: Uri by lazy {
-    "https://cdn.img.ly/packages/imgly/cesdk-android/1.73.0-rc.3/assets".toUri()
+    "https://cdn.img.ly/packages/imgly/cesdk-android/1.73.0/assets".toUri()
 }
 
 /**

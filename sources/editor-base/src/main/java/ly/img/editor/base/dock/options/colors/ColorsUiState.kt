@@ -7,7 +7,6 @@ import ly.img.editor.core.component.data.SolidFill
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.ui.engine.getFill
 import ly.img.editor.core.ui.engine.getStrokeColor
-import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
 
 @Immutable
@@ -16,8 +15,7 @@ data class ColorsUiState(
     val items: List<Item>,
 ) {
     data class Item(
-        val designBlock: DesignBlock,
-        val name: String?,
+        val name: String,
         val selectedColor: Color,
     )
 
@@ -29,6 +27,7 @@ data class ColorsUiState(
         ) = ColorsUiState(
             colorPalette = colorPalette,
             items = sheetType.designBlocks.mapNotNull { designBlock ->
+                val name = engine.block.getName(designBlock).takeIf { it.isNotEmpty() } ?: return@mapNotNull null
                 val selectedColor = if (engine.block.supportsFill(designBlock) && engine.block.isFillEnabled(designBlock)) {
                     when (val fillInfo = engine.getFill(designBlock)) {
                         is SolidFill, is GradientFill -> fillInfo.mainColor
@@ -40,9 +39,8 @@ data class ColorsUiState(
                     null
                 }
                 Item(
+                    name = name,
                     selectedColor = selectedColor ?: return@mapNotNull null,
-                    designBlock = designBlock,
-                    name = engine.block.getName(designBlock).takeIf { it.isNotEmpty() },
                 )
             },
         )

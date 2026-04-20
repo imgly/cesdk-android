@@ -3,7 +3,9 @@ package ly.img.editor.core
 import android.app.Activity
 import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -71,6 +73,18 @@ interface EditorContext {
      * The state flow of the [EditorState].
      */
     val state: StateFlow<EditorState>
+
+    /**
+     * [MutableState] provider for storing custom content in the editor scope. All state values
+     * will survive configuration changes and will be available until exiting the editor.
+     *
+     * @param key the unique key of the mutable state.
+     * @param initial the initial value to be set to [MutableState] when first created.
+     */
+    fun <T> mutableStateOf(
+        key: String,
+        initial: T,
+    ): MutableState<T>
 }
 
 interface MutableEditorContext : EditorContext {
@@ -130,6 +144,10 @@ internal class EditorContextImpl :
 
     private var timelineOwnerProvider: (() -> TimelineOwner)? = null
 
+    private var editorStateStore = mutableMapOf<String, MutableState<*>>()
+
+    var isValid = false
+
     override fun init(
         license: String?,
         userId: String?,
@@ -139,6 +157,7 @@ internal class EditorContextImpl :
         coroutineScope: CoroutineScope,
         timelineOwnerProvider: () -> TimelineOwner,
     ) {
+        this.isValid = true
         this.license = license
         this.userId = userId
         _baseUri = baseUri
@@ -151,6 +170,12 @@ internal class EditorContextImpl :
     override fun updateConfiguration(configuration: EditorConfiguration) {
         this.configuration.value = configuration
     }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> mutableStateOf(
+        key: String,
+        initial: T,
+    ): MutableState<T> = editorStateStore.getOrPut(key) { mutableStateOf(initial) } as MutableState<T>
 
     @Composable
     override fun TimelineContent() {
@@ -166,6 +191,8 @@ internal class EditorContextImpl :
         _eventHandler = null
         _coroutineScope = null
         timelineOwnerProvider = null
+        editorStateStore.clear()
         state.value = EditorState()
+        this.isValid = false
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.core.EditorContext
+import ly.img.editor.core.EditorContextImpl
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.LocalEditorScope
 import ly.img.editor.core.ScopedProperty
@@ -47,7 +48,7 @@ data class EditorConfiguration(
  */
 @Stable
 open class EditorConfigurationBuilder {
-    private var _editorContext: EditorContext? = null
+    private val _editorContext = requireNotNull(EditorContextHolder.editorContext)
 
     /**
      * The context of the editor. This property should be used to access all the properties and functions within the editor.
@@ -55,7 +56,7 @@ open class EditorConfigurationBuilder {
      * not a customer's property (italic in Android Studio makes it more obvious).
      */
     val EditorConfigurationBuilder.editorContext: EditorContext
-        get() = requireNotNull(_editorContext)
+        get() = _editorContext
 
     /**
      * The callback that is invoked when the editor is created. This is the main initialization block of both the editor
@@ -177,9 +178,7 @@ open class EditorConfigurationBuilder {
 
     @Composable
     fun build(): EditorConfiguration {
-        val scope = LocalEditorScope.current.apply {
-            _editorContext = editorContext
-        }
+        val scope = LocalEditorScope.current
         val colorPalette = colorPalette?.invoke(scope)
         val assetLibrary = assetLibrary?.invoke(scope)
         val dock = dock?.invoke(scope)
@@ -296,4 +295,17 @@ fun EditorConfiguration.Companion.remember(builder: EditorConfigurationBuilder.(
 fun <Builder : EditorConfigurationBuilder> EditorConfiguration.Companion.remember(
     builderFactory: () -> Builder,
     builder: Builder.() -> Unit = {},
-): EditorConfiguration = androidx.compose.runtime.remember { builderFactory().apply(builder) }.build()
+): EditorConfiguration = LocalEditorScope.current.run {
+    // This can be moved to compile time in the future when we start to use context parameters.
+    require((this.editorContext as EditorContextImpl).isValid) {
+        "EditorConfiguration.remember must be invoked only in `configuration` lambda of `Editor` composable."
+    }
+    EditorContextHolder.editorContext = editorContext
+    androidx.compose.runtime.remember {
+        builderFactory().apply(builder).also { EditorContextHolder.editorContext = null }
+    }.build()
+}
+
+internal object EditorContextHolder {
+    var editorContext: EditorContext? = null
+}

@@ -49,9 +49,7 @@ fun ColorsSheet(
                     Modifier.sheetScrollableContentModifier(),
                 ) {
                     uiState.items.forEachIndexed { index, item ->
-                        item.name?.let {
-                            SectionHeader(it)
-                        }
+                        SectionHeader(item.name)
                         Card(
                             colors = UiDefaults.cardColors,
                         ) {
@@ -61,7 +59,7 @@ fun ColorsSheet(
                                 selectedColor = item.selectedColor,
                                 onNoColorSelected = { },
                                 onColorSelected = {
-                                    onEvent(Event.OnColorChange(item.designBlock, it))
+                                    onEvent(Event.OnColorChange(item.name, it))
                                     onEvent(BlockEvent.OnChangeFinish)
                                 },
                                 openColorPicker = {
@@ -85,14 +83,14 @@ fun ColorsSheet(
                 color = state.item.selectedColor,
                 title = stringResource(
                     id = R.string.ly_img_editor_sheet_color_picker_title,
-                    state.item.name ?: "",
+                    state.item.name,
                 ).trim(),
                 onBack = {
                     onColorPickerActiveChanged(false)
                     screenState = ScreenState.Main
                 },
                 onColorChange = {
-                    onEvent(Event.OnColorChange(state.item.designBlock, it))
+                    onEvent(Event.OnColorChange(state.item.name, it))
                 },
                 onEvent = onEvent,
             )

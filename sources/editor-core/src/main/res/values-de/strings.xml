@@ -456,7 +456,6 @@
     <string name="ly_img_editor_sheet_voiceover_button_mute">Anderes Audio aus</string>
     <string name="ly_img_editor_sheet_voiceover_button_record">Aufnehmen</string>
     <string name="ly_img_editor_sheet_voiceover_button_unmute">Anderes Audio an</string>
-    <string name="ly_img_editor_sheet_voiceover_title">Voiceover</string>
     <string name="ly_img_editor_sheet_volume_title">Lautstärke</string>
     <string name="ly_img_editor_timeline_add_audio_option_voiceover">Voiceover</string>
     <string name="ly_img_editor_timeline_add_clip_option_camera">Kamera</string>
@@ -469,6 +468,7 @@
     <string name="ly_img_editor_timeline_button_pause">Pause</string>
     <string name="ly_img_editor_timeline_button_play">Abspielen</string>
     <string name="ly_img_editor_timeline_button_show_timeline">Zeitleiste</string>
+    <string name="ly_img_editor_timeline_clip_voiceover_title">Voiceover</string>
     <string name="ly_img_editor_timeline_error_split_out_of_range">Bitte bewegen Sie den ausgewählten Clip unter den Abspielkopf.</string>
     <string name="ly_img_editor_timeline_error_split_short_duration">Teilung nicht möglich, da einer der Clips zu kurz werden würde.</string>
     <string name="ly_img_editor_timeline_maximum_video_length">Maximale Videolänge</string>

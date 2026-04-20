@@ -158,7 +158,7 @@ interface Event : EditorEvent {
 
     @UnstableEditorApi
     data class OnColorChange(
-        val designBlock: DesignBlock,
+        val name: String,
         val color: Color,
     ) : Event
 }

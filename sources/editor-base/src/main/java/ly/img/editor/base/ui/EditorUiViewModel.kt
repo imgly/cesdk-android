@@ -353,7 +353,7 @@ class EditorUiViewModel(
             onFontSizeChange(it.designBlock, it.size)
         }
         register<Event.OnColorChange> {
-            onColorChange(it.designBlock, it.color)
+            onColorChange(it.name, it.color)
         }
 
         /** Customer exposed internal events **/
@@ -2066,19 +2066,21 @@ class EditorUiViewModel(
     }
 
     private fun onColorChange(
-        designBlock: DesignBlock,
+        name: String,
         color: Color,
     ) {
         val engineColor = color.toEngineColor()
-        if (engine.block.supportsFill(designBlock) && engine.block.isFillEnabled(designBlock)) {
-            engine.overrideAndRestore(designBlock, Scope.FillChange) {
-                engine.block.setFillType(it, FillType.Color)
-                engine.block.setFillSolidColor(it, engineColor)
+        engine.block.findByName(name).forEach {
+            if (engine.block.supportsFill(it) && engine.block.isFillEnabled(it)) {
+                engine.overrideAndRestore(it, Scope.FillChange) { block ->
+                    engine.block.setFillType(block, FillType.Color)
+                    engine.block.setFillSolidColor(block, engineColor)
+                }
             }
-        }
-        if (engine.block.supportsStroke(designBlock) && engine.block.isStrokeEnabled(designBlock)) {
-            engine.overrideAndRestore(designBlock, Scope.StrokeChange) {
-                engine.block.setStrokeColor(it, engineColor)
+            if (engine.block.supportsStroke(it) && engine.block.isStrokeEnabled(it)) {
+                engine.overrideAndRestore(it, Scope.StrokeChange) { block ->
+                    engine.block.setStrokeColor(block, engineColor)
+                }
             }
         }
     }
