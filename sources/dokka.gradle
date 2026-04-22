@@ -70,6 +70,9 @@ void configureDokkaFiles(File docsDir) {
     // noop and behavior is unchanged.
     def baseFixTag = '<script>(function(){var p=location.pathname;if(!p.endsWith("/")&&!p.endsWith(".html")){document.write(\'<base href="\'+p.substring(p.lastIndexOf("/")+1)+\'/">\');}})();</script>'
 
+    // Block Google indexing (thin-content risk) but keep crawling open for LLMs.
+    def noindexTag = '<meta name="robots" content="noindex">'
+
     docsDir.eachFileRecurse { file ->
         if (!file.isFile()) return
         if (!file.name.endsWith(".html")) return
@@ -79,6 +82,10 @@ void configureDokkaFiles(File docsDir) {
 
         if (!patched.contains(baseFixTag) && patched.contains("<head>")) {
             patched = patched.replace("<head>", "<head>${baseFixTag}")
+        }
+
+        if (!patched.contains(noindexTag) && patched.contains("<head>")) {
+            patched = patched.replace("<head>", "<head>${noindexTag}")
         }
 
         if (!patched.contains(scriptTag) && patched.contains("</body>")) {
