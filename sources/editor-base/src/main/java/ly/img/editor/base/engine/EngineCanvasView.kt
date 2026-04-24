@@ -102,9 +102,11 @@ fun EngineCanvasView(
                 }
             },
     )
+    LaunchedEffect(clearColor) {
+        engine.setClearColor(clearColor)
+    }
     LaunchedEffect(Unit) {
         engine.editor.setAppIsPaused(appIsPaused)
-        engine.setClearColor(clearColor)
         if (renderTarget == EngineRenderTarget.SURFACE_VIEW) {
             renderViewHandler?.addCallback(onSizeChanged)
         }

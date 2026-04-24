@@ -126,7 +126,7 @@ fun EditorTheme(
 
     val view = LocalView.current
     if (!view.isInEditMode) {
-        LaunchedEffect(Unit) {
+        LaunchedEffect(useDarkTheme) {
             val window = (view.context as Activity).window
             // Starting from android 15 following calls have no effect as it is always edge to edge and we
             // are the ones responsible drawing behind status and navigation bars.

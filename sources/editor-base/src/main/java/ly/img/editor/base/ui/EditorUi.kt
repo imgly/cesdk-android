@@ -201,7 +201,7 @@ fun EditorScope.EditorUi(
     val surfaceColor = colorScheme.surface
     val canvasColor = colorScheme.surface1
     val libraryColor = colorScheme.surface2
-    var navigationBarColor by remember {
+    var navigationBarColor by remember(surfaceColor) {
         mutableStateOf(surfaceColor)
     }
     var navigationBarHeightPx by remember {

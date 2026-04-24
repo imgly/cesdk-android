@@ -1,10 +1,15 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'com.github.gmazzo.buildconfig'
 }
 
-apply from: "ktlint.gradle"
+def starterKitsGradleFilePath = "$rootDir/../cesdk_android_showcases/starter-kits/starter-kits-local.gradle"
+if (file(starterKitsGradleFilePath).exists()) {
+    apply from: starterKitsGradleFilePath
+}
 
 String getLocalProperty(String property) {
     def propertiesFile = new File(rootDir, "local.properties")
@@ -15,7 +20,7 @@ String getLocalProperty(String property) {
 }
 
 android {
-    namespace = "ly.img.editor.guides"
+    namespace = "ly.img.editor.examples"
     compileSdk = libs.versions.androidCompileSdk.get().toInteger()
 
     defaultConfig {
@@ -71,16 +76,17 @@ android {
 
     sourceSets {
         main {
-            def exampleRoot = file("$projectDir/../../cesdk_android_examples")
-            def includeDirs = [
-                "editor-guides-configuration-dock",
-                "editor-guides-configuration-panel",
-                "editor-guides-video-force-trim",
-            ]
-            includeDirs.each { name ->
-                def dir = new File(exampleRoot, name)
-                if (dir.directory) {
-                    java.srcDirs += dir
+            def guidePatterns = ['engine-guides-', 'editor-guides-']
+            def blacklist = ['editor-guides-quickstart']
+            file("$projectDir/../../cesdk_android_examples").listFiles().findAll { file ->
+                file.directory && !blacklist.contains(file.name) && guidePatterns.any { pattern ->
+                    file.name.startsWith(pattern)
+                }
+            }.each { dir ->
+                java.srcDirs += dir
+                def assetsDir = file("$dir/assets")
+                if (assetsDir.exists()) {
+                    assets.srcDirs += assetsDir
                 }
             }
         }
@@ -88,8 +94,8 @@ android {
 }
 
 buildConfig {
-    className "GuidesBuildConfig"
-    packageName "ly.img.editor.guides"
+    className "ExamplesBuildConfig"
+    packageName "ly.img.editor.examples"
     buildConfigField String, "LICENSE", System.env.CESDK_APP_STORE_LICENSE ?: getLocalProperty("license") ?: ""
 }
 
@@ -98,7 +104,6 @@ dependencies {
     implementation project(':camera')
     implementation libs.cesdk.engine
     implementation libs.cesdk.engine.camera
-    implementation project(":editor-debug-menu")
 
     implementation libs.camera.core
     implementation libs.camera.camera2
@@ -118,8 +123,8 @@ dependencies {
     debugImplementation libs.compose.test.manifest
 }
 
-configurations.configureEach {
-    resolutionStrategy.dependencySubstitution {
-        substitute project(":editor-debug-menu-dummy") using project(":editor-debug-menu") because "we want the real debug menu in the guides app"
-    }
+// Kotlin compiler tries to compile kts files that are in src/java or src/kotlin.
+// Since we do have such files for guides, these files need to be ignored.
+tasks.withType(KotlinCompile).configureEach {
+    exclude("**/*.gradle.kts")
 }

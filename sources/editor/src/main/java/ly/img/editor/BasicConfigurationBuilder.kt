@@ -46,10 +46,8 @@ import ly.img.editor.core.iconpack.WifiCancel
 import ly.img.editor.core.library.data.SystemGalleryConfiguration
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
-import ly.img.engine.EngineException
 import ly.img.engine.MimeType
 import java.io.File
-import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.UUID
 
@@ -271,17 +269,8 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
             }
         },
         errorDialog: @Composable () -> Unit = {
-            val localError = this@BasicConfigurationBuilder.error
-            when {
-                localError is EngineException -> {
-                    ErrorDialog(engineException = localError)
-                }
-                localError is IOException -> {
-                    NoInternetDialog()
-                }
-                localError != null -> {
-                    ErrorDialog(engineException = EngineException(message = localError.toString()))
-                }
+            this@BasicConfigurationBuilder.error?.let {
+                ErrorDialog(throwable = it)
             }
         },
         closeConfirmationDialog: @Composable () -> Unit = {
@@ -376,9 +365,9 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
     }
 
     /**
-     * A helper composable function for displaying a dialog when the editor captures an error.
+     * A helper composable function for displaying a dialog when the editor captures a [throwable].
      *
-     * @param engineException the exception that was caught.
+     * @param throwable the throwable that was thrown.
      * @param modifier the modifier to apply to the dialog.
      * @param icon the icon to display in the dialog.
      * @param title the title of the dialog.
@@ -391,20 +380,20 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
     @Composable
     fun ErrorDialog(
         `_`: Nothing = nothing,
-        engineException: EngineException,
+        throwable: Throwable,
         modifier: Modifier = Modifier,
         icon: @Composable (() -> Unit)? = null,
         title: @Composable (() -> Unit)? = {
             Text(text = stringResource(R.string.ly_img_editor_dialog_error_title))
         },
         text: @Composable (() -> Unit)? = {
-            Text(text = engineException.message ?: "")
+            Text(text = throwable.message ?: "")
         },
         confirmButton: @Composable () -> Unit = {
             TextButton(
                 onClick = {
                     error = null
-                    editorContext.eventHandler.send(EditorEvent.CloseEditor(engineException))
+                    editorContext.eventHandler.send(EditorEvent.CloseEditor(throwable))
                 },
             ) {
                 Text(stringResource(R.string.ly_img_editor_dialog_error_confirm_text))
@@ -452,10 +441,13 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
         text: @Composable (() -> Unit)? = {
             Text(text = stringResource(R.string.ly_img_editor_dialog_close_confirm_text))
         },
+        onDismissRequest: () -> Unit = {
+            showCloseConfirmationDialog = false
+        },
         confirmButton: @Composable () -> Unit = {
             TextButton(
                 onClick = {
-                    showCloseConfirmationDialog = false
+                    onDismissRequest()
                     editorContext.eventHandler.send(EditorEvent.CloseEditor())
                 },
             ) {
@@ -464,15 +456,10 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
         },
         dismissButton: @Composable (() -> Unit)? = {
             TextButton(
-                onClick = {
-                    showCloseConfirmationDialog = false
-                },
+                onClick = onDismissRequest,
             ) {
                 Text(stringResource(R.string.ly_img_editor_dialog_close_confirm_button_dismiss))
             }
-        },
-        onDismissRequest: () -> Unit = {
-            showCloseConfirmationDialog = false
         },
         properties: DialogProperties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
         `__`: Nothing = nothing,

@@ -30,8 +30,8 @@ if (file("smoke-tests-app").exists()) {
     include ':smoke-tests-app'
     include ':ubq-source-dummy'
 }
-if (file("guides-app").exists()) {
-    include ':guides-app'
+if (file("examples-app").exists()) {
+    include ':examples-app'
 }
 new File(rootDir, "sources").listFiles().each {
     if (it.isDirectory() && it.name.startsWith("editor") || it.name.startsWith("camera")) {
