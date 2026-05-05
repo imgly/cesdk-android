@@ -24,6 +24,7 @@ import ly.img.editor.core.ui.iconpack.Filteradjustments
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.library.SimpleSelectableAssetList
 import ly.img.editor.core.ui.library.getMeta
+import ly.img.editor.core.ui.library.localizedLabel
 
 @Composable
 fun AnimationSheet(
@@ -69,7 +70,7 @@ fun AnimationSheet(
             }
             screenState is ScreenState.PropertiesPage && selectedAnimation != null -> {
                 PropertiesSheet(
-                    title = selectedAnimation.asset?.label ?: "",
+                    title = selectedAnimation.asset?.localizedLabel() ?: "",
                     designBlockWithProperties = selectedAnimation,
                     onBack = { screenState = ScreenState.Main },
                     onEvent = onEvent,
