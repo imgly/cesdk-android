@@ -219,10 +219,12 @@ interface EditorEvent {
      * @param uploadAssetSourceType the asset source where [uri] should be added.
      * Check [ly.img.editor.core.library.data.AssetSourceType] for available [UploadAssetSourceType]s.
      * @param uri the uri which content should be added to the scene.
+     * @param addToBackgroundTrack whether to add the asset to the background track. Defaults to false.
      */
     class AddUriToScene(
         val uploadAssetSourceType: UploadAssetSourceType,
         val uri: Uri,
+        val addToBackgroundTrack: Boolean = false,
     ) : EditorEvent
 
     /**

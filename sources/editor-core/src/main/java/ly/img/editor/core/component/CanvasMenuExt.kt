@@ -2,9 +2,15 @@
 
 package ly.img.editor.core.component
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import ly.img.editor.core.R
 import ly.img.editor.core.component.data.unsafeLazy
 import ly.img.editor.core.configuration.remember
@@ -170,7 +176,16 @@ fun CanvasMenu.Button.rememberSelectGroup(builder: CanvasMenu.ButtonBuilder.() -
         visible = {
             remember(this) { editorContext.isSelectionInGroup }
         }
-        textString = { stringResource(R.string.ly_img_editor_canvas_menu_button_select_group) }
+        text = {
+            Text(
+                text = stringResource(R.string.ly_img_editor_canvas_menu_button_select_group),
+                style = MaterialTheme.typography.labelMedium,
+            )
+        }
+        tint = { MaterialTheme.colorScheme.onSecondaryContainer }
+        containerColor = { MaterialTheme.colorScheme.secondaryContainer }
+        modifier = { Modifier.padding(horizontal = 4.dp) }
+        contentPadding = { PaddingValues(horizontal = 12.dp, vertical = 10.dp) }
         onClick = {
             editorContext.eventHandler.send(EditorEvent.Selection.SelectGroup())
         }

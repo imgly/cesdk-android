@@ -34,6 +34,7 @@ import ly.img.editor.core.iconpack.TextFields
  * @param enabled whether the button is enabled.
  * @param contentPadding the content padding of the button.
  * @param tint the tint color of the button.
+ * @param containerColor background color of the button. Defaults to [Color.Transparent].
  */
 @Composable
 fun IconTextButton(
@@ -44,13 +45,16 @@ fun IconTextButton(
     enabled: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(vertical = 10.dp, horizontal = 4.dp),
     tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    containerColor: Color = Color.Transparent,
 ) {
     if (text == null) {
         IconButton(
             onClick = onClick,
             enabled = enabled,
             colors = IconButtonDefaults.iconButtonColors(
+                containerColor = containerColor,
                 contentColor = tint,
+                disabledContainerColor = Color.Transparent,
                 disabledContentColor = tint.copy(alpha = tint.alpha * 0.38F),
             ),
             modifier = modifier.padding(contentPadding),
@@ -61,7 +65,9 @@ fun IconTextButton(
         Button(
             modifier = modifier,
             colors = ButtonDefaults.textButtonColors(
+                containerColor = containerColor,
                 contentColor = tint,
+                disabledContainerColor = Color.Transparent,
                 disabledContentColor = tint.copy(alpha = tint.alpha * 0.5F),
             ),
             onClick = onClick,

@@ -132,7 +132,6 @@ import ly.img.editor.core.ui.engine.awaitEngineAndSceneLoad
 import ly.img.editor.core.ui.engine.deselectAllBlocks
 import ly.img.editor.core.ui.engine.dpToCanvasUnit
 import ly.img.editor.core.ui.engine.getCamera
-import ly.img.editor.core.ui.engine.getPage
 import ly.img.editor.core.ui.engine.getScene
 import ly.img.editor.core.ui.engine.overrideAndRestore
 import ly.img.editor.core.ui.library.AppearanceLibraryCategory
@@ -408,7 +407,7 @@ class EditorUiViewModel(
             // This event is triggered only from dock for now.
             // addToBackgroundTrack is always true for now as we do not want to expose it to customers due to unknown future.
             libraryViewModel.onEvent(
-                LibraryEvent.OnAddUri(it.uploadAssetSourceType, it.uri, addToBackgroundTrack = true),
+                LibraryEvent.OnAddUri(it.uploadAssetSourceType, it.uri, addToBackgroundTrack = it.addToBackgroundTrack),
             )
         }
         register<EditorEvent.ReplaceUriAtScene> {
@@ -721,7 +720,7 @@ class EditorUiViewModel(
     }
 
     private fun updateVisiblePageState() {
-        val pages = engine.scene.getPages()
+        val pages = engine.scene.getPages().takeIf { it.isNotEmpty() } ?: return
         val page = engine.scene.getCurrentPage()
         val currentVisible = pages.indexOfFirst { page == it }
         if (pageIndex.value != currentVisible) {
@@ -1557,8 +1556,8 @@ class EditorUiViewModel(
         zoomJob?.cancel()
         return viewModelScope
             .launch {
+                val page = engine.scene.getPages().getOrNull(pageIndex.value) ?: return@launch
                 val currentInsets = publicState.value.insets
-                val page = engine.getPage(pageIndex.value)
                 val selectedBlock = getBlockForEvents()
                 val shouldZoomToPage = forceZoomToPage ||
                     selectedBlock == null ||

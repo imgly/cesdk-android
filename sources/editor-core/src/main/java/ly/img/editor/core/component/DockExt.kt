@@ -498,7 +498,12 @@ fun Dock.Button.rememberSystemCamera(
                     } else {
                         AssetSourceType.ImageUploads
                     }
-                    editorContext.eventHandler.send(EditorEvent.AddUriToScene(uploadSource, uri))
+                    val event = EditorEvent.AddUriToScene(
+                        uploadAssetSourceType = uploadSource,
+                        uri = uri,
+                        addToBackgroundTrack = isCaptureVideo,
+                    )
+                    editorContext.eventHandler.send(event)
 
                     // Persist selection and rescan so it appears in gallery for follow-up edits
                     val context = editorContext.activity

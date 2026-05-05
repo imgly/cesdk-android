@@ -40,6 +40,7 @@ data class Button<Scope : EditorScope>(
     val tint: Color,
     val enabled: Boolean,
     val contentPadding: PaddingValues,
+    val containerColor: Color,
 ) : EditorComponent<Scope>() {
     @Composable
     override fun Scope.Content(animatedVisibilityScope: AnimatedVisibilityScope?) {
@@ -49,6 +50,7 @@ data class Button<Scope : EditorScope>(
             enabled = enabled,
             contentPadding = contentPadding,
             tint = tint,
+            containerColor = containerColor,
             icon = icon?.let { { it() } },
             text = text?.let { { it() } },
         )
@@ -146,6 +148,11 @@ abstract class AbstractButtonBuilder<Scope : EditorScope> : EditorComponentBuild
         PaddingValues(vertical = 10.dp, horizontal = 4.dp)
     }
 
+    /**
+     * Container (background) color of the button. Defaults to [Color.Transparent].
+     */
+    open var containerColor: ScopedProperty<Scope, Color> = { Color.Transparent }
+
     @Composable
     override fun build(
         scope: Scope,
@@ -159,6 +166,7 @@ abstract class AbstractButtonBuilder<Scope : EditorScope> : EditorComponentBuild
         val tint = tint(scope)
         val enabled = enabled(scope)
         val contentPadding = contentPadding(scope)
+        val containerColor = containerColor(scope)
         return remember(
             scope,
             id,
@@ -170,6 +178,7 @@ abstract class AbstractButtonBuilder<Scope : EditorScope> : EditorComponentBuild
             tint,
             enabled,
             contentPadding,
+            containerColor,
         ) {
             Button(
                 scope = scope,
@@ -185,6 +194,7 @@ abstract class AbstractButtonBuilder<Scope : EditorScope> : EditorComponentBuild
                 tint = tint,
                 enabled = enabled,
                 contentPadding = contentPadding,
+                containerColor = containerColor,
             )
         }
     }
