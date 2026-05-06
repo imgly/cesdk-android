@@ -9,7 +9,6 @@ import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
 import ly.img.engine.FontStyle
 import ly.img.engine.FontWeight
-import ly.img.engine.HorizontalAlignment
 import ly.img.engine.ListStyle
 import ly.img.engine.SizeMode
 import ly.img.engine.TextCase
@@ -105,7 +104,9 @@ internal fun createFormatUiState(
         horizontalAlignment = HorizontalAlignment.valueOf(
             engine.block.getEnum(designBlock, "text/horizontalAlignment"),
         ),
-        effectiveHorizontalAlignment = engine.block.getTextEffectiveHorizontalAlignment(designBlock),
+        effectiveHorizontalAlignment = HorizontalAlignment.valueOf(
+            engine.block.getTextEffectiveHorizontalAlignment(designBlock),
+        ),
         verticalAlignment = VerticalAlignment.valueOf(
             engine.block.getEnum(designBlock, "text/verticalAlignment"),
         ),

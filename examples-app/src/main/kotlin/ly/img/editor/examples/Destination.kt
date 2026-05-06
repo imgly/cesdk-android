@@ -38,16 +38,6 @@ sealed class Destination(
         title = "Apparel Editor",
     )
 
-    data object AutoResizeGuide : Destination(
-        route = "guide-auto-resize",
-        title = "Auto-Resize",
-    )
-
-    data object DataMerge : Destination(
-        route = "guides-data-merge",
-        title = "Data Merge",
-    )
-
     data object GuideColorPalette : Destination(
         route = "guide-color-palette",
         title = "Color Palette",
@@ -83,21 +73,6 @@ sealed class Destination(
         title = "Force Trim",
     )
 
-    data object GuideDesignUnits : Destination(
-        route = "guide-design-units",
-        title = "Design Units",
-    )
-
-    data object GuideScenes : Destination(
-        route = "guide-scenes",
-        title = "Scenes",
-    )
-
-    data object GuideAutomationActions : Destination(
-        route = "guide-automation-actions",
-        title = "Automation Actions",
-    )
-
     companion object {
         val starterKits = listOf(
             PhotoEditor,
@@ -108,8 +83,6 @@ sealed class Destination(
         )
 
         val guides = listOf(
-            AutoResizeGuide,
-            DataMerge,
             GuideColorPalette,
             GuideCallbacks,
             GuideForceCrop,
@@ -117,9 +90,6 @@ sealed class Destination(
             GuideTheming,
             GuideOverlay,
             GuideForceTrim,
-            GuideDesignUnits,
-            GuideScenes,
-            GuideAutomationActions,
         )
     }
 }
