@@ -132,7 +132,7 @@ fun SimpleSelectableAssetList(
 
                     Text(
                         modifier = Modifier.align(Alignment.CenterHorizontally),
-                        text = wrappedAsset.asset.label ?: "",
+                        text = wrappedAsset.asset.localizedLabel(),
                         style = MaterialTheme.typography.labelMedium,
                     )
                 }

@@ -1,7 +1,6 @@
 package ly.img.editor.base.ui.handler
 
 import android.net.Uri
-import ly.img.editor.base.dock.options.format.HorizontalAlignment
 import ly.img.editor.base.dock.options.format.SizeModeUi
 import ly.img.editor.base.dock.options.format.VerticalAlignment
 import ly.img.editor.base.ui.BlockEvent.OnBoldToggle
@@ -26,6 +25,7 @@ import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
+import ly.img.engine.HorizontalAlignment
 import ly.img.engine.ListStyle
 import ly.img.engine.SizeMode
 import ly.img.engine.Typeface

@@ -48,6 +48,7 @@ import ly.img.editor.core.ui.iconpack.Listnumber
 import ly.img.editor.core.ui.sheetScrollableContentModifier
 import ly.img.engine.FontStyle
 import ly.img.engine.FontWeight
+import ly.img.engine.HorizontalAlignment
 import ly.img.engine.ListStyle
 import ly.img.engine.TextCase
 
