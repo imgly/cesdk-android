@@ -59,51 +59,6 @@ open class EditorConfigurationBuilder {
         get() = _editorContext
 
     /**
-     * The configuration that was applied just before this builder via [EditorConfiguration.Companion.remember] or
-     * [EditorConfiguration.then]. This property should be used to delegate invocations from this builder.
-     *
-     * For instance, you can access callbacks and components, override and modify them, extend behavior before or after:
-     *
-     * ```kotlin
-     * onCreate = {
-     *     // Does additional stuff before parent configuration's onCreate.
-     *     ...
-     *     // parentConfiguration?.onCreate invocation can be skipped too.
-     *     parentConfiguration?.onCreate?.invoke(this)
-     *     // Waits for parent configuration onCreate to finish, then does additional stuff.
-     *     ...
-     * }
-     *
-     * // Extend dock behavior only and only if parent defines dock.
-     * dock = impl@{
-     *     val parentDock = parentConfiguration?.dock as? Dock ?: return@impl null
-     *     val updatedListBuilder = parentDock.listBuilder.modify {
-     *         addFirst { Dock.Button.rememberElementsLibrary() }
-     *     }
-     *     remember(parentDock, updatedListBuilder) {
-     *         parentDock.copy(listBuilder = updatedListBuilder)
-     *     }
-     * }
-     *
-     * // Add inspector bar no matter parent defines or not. If it is defined, then extend it.
-     * inspectorBar = {
-     *     // If parent configuration does not have an inspector bar, create an empty one as source.
-     *     val sourceInspectorBar = parentConfiguration?.inspectorBar as? InspectorBar ?: InspectorBar.remember()
-     *     val updatedListBuilder = sourceInspectorBar.listBuilder.modify {
-     *         addLast { InspectorBar.Button.rememberCrop() }
-     *     }
-     *     remember(sourceInspectorBar, updatedListBuilder) {
-     *         sourceInspectorBar.copy(listBuilder = updatedListBuilder)
-     *     }
-     * }
-     * ```
-     * Note that all null properties in [EditorConfigurationBuilder] are automatically delegated to corresponding properties in [parentConfiguration].
-     * For instance, if [EditorConfigurationBuilder.onCreate] is null then the final [EditorConfiguration.onCreate] will match with
-     * [EditorConfiguration.onCreate] of [parentConfiguration].
-     */
-    val parentConfiguration: EditorConfiguration? = EditorConfigurationHolder.editorConfiguration
-
-    /**
      * The callback that is invoked when the editor is created. This is the main initialization block of both the editor
      * and engine. Normally, you should create/load a scene, prepare asset sources and apply editor settings in this block.
      * We recommend that you check the availability of the scene before creating/loading a new scene since a recreated scene may already
@@ -152,7 +107,7 @@ open class EditorConfigurationBuilder {
      * The callback that is invoked after an asset is added to [UploadAssetSourceType]. When selecting an asset to upload,
      * a default [AssetDefinition] object is constructed based on the selected asset and the callback is invoked. You can either leave
      * the asset definition unmodified and do nothing (that's what the default implementation of the callback does), or adjust the properties
-     * of the object, or maybe even upload the asset file to your server and adjust the uri property of the asset.
+     * of the object, or maybe even upload the asset asset file to your server and adjust the uri property of the asset.
      * Note that the "upload" coroutine job will survive configuration changes and will be cancelled only if the editor is closed or the process is killed
      * when in the background.
      */
@@ -169,26 +124,26 @@ open class EditorConfigurationBuilder {
      * The default color palette used in the UI elements that contain color modifiers such as "Fill color",
      * "Stroke Color" etc.
      */
-    open var colorPalette: ScopedProperty<EditorScope, List<Color>?>? = null
+    open var colorPalette: ScopedProperty<EditorScope, List<Color>>? = null
 
     /**
      * The configuration of the [AssetLibrary]. Check the documentation of [AssetLibrary] for more details.
      */
-    open var assetLibrary: ScopedProperty<EditorScope, AssetLibrary?>? = null
+    open var assetLibrary: ScopedProperty<EditorScope, AssetLibrary>? = null
 
     /**
      * The configuration of the component that is displayed as horizontal list of items at the bottom of the editor.
      * Check [ly.img.editor.core.component.Dock] for our implementation or consider using [EditorComponent.Companion.remember]
      * to fully customize it.
      */
-    open var dock: ScopedProperty<EditorScope, EditorComponent<*>?>? = null
+    open var dock: ScopedProperty<EditorScope, EditorComponent<*>>? = null
 
     /**
      * The configuration of the component that is displayed as horizontal list of items at the top of the editor.
      * Check [ly.img.editor.core.component.NavigationBar] for our implementation or consider using [EditorComponent.Companion.remember]
      * to fully customize it.
      */
-    open var navigationBar: ScopedProperty<EditorScope, EditorComponent<*>?>? = null
+    open var navigationBar: ScopedProperty<EditorScope, EditorComponent<*>>? = null
 
     /**
      * The configuration of the component that is displayed as horizontal list of items at the
@@ -196,7 +151,7 @@ open class EditorConfigurationBuilder {
      * Check [ly.img.editor.core.component.InspectorBar] for our implementation or consider using [EditorComponent.Companion.remember]
      * to fully customize it.
      */
-    open var inspectorBar: ScopedProperty<EditorScope, EditorComponent<*>?>? = null
+    open var inspectorBar: ScopedProperty<EditorScope, EditorComponent<*>>? = null
 
     /**
      * The configuration of the component that is displayed as horizontal list of items next to
@@ -204,13 +159,13 @@ open class EditorConfigurationBuilder {
      * Check [ly.img.editor.core.component.CanvasMenu] for our implementation or consider using [EditorComponent.Companion.remember]
      * to fully customize it.
      */
-    open var canvasMenu: ScopedProperty<EditorScope, EditorComponent<*>?>? = null
+    open var canvasMenu: ScopedProperty<EditorScope, EditorComponent<*>>? = null
 
     /**
      * The configuration of the component that is displayed as a fixed bottom panel at the bottom of the editor, just above the [dock].
      * For example, it can be used if you want to render a timeline in a video editor via [ly.img.editor.core.component.Timeline].
      */
-    open var bottomPanel: ScopedProperty<EditorScope, EditorComponent<*>?>? = null
+    open var bottomPanel: ScopedProperty<EditorScope, EditorComponent<*>>? = null
 
     /**
      * The configuration of the component that is displayed over the editor. It is useful if you want to display a popup dialog or anything in the
@@ -219,80 +174,52 @@ open class EditorConfigurationBuilder {
      * Consider using [EditorComponent.Companion.remember] to implement it.
      * Note that the overlay is edge-to-edge, therefore it is your responsibility to draw over system bars too.
      */
-    open var overlay: ScopedProperty<EditorScope, EditorComponent<*>?>? = null
-
-    /**
-     * Decorates final [EditorConfiguration] built by this builder.
-     *
-     * Useful when you want to wrap and apply pre-existing external configuration builders:
-     *
-     * ```kotlin
-     * decorator = {
-     *     this
-     *         .then(::ExistingConfigurationBuilder)
-     *         .then(::SomePlugin) {
-     *             configOption = "external value"
-     *         }
-     * }
-     * ```
-     */
-    protected open var decorator: @Composable EditorConfiguration.() -> EditorConfiguration = { this }
+    open var overlay: ScopedProperty<EditorScope, EditorComponent<*>>? = null
 
     @Composable
-    internal fun build() = decorator(buildInternal())
-
-    @Composable
-    private fun buildInternal(): EditorConfiguration {
+    fun build(): EditorConfiguration {
         val scope = LocalEditorScope.current
-        val finalOnCreate = onCreate ?: parentConfiguration?.onCreate
-        val finalOnLoaded = onLoaded ?: parentConfiguration?.onLoaded
-        val finalOnExport = onExport ?: parentConfiguration?.onExport
-        val finalOnClose = onClose ?: parentConfiguration?.onClose
-        val finalOnEvent = onEvent ?: parentConfiguration?.onEvent
-        val finalOnUpload = onUpload ?: parentConfiguration?.onUpload
-        val finalOnError = onError ?: parentConfiguration?.onError
-        val finalColorPalette = colorPalette?.invoke(scope) ?: parentConfiguration?.colorPalette
-        val finalAssetLibrary = assetLibrary?.invoke(scope) ?: parentConfiguration?.assetLibrary
-        val finalDock = dock?.invoke(scope) ?: parentConfiguration?.dock
-        val finalNavigationBar = navigationBar?.invoke(scope) ?: parentConfiguration?.navigationBar
-        val finalInspectorBar = inspectorBar?.invoke(scope) ?: parentConfiguration?.inspectorBar
-        val finalCanvasMenu = canvasMenu?.invoke(scope) ?: parentConfiguration?.canvasMenu
-        val finalBottomPanel = bottomPanel?.invoke(scope) ?: parentConfiguration?.bottomPanel
-        val finalOverlay = overlay?.invoke(scope) ?: parentConfiguration?.overlay
+        val colorPalette = colorPalette?.invoke(scope)
+        val assetLibrary = assetLibrary?.invoke(scope)
+        val dock = dock?.invoke(scope)
+        val navigationBar = navigationBar?.invoke(scope)
+        val inspectorBar = inspectorBar?.invoke(scope)
+        val canvasMenu = canvasMenu?.invoke(scope)
+        val bottomPanel = bottomPanel?.invoke(scope)
+        val overlay = overlay?.invoke(scope)
         return remember(
-            finalOnCreate,
-            finalOnLoaded,
-            finalOnExport,
-            finalOnClose,
-            finalOnEvent,
-            finalOnUpload,
-            finalOnError,
-            finalColorPalette,
-            finalAssetLibrary,
-            finalDock,
-            finalNavigationBar,
-            finalInspectorBar,
-            finalCanvasMenu,
-            finalBottomPanel,
-            finalOverlay,
-            parentConfiguration,
+            onCreate,
+            onLoaded,
+            onExport,
+            onClose,
+            onEvent,
+            onUpload,
+            onError,
+            colorPalette,
+            assetLibrary,
+            dock,
+            navigationBar,
+            inspectorBar,
+            canvasMenu,
+            bottomPanel,
+            overlay,
         ) {
             EditorConfiguration(
-                onCreate = finalOnCreate,
-                onLoaded = finalOnLoaded,
-                onExport = finalOnExport,
-                onClose = finalOnClose,
-                onEvent = finalOnEvent,
-                onUpload = finalOnUpload,
-                onError = finalOnError,
-                colorPalette = finalColorPalette,
-                assetLibrary = finalAssetLibrary,
-                dock = finalDock,
-                navigationBar = finalNavigationBar,
-                inspectorBar = finalInspectorBar,
-                canvasMenu = finalCanvasMenu,
-                bottomPanel = finalBottomPanel,
-                overlay = finalOverlay,
+                onCreate = this@EditorConfigurationBuilder.onCreate,
+                onLoaded = this@EditorConfigurationBuilder.onLoaded,
+                onExport = this@EditorConfigurationBuilder.onExport,
+                onClose = this@EditorConfigurationBuilder.onClose,
+                onEvent = this@EditorConfigurationBuilder.onEvent,
+                onUpload = this@EditorConfigurationBuilder.onUpload,
+                onError = this@EditorConfigurationBuilder.onError,
+                colorPalette = colorPalette,
+                assetLibrary = assetLibrary,
+                dock = dock,
+                navigationBar = navigationBar,
+                inspectorBar = inspectorBar,
+                canvasMenu = canvasMenu,
+                bottomPanel = bottomPanel,
+                overlay = overlay,
             )
         }
     }
@@ -373,126 +300,12 @@ fun <Builder : EditorConfigurationBuilder> EditorConfiguration.Companion.remembe
     require((this.editorContext as EditorContextImpl).isValid) {
         "EditorConfiguration.remember must be invoked only in `configuration` lambda of `Editor` composable."
     }
+    EditorContextHolder.editorContext = editorContext
     androidx.compose.runtime.remember {
-        EditorContextHolder.editorContext = editorContext
-        EditorConfigurationHolder.editorConfiguration = null
-        builderFactory()
-            .also { EditorContextHolder.editorContext = null }
-            .apply(builder)
-    }.build()
-}
-
-/**
- * A composable overload for [EditorConfiguration.then] that uses [EditorConfigurationBuilder] to create and remember an
- * [EditorConfiguration] instance.
- * Check the documentation of overloaded [EditorConfiguration.then] function below for more details.
- * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions:
- *
- * ```kotlin
- * editorConfiguration.then {
- *     // WRONG! onCreate will not be updated.
- *     onCreate = if (condition) {
- *         { ... }
- *     } else {
- *         { ... }
- *     }
- * ```
- *
- * ```kotlin
- * editorConfiguration.then {
- *     // CORRECT! onCreate will use the updated logic based on the condition.
- *     onCreate = {
- *         if (condition) {
- *             ...
- *         } else {
- *             ...
- *         }
- *     }
- * ```
- *
- * @param builder the builder block that configures the [EditorConfiguration].
- * @return an object that is used to configure the editor.
- */
-@Composable
-fun EditorConfiguration.then(builder: EditorConfigurationBuilder.() -> Unit = {}): EditorConfiguration = then(
-    builderFactory = ::EditorConfigurationBuilder,
-    builder = builder,
-)
-
-/**
- * A composable function that creates and remembers an [EditorConfiguration] instance on top of an existing [EditorConfiguration].
- * Existing configuration effectively becomes the parent configuration for the newly created [EditorConfiguration].
- * It is useful to use this function when you want to extend the editor configuration by preexisting [EditorConfigurationBuilder]s,
- * such as plugins provided by IMG.LY.
- *
- * You can chain as many configurations as you want:
- *
- * ```kotlin
- * Editor(
- *     configuration = {
- *         EditorConfiguration.remember {
- *             onCreate = { ... }
- *             dock = { ... }
- *         }.then(::SomePlugin) {
- *             pluginConfigurationProperty = ...
- *         }.then(::AnotherPlugin)
- *     }
- * )
- * ```
- *
- * Note that both [builderFactory] and [builder] lambdas run only once, therefore you should not have builder property reassignments based on conditions:
- *
- * ```kotlin
- * editorConfiguration.then(::SomePlugin) {
- *     // WRONG! onCreate will not be updated.
- *     onCreate = if (condition) {
- *         { ... }
- *     } else {
- *         { ... }
- *     }
- * ```
- *
- * ```kotlin
- * editorConfiguration.then(::OtherEditorConfigurationBuilder) {
- *     // CORRECT! onCreate will use the updated logic based on the condition.
- *     onCreate = {
- *         if (condition) {
- *             ...
- *         } else {
- *             ...
- *         }
- *     }
- * ```
- *
- * @param builderFactory the factory that should be used to construct [EditorConfiguration].
- * @param builder the builder block that configures the [EditorConfiguration].
- * @return an object that is used to configure the editor.
- */
-@Composable
-fun <Builder : EditorConfigurationBuilder> EditorConfiguration.then(
-    builderFactory: () -> Builder,
-    builder: Builder.() -> Unit = {},
-): EditorConfiguration = LocalEditorScope.current.run {
-    // This can be moved to compile time in the future when we start to use context parameters.
-    require((this.editorContext as EditorContextImpl).isValid) {
-        "EditorConfiguration.then extension must be invoked only in `configuration` lambda of `Editor` composable."
-    }
-    androidx.compose.runtime.remember(this@then) {
-        EditorContextHolder.editorContext = editorContext
-        EditorConfigurationHolder.editorConfiguration = this@then
-        builderFactory()
-            .also {
-                EditorConfigurationHolder.editorConfiguration = null
-                EditorContextHolder.editorContext = null
-            }
-            .apply(builder)
+        builderFactory().apply(builder).also { EditorContextHolder.editorContext = null }
     }.build()
 }
 
 internal object EditorContextHolder {
     var editorContext: EditorContext? = null
-}
-
-internal object EditorConfigurationHolder {
-    var editorConfiguration: EditorConfiguration? = null
 }

@@ -14,19 +14,19 @@ import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Verticalalignbottom
 import ly.img.editor.core.ui.iconpack.Verticalaligncenter
 import ly.img.editor.core.ui.iconpack.Verticalaligntop
-import ly.img.engine.HorizontalAlignment
 
 @Composable
-fun AlignmentButton(
-    alignment: HorizontalAlignment,
-    currentAlignment: HorizontalAlignment,
+fun <T : Alignment> AlignmentButton(
+    alignment: Alignment,
+    currentAlignment: T,
     effectiveAlignment: HorizontalAlignment? = null,
-    changeAlignment: (HorizontalAlignment) -> Unit,
+    changeAlignment: (T) -> Unit,
 ) {
     ToggleIconButton(
         checked = currentAlignment == alignment,
         onCheckedChange = {
-            changeAlignment(alignment)
+            @Suppress("UNCHECKED_CAST")
+            changeAlignment(alignment as T)
         },
     ) {
         Icon(
@@ -41,36 +41,15 @@ fun AlignmentButton(
                         effectiveAlignment == HorizontalAlignment.Right -> IconPack.FormatAlignRightAuto
                     else -> IconPack.FormatAlignLeftAuto
                 }
+                VerticalAlignment.Bottom -> IconPack.Verticalalignbottom
+                VerticalAlignment.Center -> IconPack.Verticalaligncenter
+                VerticalAlignment.Top -> IconPack.Verticalaligntop
             },
             contentDescription = when (alignment) {
                 HorizontalAlignment.Left -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_horizontal_option_left)
                 HorizontalAlignment.Center -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_horizontal_option_center)
                 HorizontalAlignment.Right -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_horizontal_option_right)
                 HorizontalAlignment.Auto -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_horizontal_option_auto)
-            },
-        )
-    }
-}
-
-@Composable
-fun AlignmentButton(
-    alignment: VerticalAlignment,
-    currentAlignment: VerticalAlignment,
-    changeAlignment: (VerticalAlignment) -> Unit,
-) {
-    ToggleIconButton(
-        checked = currentAlignment == alignment,
-        onCheckedChange = {
-            changeAlignment(alignment)
-        },
-    ) {
-        Icon(
-            imageVector = when (alignment) {
-                VerticalAlignment.Bottom -> IconPack.Verticalalignbottom
-                VerticalAlignment.Center -> IconPack.Verticalaligncenter
-                VerticalAlignment.Top -> IconPack.Verticalaligntop
-            },
-            contentDescription = when (alignment) {
                 VerticalAlignment.Bottom -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_vertical_option_bottom)
                 VerticalAlignment.Center -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_vertical_option_center)
                 VerticalAlignment.Top -> stringResource(R.string.ly_img_editor_sheet_format_text_alignment_vertical_option_top)

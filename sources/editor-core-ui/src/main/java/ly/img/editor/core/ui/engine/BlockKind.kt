@@ -8,7 +8,6 @@ enum class BlockKind(
 ) {
     Image("image"),
     Gif("gif"),
-    Apng("apng"),
     AnimatedSticker("animatedSticker"),
     Sticker("sticker"),
     Shape("shape"),

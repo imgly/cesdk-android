@@ -1,14 +1,10 @@
 package ly.img.editor.examples
 
-import AutomationActionsEditorSolution
 import CallbacksEditorSolution
 import ColorPaletteEditorSolution
 import CustomPanelSolution
-import DataMergeGuideScreen
-import DesignUnitsScreen
 import ForceCropEditorSolution
 import ForceTrimVideoSolution
-import ModifyingScenesEngineSolution
 import OverlayEditorSolution
 import ThemingEditorSolution
 import androidx.compose.animation.AnimatedContentScope
@@ -66,17 +62,6 @@ fun NavGraphBuilder.build(navController: NavHostController) {
             onClose = { navController.popBackStack() },
         )
     }
-    composable(destination = Destination.AutoResizeGuide) {
-        AutoResizeGuideScreen(
-            license = Secrets.license,
-        )
-    }
-    composable(destination = Destination.DataMerge) {
-        DataMergeGuideScreen(
-            navController = navController,
-            license = Secrets.license,
-        )
-    }
     composable(destination = Destination.GuideColorPalette) {
         ColorPaletteEditorSolution(
             license = Secrets.license,
@@ -115,21 +100,6 @@ fun NavGraphBuilder.build(navController: NavHostController) {
     }
     composable(destination = Destination.GuideForceTrim) {
         ForceTrimVideoSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideDesignUnits) {
-        DesignUnitsScreen(license = Secrets.license)
-    }
-    composable(destination = Destination.GuideScenes) {
-        ModifyingScenesEngineSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideAutomationActions) {
-        AutomationActionsEditorSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
         )

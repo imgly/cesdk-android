@@ -215,7 +215,7 @@ class TimelineState(
             fillType == FillType.Video -> {
                 clipType = when (kind) {
                     BlockKind.AnimatedSticker -> ClipType.Sticker
-                    BlockKind.Gif, BlockKind.Apng -> ClipType.Image
+                    BlockKind.Gif -> ClipType.Image
                     else -> ClipType.Video
                 }
             }
