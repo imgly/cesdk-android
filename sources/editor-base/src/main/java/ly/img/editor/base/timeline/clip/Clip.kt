@@ -21,6 +21,12 @@ data class Clip(
     val timeOffset: Duration = 0.seconds,
     val allowsTrimming: Boolean = false,
     val allowsSelecting: Boolean = true,
+    /**
+     * Whether the clip is locked in place.
+     *
+     * Always `false` for now; engine-backed lock support will be implemented in the future.
+     */
+    val isLocked: Boolean = false,
     val trimOffset: Duration = 0.seconds,
     val isMuted: Boolean = false,
     val isLooping: Boolean = false,
@@ -28,6 +34,7 @@ data class Clip(
     val isInBackgroundTrack: Boolean = false,
     val hasLoaded: Boolean = false,
     val hasAnimation: Boolean = false,
+    val isLiveBufferRecording: Boolean = false,
 ) {
     val effectiveFootageDuration: Duration?
         get() = footageDuration?.let {

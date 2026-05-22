@@ -128,6 +128,7 @@
     <string name="ly_img_editor_dialog_resize_button_confirm">Apply</string>
     <string name="ly_img_editor_dialog_resize_button_dismiss">Cancel</string>
     <string name="ly_img_editor_dialog_resize_button_resize_proportionally">Resize proportionally</string>
+    <string name="ly_img_editor_dialog_resize_label_font_unit">Font size unit</string>
     <string name="ly_img_editor_dialog_resize_label_height">Height (%s)</string>
     <string name="ly_img_editor_dialog_resize_label_pixel_scale">Pixel Scale</string>
     <string name="ly_img_editor_dialog_resize_label_resolution">Resolution</string>
@@ -137,6 +138,7 @@
     <string name="ly_img_editor_dialog_resize_unit_option_inch">Inch</string>
     <string name="ly_img_editor_dialog_resize_unit_option_millimeter">Millimeter</string>
     <string name="ly_img_editor_dialog_resize_unit_option_pixel">Pixel</string>
+    <string name="ly_img_editor_dialog_resize_unit_option_point">Point</string>
     <string name="ly_img_editor_dialog_video_min_length_button">OK</string>
     <string name="ly_img_editor_dialog_video_min_length_text">The video must be at least %s long.</string>
     <string name="ly_img_editor_dialog_video_min_length_title">Video too short</string>
@@ -412,9 +414,11 @@
     <string name="ly_img_editor_sheet_format_text_frame_behavior_option_fixed_size">Fixed Size</string>
     <string name="ly_img_editor_sheet_format_text_label_alignment">Alignment</string>
     <string name="ly_img_editor_sheet_format_text_label_font">Font</string>
+    <string name="ly_img_editor_sheet_format_text_label_font_size_pt">Font Size (pt)</string>
     <string name="ly_img_editor_sheet_format_text_label_font_size">Font Size</string>
+    <string name="ly_img_editor_sheet_format_text_label_font_size_px">Font Size (px)</string>
     <string name="ly_img_editor_sheet_format_text_label_frame_behaviour">Frame Behavior</string>
-    <string name="ly_img_editor_sheet_format_text_label_frame_clipping">Frame Clipping</string>
+    <string name="ly_img_editor_sheet_format_text_label_frame_clipping">Clipping</string>
     <string name="ly_img_editor_sheet_format_text_label_letter_case">Letter Case</string>
     <string name="ly_img_editor_sheet_format_text_label_letter_spacing">Letter Spacing</string>
     <string name="ly_img_editor_sheet_format_text_label_line_height">Line Height</string>
@@ -483,6 +487,7 @@
     <string name="ly_img_editor_sheet_voiceover_button_record">Record</string>
     <string name="ly_img_editor_sheet_voiceover_button_unmute">Unmute other Audio</string>
     <string name="ly_img_editor_sheet_volume_title">Volume</string>
+    <string name="ly_img_editor_timeline_add_audio_option_music">Audio</string>
     <string name="ly_img_editor_timeline_add_audio_option_voiceover">Voiceover</string>
     <string name="ly_img_editor_timeline_add_clip_option_camera">Camera</string>
     <string name="ly_img_editor_timeline_add_clip_option_gallery">Gallery</string>

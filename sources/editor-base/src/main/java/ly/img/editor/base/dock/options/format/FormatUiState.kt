@@ -8,6 +8,7 @@ import ly.img.editor.core.ui.library.data.font.FontData
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
 import ly.img.engine.FontStyle
+import ly.img.engine.FontUnit
 import ly.img.engine.FontWeight
 import ly.img.engine.HorizontalAlignment
 import ly.img.engine.ListStyle
@@ -32,6 +33,9 @@ data class FormatUiState(
     val effectiveHorizontalAlignment: HorizontalAlignment,
     val verticalAlignment: VerticalAlignment,
     val fontSize: Float,
+    // The unit in which `fontSize` (read via getFloat("text/fontSize")) is expressed. Driven by the
+    // scene's `fontSizeUnit` and used to label the UI and choose an appropriate slider range.
+    val fontSizeUnit: FontUnit,
     val letterSpacing: Float,
     val paragraphSpacing: Float,
     val lineHeight: Float,
@@ -110,6 +114,7 @@ internal fun createFormatUiState(
             engine.block.getEnum(designBlock, "text/verticalAlignment"),
         ),
         fontSize = engine.block.getFloat(designBlock, "text/fontSize"),
+        fontSizeUnit = engine.scene.getFontSizeUnit(),
         letterSpacing = engine.block.getFloat(designBlock, "text/letterSpacing"),
         lineHeight = engine.block.getFloat(designBlock, "text/lineHeight"),
         sizeModeRes = when (sizeMode) {

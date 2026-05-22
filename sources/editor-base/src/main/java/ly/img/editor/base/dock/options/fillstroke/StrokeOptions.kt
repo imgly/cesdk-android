@@ -69,22 +69,24 @@ fun StrokeOptions(
                 properties = strokeStylePropertiesList,
                 onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokeStyle(it)) },
             )
-            Divider(Modifier.padding(horizontal = 16.dp))
-            PropertyPicker(
-                title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_position),
-                propertyTextRes = uiState.strokePositionRes,
-                enabled = uiState.isStrokePositionEnabled,
-                properties = strokePositionPropertiesList,
-                onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokePosition(it)) },
-            )
-            Divider(Modifier.padding(horizontal = 16.dp))
-            PropertyPicker(
-                title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_join),
-                propertyTextRes = uiState.strokeJoinRes,
-                properties = strokeJoinPropertiesList,
-                enabled = uiState.isStrokeJointEnabled,
-                onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokeJoin(it)) },
-            )
+            if (uiState.showPositionAndJoin) {
+                Divider(Modifier.padding(horizontal = 16.dp))
+                PropertyPicker(
+                    title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_position),
+                    propertyTextRes = uiState.strokePositionRes,
+                    enabled = uiState.isStrokePositionEnabled,
+                    properties = strokePositionPropertiesList,
+                    onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokePosition(it)) },
+                )
+                Divider(Modifier.padding(horizontal = 16.dp))
+                PropertyPicker(
+                    title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_join),
+                    propertyTextRes = uiState.strokeJoinRes,
+                    properties = strokeJoinPropertiesList,
+                    enabled = uiState.isStrokeJointEnabled,
+                    onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokeJoin(it)) },
+                )
+            }
         }
     }
 }

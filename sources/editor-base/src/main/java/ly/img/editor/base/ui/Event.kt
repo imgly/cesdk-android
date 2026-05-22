@@ -7,6 +7,8 @@ import androidx.compose.ui.graphics.Color
 import ly.img.editor.base.dock.options.format.VerticalAlignment
 import ly.img.editor.base.engine.Property
 import ly.img.editor.base.engine.PropertyValue
+import ly.img.editor.base.timeline.clip.Clip
+import ly.img.editor.base.timeline.dragdrop.DropTarget
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.event.EditorEvent
@@ -19,6 +21,7 @@ import ly.img.engine.BlendMode
 import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignUnit
+import ly.img.engine.FontUnit
 import ly.img.engine.HorizontalAlignment
 import ly.img.engine.ListStyle
 import ly.img.engine.TextCase
@@ -263,10 +266,6 @@ interface BlockEvent : Event {
     // endregion
 
     // region Shape Events
-    data class OnChangeLineWidth(
-        val width: Float,
-    ) : BlockEvent
-
     data class OnChangePolygonSides(
         val sides: Float,
     ) : BlockEvent
@@ -392,6 +391,8 @@ interface BlockEvent : Event {
         val unit: DesignUnit,
         val unitValue: Float,
         val applyOnAllPages: Boolean = false,
+        // When non-null, also updates the scene's font-size unit alongside the design unit.
+        val fontUnit: FontUnit? = null,
     ) : BlockEvent
 
     data class OnCropRotate(
@@ -431,10 +432,6 @@ interface BlockEvent : Event {
         val duration: Duration,
     ) : BlockEvent
 
-    data class OnUpdateTimeOffset(
-        val timeOffset: Duration,
-    ) : BlockEvent
-
     data class OnUpdateDuration(
         val duration: Duration,
     ) : BlockEvent
@@ -446,6 +443,22 @@ interface BlockEvent : Event {
     data class OnReorder(
         val block: DesignBlock,
         val newIndex: Int,
+    ) : BlockEvent
+
+    /**
+     * Commit a drag-drop interaction. Dispatched once on release with a valid target.
+     *
+     * @property clip The dragged clip with its **pre-drag** field values (id, type,
+     * timeOffset, duration, etc.).
+     * @property target Where the clip should land
+     * @property siblingOffsets Final preview offsets resolved by the cascade for any
+     * sibling clip that needs to move to make room for the drop. Already includes the
+     * dragged clip's snapped position via [target]. Empty when no siblings shift.
+     */
+    data class OnApplyDrop(
+        val clip: Clip,
+        val target: DropTarget,
+        val siblingOffsets: Map<DesignBlock, Duration>,
     ) : BlockEvent
     // endregion
 }

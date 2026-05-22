@@ -4,13 +4,15 @@ import androidx.compose.runtime.mutableStateListOf
 import ly.img.editor.base.timeline.clip.Clip
 import ly.img.editor.base.timeline.track.Track
 import ly.img.engine.DesignBlock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
 
 class TimelineDataSource {
     private val _tracks = mutableStateListOf<Track>()
     val tracks: List<Track>
-        get() = _tracks.toList()
+        get() = _tracks
 
-    val backgroundTrack = Track()
+    val backgroundTrack = Track.background()
 
     fun addTrack(track: Track) {
         _tracks.add(0, track)
@@ -21,30 +23,38 @@ class TimelineDataSource {
     }
 
     fun findClip(block: DesignBlock): Clip? {
-        val find: ((Clip) -> Boolean) = {
-            it.id == block ||
-                it.trimmableId == block ||
-                it.fillId == block ||
-                it.shapeId == block ||
-                it.blurId == block ||
-                it.effectIds?.contains(block) == true
-        }
-        // Search in tracks
         for (track in _tracks) {
-            val result = track.clips.find(find)
+            val result = track.clips.find { it.matches(block) }
             if (result != null) return result
         }
-        // Finally search in background track
-        return backgroundTrack.clips.find(find)
+        return backgroundTrack.clips.find { it.matches(block) }
     }
 
-    fun allClips(): List<Clip> = backgroundTrack.clips + tracks.flatMap { it.clips }
+    fun allClips(): Sequence<Clip> = backgroundTrack.clips.asSequence() +
+        tracks.asSequence().flatMap { it.clips.asSequence() }
 
-    fun findTrack(clip: Clip): Track = checkNotNull(
-        tracks.find {
-            it.clips.contains(clip)
-        },
-    )
+    fun maxClipEnd(): Duration {
+        var max: Duration = ZERO
+        backgroundTrack.clips.forEach { clip ->
+            val end = clip.timeOffset + clip.duration
+            if (end > max) max = end
+        }
+        tracks.forEach { track ->
+            track.clips.forEach { clip ->
+                val end = clip.timeOffset + clip.duration
+                if (end > max) max = end
+            }
+        }
+        return max
+    }
+
+    /**
+     * Returns the track holding [clip].
+     * @throws IllegalStateException if no track contains the clip.
+     */
+    internal fun findTrack(clip: Clip): Track = tracks.find { track -> track.clips.any { it.id == clip.id } }
+        ?: backgroundTrack.takeIf { track -> track.clips.any { it.id == clip.id } }
+        ?: error("Clip ${clip.id} not found in any track")
 
     fun indexOf(clip: Clip): Int = tracks.indexOfFirst {
         it.clips.contains(clip)
@@ -61,3 +71,10 @@ class TimelineDataSource {
         backgroundTrack.clips.joinToString("\n")
     }"
 }
+
+private fun Clip.matches(block: DesignBlock): Boolean = id == block ||
+    trimmableId == block ||
+    fillId == block ||
+    shapeId == block ||
+    blurId == block ||
+    effectIds?.contains(block) == true

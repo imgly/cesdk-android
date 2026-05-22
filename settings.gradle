@@ -34,7 +34,7 @@ if (file("examples-app").exists()) {
     include ':examples-app'
 }
 new File(rootDir, "sources").listFiles().each {
-    if (it.isDirectory() && it.name.startsWith("editor") || it.name.startsWith("camera")) {
+    if (it.isDirectory() && it.name.startsWith("editor") || it.name.startsWith("camera") || it.name.startsWith("plugin")) {
         include ":${it.name}"
         project(":${it.name}").projectDir = it
     }

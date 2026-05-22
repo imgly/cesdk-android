@@ -11,7 +11,6 @@ import ly.img.editor.base.ui.BlockEvent.OnChangeHorizontalAlignment
 import ly.img.editor.base.ui.BlockEvent.OnChangeLetterCasing
 import ly.img.editor.base.ui.BlockEvent.OnChangeLetterSpacing
 import ly.img.editor.base.ui.BlockEvent.OnChangeLineHeight
-import ly.img.editor.base.ui.BlockEvent.OnChangeLineWidth
 import ly.img.editor.base.ui.BlockEvent.OnChangeListStyle
 import ly.img.editor.base.ui.BlockEvent.OnChangeParagraphSpacing
 import ly.img.editor.base.ui.BlockEvent.OnChangeSizeMode
@@ -82,16 +81,6 @@ fun EventsHandler.textBlockEvents(
     fun onStrikethroughToggle() {
         engine.block.toggleTextDecorationStrikethrough(block = block)
         engine.editor.addUndoStep()
-    }
-
-    register<OnChangeLineWidth> {
-        engine.block.setWidth(block, engine.block.getFrameWidth(block))
-        engine.block.setHeight(block, it.width)
-    }
-
-    register<OnChangeLineWidth> {
-        engine.block.setWidth(block, engine.block.getFrameWidth(block))
-        engine.block.setHeight(block, it.width)
     }
 
     register<OnBoldToggle> {

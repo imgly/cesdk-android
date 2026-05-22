@@ -13,6 +13,8 @@ import ly.img.editor.base.engine.getPlaybackControlBlock
 import ly.img.editor.base.engine.isParentBackgroundTrack
 import ly.img.editor.base.timeline.clip.Clip
 import ly.img.editor.base.timeline.clip.ClipType
+import ly.img.editor.base.timeline.dragdrop.DragDropState
+import ly.img.editor.base.timeline.dragdrop.DragDropStore
 import ly.img.editor.base.timeline.thumbnail.ThumbnailsManager
 import ly.img.editor.base.timeline.track.Track
 import ly.img.editor.base.timeline.view.TimelineView
@@ -34,7 +36,6 @@ import ly.img.engine.Engine
 import ly.img.engine.EngineException
 import ly.img.engine.FillType
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.seconds
 
 private const val VOICEOVER_KIND = "voiceover"
@@ -70,6 +71,10 @@ class TimelineState(
     val playerState = PlayerState(engine)
     val dataSource = TimelineDataSource()
     val zoomState = TimelineZoomState()
+    val dragDrop = DragDropStore(
+        foregroundTracks = { dataSource.tracks },
+        findClip = { dataSource.findClip(it) },
+    )
     private val thumbnailsManager = ThumbnailsManager(engine, coroutineScope)
 
     private val page = engine.getCurrentPage()
@@ -79,30 +84,23 @@ class TimelineState(
     fun getThumbnailProvider(designBlock: DesignBlock) = thumbnailsManager.getProvider(designBlock)
 
     fun refresh(events: List<DesignBlockEvent>) {
-        cleanUpEmptyTracks()
+        if (consumeSuppressedRefresh()) return
 
-        val blocks = engine.block.getChildren(page)
-
-        // If the block order has changed OR a block was destroyed or created, we refresh the entire timeline
-        if (blocks != pageChildren ||
-            events.find {
-                it.type == DesignBlockEvent.Type.CREATED || it.type == DesignBlockEvent.Type.DESTROYED
-            } != null
-        ) {
-            pageChildren = blocks
-            refresh()
-        } else {
-            // filter blocks that were updated into a set and then refresh them
-            events.mapNotNull { event ->
-                event.block.takeIf { event.type == DesignBlockEvent.Type.UPDATED }
-            }.toSet().forEach { block ->
-                dataSource.findClip(block)?.let { refresh(it.id, it) }
-            }
-        }
+        applyEngineEvents(events)
 
         updateSelection(engine.block.findAllSelected().firstOrNull())
         updateDuration()
         playerState.refresh()
+        clearOverridesIfIdle()
+    }
+
+    /**
+     * Synchronous full rebuild of [dataSource] from engine state, in the same call stack
+     * as the engine writes that just landed. Lighter than [onHistoryUpdated]: skips [refreshThumbnails],
+     * because drop commits change clip position but not content or duration, so existing thumbnails stay valid.
+     */
+    fun forceRefresh() {
+        rebuildFromEngine()
     }
 
     fun refreshThumbnails() {
@@ -115,12 +113,7 @@ class TimelineState(
     fun onHistoryUpdated() {
         // Rebuild clips from engine state first. Voiceover recording mutates a draft audio block
         // in place, so a provider-only refresh can otherwise keep stale draft metadata.
-        cleanUpEmptyTracks()
-        pageChildren = engine.block.getChildren(page)
-        refresh()
-        updateSelection(engine.block.findAllSelected().firstOrNull())
-        updateDuration()
-        playerState.refresh()
+        rebuildFromEngine()
         refreshThumbnails()
     }
 
@@ -145,6 +138,68 @@ class TimelineState(
         playerState.setPlaybackTime(clampedTime)
     }
 
+    /**
+     * Bail out of the async rebuild when [DragDropStore.markSuppressNextEngineEventRefresh]
+     * has armed the suppression flag. [updateDuration] still runs because the same async
+     * batch may carry an unrelated duration update that would otherwise be dropped.
+     *
+     * @return `true` when the flag was consumed and the caller should return.
+     */
+    private fun consumeSuppressedRefresh(): Boolean {
+        if (!dragDrop.consumeSuppressNextEngineEventRefresh()) return false
+        updateDuration()
+        clearOverridesIfIdle()
+        return true
+    }
+
+    /**
+     * Reconcile [dataSource] with engine state for the event batch. Full rebuild if
+     * block order changed or any block was created/destroyed; otherwise targeted
+     * per-clip updates for UPDATED events.
+     */
+    private fun applyEngineEvents(events: List<DesignBlockEvent>) {
+        cleanUpEmptyTracks()
+
+        val blocks = engine.block.getChildren(page)
+
+        if (blocks != pageChildren ||
+            events.find {
+                it.type == DesignBlockEvent.Type.CREATED || it.type == DesignBlockEvent.Type.DESTROYED
+            } != null
+        ) {
+            pageChildren = blocks
+            refresh()
+        } else {
+            // dedup updated blocks in a single pass — no intermediate list
+            val processed = HashSet<DesignBlock>()
+            events.forEach { event ->
+                if (event.type == DesignBlockEvent.Type.UPDATED && processed.add(event.block)) {
+                    dataSource.findClip(event.block)?.let { refresh(it.id, it) }
+                }
+            }
+        }
+    }
+
+    /**
+     * Clears drag-drop preview overrides. Stale once [dataSource] reflects committed engine state.
+     * Skipped while dragging — a mid-drag refresh would otherwise wipe in-flight preview.
+     */
+    private fun clearOverridesIfIdle() {
+        if (dragDrop.phase !is DragDropState.Dragging) {
+            dragDrop.overrides.clear()
+        }
+    }
+
+    /** Rebuild [dataSource] from engine state and refresh selection / duration / player. */
+    private fun rebuildFromEngine() {
+        cleanUpEmptyTracks()
+        pageChildren = engine.block.getChildren(page)
+        refresh()
+        updateSelection(engine.block.findAllSelected().firstOrNull())
+        updateDuration()
+        playerState.refresh()
+    }
+
     private fun updateSelection(designBlock: DesignBlock?) {
         val selection = if (designBlock == null) {
             null
@@ -162,10 +217,28 @@ class TimelineState(
     private fun refresh() {
         dataSource.reset()
         pageChildren.forEach { refresh(it) }
+        packBackgroundOffsets()
         thumbnailsManager.destroyProvidersExcept(
             dataSource.allClips()
                 .mapTo(linkedSetOf()) { clip -> clip.id },
         )
+    }
+
+    /**
+     * Pack BG clip offsets to the running cumulative duration. Engine `Track::layout()`
+     * packs lazily — not inside `insertChild` — so a sync rebuild after a BG-target drop
+     * reads stale offsets and the dragged clip flashes at its pre-drop position.
+     */
+    private fun packBackgroundOffsets() {
+        val bgClips = dataSource.backgroundTrack.clips
+        var cursor: Duration = Duration.ZERO
+        for (i in bgClips.indices) {
+            val clip = bgClips[i]
+            if (clip.timeOffset != cursor) {
+                bgClips[i] = clip.copy(timeOffset = cursor)
+            }
+            cursor += clip.duration
+        }
     }
 
     private fun refresh(
@@ -187,7 +260,7 @@ class TimelineState(
                     refresh(child, dataSource.findClip(child))
                 }
             } else {
-                val track = Track()
+                val track = Track.engine(engineTrackId = designBlock)
                 addTrackForChildren(children, track)
                 children.forEach { child ->
                     refresh(child, dataSource.findClip(child), track)
@@ -361,6 +434,7 @@ class TimelineState(
             hasLoaded = hasLoaded,
             isLooping = isLooping,
             hasAnimation = anyAnimationBlock != null,
+            isLiveBufferRecording = isLiveBufferAudio,
         )
 
         // Find which track the clip will go to
@@ -371,7 +445,7 @@ class TimelineState(
         } else if (targetTrack != null) {
             targetTrack
         } else {
-            Track()
+            Track.standalone(clipBlock = designBlock)
         }
 
         updateClip(track, clip, existingClip)
@@ -406,8 +480,16 @@ class TimelineState(
         existingClip: Clip?,
     ) {
         if (existingClip != null) {
-            val index = track.clips.indexOf(existingClip)
-            track.clips[index] = newClip
+            val oldTrack = dataSource.findTrack(existingClip)
+            if (oldTrack !== track) {
+                // Engine reparented the clip across dataSource tracks (e.g., "Move as
+                // clip" out of a multi-clip foreground engine track into the background).
+                oldTrack.clips.remove(existingClip)
+                insertClipAtEngineIndex(track, newClip)
+            } else {
+                val index = track.clips.indexOf(existingClip)
+                track.clips[index] = newClip
+            }
             val audioResourceChanged = newClip.clipType == ClipType.Audio &&
                 existingClip.hasAudioResource != newClip.hasAudioResource
             val audioLoadStateChanged = newClip.clipType == ClipType.Audio &&
@@ -428,6 +510,15 @@ class TimelineState(
         }
     }
 
+    private fun insertClipAtEngineIndex(
+        track: Track,
+        clip: Clip,
+    ) {
+        val parent = checkNotNull(engine.block.getParent(clip.id))
+        val engineIndex = engine.block.getChildren(parent).indexOf(clip.id)
+        track.clips.add(engineIndex.coerceAtMost(track.clips.size), clip)
+    }
+
     private fun cleanUpEmptyTracks() {
         engine.block.getChildren(page).forEach { block ->
             if (engine.block.isValid(block)) {
@@ -441,9 +532,7 @@ class TimelineState(
 
     private fun updateDuration() {
         val pageDuration = engine.block.getDuration(page).seconds
-        val clipsDuration = dataSource.allClips()
-            .maxOfOrNull { clip -> clip.timeOffset + clip.duration }
-            ?: ZERO
+        val clipsDuration = dataSource.maxClipEnd()
         val hasBackgroundTrack = pageChildren.any { block ->
             engine.block.isValid(block) &&
                 DesignBlockType.get(engine.block.getType(block)) == DesignBlockType.Track &&

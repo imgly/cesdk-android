@@ -17,9 +17,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import kotlinx.coroutines.launch
+import ly.img.editor.base.timeline.dragdrop.DragDropState
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.ui.BlockEvent
@@ -41,6 +44,14 @@ internal fun TimelineBaseView(
             .fillMaxWidth()
             .padding(top = TimelineConfiguration.clipPadding)
             .height(timelineState.timelineViewHeight)
+            // Publish the viewport's window space frame so drag auto-scroll can
+            // compute pointer distance from the leading/trailing edges.
+            .onGloballyPositioned { coordinates ->
+                val rect = coordinates.boundsInWindow()
+                if (timelineState.dragDrop.viewportFrame != rect) {
+                    timelineState.dragDrop.viewportFrame = rect
+                }
+            }
             .pointerInput(Unit) {
                 detectZoomGestures(
                     onZoom = { zoom ->
@@ -78,7 +89,7 @@ internal fun TimelineBaseView(
         // Set playback time corresponding to scroll position
         val onePxInDp = 1f.toDp()
         LaunchedEffect(scrollState.value) {
-            if (isScrollInProgress) {
+            if (isScrollInProgress && timelineState.dragDrop.phase !is DragDropState.Dragging) {
                 val time = zoomState.toSeconds(maxOf(0, scrollState.value) * onePxInDp).coerceAtMost(timelineState.totalDuration)
                 playerState.setPlaybackTime(time)
             }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -25,7 +26,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import ly.img.editor.base.ui.Event
 import ly.img.editor.core.EditorContext
 import ly.img.editor.core.LocalEditorScope
@@ -101,7 +101,7 @@ internal fun VoiceoverOptionsSheet(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .height(voiceOverRecordSheetHeight),
+            .navigationBarsPadding(),
     ) {
         val recordButtonWidth = if (controller.isRecording) {
             voiceOverRecordButtonRecordingWidth
@@ -123,6 +123,10 @@ internal fun VoiceoverOptionsSheet(
 
         Row(
             modifier = Modifier
+                .padding(
+                    top = 8.dp,
+                    bottom = 16.dp,
+                )
                 .fillMaxWidth()
                 .height(voiceOverRecordSheetControlsHeight)
                 .padding(

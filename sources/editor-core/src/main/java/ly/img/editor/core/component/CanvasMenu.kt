@@ -107,6 +107,16 @@ data class CanvasMenu<Scope : CanvasMenu.Scope>(
             editorContext.engine.block.supportsPlaybackTime(page) && editorContext.engine.block.isPlaying(page)
         }
 
+        private val _canSelectionBringForward by lazy {
+            val selection = selection ?: return@lazy false
+            editorContext.engine.canBringForward(selection.designBlock)
+        }
+
+        private val _canSelectionSendBackward by lazy {
+            val selection = selection ?: return@lazy false
+            editorContext.engine.canSendBackward(selection.designBlock)
+        }
+
         private val _canSelectionMove by lazy {
             val selection = selection ?: return@lazy false
             editorContext.engine.block.isAllowedByScope(selection.designBlock, "layer/move") &&
@@ -116,7 +126,7 @@ data class CanvasMenu<Scope : CanvasMenu.Scope>(
                             editorContext.engine.block.isPageDurationSource(it)
                     } ?: false
                 }.not() &&
-                _selectionSiblings.size > 1
+                (_canSelectionBringForward || _canSelectionSendBackward)
         }
 
         /**
@@ -143,6 +153,18 @@ data class CanvasMenu<Scope : CanvasMenu.Scope>(
          */
         val EditorContext.canSelectionMove: Boolean
             get() = this@Scope._canSelectionMove
+
+        /**
+         * Returns true if the selection can be brought forward in the z-order.
+         */
+        val EditorContext.canSelectionBringForward: Boolean
+            get() = this@Scope._canSelectionBringForward
+
+        /**
+         * Returns true if the selection can be sent backward in the z-order.
+         */
+        val EditorContext.canSelectionSendBackward: Boolean
+            get() = this@Scope._canSelectionSendBackward
 
         /**
          * Returns the list of siblings of the design block in [selection] that can be used to reorder.
@@ -196,6 +218,22 @@ data class CanvasMenu<Scope : CanvasMenu.Scope>(
         val EditorContext.canSelectionMove: Boolean
             get() = (parentScope as Scope).run {
                 editorContext.canSelectionMove
+            }
+
+        /**
+         * Returns true if the selection can be brought forward in the z-order.
+         */
+        val EditorContext.canSelectionBringForward: Boolean
+            get() = (parentScope as Scope).run {
+                editorContext.canSelectionBringForward
+            }
+
+        /**
+         * Returns true if the selection can be sent backward in the z-order.
+         */
+        val EditorContext.canSelectionSendBackward: Boolean
+            get() = (parentScope as Scope).run {
+                editorContext.canSelectionSendBackward
             }
 
         /**
@@ -477,26 +515,50 @@ fun CanvasMenu.Companion.rememberDefaultScope(
             .flatMapLatest {
                 val camera = editorContext.engine.block.findByType(DesignBlockType.Camera).first()
                 val selectedDesignBlock = selectedDesignBlock() ?: return@flatMapLatest flowOf(null)
-                val parentDesignBlock = editorContext.engine.block.getParent(selectedDesignBlock)
-                val observableDesignBlocks = parentDesignBlock
-                    ?.let { listOf(it, selectedDesignBlock) } ?: listOf(selectedDesignBlock)
-                merge(
-                    editorContext.engine.event.subscribe(observableDesignBlocks),
-                    editorContext.engine.event.subscribe(listOf(camera)),
-                    editorContext.engine.editor.onStateChanged()
-                        .map { editorContext.engine.editor.getEditMode() }
-                        .distinctUntilChanged(),
-                    editorContext.state
-                        .map { it.isTouchActive to (it.activeSheet != null) }
-                        .distinctUntilChanged(),
-                )
-                    .filter {
-                        // When the design block is unselected/deleted, this lambda is entered before onSelectionChanged is emitted.
-                        // We need to make sure that this flow does not emit previous selection in such scenario.
-                        selectedDesignBlock == selectedDesignBlock() && editorContext.engine.block.isValid(selectedDesignBlock)
+
+                // Re-subscribe whenever the selected block's parent changes. With multi-clip tracks,
+                // the parent of a selection can change without the selection changing.
+                editorContext.engine.event
+                    .subscribe(listOf(selectedDesignBlock))
+                    .map {
+                        if (editorContext.engine.block.isValid(selectedDesignBlock)) {
+                            editorContext.engine.block.getParent(selectedDesignBlock)
+                        } else {
+                            null
+                        }
                     }
-                    .map { Selection.getDefault(editorContext, selectedDesignBlock) }
-                    .onStart { emit(Selection.getDefault(editorContext, selectedDesignBlock)) }
+                    .onStart {
+                        emit(
+                            if (editorContext.engine.block.isValid(selectedDesignBlock)) {
+                                editorContext.engine.block.getParent(selectedDesignBlock)
+                            } else {
+                                null
+                            },
+                        )
+                    }
+                    .distinctUntilChanged()
+                    .flatMapLatest { parentDesignBlock ->
+                        val observableDesignBlocks = parentDesignBlock
+                            ?.let { listOf(it, selectedDesignBlock) } ?: listOf(selectedDesignBlock)
+                        merge(
+                            editorContext.engine.event.subscribe(observableDesignBlocks),
+                            editorContext.engine.event.subscribe(listOf(camera)),
+                            editorContext.engine.editor.onStateChanged()
+                                .map { editorContext.engine.editor.getEditMode() }
+                                .distinctUntilChanged(),
+                            editorContext.state
+                                .map { it.isTouchActive to (it.activeSheet != null) }
+                                .distinctUntilChanged(),
+                        )
+                            .filter {
+                                // When the design block is unselected/deleted, this lambda is entered before
+                                // onSelectionChanged is emitted. Guard against emitting Selection for a stale block.
+                                selectedDesignBlock == selectedDesignBlock() &&
+                                    editorContext.engine.block.isValid(selectedDesignBlock)
+                            }
+                            .map { Selection.getDefault(editorContext, selectedDesignBlock) }
+                            .onStart { emit(Selection.getDefault(editorContext, selectedDesignBlock)) }
+                    }
             }
     }.collectAsState(initial = initial)
 
@@ -752,3 +814,48 @@ fun CanvasMenu.Button.remember(builder: CanvasMenu.ButtonBuilder.() -> Unit = {}
 @Composable
 fun CanvasMenu.Divider.remember(builder: CanvasMenu.DividerBuilder.() -> Unit = {}): Divider<CanvasMenu.ItemScope> =
     Divider.remember({ CanvasMenu.DividerBuilder() }, builder)
+
+private fun Engine.canBringForward(designBlock: DesignBlock): Boolean {
+    val parent = block.getParent(designBlock) ?: return false
+    if (block.getType(parent) == DesignBlockType.Track.key) {
+        val trackChildren = block.getChildren(parent)
+        if (trackChildren.size > 1) return true
+        return canBringForward(parent)
+    }
+    val children = reorderableChildren(parent, designBlock)
+    return children.last() != designBlock
+}
+
+private fun Engine.canSendBackward(designBlock: DesignBlock): Boolean {
+    val parent = block.getParent(designBlock) ?: return false
+    if (block.getType(parent) == DesignBlockType.Track.key) {
+        val trackChildren = block.getChildren(parent)
+        if (trackChildren.size > 1) return true
+        return canSendBackward(parent)
+    }
+    val children = reorderableChildren(parent, designBlock)
+    return children.first() != designBlock
+}
+
+private fun Engine.reorderableChildren(
+    parent: DesignBlock,
+    child: DesignBlock,
+): List<DesignBlock> {
+    val childIsAlwaysOnTop = block.isAlwaysOnTop(child)
+    val childIsAlwaysOnBottom = block.isAlwaysOnBottom(child)
+    val childContainsAudio = containsAudio(child)
+
+    return block.getChildren(parent).filter { childToCompare ->
+        val matchingIsAlwaysOnTop = childIsAlwaysOnTop == block.isAlwaysOnTop(childToCompare)
+        val matchingIsAlwaysOnBottom = childIsAlwaysOnBottom == block.isAlwaysOnBottom(childToCompare)
+        val matchingType = containsAudio(childToCompare) == childContainsAudio
+        matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom && matchingType
+    }
+}
+
+private fun Engine.containsAudio(designBlock: DesignBlock): Boolean {
+    val type = block.getType(designBlock)
+    if (type == DesignBlockType.Audio.key) return true
+    if (type != DesignBlockType.Track.key) return false
+    return block.getChildren(designBlock).any { block.getType(it) == DesignBlockType.Audio.key }
+}

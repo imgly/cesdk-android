@@ -16,6 +16,8 @@ data class StrokeUiState(
     @StringRes val strokeStyleRes: Int,
     val isStrokePositionEnabled: Boolean,
     val isStrokeJointEnabled: Boolean = true,
+    // Position and Join pickers don't apply to a 1-D primitive.
+    val showPositionAndJoin: Boolean,
     @StringRes val strokePositionRes: Int,
     @StringRes val strokeJoinRes: Int,
 )
@@ -27,6 +29,7 @@ internal fun createStrokeUiState(
 ): StrokeUiState {
     val designBlock = block.designBlock
     val isEnabled = engine.block.isStrokeEnabled(designBlock)
+    val isLineOrigin = engine.block.isLineOrigin(designBlock)
     return StrokeUiState(
         colorPalette = colorPalette,
         isStrokeEnabled = isEnabled,
@@ -37,6 +40,7 @@ internal fun createStrokeUiState(
         strokeStyleRes = engine.block.getStrokeStyle(designBlock).getText(),
         isStrokePositionEnabled = block.type != BlockType.Text && block.type != BlockType.Page,
         isStrokeJointEnabled = block.type != BlockType.Page,
+        showPositionAndJoin = !isLineOrigin,
         strokePositionRes = engine.block.getStrokePosition(designBlock).getText(),
         strokeJoinRes = engine.block.getStrokeCornerGeometry(designBlock).getText(),
     )

@@ -133,6 +133,7 @@ fun EventsHandler.cropEvents(
             engine.block.setFloat(scene, "scene/pageDimensions/width", width)
             engine.block.setFloat(scene, "scene/pageDimensions/height", height)
             engine.scene.setDesignUnit(it.unit)
+            it.fontUnit?.let { fontUnit -> engine.scene.setFontSizeUnit(fontUnit) }
             when (it.unit) {
                 DesignUnit.INCH, DesignUnit.MILLIMETER -> {
                     engine.block.setFloat(scene, "scene/dpi", it.unitValue)

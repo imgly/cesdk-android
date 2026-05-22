@@ -21,7 +21,7 @@ import ly.img.editor.core.ui.iconpack.FlashOff
 import ly.img.editor.core.ui.iconpack.FlashOn
 import ly.img.editor.core.ui.iconpack.FlipCamera
 import ly.img.editor.core.ui.iconpack.IconPack
-import ly.img.editor.core.ui.iconpack.Switchsplitscreen
+import ly.img.editor.core.ui.iconpack.SwapHoriz
 
 @Composable
 internal fun CameraControls(
@@ -62,7 +62,7 @@ internal fun CameraControls(
                         onClick = swapLayoutPositions,
                     ) {
                         Icon(
-                            IconPack.Switchsplitscreen,
+                            IconPack.SwapHoriz,
                             contentDescription = stringResource(R.string.ly_img_camera_button_swap_positions),
                         )
                     }

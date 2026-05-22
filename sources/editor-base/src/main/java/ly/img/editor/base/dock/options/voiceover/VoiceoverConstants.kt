@@ -17,7 +17,6 @@ internal const val ENGINE_WAVEFORM_UPDATE_INTERVAL_MS = 300L
 internal const val ENGINE_BUFFER_CAPACITY_GROWTH_BYTES = SAMPLE_RATE * VOICEOVER_WAV_BLOCK_ALIGN * 2
 
 internal const val VOICE_OVER_RECORD_BUTTON_ANIMATION_DURATION_MILLIS = 220
-internal val voiceOverRecordSheetHeight = 100.dp
 internal val voiceOverRecordSheetTopInset = 8.dp
 internal val voiceOverRecordSheetFigmaWidth = 412.dp
 internal val voiceOverRecordSheetHorizontalPadding = 32.dp

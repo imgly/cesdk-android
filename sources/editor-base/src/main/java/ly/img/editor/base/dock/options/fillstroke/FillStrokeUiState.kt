@@ -49,8 +49,16 @@ data class FillStrokeUiState(
                 fillType == FillType.LinearGradient ||
                 fillType == FillType.RadialGradient ||
                 fillType == FillType.ConicalGradient
-            val showFill = hasSolidOrGradientFill && engine.block.isAllowedByScope(designBlock, Scope.FillChange)
+            // Line-origin graphics surface their colour through the stroke section,
+            // but only hide the fill when stroke is actually available — otherwise
+            // the user would lose every colour control in configurations without a
+            // stroke section.
+            val isLineOrigin = engine.block.isLineOrigin(designBlock)
             val showStroke = engine.block.supportsStroke(designBlock) && engine.block.isAllowedByScope(designBlock, Scope.StrokeChange)
+            val hideFillForLine = isLineOrigin && showStroke
+            val showFill = hasSolidOrGradientFill &&
+                !hideFillForLine &&
+                engine.block.isAllowedByScope(designBlock, Scope.FillChange)
 
             val palette = colorPalette.take(6)
             return FillStrokeUiState(

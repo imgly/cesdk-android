@@ -46,6 +46,7 @@ import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.LockClose
 import ly.img.editor.core.ui.iconpack.LockOpen
 import ly.img.engine.DesignUnit
+import ly.img.engine.FontUnit
 import kotlin.math.roundToInt
 
 private fun Float.cleanString(): String = if (this % 1f == 0f) this.toInt().toString() else this.toString()
@@ -76,6 +77,8 @@ fun ResizeDialog(
     var keepAspect by remember { mutableStateOf(uiState.width / uiState.height) }
     var isUnitDropdownOpen by remember { mutableStateOf(false) }
     var isUnitValueDropdownOpen by remember { mutableStateOf(false) }
+    var fontUnit by remember { mutableStateOf(uiState.fontUnit) }
+    var isFontUnitDropdownOpen by remember { mutableStateOf(false) }
 
     fun onApply() {
         val newUnitValue = unitValue
@@ -86,6 +89,7 @@ fun ResizeDialog(
                 unit = unit.native,
                 unitValue = newUnitValue,
                 applyOnAllPages = applyOnAllPages,
+                fontUnit = fontUnit,
             ),
         )
         onClose()
@@ -298,6 +302,55 @@ fun ResizeDialog(
                             },
                         )
                     }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = stringResource(
+                    when (fontUnit) {
+                        FontUnit.PIXEL -> R.string.ly_img_editor_dialog_resize_unit_option_pixel
+                        FontUnit.POINT -> R.string.ly_img_editor_dialog_resize_unit_option_point
+                    },
+                ),
+                onValueChange = {},
+                singleLine = true,
+                label = {
+                    Text(stringResource(R.string.ly_img_editor_dialog_resize_label_font_unit))
+                },
+                readOnly = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusable(false),
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable { isFontUnitDropdownOpen = true },
+            )
+            DropdownMenu(
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(MaterialTheme.colorScheme.surface),
+                expanded = isFontUnitDropdownOpen,
+                onDismissRequest = { isFontUnitDropdownOpen = false },
+            ) {
+                FontUnit.values().forEach { mode ->
+                    PropertyItem(
+                        checked = fontUnit == mode,
+                        textRes = when (mode) {
+                            FontUnit.PIXEL -> R.string.ly_img_editor_dialog_resize_unit_option_pixel
+                            FontUnit.POINT -> R.string.ly_img_editor_dialog_resize_unit_option_point
+                        },
+                        onClick = {
+                            fontUnit = mode
+                            isFontUnitDropdownOpen = false
+                        },
+                    )
                 }
             }
         }

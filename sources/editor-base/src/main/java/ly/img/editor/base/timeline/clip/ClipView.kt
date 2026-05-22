@@ -1,10 +1,7 @@
 package ly.img.editor.base.timeline.clip
 
+import android.os.Build
 import android.view.HapticFeedbackConstants
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -14,51 +11,49 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.LocalPinnableContainer
+import androidx.compose.ui.layout.PinnableContainer
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.map
 import ly.img.editor.base.dock.options.voiceover.isVoiceOverRecordingInProgress
 import ly.img.editor.base.timeline.clip.trim.ClipDragType
-import ly.img.editor.base.timeline.clip.trim.ClipSelectionView
-import ly.img.editor.base.timeline.clip.trim.ClipTrimHandleIconView
+import ly.img.editor.base.timeline.clip.trim.ClipTrimHandlesView
 import ly.img.editor.base.timeline.clip.trim.ClipTrimOutlineView
-import ly.img.editor.base.timeline.clip.trim.IconStyle
+import ly.img.editor.base.timeline.dragdrop.DragDropState
+import ly.img.editor.base.timeline.dragdrop.DropTarget
+import ly.img.editor.base.timeline.dragdrop.context
+import ly.img.editor.base.timeline.state.LiveTrimState
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.base.ui.Event
 import ly.img.editor.core.LocalEditorScope
 import ly.img.editor.core.theme.LocalExtendedColorScheme
-import ly.img.editor.core.ui.utils.almostEquals
 import ly.img.editor.core.ui.utils.formatForClip
 import ly.img.editor.core.ui.utils.toDp
-import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration
 
 @Composable
 fun ClipView(
@@ -66,6 +61,8 @@ fun ClipView(
     clip: Clip,
     timelineState: TimelineState,
     scrollContentOffset: () -> Int = { 0 },
+    liveOffsetOverride: State<Duration?>,
+    onTrimChange: (LiveTrimState) -> Unit,
     onEvent: (Event) -> Unit,
 ) {
     val editorContext = with(LocalEditorScope.current) { editorContext }
@@ -88,28 +85,74 @@ fun ClipView(
         }
     }
 
-    Box(modifier = modifier.zIndex(if (showSelectionUi) 1f else 0f)) {
+    val isBeingDragged by remember(clip.id) {
+        derivedStateOf { timelineState.dragDrop.draggedClipId == clip.id }
+    }
+
+    // Pin the enclosing LazyColumn item slot for the duration of a drag.
+    // Otherwise vertical auto-scroll could push the source track out of the
+    // composition window mid-gesture, disposing this ClipView and silently
+    // killing its pointerInput coroutine — neither onDragEnd nor onDragCancel
+    // would fire and dragDrop.phase would stay stuck in Dragging.
+    val pinnableContainer = LocalPinnableContainer.current
+    DisposableEffect(isBeingDragged, pinnableContainer) {
+        val handle: PinnableContainer.PinnedHandle? = if (isBeingDragged) {
+            pinnableContainer?.pin()
+        } else {
+            null
+        }
+        onDispose { handle?.release() }
+    }
+
+    // Defensive cleanup if this ClipView is the active drag subject and gets
+    // disposed for reasons unrelated to LazyColumn culling (e.g. engine
+    // removes the clip mid-drag via undo/redo). Without this, dragDrop.phase
+    // stays in `Dragging` forever and the floating overlay remains visible
+    // after the user lifts their finger.
+    DisposableEffect(Unit) {
+        onDispose {
+            if (timelineState.dragDrop.phase.context?.clipId == clip.id) {
+                timelineState.dragDrop.overrides.clear()
+                timelineState.dragDrop.phase = DragDropState.Idle
+            }
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .zIndex(if (showSelectionUi) 1f else 0f)
+            .alpha(if (isBeingDragged) 0f else 1f),
+    ) {
         val zoomState = timelineState.zoomState
 
-        var offset by remember(clip.timeOffset, zoomState.zoomLevel, clip.duration) {
-            mutableStateOf(zoomState.toPx(clip.timeOffset))
-        }
-
-        var width by remember(clip.duration, zoomState.zoomLevel) {
+        // These three states are hoisted so they can be shared between the
+        // trim handles and the move-drag helpers below; both paths need
+        // write access.
+        val widthState = remember(clip.duration, zoomState.zoomLevel) {
             mutableStateOf(zoomState.toPx(clip.duration))
         }
+        val width by widthState
+
+        val offsetState = remember(clip.timeOffset, zoomState.zoomLevel, clip.duration) {
+            mutableStateOf(zoomState.toPx(clip.timeOffset))
+        }
+        var offset by offsetState
+
+        val clipDragTypeState: MutableState<ClipDragType?> = remember { mutableStateOf(null) }
+        var clipDragType by clipDragTypeState
 
         val overlayDuration = timelineState.playerState.maxPlaybackDuration
             ?.takeIf { it < timelineState.totalDuration }
             ?: timelineState.totalDuration
-        val overlayDurationWidth by remember(overlayDuration, zoomState.zoomLevel) {
-            mutableStateOf(zoomState.toPx(overlayDuration))
-        }
+        val overlayDurationWidth = zoomState.toPx(overlayDuration)
 
         BoxWithConstraints(
             Modifier
                 .offset {
-                    IntOffset(x = offset.roundToInt(), y = 0)
+                    val overrideOffset = liveOffsetOverride.value
+                        ?.takeIf { clipDragType == null }
+                        ?.let { zoomState.toPx(it) }
+                    IntOffset(x = (overrideOffset ?: offset).roundToInt(), y = 0)
                 }
                 .height(TimelineConfiguration.clipHeight)
                 .width(width.toDp())
@@ -123,7 +166,6 @@ fun ClipView(
                     }
                 },
         ) {
-            val density = LocalDensity.current
             var clipDurationText by remember(showSelectionUi, clip.duration) {
                 mutableStateOf(
                     if (showSelectionUi) {
@@ -134,29 +176,7 @@ fun ClipView(
                 )
             }
 
-            var clipDragType: ClipDragType? by remember { mutableStateOf(null) }
-            var labelWidth by remember { mutableStateOf(0.dp) }
-
-            val pinOffsetDp by remember(clip.timeOffset, clip.duration, zoomState.zoomLevel) {
-                derivedStateOf {
-                    val clipLeftCutoff = (scrollContentOffset() - offset).coerceAtLeast(0f)
-                    val labelWidthPx = with(density) { labelWidth.toPx() }
-                    val rightEdgePadding = with(density) { TimelineConfiguration.clipPadding.toPx() }
-                    val maxPinOffset = (width - labelWidthPx - rightEdgePadding).coerceAtLeast(0f)
-                    with(density) { minOf(clipLeftCutoff, maxPinOffset).toDp() }
-                }
-            }
-
             val draggingColor = LocalExtendedColorScheme.current.yellow.color
-            val selectedColor = MaterialTheme.colorScheme.primary
-            val draggingIconColor = LocalExtendedColorScheme.current.yellow.onColor
-            val selectedIconColor = MaterialTheme.colorScheme.onPrimary
-            val selectionColor by remember(clipDragType) {
-                mutableStateOf(if (clipDragType == null) selectedColor else draggingColor)
-            }
-            val handleIconColor by remember(clipDragType) {
-                mutableStateOf(if (clipDragType == null) selectedIconColor else draggingIconColor)
-            }
 
             ClipTrimOutlineView(
                 clip = clip,
@@ -167,287 +187,173 @@ fun ClipView(
                 height = maxHeight,
             )
 
-            ClipBackgroundView(
-                clip = clip,
-                timelineState = timelineState,
-                inTimeline = true,
-                labelWidth = labelWidth,
-                clipWidth = maxWidth,
-                clipDragType = clipDragType,
-                pinOffset = pinOffsetDp,
-            )
+            // SubcomposeLayout coordinates the label, background, and right-edge overlay in one pass
+            // so the still-thumbnail layout can pad past the label width without a state round-trip via
+            // `onGloballyPositioned`. The label is composed and measured first, then its width is fed into the background.
+            SubcomposeLayout(modifier = Modifier.fillMaxSize()) { constraints ->
+                val labelPlaceable = subcompose(ClipContentSlot.Label) {
+                    ClipLabelView(
+                        modifier = Modifier,
+                        clip = clip,
+                        duration = clipDurationText,
+                        isSelected = showSelectionUi,
+                    )
+                }.first().measure(
+                    // Bound the label by the clip's own width so the wrapper clamps to the clip and its rounded-corner clip masks any
+                    // overflow from the inner Row's `wrapContentWidth(unbounded = true)`. Without the maxWidth bound the Row's natural
+                    // width would spill past the clip's right edge into the trim handle area.
+                    Constraints(maxWidth = constraints.maxWidth, maxHeight = constraints.maxHeight),
+                )
+                val labelWidthPx = labelPlaceable.width
+                val labelWidthDp = labelWidthPx.toDp()
 
-            val overlayWidth = (width + offset - overlayDurationWidth).coerceAtMost(width)
-            ClipForegroundView(
-                clip = clip,
-                isSelected = showSelectionUi,
-                clipDurationText = clipDurationText,
-                pinOffset = pinOffsetDp,
-                overlayWidth = overlayWidth.toDp(),
-                overlayShape = if (overlayWidth <= 0) {
+                // Slide the label rightward when the clip's left edge has scrolled offscreen
+                val clipLeftCutoffPx = (scrollContentOffset() - offset).coerceAtLeast(0f)
+                val rightEdgePaddingPx = TimelineConfiguration.clipPadding.toPx()
+                val maxPinOffsetPx = (width - labelWidthPx - rightEdgePaddingPx).coerceAtLeast(0f)
+                val pinOffsetPx = minOf(clipLeftCutoffPx, maxPinOffsetPx)
+                val pinOffsetDp = pinOffsetPx.toDp()
+
+                val backgroundPlaceable = subcompose(ClipContentSlot.Background) {
+                    ClipBackgroundView(
+                        clip = clip,
+                        timelineState = timelineState,
+                        inTimeline = true,
+                        labelWidth = labelWidthDp,
+                        clipWidth = constraints.maxWidth.toDp(),
+                        clipDragType = clipDragType,
+                        pinOffset = pinOffsetDp,
+                    )
+                }.first().measure(constraints)
+
+                // Right-edge translucent overlay for non-bg clips that extend past the page's max playback duration.
+                val overlayWidthPx = (width + offset - overlayDurationWidth).coerceAtMost(width)
+                val overlayPlaceable = if (overlayWidthPx > 0f) {
+                    subcompose(ClipContentSlot.Overlay) {
+                        val overlayShape = if (offset > overlayDurationWidth) {
+                            MaterialTheme.shapes.small
+                        } else {
+                            MaterialTheme.shapes.small.copy(
+                                topStart = CornerSize(0.dp),
+                                bottomStart = CornerSize(0.dp),
+                            )
+                        }
+                        ClipOverlay(
+                            modifier = Modifier
+                                .clip(overlayShape)
+                                .width(overlayWidthPx.toDp())
+                                .fillMaxHeight(),
+                        )
+                    }.firstOrNull()?.measure(
+                        Constraints(maxWidth = constraints.maxWidth, maxHeight = constraints.maxHeight),
+                    )
+                } else {
+                    null
+                }
+
+                layout(constraints.maxWidth, constraints.maxHeight) {
+                    // Z-order: background under, overlay above background, label on top.
+                    backgroundPlaceable.place(0, 0)
+                    overlayPlaceable?.place(constraints.maxWidth - overlayPlaceable.width, 0)
+                    labelPlaceable.place(
+                        x = pinOffsetPx.roundToInt(),
+                        y = (constraints.maxHeight - labelPlaceable.height) / 2,
+                    )
+                }
+            }
+
+            val viewForHapticFeedback = LocalView.current
+            val dropFinishHaptic = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                HapticFeedbackConstants.CONFIRM
+            } else {
+                HapticFeedbackConstants.LONG_PRESS
+            }
+
+            var movePlayerWasPlaying by remember { mutableStateOf(false) }
+
+            fun startMoveDrag() {
+                clipDragType = ClipDragType.Move
+                movePlayerWasPlaying = timelineState.playerState.isPlaying
+                timelineState.playerState.pause()
+            }
+
+            // The commit branch leaves `dragDrop.overrides` populated; they're cleared downstream
+            // after OnApplyDrop's engine refresh so siblings stay at their preview positions until then.
+            fun endMoveDrag(cancelled: Boolean) {
+                clipDragType = null
+                if (movePlayerWasPlaying) {
+                    timelineState.playerState.play()
+                }
+
+                val target = if (cancelled) {
                     null
                 } else {
-                    if (offset > overlayDurationWidth) {
-                        MaterialTheme.shapes.small
-                    } else {
-                        MaterialTheme.shapes.small.copy(topStart = CornerSize(0.dp), bottomStart = CornerSize(0.dp))
+                    timelineState.dragDrop.phase.context?.dropTarget
+                }
+
+                if (target == null) {
+                    // No drop — `offset` already matches engine truth, so just clear overrides.
+                    timelineState.dragDrop.overrides.clear()
+                } else {
+                    // Pre-snap to bridge the frame between alpha → 1.0 (phase = Idle below) and the
+                    // async refresh updating `clip.timeOffset` — otherwise the clip flashes at its
+                    // source position before jumping to the target.
+                    val snapTime = when (target) {
+                        is DropTarget.ExistingTrack -> target.timeOffset
+                        is DropTarget.NewTrack -> target.timeOffset
                     }
-                },
-                onLabelWidthMeasured = remember { { measuredWidth: Dp -> labelWidth = measuredWidth } },
+                    offset = zoomState.toPx(snapTime)
+
+                    val backgroundTrack = timelineState.dataSource.backgroundTrack
+                    val isBgNoOpReorder = timelineState.dataSource.findTrack(clip) === backgroundTrack &&
+                        target is DropTarget.ExistingTrack &&
+                        target.trackId == backgroundTrack.id &&
+                        snapTime == clip.timeOffset
+
+                    if (isBgNoOpReorder) {
+                        // Skip dispatch — `insertChild(idx = current)` is a no-op in the engine
+                        // and would only add an empty undo step.
+                        timelineState.dragDrop.overrides.clear()
+                    } else {
+                        onEvent(
+                            BlockEvent.OnApplyDrop(
+                                clip = clip,
+                                target = target,
+                                siblingOffsets = timelineState.dragDrop.overrides.toMap(),
+                            ),
+                        )
+                        // Finish haptic on successful drop only; cancels and no-target paths stay silent.
+                        viewForHapticFeedback.performHapticFeedback(dropFinishHaptic)
+                    }
+                }
+                timelineState.dragDrop.phase = DragDropState.Idle
+            }
+
+            ClipMoveDragGesture(
+                clip = clip,
+                timelineState = timelineState,
+                isBeingDragged = isBeingDragged,
+                onEvent = onEvent,
+                onStartMoveDrag = ::startMoveDrag,
+                onEndMoveDrag = ::endMoveDrag,
             )
 
             if (showSelectionUi) {
-                val handleWidth = 20.dp
-                val verticalInset = 2.dp
-
-                val leadingTrimHandleOvershoot = remember { mutableStateOf(0f) }
-                val trailingTrimHandleOvershoot = remember { mutableStateOf(0f) }
-
-                val animatedLeadingTrimHandleOvershoot by animateOvershoot(
-                    overshootValue = leadingTrimHandleOvershoot,
-                    shouldBounce = clipDragType == null,
+                ClipTrimHandlesView(
+                    clip = clip,
+                    timelineState = timelineState,
+                    clipBodyWidth = maxWidth,
+                    clipBodyHeight = maxHeight,
+                    widthState = widthState,
+                    offsetState = offsetState,
+                    clipDragTypeState = clipDragTypeState,
+                    onClipDurationTextChange = { clipDurationText = it },
+                    onTrimChange = onTrimChange,
+                    onEvent = onEvent,
                 )
-                val animatedTrailingTrimHandleOvershoot by animateOvershoot(
-                    overshootValue = trailingTrimHandleOvershoot,
-                    shouldBounce = clipDragType == null,
-                )
-
-                HapticFeedbackOnOvershoot(overshootValue = leadingTrimHandleOvershoot, clipDragType = clipDragType)
-                HapticFeedbackOnOvershoot(overshootValue = trailingTrimHandleOvershoot, clipDragType = clipDragType)
-
-                Box(
-                    modifier = Modifier
-                        .wrapContentSize(
-                            unbounded = true,
-                            align = when {
-                                animatedLeadingTrimHandleOvershoot != 0f -> Alignment.CenterEnd
-                                animatedTrailingTrimHandleOvershoot != 0f -> Alignment.CenterStart
-                                else -> Alignment.Center
-                            },
-                        )
-                        .offset(
-                            x = handleWidth *
-                                when {
-                                    animatedLeadingTrimHandleOvershoot != 0f -> 1
-                                    animatedTrailingTrimHandleOvershoot != 0f -> -1
-                                    else -> 0
-                                },
-                        )
-                        .size(
-                            width = maxWidth + (handleWidth * 2) +
-                                (animatedLeadingTrimHandleOvershoot + animatedTrailingTrimHandleOvershoot).toDp(),
-                            height = maxHeight + (verticalInset * 2),
-                        ),
-                ) {
-                    ClipSelectionView(
-                        modifier = Modifier.fillMaxSize(),
-                        handleWidth = handleWidth,
-                        color = selectionColor,
-                    )
-
-                    fun determineLeadingTrimIconStyle(hasReachedMaxWidth: Boolean? = null): IconStyle {
-                        if (!clip.hasLoaded || clip.isLooping) return IconStyle.Neutral
-                        if (!clip.allowsTrimming) return IconStyle.Left
-                        if (hasReachedMaxWidth != null) {
-                            return if (hasReachedMaxWidth) IconStyle.Neutral else IconStyle.Left
-                        }
-                        return if (clip.trimOffset.almostEquals(0.seconds)) IconStyle.Neutral else IconStyle.Left
-                    }
-
-                    fun determineTrailingTrimIconStyle(hasReachedMaxWidth: Boolean? = null): IconStyle {
-                        if (!clip.hasLoaded) return IconStyle.Neutral
-                        if (clip.isLooping || !clip.allowsTrimming) return IconStyle.Right
-                        if (hasReachedMaxWidth != null) {
-                            return if (hasReachedMaxWidth) IconStyle.Neutral else IconStyle.Right
-                        }
-                        val maxDuration = (clip.effectiveFootageDuration ?: 0.seconds) - clip.trimOffset - clip.duration
-                        return if (maxDuration.almostEquals(0.seconds)) {
-                            IconStyle.Neutral
-                        } else {
-                            IconStyle.Right
-                        }
-                    }
-
-                    var playerWasPlayingBeforeDragStart by remember { mutableStateOf(false) }
-                    var leadingTrimIconStyle by remember(clip) { mutableStateOf(determineLeadingTrimIconStyle()) }
-                    var trailingTrimIconStyle by remember(clip) { mutableStateOf(determineTrailingTrimIconStyle()) }
-
-                    fun onDragStart(type: ClipDragType) {
-                        clipDragType = type
-                        val playerState = timelineState.playerState
-                        playerWasPlayingBeforeDragStart = playerState.isPlaying
-                        playerState.pause()
-                    }
-
-                    fun onDragEnd() {
-                        clipDragType = null
-                        if (playerWasPlayingBeforeDragStart) {
-                            timelineState.playerState.play()
-                        }
-                    }
-
-                    fun onDrag(newWidth: Float) {
-                        clipDurationText = zoomState.toSeconds(newWidth).formatForClip()
-                    }
-
-                    // Leading trim handle
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(handleWidth)
-                            .align(Alignment.CenterStart)
-                            .pointerInput(clip, zoomState.zoomLevel) {
-                                if (!clip.hasLoaded) return@pointerInput
-                                val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minClipDuration))
-                                val maxWidth = if (clip.footageDuration != null) {
-                                    zoomState.toPx(clip.duration + clip.trimOffset)
-                                } else if (clip.isInBackgroundTrack || clip.isLooping) {
-                                    Float.POSITIVE_INFINITY
-                                } else {
-                                    zoomState.toPx(clip.duration + clip.timeOffset)
-                                }
-                                var initialWidth = 0f
-                                detectHorizontalDragGestures(
-                                    onDragStart = {
-                                        initialWidth = width
-                                        onDragStart(type = ClipDragType.Leading)
-                                    },
-                                    onHorizontalDrag = { _, drag ->
-                                        val oldWidth = width
-                                        val newProposedWidth = oldWidth - drag
-                                        if (leadingTrimHandleOvershoot.value == 0f) {
-                                            width = newProposedWidth.coerceIn(minWidth, maxWidth)
-                                            onDrag(width)
-                                        }
-                                        if (width != newProposedWidth) {
-                                            with(leadingTrimHandleOvershoot) {
-                                                value = (value + drag).coerceAtMost(0f)
-                                            }
-                                        }
-
-                                        leadingTrimIconStyle = determineLeadingTrimIconStyle(width == maxWidth)
-
-                                        // we only want to consume as much drag that doesn't
-                                        // move the trailing handle at all from its original position
-                                        val consumeDragAmount = oldWidth - width
-                                        offset += consumeDragAmount
-                                    },
-                                    onDragEnd = {
-                                        onDragEnd()
-                                        leadingTrimHandleOvershoot.value = 0f
-
-                                        var trimOffset = clip.trimOffset
-                                        var timeOffset = clip.timeOffset
-                                        var duration = clip.duration
-
-                                        val delta = zoomState.toSeconds(initialWidth - width)
-
-                                        if (!clip.isInBackgroundTrack) {
-                                            timeOffset = (timeOffset + delta).coerceAtLeast(0.seconds)
-                                        }
-                                        trimOffset += delta
-                                        duration -= delta
-
-                                        onEvent(
-                                            BlockEvent.OnUpdateTrim(
-                                                trimOffset = trimOffset,
-                                                timeOffset = timeOffset,
-                                                duration = duration,
-                                            ),
-                                        )
-                                    },
-                                )
-                            },
-                    ) {
-                        ClipTrimHandleIconView(
-                            style = leadingTrimIconStyle,
-                            modifier = Modifier.align(Alignment.Center),
-                            color = handleIconColor,
-                        )
-                    }
-
-                    // Trim clip body
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.CenterStart)
-                            .padding(horizontal = handleWidth)
-                            .pointerInput(clip, zoomState.zoomLevel) {
-                                if (!clip.isInBackgroundTrack) {
-                                    detectHorizontalDragGestures(
-                                        onDragStart = {
-                                            onDragStart(type = ClipDragType.Move)
-                                        },
-                                        onHorizontalDrag = { _, drag ->
-                                            // we don't want our clips to have a negative time offset
-                                            offset = (offset + drag).coerceAtLeast(0f)
-                                        },
-                                        onDragEnd = {
-                                            onDragEnd()
-                                            onEvent(BlockEvent.OnUpdateTimeOffset(zoomState.toSeconds(offset)))
-                                        },
-                                    )
-                                }
-                            },
-                    )
-
-                    // Trailing trim handle
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(handleWidth)
-                            .align(Alignment.CenterEnd)
-                            .pointerInput(clip, zoomState.zoomLevel) {
-                                if (!clip.hasLoaded) return@pointerInput
-                                val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minClipDuration))
-                                val effectiveFootageDuration = clip.effectiveFootageDuration
-                                val maxWidth = if (effectiveFootageDuration != null) {
-                                    zoomState.toPx(effectiveFootageDuration - clip.trimOffset).coerceAtLeast(minWidth)
-                                } else {
-                                    Float.POSITIVE_INFINITY
-                                }
-                                detectHorizontalDragGestures(
-                                    onDragStart = {
-                                        onDragStart(ClipDragType.Trailing)
-                                    },
-                                    onHorizontalDrag = { _, drag ->
-                                        val newProposedWidth = width + drag
-
-                                        if (trailingTrimHandleOvershoot.value == 0f) {
-                                            width = if (maxWidth.isFinite()) {
-                                                newProposedWidth.coerceIn(minWidth, maxWidth)
-                                            } else {
-                                                newProposedWidth.coerceAtLeast(minWidth)
-                                            }
-                                            onDrag(width)
-                                        }
-                                        if (width != newProposedWidth) {
-                                            with(trailingTrimHandleOvershoot) {
-                                                value = (value + drag).coerceAtLeast(0f)
-                                            }
-                                        }
-
-                                        trailingTrimIconStyle = determineTrailingTrimIconStyle(width == maxWidth)
-                                    },
-                                    onDragEnd = {
-                                        trailingTrimHandleOvershoot.value = 0f
-                                        onDragEnd()
-                                        onEvent(BlockEvent.OnUpdateDuration(zoomState.toSeconds(width)))
-                                    },
-                                )
-                            },
-                    ) {
-                        ClipTrimHandleIconView(
-                            style = trailingTrimIconStyle,
-                            modifier = Modifier.align(Alignment.Center),
-                            color = handleIconColor,
-                        )
-                    }
-                }
             }
         }
 
-        // overlay
         if (!clip.isInBackgroundTrack) {
             ClipOverlay(
                 modifier = Modifier
@@ -460,46 +366,4 @@ fun ClipView(
     }
 }
 
-// Adds a bouncy animation when trim handles are released after being overshot
-@Composable
-private fun animateOvershoot(
-    overshootValue: State<Float>,
-    shouldBounce: Boolean,
-): State<Float> = animateFloatAsState(
-    targetValue = overshootValue.value.absoluteValue / 2.45f,
-    animationSpec = if (shouldBounce) {
-        spring(
-            dampingRatio = 0.35f,
-            stiffness = 800f,
-        )
-    } else {
-        snap()
-    },
-    label = "animatedTrimHandleOvershoot",
-)
-
-// Adds some vibration when the trim handles are dragged beyond their limits
-@Composable
-private fun HapticFeedbackOnOvershoot(
-    overshootValue: State<Float>,
-    clipDragType: ClipDragType?,
-) {
-    val viewForHapticFeedback = LocalView.current
-    LaunchedEffect(Unit) {
-        snapshotFlow { overshootValue.value }
-            .drop(1)
-            .map { it == 0f }
-            .distinctUntilChanged()
-            .collect { overshootAtZero ->
-                if (clipDragType == null && overshootAtZero) {
-                    viewForHapticFeedback.performHapticFeedback(
-                        HapticFeedbackConstants.LONG_PRESS,
-                    )
-                } else if (!overshootAtZero) {
-                    viewForHapticFeedback.performHapticFeedback(
-                        HapticFeedbackConstants.CLOCK_TICK,
-                    )
-                }
-            }
-    }
-}
+private enum class ClipContentSlot { Label, Background, Overlay }

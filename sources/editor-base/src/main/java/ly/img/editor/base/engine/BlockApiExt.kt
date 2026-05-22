@@ -5,6 +5,7 @@ import ly.img.editor.core.ui.engine.isBackgroundTrack
 import ly.img.engine.BlockApi
 import ly.img.engine.BlurType
 import ly.img.engine.DesignBlock
+import ly.img.engine.DesignBlockType
 import ly.img.engine.EffectType
 import ly.img.engine.FillType
 import ly.img.engine.GradientColorStop
@@ -162,4 +163,14 @@ fun BlockApi.getSmallerSide(block: DesignBlock): Float {
     val height = getHeight(block)
     val width = getWidth(block)
     return min(width, height)
+}
+
+/**
+ * Returns true if [designBlock] is an audio block, or a Track containing at least one audio child.
+ */
+fun BlockApi.containsAudio(designBlock: DesignBlock): Boolean {
+    val type = getType(designBlock)
+    if (type == DesignBlockType.Audio.key) return true
+    if (type != DesignBlockType.Track.key) return false
+    return getChildren(designBlock).any { getType(it) == DesignBlockType.Audio.key }
 }

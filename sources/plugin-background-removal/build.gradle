@@ -1,0 +1,25 @@
+apply from: "$projectDir/../editor-library.gradle"
+apply from: "$projectDir/../dokka.gradle"
+
+def UBQ_ROOT_DIR = "${project.projectDir}/../../../.."
+def updateLocalizationTask = tasks.register("updateLocalizationFiles", Exec) {
+    workingDir = UBQ_ROOT_DIR
+    executable "bash"
+    args = [
+        "scripts/localization/android/generate_localization.sh",
+        "scripts/localization/mobile-plugin-background-removal.tsv",
+        "apps/cesdk_android/sources/plugin-background-removal/src/main/res",
+        "ly_img_plugin_background_removal_"
+    ]
+}
+tasks.named("preBuild").configure { dependsOn(updateLocalizationTask) }
+tasks.named("build").configure { dependsOn(updateLocalizationTask) }
+
+android {
+    namespace = 'ly.img.editor.plugin.backgroundRemoval'
+}
+
+dependencies {
+    implementation project(":editor")
+    implementation(libs.segmentation.selfie)
+}

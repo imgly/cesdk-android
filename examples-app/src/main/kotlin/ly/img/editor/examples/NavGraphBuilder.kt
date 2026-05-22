@@ -6,10 +6,12 @@ import ColorPaletteEditorSolution
 import CustomPanelSolution
 import DataMergeGuideScreen
 import DesignUnitsScreen
+import EditorStateEditorSolution
 import ForceCropEditorSolution
 import ForceTrimVideoSolution
 import ModifyingScenesEngineSolution
 import OverlayEditorSolution
+import TemplatingEditorSolution
 import ThemingEditorSolution
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.runtime.Composable
@@ -115,6 +117,23 @@ fun NavGraphBuilder.build(navController: NavHostController) {
     }
     composable(destination = Destination.GuideForceTrim) {
         ForceTrimVideoSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.AutomateWorkflows) {
+        AutomateWorkflowsScreen(
+            license = Secrets.license,
+        )
+    }
+    composable(destination = Destination.GuideEditorState) {
+        EditorStateEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideTemplating) {
+        TemplatingEditorSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
         )

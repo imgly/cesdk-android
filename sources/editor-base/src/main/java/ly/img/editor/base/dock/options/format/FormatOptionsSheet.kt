@@ -47,10 +47,16 @@ import ly.img.editor.core.ui.iconpack.Listbullet
 import ly.img.editor.core.ui.iconpack.Listnumber
 import ly.img.editor.core.ui.sheetScrollableContentModifier
 import ly.img.engine.FontStyle
+import ly.img.engine.FontUnit
 import ly.img.engine.FontWeight
 import ly.img.engine.HorizontalAlignment
 import ly.img.engine.ListStyle
 import ly.img.engine.TextCase
+
+private object FontSizeRange {
+    val PIXEL = 8f..128f
+    val POINT = 6f..90f
+}
 
 @Composable
 fun FormatOptionsSheet(
@@ -155,10 +161,18 @@ fun FormatOptionsSheet(
                     }
 
                     Spacer(Modifier.height(16.dp))
+                    val fontSizeLabelRes = when (uiState.fontSizeUnit) {
+                        FontUnit.PIXEL -> R.string.ly_img_editor_sheet_format_text_label_font_size_px
+                        FontUnit.POINT -> R.string.ly_img_editor_sheet_format_text_label_font_size_pt
+                    }
+                    val fontSizeRange = when (uiState.fontSizeUnit) {
+                        FontUnit.PIXEL -> FontSizeRange.PIXEL
+                        FontUnit.POINT -> FontSizeRange.POINT
+                    }
                     PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_sheet_format_text_label_font_size),
+                        title = stringResource(fontSizeLabelRes),
                         value = uiState.fontSize,
-                        valueRange = 6f..90f,
+                        valueRange = fontSizeRange,
                         onValueChange = { onEvent(BlockEvent.OnChangeFontSize(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                     )
@@ -334,6 +348,7 @@ fun FormatOptionsSheet(
                                 onPropertyPicked = { onEvent(BlockEvent.OnChangeSizeMode(it)) },
                             )
                             if (uiState.hasClippingOption) {
+                                Divider(Modifier.padding(horizontal = 16.dp))
                                 PropertySwitch(
                                     title = stringResource(R.string.ly_img_editor_sheet_format_text_label_frame_clipping),
                                     isChecked = uiState.isClipped,
@@ -401,6 +416,7 @@ fun DefaultPreview() {
         uiState = FormatUiState(
             fontFamily = "Roboto",
             fontSize = 16f,
+            fontSizeUnit = FontUnit.POINT,
             letterSpacing = 0f,
             lineHeight = 1f,
             isBold = true,

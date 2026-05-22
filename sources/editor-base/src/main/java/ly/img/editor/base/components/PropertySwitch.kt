@@ -43,6 +43,7 @@ fun PropertySwitch(
         Switch(
             modifier = Modifier.padding(end = 16.dp),
             checked = isChecked,
+            enabled = enabled,
             onCheckedChange = onPropertyChange,
         )
     }

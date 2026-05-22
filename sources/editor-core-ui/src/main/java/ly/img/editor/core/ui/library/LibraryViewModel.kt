@@ -255,7 +255,7 @@ class LibraryViewModel(
         viewModelScope.launch {
             engine.awaitEngineAndSceneLoad()
             Log.d(TAG, "onAddUri source=${assetSourceType.sourceId} uri=$uri")
-            val asset = uploadToAssetSource(assetSourceType, uri)
+            val asset = uploadToAssetSource(assetSourceType, uri) ?: return@launch
             onAddAsset(assetSourceType, asset, addToBackgroundTrack)
             runCatching { SystemGalleryPermission.addSelected(uri, editor.activity) }
             // Also trigger refresh for gallery source if relevant
@@ -280,7 +280,7 @@ class LibraryViewModel(
             engine.block.setPlaybackTime(page, engine.block.getDuration(backgroundTrack))
 
             recordings.forEach { (uri, duration) ->
-                uploadToAssetSource(assetSource, uri, duration)
+                if (uploadToAssetSource(assetSource, uri, duration) == null) return@forEach
                 // We cannot use engine.asset.applyAssetSourceAsset() here as it adds an undo step at the end.
                 // We only want to add one undo step at the end after adding all the recordings.
                 addCameraRecording(uri, duration)
@@ -383,7 +383,7 @@ class LibraryViewModel(
     ) {
         viewModelScope.launch {
             engine.awaitEngineAndSceneLoad()
-            val asset = uploadToAssetSource(assetSource, uri)
+            val asset = uploadToAssetSource(assetSource, uri) ?: return@launch
             onReplaceAsset(assetSource, asset, designBlock)
         }
     }
@@ -769,25 +769,27 @@ class LibraryViewModel(
                     expandContent = section.expandContent,
                 ).let(loadingSectionItemsList::add)
             }
-            if (section.addGroupedSubSections) {
-                val groups = engine.asset.getGroups(section.sourceTypes[0].sourceId)
-                groups?.mapIndexed { groupIndex, group ->
-                    LibrarySectionItem.ContentLoading(
-                        stackIndex = stackIndex,
-                        sectionIndex = sectionIndex,
-                        subSectionIndex = groupIndex,
-                        section = section.copy(
-                            groups = listOf(group),
-                            addGroupedSubSections = false,
-                        ),
-                    ).let(loadingSectionItemsList::add)
+            val subSections: List<LibraryContent.Section> = if (section.addGroupedSubSections) {
+                val groupsResult = runCatching {
+                    engine.asset.getGroups(section.sourceTypes[0].sourceId)
+                }
+                if (groupsResult.isSuccess) {
+                    groupsResult.getOrNull().orEmpty().map { group ->
+                        section.copy(groups = listOf(group), addGroupedSubSections = false)
+                    }
+                } else {
+                    // Asset source is not registered.
+                    listOf(section)
                 }
             } else {
+                listOf(section)
+            }
+            subSections.forEachIndexed { subSectionIndex, subSection ->
                 LibrarySectionItem.ContentLoading(
                     stackIndex = stackIndex,
                     sectionIndex = sectionIndex,
-                    subSectionIndex = 0,
-                    section = section,
+                    subSectionIndex = subSectionIndex,
+                    section = subSection,
                 ).let(loadingSectionItemsList::add)
             }
         }
@@ -956,8 +958,12 @@ class LibraryViewModel(
         assetSourceType: UploadAssetSourceType,
         uri: Uri,
         duration: Duration? = null,
-    ): Asset {
+    ): Asset? {
         Log.d(TAG, "uploadToAssetSource start source=${assetSourceType.sourceId} uri=$uri duration=$duration")
+        if (assetSourceType.sourceId !in engine.asset.findAllSources()) {
+            Log.d(TAG, "uploadToAssetSource skipped: source not registered: ${assetSourceType.sourceId}")
+            return null
+        }
         val uuid = UUID.randomUUID().toString()
         val uriString = uri.toString()
         val meta = mutableMapOf(
@@ -1064,7 +1070,7 @@ class LibraryViewModel(
         }
         Log.d(TAG, "fallbackApplyGalleryAsset uploadSource=${uploadSource.sourceId} uri=$uri kind=$kind")
 
-        val uploadedAsset = uploadToAssetSource(uploadSource, uri)
+        val uploadedAsset = uploadToAssetSource(uploadSource, uri) ?: return null
         val designBlock = runCatching {
             engine.asset.applyAssetSourceAsset(uploadSource.sourceId, uploadedAsset)
         }.onFailure {

@@ -187,11 +187,18 @@ abstract class EditorComponent<Scope : EditorScope> {
                 mutableMapOf()
             private val addAfterProviderMapping: MutableMap<EditorComponentId, LinkedList<ScopedProperty<EditorScope, Item>>> =
                 mutableMapOf()
+            private val addAfterOptionalProviderMapping: MutableMap<EditorComponentId, LinkedList<ScopedProperty<EditorScope, Item>>> =
+                mutableMapOf()
             private val addBeforeProviderMapping: MutableMap<EditorComponentId, LinkedList<ScopedProperty<EditorScope, Item>>> =
+                mutableMapOf()
+            private val addBeforeOptionalProviderMapping: MutableMap<EditorComponentId, LinkedList<ScopedProperty<EditorScope, Item>>> =
                 mutableMapOf()
             private val replaceItemProviderMapping: MutableMap<EditorComponentId, ScopedProperty<EditorScope, Item>> =
                 mutableMapOf()
+            private val replaceItemOptionalProviderMapping: MutableMap<EditorComponentId, ScopedProperty<EditorScope, Item>> =
+                mutableMapOf()
             private val removeList: LinkedList<EditorComponentId> = LinkedList()
+            private val removeListOptional: LinkedList<EditorComponentId> = LinkedList()
 
             internal var builder: Modify<Item, Alignment, Arrangement>.() -> Unit = {}
 
@@ -238,9 +245,18 @@ abstract class EditorComponent<Scope : EditorScope> {
                             data.items.forEach forEachInner@{ item ->
                                 // Try remove item first, then do other operations.
                                 if (removeList.remove(item.id)) return@forEachInner
+                                if (removeListOptional.remove(item.id)) return@forEachInner
                                 addBeforeProviderMapping.remove(item.id)?.map { it() }?.let(::addAll)
-                                add(replaceItemProviderMapping.remove(item.id)?.invoke(this@buildLocal) ?: item)
+                                addBeforeOptionalProviderMapping.remove(item.id)?.map { it() }?.let(::addAll)
+                                add(
+                                    replaceItemProviderMapping.remove(item.id)?.invoke(this@buildLocal)
+                                        ?: replaceItemOptionalProviderMapping.remove(item.id)?.invoke(this@buildLocal)
+                                        ?: item,
+                                )
                                 addAfterProviderMapping.remove(
+                                    item.id,
+                                )?.map { it() }?.let(::addAll)
+                                addAfterOptionalProviderMapping.remove(
                                     item.id,
                                 )?.map { it() }?.let(::addAll)
                             }
@@ -257,18 +273,21 @@ abstract class EditorComponent<Scope : EditorScope> {
                 removeList.ensureIsEmpty {
                     getItemError(operation = "remove", id = it.id)
                 }
+                removeListOptional.clear()
                 addBeforeProviderMapping.ensureIsEmpty {
                     getItemError(operation = "addBefore", id = it.id)
                 }
+                addBeforeOptionalProviderMapping.clear()
                 addAfterProviderMapping.ensureIsEmpty {
                     getItemError(operation = "addAfter", id = it.id)
                 }
+                addAfterOptionalProviderMapping.clear()
                 replaceItemProviderMapping.ensureIsEmpty {
                     getItemError(operation = "replace", id = it.id)
                 }
+                replaceItemOptionalProviderMapping.clear()
                 addFirstProviderMapping.clear()
                 addLastProviderMapping.clear()
-                replaceItemProviderMapping.clear()
             }
 
             /**
@@ -354,13 +373,20 @@ abstract class EditorComponent<Scope : EditorScope> {
              * is true for them.
              * Also note that [EditorScope] in the [block] builder is the scope of the parent [EditorComponent].
              *
+             * @param id the component id to add the new item after.
+             * @param failIfNotFound whether operation should fail if component with [id] is not found.
              * @param block a building block that returns an item that should be added to the list.
              */
             fun addAfter(
                 id: EditorComponentId,
+                failIfNotFound: Boolean = true,
                 block: ScopedProperty<EditorScope, Item>,
             ) {
-                val newList = addAfterProviderMapping.getOrPut(id) { LinkedList() }
+                val newList = if (failIfNotFound) {
+                    addAfterProviderMapping.getOrPut(id) { LinkedList() }
+                } else {
+                    addAfterOptionalProviderMapping.getOrPut(id) { LinkedList() }
+                }
                 newList.add(0, block)
             }
 
@@ -370,13 +396,20 @@ abstract class EditorComponent<Scope : EditorScope> {
              * is true for them.
              * Also note that [EditorScope] in the [block] builder is the scope of the parent [EditorComponent].
              *
+             * @param id the component id to add the new item before.
+             * @param failIfNotFound whether operation should fail if component with [id] is not found.
              * @param block a building block that returns an item that should be added to the list.
              */
             fun addBefore(
                 id: EditorComponentId,
+                failIfNotFound: Boolean = true,
                 block: ScopedProperty<EditorScope, Item>,
             ) {
-                val newList = addBeforeProviderMapping.getOrPut(id) { LinkedList() }
+                val newList = if (failIfNotFound) {
+                    addBeforeProviderMapping.getOrPut(id) { LinkedList() }
+                } else {
+                    addBeforeOptionalProviderMapping.getOrPut(id) { LinkedList() }
+                }
                 newList.add(block)
             }
 
@@ -385,22 +418,36 @@ abstract class EditorComponent<Scope : EditorScope> {
              * Note that [EditorScope] in the [block] builder is the scope of the parent [EditorComponent].
              *
              * @param id the id of the component that should be replaced.
+             * @param failIfNotFound whether operation should fail if component with [id] is not found.
              * @param block a building block that returns an item that should replace.
              */
             fun replace(
                 id: EditorComponentId,
+                failIfNotFound: Boolean = true,
                 block: ScopedProperty<EditorScope, Item>,
             ) {
-                replaceItemProviderMapping[id] = block
+                if (failIfNotFound) {
+                    replaceItemProviderMapping[id] = block
+                } else {
+                    replaceItemOptionalProviderMapping[id] = block
+                }
             }
 
             /**
              * Removes the [EditorComponent] with id = [id] that was previously added in the [source] [ListBuilder].
              *
              * @param id the id of the component that should be removed.
+             * @param failIfNotFound whether operation should fail if component with [id] is not found.
              */
-            fun remove(id: EditorComponentId) {
-                removeList.add(id)
+            fun remove(
+                id: EditorComponentId,
+                failIfNotFound: Boolean = true,
+            ) {
+                if (failIfNotFound) {
+                    removeList.add(id)
+                } else {
+                    removeListOptional.add(id)
+                }
             }
         }
 

@@ -1170,7 +1170,7 @@ val InspectorBar.Button.Id.shape by unsafeLazy {
 /**
  * A composable helper function that creates and remembers an [Button] that opens shape options sheet via
  * [EditorEvent.Sheet.Open]. The button is applicable for the following shape types:
- * [ShapeType.Star], [ShapeType.Polygon], [ShapeType.Line], [ShapeType.Rect].
+ * [ShapeType.Star], [ShapeType.Polygon], [ShapeType.Rect].
  * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
  * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
  *
@@ -1194,7 +1194,8 @@ fun InspectorBar.Button.rememberShape(builder: InspectorBar.ButtonBuilder.() -> 
                         } else {
                             null
                         }
-                        shapeType in arrayOf(ShapeType.Star, ShapeType.Polygon, ShapeType.Line, ShapeType.Rect)
+                        // Lines are intentionally excluded: their thickness is configured via the stroke section.
+                        shapeType in arrayOf(ShapeType.Star, ShapeType.Polygon, ShapeType.Rect)
                     }
             }
         }

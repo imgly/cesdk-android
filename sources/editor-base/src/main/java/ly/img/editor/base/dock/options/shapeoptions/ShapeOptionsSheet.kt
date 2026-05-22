@@ -48,16 +48,6 @@ fun ShapeOptionsSheet(
                     )
                 }
 
-                is LineShapeOptionsUiState -> {
-                    PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_sheet_shape_label_line_width),
-                        value = uiState.width,
-                        onValueChange = { onEvent(BlockEvent.OnChangeLineWidth(it)) },
-                        onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
-                        valueRange = 0.1f..30f,
-                    )
-                }
-
                 is StarShapeOptionsUiState -> {
                     PropertySlider(
                         title = stringResource(R.string.ly_img_editor_sheet_shape_label_points),
