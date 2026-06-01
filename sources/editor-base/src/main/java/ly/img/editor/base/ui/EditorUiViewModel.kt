@@ -1876,7 +1876,7 @@ class EditorUiViewModel(
 
     private fun observeHistory() {
         viewModelScope.launch {
-            engine.editor.onHistoryUpdated().collect {
+            engine.editor.onHistoryUpdatedWithKind().collect {
                 _historyChangeTrigger.emit(Unit)
                 timelineState?.onHistoryUpdated()
                 updateVisiblePageState()

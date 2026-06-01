@@ -250,7 +250,7 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
         backHandler: @Composable () -> Unit = {
             val isBackHandlerEnabled by remember {
                 combine(
-                    editorContext.engine.editor.onHistoryUpdated().map {
+                    editorContext.engine.editor.onHistoryUpdatedWithKind().map {
                         editorContext.engine.editor.canUndo()
                     },
                     editorContext.state.map { it.isBackHandlerEnabled },
