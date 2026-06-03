@@ -674,10 +674,15 @@ private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon
             fillType == FillType.ConicalGradient
     }
 
+    val showStroke = block.supportsStroke(designBlock) && block.isAllowedByScope(designBlock, "stroke/change")
+    // Line-origin graphics surface their colour through the stroke section, so the fill
+    // button is hidden — but only when a stroke section is actually available, otherwise
+    // the user would lose every colour control.
+    val hideFillForLine = block.isLineOrigin(designBlock) && showStroke
     val showFill = block.supportsFill(designBlock) &&
         block.hasColorOrGradientFill(designBlock) &&
+        !hideFillForLine &&
         block.isAllowedByScope(designBlock, "fill/change")
-    val showStroke = block.supportsStroke(designBlock) && block.isAllowedByScope(designBlock, "stroke/change")
     return EditorIcon.FillStroke(
         showFill = showFill,
         showStroke = showStroke,
@@ -952,7 +957,10 @@ fun InspectorBar.Button.rememberReplace(builder: InspectorBar.ButtonBuilder.() -
                             editorContext.selection.kind != KIND_VOICEOVER
                     ) ||
                         (
-                            editorContext.selection.type == DesignBlockType.Graphic &&
+                            (
+                                editorContext.selection.type == DesignBlockType.Graphic ||
+                                    editorContext.selection.type == DesignBlockType.Page
+                            ) &&
                                 (editorContext.selection.fillType == FillType.Image || editorContext.selection.fillType == FillType.Video)
                         ) &&
                         editorContext.selection.isNotAnyKindOfSticker() &&
@@ -981,6 +989,15 @@ fun InspectorBar.Button.rememberReplace(builder: InspectorBar.ButtonBuilder.() -
                                 )
                             }
                         }
+                    }
+                }
+                DesignBlockType.Page -> when (editorContext.selection.fillType) {
+                    FillType.Image -> assetLibrary.images
+                    FillType.Video -> assetLibrary.videos
+                    else -> {
+                        error(
+                            "Unsupported fillType ${editorContext.selection.fillType} for replace inspector bar button.",
+                        )
                     }
                 }
                 else -> error("Unsupported type ${editorContext.selection.type} for replace inspector bar button.")

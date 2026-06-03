@@ -132,6 +132,7 @@ import ly.img.editor.core.ui.engine.awaitEngineAndSceneLoad
 import ly.img.editor.core.ui.engine.deselectAllBlocks
 import ly.img.editor.core.ui.engine.dpToCanvasUnit
 import ly.img.editor.core.ui.engine.getCamera
+import ly.img.editor.core.ui.engine.getFillType
 import ly.img.editor.core.ui.engine.getScene
 import ly.img.editor.core.ui.engine.overrideAndRestore
 import ly.img.editor.core.ui.library.AppearanceLibraryCategory
@@ -1869,6 +1870,14 @@ class EditorUiViewModel(
             BlockType.Image -> assetLibrary.images()
             BlockType.Audio -> assetLibrary.audios()
             BlockType.Video -> assetLibrary.videos()
+            // A page holds its replaceable media in its fill, not in the block type, so
+            // resolve the library from the fill type (mirrors the graphic cases above).
+            // Non-media fills (color/gradient/none) have nothing to replace, so no sheet.
+            BlockType.Page -> when (engine.block.getFillType(designBlock)) {
+                FillType.Image -> assetLibrary.images()
+                FillType.Video -> assetLibrary.videos()
+                else -> return
+            }
             else -> return
         }
         send(EditorEvent.Sheet.Open(SheetType.LibraryReplace(libraryCategory = libraryCategory)))
