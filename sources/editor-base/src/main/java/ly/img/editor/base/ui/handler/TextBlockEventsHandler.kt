@@ -3,6 +3,7 @@ package ly.img.editor.base.ui.handler
 import android.net.Uri
 import ly.img.editor.base.dock.options.format.SizeModeUi
 import ly.img.editor.base.dock.options.format.VerticalAlignment
+import ly.img.editor.base.engine.effectiveTextRange
 import ly.img.editor.base.ui.BlockEvent.OnBoldToggle
 import ly.img.editor.base.ui.BlockEvent.OnChangeClipping
 import ly.img.editor.base.ui.BlockEvent.OnChangeFont
@@ -173,8 +174,11 @@ fun EventsHandler.textBlockEvents(
     }
 
     register<OnChangeLetterCasing> {
-        if (engine.block.getTextCases(block).firstOrNull() != it.casing) {
-            engine.block.setTextCase(block, it.casing)
+        val casing = it.casing
+        val range = engine.block.effectiveTextRange(block)
+        val cases = engine.block.getTextCases(block, range.first, range.last)
+        if (cases.any { case -> case != casing }) {
+            engine.block.setTextCase(block, casing, range.first, range.last)
             engine.editor.addUndoStep()
         }
     }
@@ -187,8 +191,7 @@ fun EventsHandler.textBlockEvents(
             null
         }
         val currentStyle = runCatching {
-            val referenceIndex = paragraphIndices?.firstOrNull() ?: 0
-            engine.block.getTextListStyle(block, referenceIndex)
+            engine.block.getTextListStyle(block, paragraphIndices?.firstOrNull() ?: 0)
         }.getOrDefault(ListStyle.NONE)
         val newStyle = if (currentStyle == it.listStyle) ListStyle.NONE else it.listStyle
         if (paragraphIndices != null) {

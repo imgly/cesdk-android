@@ -20,6 +20,7 @@ internal fun SetupView(
     error: Throwable?,
     onClose: () -> Unit,
     onAllPermissionsGranted: () -> Unit,
+    requestOnlyCameraPermission: Boolean = false,
 ) {
     Column(
         modifier = modifier
@@ -29,6 +30,7 @@ internal fun SetupView(
     ) {
         when {
             !hasRequiredPermissions -> PermissionsView(
+                requestOnlyCameraPermission = requestOnlyCameraPermission,
                 onAllPermissionsGranted = onAllPermissionsGranted,
                 onClose = onClose,
             )

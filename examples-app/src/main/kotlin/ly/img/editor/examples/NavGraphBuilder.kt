@@ -1,6 +1,8 @@
 package ly.img.editor.examples
 
+import AIImageGenerationEditorSolution
 import AutomationActionsEditorSolution
+import BackgroundRemovalEditorSolution
 import CallbacksEditorSolution
 import ColorPaletteEditorSolution
 import CustomPanelSolution
@@ -11,6 +13,8 @@ import ForceCropEditorSolution
 import ForceTrimVideoSolution
 import ModifyingScenesEngineSolution
 import OverlayEditorSolution
+import RearrangeButtonsEditorSolution
+import RecordVoiceoverSolution
 import TemplatingEditorSolution
 import ThemingEditorSolution
 import androidx.compose.animation.AnimatedContentScope
@@ -121,6 +125,12 @@ fun NavGraphBuilder.build(navController: NavHostController) {
             onClose = { navController.popBackStack() },
         )
     }
+    composable(destination = Destination.GuideRecordVoiceover) {
+        RecordVoiceoverSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
     composable(destination = Destination.AutomateWorkflows) {
         AutomateWorkflowsScreen(
             license = Secrets.license,
@@ -150,6 +160,25 @@ fun NavGraphBuilder.build(navController: NavHostController) {
     composable(destination = Destination.GuideAutomationActions) {
         AutomationActionsEditorSolution(
             license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideRearrangeButtons) {
+        RearrangeButtonsEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideBackgroundRemoval) {
+        BackgroundRemovalEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideAIImageGeneration) {
+        AIImageGenerationEditorSolution(
+            license = Secrets.license,
+            aiGatewayApiKey = Secrets.gatewayApiKey,
             onClose = { navController.popBackStack() },
         )
     }

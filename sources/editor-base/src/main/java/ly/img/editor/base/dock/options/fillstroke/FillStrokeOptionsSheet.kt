@@ -13,7 +13,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ly.img.editor.base.components.PropertyPicker
@@ -82,7 +81,7 @@ fun FillStrokeOptionsSheet(
                                 null -> {
                                     ColorOptions(
                                         enabled = uiState.fillUiState.isFillEnabled,
-                                        selectedColor = Color.Black,
+                                        selectedColors = emptyList(),
                                         onNoColorSelected = {
                                             onEvent(
                                                 BlockEvent.OnDisableFill,
@@ -103,7 +102,7 @@ fun FillStrokeOptionsSheet(
                                 is SolidFill -> {
                                     ColorOptions(
                                         enabled = uiState.fillUiState.isFillEnabled,
-                                        selectedColor = fillState.mainColor,
+                                        selectedColors = fillState.colors,
                                         onNoColorSelected = {
                                             onEvent(
                                                 BlockEvent.OnDisableFill,
@@ -128,7 +127,7 @@ fun FillStrokeOptionsSheet(
                                     val secondColorStrop = (fillState.colorStops[1].color as RGBAColor).toComposeColor()
                                     ColorOptions(
                                         enabled = true,
-                                        selectedColor = firstColorStop,
+                                        selectedColors = listOf(firstColorStop),
                                         onNoColorSelected = {
                                             onEvent(BlockEvent.OnDisableFill)
                                         },
@@ -167,7 +166,7 @@ fun FillStrokeOptionsSheet(
                                     Divider(Modifier.padding(horizontal = 16.dp))
                                     ColorOptions(
                                         enabled = true,
-                                        selectedColor = secondColorStrop,
+                                        selectedColors = listOf(secondColorStrop),
                                         onNoColorSelected = {
                                             onEvent(BlockEvent.OnDisableFill)
                                         },

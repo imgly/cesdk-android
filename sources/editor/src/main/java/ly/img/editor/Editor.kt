@@ -41,7 +41,7 @@ import ly.img.engine.DesignBlockType
  * The default baseUri value used in [Editor] composable.
  */
 val defaultBaseUri: Uri by lazy {
-    "https://cdn.img.ly/packages/imgly/cesdk-android/1.76.0/assets".toUri()
+    "https://cdn.img.ly/packages/imgly/cesdk-android/1.77.0-rc.0/assets".toUri()
 }
 
 /**
@@ -78,6 +78,7 @@ fun Editor(
     license: String? = null,
     userId: String? = null,
     baseUri: Uri = defaultBaseUri,
+    host: String = "",
     engineRenderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
     uiMode: EditorUiMode = EditorUiMode.SYSTEM,
     configuration: ScopedProperty<EditorScope, EditorConfiguration> = { EditorConfiguration.remember() },
@@ -90,6 +91,7 @@ fun Editor(
             license = license,
             userId = userId,
             baseUri = baseUri,
+            host = host,
             onClose = onClose,
         ) { uiState ->
             EngineInitializer(
@@ -150,6 +152,7 @@ private inline fun EditorScope.EngineInitializer(
                     license = editorContext.license,
                     userId = editorContext.userId,
                     savedStateRegistryOwner = savedStateRegistryOwner,
+                    buildHost = editorContext.host,
                 )
                 loadingJob.cancelAndJoin()
                 Log.d("CESDK", "Engine initialization took ${System.currentTimeMillis() - start} ms")

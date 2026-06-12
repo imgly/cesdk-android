@@ -163,6 +163,19 @@
     <string name="ly_img_editor_dock_button_stickers">Stickers</string>
     <string name="ly_img_editor_dock_button_text">Text</string>
     <string name="ly_img_editor_dock_button_voiceover">Voiceover</string>
+    <string name="ly_img_editor_edit_text_button_bold">Bold</string>
+    <string name="ly_img_editor_edit_text_button_italic">Italic</string>
+    <string name="ly_img_editor_edit_text_button_strikethrough">Strikethrough</string>
+    <string name="ly_img_editor_edit_text_button_underline">Underline</string>
+    <string name="ly_img_editor_edit_text_label_letter_case">Letter Case</string>
+    <string name="ly_img_editor_edit_text_label_list_style">List Style</string>
+    <string name="ly_img_editor_edit_text_letter_case_option_lowercase">lower case</string>
+    <string name="ly_img_editor_edit_text_letter_case_option_none">As typed</string>
+    <string name="ly_img_editor_edit_text_letter_case_option_title_case">Capitalized Case</string>
+    <string name="ly_img_editor_edit_text_letter_case_option_uppercase">UPPER CASE</string>
+    <string name="ly_img_editor_edit_text_list_style_option_bulleted">Bulleted List</string>
+    <string name="ly_img_editor_edit_text_list_style_option_none">None</string>
+    <string name="ly_img_editor_edit_text_list_style_option_numbered">Numbered List</string>
     <string name="ly_img_editor_edit_text_title">Edit Text</string>
     <string name="ly_img_editor_error_activity_not_found">No app available to complete this action.</string>
     <string name="ly_img_editor_inspector_bar_button_adjustments">Adjustments</string>
@@ -404,6 +417,7 @@
     <string name="ly_img_editor_sheet_format_text_font_subfamily_light_italic">Light Italic</string>
     <string name="ly_img_editor_sheet_format_text_font_subfamily_medium">Medium</string>
     <string name="ly_img_editor_sheet_format_text_font_subfamily_medium_italic">Medium Italic</string>
+    <string name="ly_img_editor_sheet_format_text_font_subfamily_mixed">Mixed</string>
     <string name="ly_img_editor_sheet_format_text_font_subfamily_regular">Regular</string>
     <string name="ly_img_editor_sheet_format_text_font_subfamily_semibold">SemiBold</string>
     <string name="ly_img_editor_sheet_format_text_font_subfamily_semibold_italic">SemiBold Italic</string>
@@ -414,8 +428,8 @@
     <string name="ly_img_editor_sheet_format_text_frame_behavior_option_fixed_size">Fixed Size</string>
     <string name="ly_img_editor_sheet_format_text_label_alignment">Alignment</string>
     <string name="ly_img_editor_sheet_format_text_label_font">Font</string>
-    <string name="ly_img_editor_sheet_format_text_label_font_size_pt">Font Size (pt)</string>
     <string name="ly_img_editor_sheet_format_text_label_font_size">Font Size</string>
+    <string name="ly_img_editor_sheet_format_text_label_font_size_pt">Font Size (pt)</string>
     <string name="ly_img_editor_sheet_format_text_label_font_size_px">Font Size (px)</string>
     <string name="ly_img_editor_sheet_format_text_label_frame_behaviour">Frame Behavior</string>
     <string name="ly_img_editor_sheet_format_text_label_frame_clipping">Clipping</string>

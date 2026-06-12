@@ -1,11 +1,10 @@
 package ly.img.editor.plugin.backgroundRemoval
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.ui.Alignment
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.ScopedProperty
 import ly.img.editor.core.component.Dock
 import ly.img.editor.core.component.EditorComponent
+import ly.img.editor.core.component.HorizontalListBuilderModify
 import ly.img.editor.core.component.modify
 import ly.img.editor.core.component.remember
 import ly.img.editor.core.configuration.EditorConfigurationBuilder
@@ -19,7 +18,7 @@ class BackgroundRemovalPlugin : EditorConfigurationBuilder() {
      * The [Dock] modifier in order to place the [Dock.Button.rememberBackgroundRemoval] button.
      * By default, it is prepended to the dock.
      */
-    var dockModifier: EditorComponent.ListBuilder.Modify<EditorComponent<*>, Alignment.Horizontal, Arrangement.Horizontal>.() -> Unit = {
+    var dockModifier: HorizontalListBuilderModify<EditorComponent<*>>.() -> Unit = {
         addFirst { Dock.Button.rememberBackgroundRemoval() }
     }
 

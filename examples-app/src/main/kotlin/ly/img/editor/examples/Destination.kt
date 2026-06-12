@@ -83,6 +83,11 @@ sealed class Destination(
         title = "Force Trim",
     )
 
+    data object GuideRecordVoiceover : Destination(
+        route = "guide-record-voiceover",
+        title = "Record Voiceover",
+    )
+
     data object AutomateWorkflows : Destination(
         route = "guide-automate-workflows",
         title = "Automate Workflows",
@@ -113,6 +118,21 @@ sealed class Destination(
         title = "Automation Actions",
     )
 
+    data object GuideRearrangeButtons : Destination(
+        route = "guide-rearrange-buttons",
+        title = "Rearrange Buttons",
+    )
+
+    data object GuideBackgroundRemoval : Destination(
+        route = "guide-background-removal",
+        title = "Background Removal",
+    )
+
+    data object GuideAIImageGeneration : Destination(
+        route = "guide-ai-image-generation",
+        title = "AI Image Generation",
+    )
+
     companion object {
         val starterKits = listOf(
             PhotoEditor,
@@ -132,12 +152,16 @@ sealed class Destination(
             GuideTheming,
             GuideOverlay,
             GuideForceTrim,
+            GuideRecordVoiceover,
             AutomateWorkflows,
             GuideEditorState,
             GuideTemplating,
             GuideDesignUnits,
             GuideScenes,
             GuideAutomationActions,
+            GuideRearrangeButtons,
+            GuideBackgroundRemoval,
+            GuideAIImageGeneration,
         )
     }
 }

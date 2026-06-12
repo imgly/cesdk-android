@@ -263,9 +263,11 @@ interface SheetType {
      *
      * @param style the style that should be used to display the sheet.
      * Default value is the default [SheetStyle].
+     * @param fillOnly when true, only the fill section is shown (no stroke). Default is false.
      */
     class FillStroke(
         override val style: SheetStyle = SheetStyle(),
+        val fillOnly: Boolean = false,
     ) : SheetType
 
     /**

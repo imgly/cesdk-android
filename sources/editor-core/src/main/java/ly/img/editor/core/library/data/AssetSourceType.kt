@@ -15,7 +15,7 @@ open class AssetSourceType(
          * The default source type for shapes.
          */
         val Shapes by lazy {
-            AssetSourceType(sourceId = "ly.img.vectorpath")
+            AssetSourceType(sourceId = "ly.img.vector.shape")
         }
 
         /**
@@ -57,7 +57,7 @@ open class AssetSourceType(
          * The default source type for text components.
          */
         val TextComponents by lazy {
-            AssetSourceType(sourceId = "ly.img.textComponents")
+            AssetSourceType(sourceId = "ly.img.text.components")
         }
 
         /**

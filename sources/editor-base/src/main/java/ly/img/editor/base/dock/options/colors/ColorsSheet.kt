@@ -56,7 +56,7 @@ fun ColorsSheet(
                             ColorOptions(
                                 enabled = true,
                                 allowDisableColor = false,
-                                selectedColor = item.selectedColor,
+                                selectedColors = listOf(item.selectedColor),
                                 onNoColorSelected = { },
                                 onColorSelected = {
                                     onEvent(Event.OnColorChange(item.name, it))

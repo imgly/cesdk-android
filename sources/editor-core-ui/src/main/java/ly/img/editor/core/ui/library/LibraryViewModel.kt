@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ly.img.camera.core.Capture
 import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.currentLanguageCode
@@ -53,6 +54,7 @@ import ly.img.editor.core.ui.library.state.WrappedAsset
 import ly.img.editor.core.ui.library.util.AssetLibraryUiConfig
 import ly.img.editor.core.ui.library.util.LibraryEvent
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddAsset
+import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddCameraCaptures
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddCameraRecordings
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddUri
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAssetLongClick
@@ -144,6 +146,9 @@ class LibraryViewModel(
         }
         register<OnAddCameraRecordings> {
             onAddCameraRecordings(it.assetSource, it.recordings)
+        }
+        register<OnAddCameraCaptures> {
+            onAddCameraCaptures(it.photoAssetSource, it.videoAssetSource, it.captures, it.appendToBackgroundTrack)
         }
         register<OnAssetLongClick> {
             onAssetLongClick(it.wrappedAsset)
@@ -314,6 +319,77 @@ class LibraryViewModel(
             resolvedClipDuration = durationInDouble,
             inBackgroundTrack = true,
         )
+    }
+
+    private fun onAddCameraCaptures(
+        photoAssetSource: UploadAssetSourceType,
+        videoAssetSource: UploadAssetSourceType,
+        captures: List<Capture>,
+        appendToBackgroundTrack: Boolean,
+    ) {
+        viewModelScope.launch {
+            engine.awaitEngineAndSceneLoad()
+
+            if (appendToBackgroundTrack) {
+                val page = engine.getCurrentPage()
+                val backgroundTrack = engine.getSafeBackgroundTrack()
+
+                // set playhead position to end of background track
+                engine.block.setPlaybackTime(page, engine.block.getDuration(backgroundTrack))
+
+                captures.forEach { capture ->
+                    when (capture) {
+                        is Capture.Photo -> {
+                            uploadToAssetSource(photoAssetSource, capture.uri)
+                            addCameraPhoto(capture.uri, capture.clipDuration)
+                        }
+                        is Capture.Video -> {
+                            val videoUri = capture.recording.videos.first().uri
+                            val videoDuration = capture.recording.duration
+                            uploadToAssetSource(videoAssetSource, videoUri, videoDuration)
+                            addCameraRecording(videoUri, videoDuration)
+                        }
+                    }
+                }
+
+                engine.editor.addUndoStep()
+            } else {
+                // Non-timeline scenes (design / photo / apparel / postcard): place each capture on the current
+                // page centered, just like the gallery picker does for added images.
+                captures.forEach { capture ->
+                    when (capture) {
+                        is Capture.Photo -> {
+                            val asset = uploadToAssetSource(photoAssetSource, capture.uri) ?: return@forEach
+                            onAddAsset(photoAssetSource, asset, addToBackgroundTrack = false)
+                        }
+                        is Capture.Video -> {
+                            val videoUri = capture.recording.videos.first().uri
+                            val videoDuration = capture.recording.duration
+                            val asset = uploadToAssetSource(videoAssetSource, videoUri, videoDuration) ?: return@forEach
+                            onAddAsset(videoAssetSource, asset, addToBackgroundTrack = false)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun addCameraPhoto(
+        uri: Uri,
+        duration: Duration,
+    ) {
+        val backgroundTrack = engine.getSafeBackgroundTrack()
+        val id = engine.block.create(DesignBlockType.Graphic)
+        val rectShape = engine.block.createShape(ShapeType.Rect)
+        engine.block.setShape(id, rectShape)
+        engine.block.appendChild(parent = backgroundTrack, child = id)
+        engine.block.fillParent(id)
+
+        val durationInDouble = duration.toDouble(DurationUnit.SECONDS)
+        engine.block.setDuration(id, durationInDouble)
+        val fill = engine.block.createFill(FillType.Image)
+        engine.block.setString(fill, "fill/image/imageFileURI", uri.toString())
+        engine.block.setFill(id, fill)
     }
 
     private fun onReplaceAsset(

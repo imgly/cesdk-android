@@ -683,13 +683,22 @@ private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon
         block.hasColorOrGradientFill(designBlock) &&
         !hideFillForLine &&
         block.isAllowedByScope(designBlock, "fill/change")
+    val fillEnabled = showFill && block.isFillEnabled(designBlock)
+    val isText = DesignBlockType.getOrNull(block.getType(designBlock)) == DesignBlockType.Text
     return EditorIcon.FillStroke(
         showFill = showFill,
         showStroke = showStroke,
-        fill = if (showFill && block.isFillEnabled(designBlock)) {
-            getFill(designBlock)
-        } else {
-            null
+        // A text block can carry several colours across its runs; surface them all as a
+        // multi-colour SolidFill so the swatch stacks them, matching the inline text swatch.
+        fill = when {
+            !fillEnabled -> null
+            isText ->
+                runCatching { block.getTextColors(designBlock).map { it.toComposeColor(this) } }
+                    .getOrNull()
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { SolidFill(it) }
+                    ?: getFill(designBlock)
+            else -> getFill(designBlock)
         },
         stroke = if (showStroke && block.isStrokeEnabled(designBlock)) {
             getStrokeColor(designBlock)

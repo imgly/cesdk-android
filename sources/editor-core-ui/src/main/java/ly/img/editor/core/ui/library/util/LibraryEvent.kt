@@ -1,6 +1,7 @@
 package ly.img.editor.core.ui.library.util
 
 import android.net.Uri
+import ly.img.camera.core.Capture
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.library.LibraryContent
@@ -64,6 +65,13 @@ sealed interface LibraryEvent : EditorEvent {
     data class OnAddCameraRecordings(
         val assetSource: UploadAssetSourceType,
         val recordings: List<Pair<Uri, Duration>>,
+    ) : LibraryEvent
+
+    data class OnAddCameraCaptures(
+        val photoAssetSource: UploadAssetSourceType,
+        val videoAssetSource: UploadAssetSourceType,
+        val captures: List<Capture>,
+        val appendToBackgroundTrack: Boolean,
     ) : LibraryEvent
 
     data class OnAssetLongClick(
