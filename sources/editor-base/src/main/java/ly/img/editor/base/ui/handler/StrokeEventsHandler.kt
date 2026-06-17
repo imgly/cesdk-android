@@ -12,6 +12,7 @@ import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
+import ly.img.engine.StrokeCap
 import ly.img.engine.StrokeCornerGeometry
 import ly.img.engine.StrokePosition
 import ly.img.engine.StrokeStyle
@@ -45,6 +46,14 @@ fun EventsHandler.strokeEvents(
         val strokeStyleEnum = StrokeStyle.valueOf(it.style)
         if (engine.block.getStrokeStyle(block) != strokeStyleEnum) {
             engine.block.setStrokeStyle(block, strokeStyleEnum)
+            // Apply the cap the preset implies, like the web editor. Dotted/*Round presets need
+            // a Round cap, else a Dotted stroke is invisible (ANDROID-814). All four caps are set
+            // equal for the renderer's fast path; the dash pattern comes from the style preset.
+            val cap = strokeStyleEnum.presetCap()
+            engine.block.setStrokeStartCap(block, cap)
+            engine.block.setStrokeEndCap(block, cap)
+            engine.block.setStrokeDashStartCap(block, cap)
+            engine.block.setStrokeDashEndCap(block, cap)
             engine.editor.addUndoStep()
         }
     }
@@ -64,4 +73,11 @@ fun EventsHandler.strokeEvents(
             engine.editor.addUndoStep()
         }
     }
+}
+
+// Round-cap presets (Dotted, DashedRound, LongDashedRound) imply round dash/line caps, matching
+// the web editor and the engine's preset rendering; the rest use a butt cap.
+private fun StrokeStyle.presetCap(): StrokeCap = when (this) {
+    StrokeStyle.DOTTED, StrokeStyle.DASHED_ROUND, StrokeStyle.LONG_DASHED_ROUND -> StrokeCap.ROUND
+    else -> StrokeCap.BUTT
 }

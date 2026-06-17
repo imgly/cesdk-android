@@ -17,7 +17,13 @@ object AppearanceLibraryCategory {
                 titleRes = 0,
                 sections = listOf(
                     LibraryContent.Section(
-                        sourceTypes = listOf(AppearanceAssetSourceType.Filter),
+                        sourceTypes = listOf(AppearanceAssetSourceType.DuoToneFilter),
+                        count = Int.MAX_VALUE,
+                        assetType = AssetType.Filter,
+                        expandContent = null,
+                    ),
+                    LibraryContent.Section(
+                        sourceTypes = listOf(AppearanceAssetSourceType.LutFilter),
                         addGroupedSubSections = true,
                         count = Int.MAX_VALUE,
                         assetType = AssetType.Filter,

@@ -15,14 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ly.img.camera.ActiveMixedSubMode
 import ly.img.camera.core.R
-import ly.img.camera.record.components.PhotoVideoToggle
 import ly.img.editor.core.theme.LocalExtendedColorScheme
 import ly.img.editor.core.ui.iconpack.FlashOff
 import ly.img.editor.core.ui.iconpack.FlashOn
-import ly.img.editor.core.ui.iconpack.FlashlightOff
-import ly.img.editor.core.ui.iconpack.FlashlightOn
 import ly.img.editor.core.ui.iconpack.FlipCamera
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.SwapHoriz
@@ -33,13 +29,9 @@ internal fun CameraControls(
     isFlashEnabled: Boolean,
     isFlashOn: Boolean,
     isSwappingAllowed: Boolean,
-    showPhotoVideoToggle: Boolean,
-    activeMixedSubMode: ActiveMixedSubMode,
-    behavesAsPhoto: Boolean,
     toggleFlash: () -> Unit,
     toggleCamera: () -> Unit,
     swapLayoutPositions: () -> Unit,
-    onSubModeChange: (ActiveMixedSubMode) -> Unit,
 ) {
     Box(
         Modifier
@@ -53,25 +45,17 @@ internal fun CameraControls(
                 LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
             ) {
                 if (isFlashEnabled) {
-                    // Photo / Mixed-photo uses `ImageCapture.FLASH_MODE_*` (a true single-shot
-                    // flash) — render the lightning-bolt icon. Video / Mixed-video uses the
-                    // continuous-LED torch — render the flashlight icon.
-                    val onIcon = if (behavesAsPhoto) IconPack.FlashOn else IconPack.FlashlightOn
-                    val offIcon = if (behavesAsPhoto) IconPack.FlashOff else IconPack.FlashlightOff
                     IconButton(
                         modifier = Modifier.align(Alignment.CenterStart),
                         onClick = toggleFlash,
                     ) {
                         Icon(
-                            if (isFlashOn) onIcon else offIcon,
+                            if (isFlashOn) IconPack.FlashOn else IconPack.FlashOff,
                             contentDescription = stringResource(R.string.ly_img_camera_button_toggle_flash),
                         )
                     }
                 }
 
-                // The center slot is shared between the Reaction "swap-positions" button and the
-                // Mixed-mode photo↔video toggle. `CameraMode.supports` forbids `Reaction × Mixed`,
-                // so the two predicates are guaranteed mutually exclusive.
                 if (isSwappingAllowed) {
                     IconButton(
                         modifier = Modifier.align(Alignment.Center),
@@ -82,12 +66,6 @@ internal fun CameraControls(
                             contentDescription = stringResource(R.string.ly_img_camera_button_swap_positions),
                         )
                     }
-                } else if (showPhotoVideoToggle) {
-                    PhotoVideoToggle(
-                        activeMixedSubMode = activeMixedSubMode,
-                        onSubModeChange = onSubModeChange,
-                        modifier = Modifier.align(Alignment.Center),
-                    )
                 }
 
                 IconButton(

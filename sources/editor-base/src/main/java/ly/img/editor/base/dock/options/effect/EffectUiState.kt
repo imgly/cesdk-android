@@ -24,28 +24,27 @@ data class EffectUiState(
     val effect: DesignBlockWithProperties?,
     val libraryCategory: LibraryCategory,
 ) {
-    fun getAssetKey(asset: WrappedAsset): String? = when (asset.assetSourceType) {
-        AppearanceAssetSourceType.Filter -> {
-            // The merged `ly.img.filter` source contains both LUT and duotone assets. Duotone
-            // assets carry `lightColor` / `darkColor` metadata — LUT assets don't.
-            val darkColor = asset.asset.getMeta("darkColor")
-            val lightColor = asset.asset.getMeta("lightColor")
-            if (darkColor != null && lightColor != null) {
+    fun getAssetKey(asset: WrappedAsset): String? {
+        return when (asset.assetSourceType) {
+            AppearanceAssetSourceType.LutFilter -> {
+                asset.asset.id
+            }
+            AppearanceAssetSourceType.DuoToneFilter -> {
+                val darkColor = asset.asset.getMeta("darkColor") ?: return null
+                val lightColor = asset.asset.getMeta("lightColor") ?: return null
                 buildDuotoneUri(
                     darkColor = Color.fromHex(darkColor),
                     lightColor = Color.fromHex(lightColor),
                 )
-            } else {
-                asset.asset.id
             }
+            AppearanceAssetSourceType.FxEffect -> {
+                asset.asset.getMeta("effectType")
+            }
+            AppearanceAssetSourceType.Blur -> {
+                asset.asset.getMeta("blurType")
+            }
+            else -> null
         }
-        AppearanceAssetSourceType.FxEffect -> {
-            asset.asset.getMeta("effectType")
-        }
-        AppearanceAssetSourceType.Blur -> {
-            asset.asset.getMeta("blurType")
-        }
-        else -> null
     }
 
     companion object {

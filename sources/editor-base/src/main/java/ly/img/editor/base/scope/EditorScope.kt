@@ -32,7 +32,6 @@ fun EditorScope(
     license: String?,
     userId: String?,
     baseUri: Uri,
-    host: String = "",
     onClose: (Throwable?) -> Unit,
     content: @Composable EditorScope.(EditorUiViewState) -> Unit,
 ) = LocalEditorScope.current.run {
@@ -64,7 +63,6 @@ fun EditorScope(
                 license = license,
                 userId = userId,
                 baseUri = baseUri,
-                host = host,
                 activity = activity,
                 eventHandler = viewModel,
                 coroutineScope = viewModel.viewModelScope,

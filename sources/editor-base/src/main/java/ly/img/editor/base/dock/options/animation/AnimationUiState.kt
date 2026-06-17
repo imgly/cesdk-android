@@ -16,6 +16,7 @@ import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
 import ly.img.engine.FindAssetsQuery
+import ly.img.engine.defaultAssetSourcesBaseUri
 
 @Immutable
 data class AnimationUiState(
@@ -91,14 +92,11 @@ data class AnimationUiState(
             locale: String,
         ): AnimationUiState {
             val isTextBlock = engine.block.getType(designBlock) == DesignBlockType.Text.key
-            // Resolve from the editor's configured base path (the single source of truth, set via
-            // EditorUiSettings). engine.defaultAssetSourcesBaseUri is null once an app registers
-            // sources via Engine.asset.addLocalSourceFromJSON instead of addDefaultAssetSources.
-            val basePath = engine.editor.getSettingString("basePath")
+            val defaultAssetSourcesBaseUri = engine.defaultAssetSourcesBaseUri
             val thumbnailsBaseUri = if (isTextBlock) {
-                "$basePath/ly.img.animation.text/thumbnails"
+                "$defaultAssetSourcesBaseUri/ly.img.animation.text/thumbnails"
             } else {
-                "$basePath/ly.img.animation/thumbnails"
+                "$defaultAssetSourcesBaseUri/ly.img.animation/thumbnails"
             }
             return AnimationUiState(
                 categories = listOf(

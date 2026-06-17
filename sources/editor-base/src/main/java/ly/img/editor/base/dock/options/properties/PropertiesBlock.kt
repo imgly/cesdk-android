@@ -208,7 +208,7 @@ private fun ColorPropertyWithListAndPicker(
     ) {
         ColorOptions(
             enabled = value.value != null,
-            selectedColors = listOf(currentColor),
+            selectedColor = currentColor,
             onNoColorSelected = {
                 BlockEvent.OnChangeProperty(
                     designBlock = designBlock,

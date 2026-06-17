@@ -18,27 +18,15 @@ sealed interface Fill {
 }
 
 /**
- * A type of [Fill] that is one or more flat colors.
+ * A type of [Fill] that is a solid color.
  */
 @Stable
 data class SolidFill(
     /**
-     * The colors of the fill.
+     * The only and main color of the fill.
      */
-    val colors: List<Color>,
-) : Fill {
-    init {
-        require(colors.isNotEmpty()) { "SolidFill must have at least one color." }
-    }
-
-    constructor(mainColor: Color) : this(listOf(mainColor))
-
-    /**
-     * The main color of the fill. It returns the first color in the [colors] list.
-     */
-    override val mainColor: Color
-        get() = colors.first()
-}
+    override val mainColor: Color,
+) : Fill
 
 /**
  * A type of [Fill] that is a gradient.

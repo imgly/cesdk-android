@@ -31,7 +31,7 @@ fun StrokeOptions(
     ) {
         ColorOptions(
             enabled = uiState.isStrokeEnabled,
-            selectedColors = listOf(uiState.strokeColor),
+            selectedColor = uiState.strokeColor,
             onNoColorSelected = { onEvent(BlockEvent.OnDisableStroke) },
             onColorSelected = {
                 onEvent(BlockEvent.OnChangeStrokeColor(it))

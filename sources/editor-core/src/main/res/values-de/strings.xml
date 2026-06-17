@@ -163,19 +163,6 @@
     <string name="ly_img_editor_dock_button_stickers">Sticker</string>
     <string name="ly_img_editor_dock_button_text">Text</string>
     <string name="ly_img_editor_dock_button_voiceover">Voiceover</string>
-    <string name="ly_img_editor_edit_text_button_bold">Fett</string>
-    <string name="ly_img_editor_edit_text_button_italic">Kursiv</string>
-    <string name="ly_img_editor_edit_text_button_strikethrough">Durchgestrichen</string>
-    <string name="ly_img_editor_edit_text_button_underline">Unterstrichen</string>
-    <string name="ly_img_editor_edit_text_label_letter_case">Groß-/Kleinschreibung</string>
-    <string name="ly_img_editor_edit_text_label_list_style">Listenstil</string>
-    <string name="ly_img_editor_edit_text_letter_case_option_lowercase">alles klein</string>
-    <string name="ly_img_editor_edit_text_letter_case_option_none">Wie geschrieben</string>
-    <string name="ly_img_editor_edit_text_letter_case_option_title_case">Großschreibung</string>
-    <string name="ly_img_editor_edit_text_letter_case_option_uppercase">ALLES GROSS</string>
-    <string name="ly_img_editor_edit_text_list_style_option_bulleted">Aufzählungsliste</string>
-    <string name="ly_img_editor_edit_text_list_style_option_none">Keine</string>
-    <string name="ly_img_editor_edit_text_list_style_option_numbered">Nummerierte Liste</string>
     <string name="ly_img_editor_edit_text_title">Text bearbeiten</string>
     <string name="ly_img_editor_error_activity_not_found">Keine App verfügbar, um diese Aktion auszuführen.</string>
     <string name="ly_img_editor_inspector_bar_button_adjustments">Farbkorrektur</string>
@@ -417,7 +404,6 @@
     <string name="ly_img_editor_sheet_format_text_font_subfamily_light_italic">Leicht Kursiv</string>
     <string name="ly_img_editor_sheet_format_text_font_subfamily_medium">Medium</string>
     <string name="ly_img_editor_sheet_format_text_font_subfamily_medium_italic">Medium Kursiv</string>
-    <string name="ly_img_editor_sheet_format_text_font_subfamily_mixed">Gemischt</string>
     <string name="ly_img_editor_sheet_format_text_font_subfamily_regular">Standard</string>
     <string name="ly_img_editor_sheet_format_text_font_subfamily_semibold">Halbfett</string>
     <string name="ly_img_editor_sheet_format_text_font_subfamily_semibold_italic">Halbfett Kursiv</string>
@@ -428,8 +414,8 @@
     <string name="ly_img_editor_sheet_format_text_frame_behavior_option_fixed_size">Feste Größe</string>
     <string name="ly_img_editor_sheet_format_text_label_alignment">Ausrichtung</string>
     <string name="ly_img_editor_sheet_format_text_label_font">Schriftart</string>
-    <string name="ly_img_editor_sheet_format_text_label_font_size">Schriftgröße</string>
     <string name="ly_img_editor_sheet_format_text_label_font_size_pt">Schriftgröße (pt)</string>
+    <string name="ly_img_editor_sheet_format_text_label_font_size">Schriftgröße</string>
     <string name="ly_img_editor_sheet_format_text_label_font_size_px">Schriftgröße (px)</string>
     <string name="ly_img_editor_sheet_format_text_label_frame_behaviour">Textrahmen</string>
     <string name="ly_img_editor_sheet_format_text_label_frame_clipping">Kappen</string>

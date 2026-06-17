@@ -8,11 +8,6 @@ dependencies {
     api project(":editor-experimental")
     api project(":editor-core")
     api libs.cesdk.engine
-    // compileOnly so editor-core-ui can pattern-match on `Capture` / `CameraResult.Captures` in
-    // its camera-handling code without forcing customers to add the camera-core dependency when
-    // they don't use the IMG.LY camera. The IMG.LY camera dock button does a
-    // `runCatching { CaptureMedia() }` at runtime to detect availability.
-    compileOnly(project(":camera-core"))
 
     implementation platform(libs.compose.bom)
     api libs.compose.material3

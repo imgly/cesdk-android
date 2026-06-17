@@ -26,8 +26,6 @@ import java.util.UUID
 
 typealias HorizontalListBuilder<Item> = EditorComponent.ListBuilder<Item, Alignment.Horizontal, Arrangement.Horizontal>
 
-typealias HorizontalListBuilderModify<Item> = EditorComponent.ListBuilder.Modify<Item, Alignment.Horizontal, Arrangement.Horizontal>
-
 typealias HorizontalListBuilderScope<Item> =
     EditorComponent.ListBuilder.New<Item, Alignment.Horizontal, Arrangement.Horizontal>
 

@@ -63,12 +63,6 @@ class PlayerState(
     }
 
     fun pause() {
-        // Only stop playback if actually playing. `setPlaying(page, false)` is not a no-op when
-        // idle: the engine flips edit mode to TRANSFORM, which would tear down an active text-edit
-        // session (e.g. when opening a sheet over the keyboard). Skipping it when idle keeps pause
-        // purely about playback. Query the engine directly rather than the cached `isPlaying` flag,
-        // which lags `play()` until the next `refresh()`.
-        if (!engine.block.isPlaying(page)) return
         engine.block.setPlaying(page, false)
     }
 

@@ -1,11 +1,7 @@
 package ly.img.camera
 
 import android.app.Application
-import android.net.Uri
-import android.util.Log
 import android.util.Size
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.MirrorMode.MIRROR_MODE_ON_FRONT_ONLY
 import androidx.camera.core.Preview
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
@@ -21,7 +17,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -34,15 +29,11 @@ import ly.img.camera.core.CameraConfiguration
 import ly.img.camera.core.CameraLayoutMode
 import ly.img.camera.core.CameraMode
 import ly.img.camera.core.CameraResult
-import ly.img.camera.core.Capture
-import ly.img.camera.core.CaptureCount
-import ly.img.camera.core.CaptureMedia
+import ly.img.camera.core.CaptureVideo
 import ly.img.camera.core.EngineConfiguration
-import ly.img.camera.core.Recording
 import ly.img.camera.core.Video
 import ly.img.camera.preview.CameraState
 import ly.img.camera.preview.LayoutState
-import ly.img.camera.record.PhotoCapture
 import ly.img.camera.record.RecordingManager
 import ly.img.camera.record.VideoRecorder
 import ly.img.camera.util.SingleEvent
@@ -60,7 +51,6 @@ import ly.img.engine.camera.setCameraPreview
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
-import kotlinx.coroutines.GlobalScope as CoroutineGlobalScope
 
 internal class CameraViewModel(
     application: Application,
@@ -71,7 +61,7 @@ internal class CameraViewModel(
         it.idlingEnabled = true
     }
 
-    private val cameraInput = savedStateHandle.get<CaptureMedia.Input>(CaptureMedia.INTENT_KEY_CAMERA_INPUT)
+    private val cameraInput = savedStateHandle.get<CaptureVideo.Input>(CaptureVideo.INTENT_KEY_CAMERA_INPUT)
     val engineConfiguration: EngineConfiguration? = cameraInput?.engineConfiguration
     val cameraConfiguration: CameraConfiguration = cameraInput?.cameraConfiguration ?: CameraConfiguration()
     val cameraMode: CameraMode = cameraInput?.cameraMode ?: CameraMode.Standard()
@@ -103,33 +93,18 @@ internal class CameraViewModel(
         .Builder(Recorder.Builder().build())
         .setMirrorMode(MIRROR_MODE_ON_FRONT_ONLY)
 
-    private val imageCaptureBuilder = ImageCapture
-        .Builder()
-        .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-
     val cameraState = CameraState(
         previewBuilder = previewBuilder,
         videoCaptureBuilder = videoCaptureBuilder,
-        imageCaptureBuilder = imageCaptureBuilder,
-        captureType = cameraConfiguration.captureType,
         startWithFrontCamera = cameraMode is CameraMode.Reaction,
     )
 
     val recordingManager = RecordingManager(
         maxDuration = cameraConfiguration.maxTotalDuration,
         allowExceedingMaxDuration = cameraConfiguration.allowExceedingMaxDuration,
-        photoClipDuration = cameraConfiguration.photoClipDuration,
         coroutineScope = viewModelScope,
         videoRecorder = VideoRecorder(
-            videoCaptureProvider = {
-                requireNotNull(cameraState.videoCaptureUseCase) {
-                    "VideoRecorder invoked in photo-only capture session — no VideoCapture use case bound."
-                }
-            },
-            filesDirProvider = { filesDirDeferred.await() },
-        ),
-        photoCapture = PhotoCapture(
-            imageCaptureProvider = { cameraState.imageCaptureUseCase },
+            videoCaptureProvider = { cameraState.videoCaptureUseCase },
             filesDirProvider = { filesDirDeferred.await() },
         ),
     )
@@ -141,28 +116,6 @@ internal class CameraViewModel(
             null -> null
         },
     )
-        private set
-
-    /**
-     * Drives shutter routing while `cameraConfiguration.captureType == Mixed`. Ignored for pure
-     * `Photo` / `Video` capture types. Defaults to `Photo` so the camera opens in still mode.
-     */
-    var activeMixedSubMode by mutableStateOf(ActiveMixedSubMode.Photo)
-        private set
-
-    fun selectActiveMixedSubMode(mode: ActiveMixedSubMode) {
-        activeMixedSubMode = mode
-    }
-
-    /** Non-null while the photo preview screen is shown. The JPEG only joins
-     * [RecordingManager]'s capture stack on [confirmPhotoPreview]. */
-    var previewingPhotoUri: Uri? by mutableStateOf(null)
-        private set
-
-    /** True for a short fixed window after the shutter fires, so the white-flash overlay is
-     * a quick visual hint rather than a wait-for-encode indicator. Decoupled from
-     * [RecordingManager.Status.TakingPhoto] (which lasts as long as the JPEG encode + write). */
-    var isFlashing: Boolean by mutableStateOf(false)
         private set
 
     private val _uiEvent = Channel<SingleEvent>()
@@ -197,78 +150,6 @@ internal class CameraViewModel(
                         },
                     )
                 }
-        }
-
-        // Single-take auto-finish: as soon as the first capture (photo or video) lands and we're
-        // idle, emit FinishCapturing so the activity returns the result without a Next button tap.
-        if (cameraConfiguration.captureCount == CaptureCount.Single) {
-            viewModelScope.launch {
-                snapshotFlow {
-                    val state = recordingManager.state
-                    state.status is RecordingManager.Status.Idle && state.captures.isNotEmpty()
-                }.distinctUntilChanged().filter { it }.collect {
-                    sendSingleEvent(SingleEvent.FinishCapturing)
-                }
-            }
-        }
-    }
-
-    /**
-     * Fires the shutter, writes the JPEG, and either parks the URI in [previewingPhotoUri] for
-     * the preview screen to pick up (default) or commits it straight to the capture stack when
-     * [CameraConfiguration.showsPhotoPreview] is false. Routes through
-     * [RecordingManager.runWithTimerForPhoto] so the [Timer] setting applies to photo captures too.
-     */
-    fun capturePhoto() {
-        recordingManager.runWithTimerForPhoto {
-            recordingManager.setTakingPhoto()
-            isFlashing = true
-            try {
-                val uri = recordingManager.takePhoto(getApplication())
-                if (cameraConfiguration.showsPhotoPreview) {
-                    // Defer `addPhoto` to `confirmPhotoPreview` so retry is a clean file delete.
-                    previewingPhotoUri = uri
-                } else {
-                    recordingManager.addPhoto(uri)
-                }
-                recordingManager.finishTakingPhoto()
-            } catch (e: ImageCaptureException) {
-                recordingManager.finishTakingPhoto()
-                Log.w("CameraViewModel", "Photo capture failed", e)
-            } catch (e: IllegalStateException) {
-                // `ImageCapture` use case not bound — device cannot host the photo+video combo.
-                recordingManager.finishTakingPhoto()
-                Log.w("CameraViewModel", "Photo capture unavailable", e)
-            } finally {
-                isFlashing = false
-            }
-        }
-    }
-
-    /** Commits the previewing photo to the capture stack. No-op if nothing is previewing. */
-    fun confirmPhotoPreview() {
-        val uri = previewingPhotoUri ?: return
-        // Single-take keeps the preview rendered through dismissal so the chrome doesn't
-        // briefly fade back in before the activity finishes.
-        if (cameraConfiguration.captureCount != CaptureCount.Single) {
-            previewingPhotoUri = null
-        }
-        recordingManager.addPhoto(uri)
-    }
-
-    /**
-     * Discards the previewing photo and deletes the JPEG. Also called from the
-     * activity-close paths to orphan-clean an unconfirmed JPEG — hence
-     * [CoroutineGlobalScope] (matches [RecordingManager.deletePreviousRecording]) so the
-     * delete survives [viewModelScope] being cancelled by the closing activity.
-     */
-    @OptIn(DelicateCoroutinesApi::class)
-    fun discardPhotoPreview() {
-        val uri = previewingPhotoUri ?: return
-        previewingPhotoUri = null
-        val path = uri.path ?: return
-        CoroutineGlobalScope.launch(Dispatchers.IO) {
-            runCatching { File(path).delete() }
         }
     }
 
@@ -378,30 +259,19 @@ internal class CameraViewModel(
         }
     }
 
-    fun finishCapturing() {
-        sendSingleEvent(SingleEvent.FinishCapturing)
-    }
-
-    fun getResult(): CameraResult {
-        val captures = recordingManager.state.captures
-        return when {
-            cameraMode is CameraMode.Reaction ->
-                CameraResult.Reaction(
-                    video = Video(
-                        uri = cameraMode.video,
-                        rect = layoutState.rect1,
-                    ),
-                    reaction = ArrayList(captures.reactionRecordings()),
-                )
-            else -> CameraResult.Captures(captures = captures)
-        }
-    }
-
-    private fun List<Capture>.reactionRecordings(): List<Recording> {
-        // Reaction × Photo/Mixed is forbidden at CaptureMedia.Input construction. The `check`
-        // makes the invariant explicit — a Photo reaching this branch should crash loudly.
-        check(none { it is Capture.Photo }) { "Capture.Photo reached a Reaction result branch" }
-        return map { (it as Capture.Video).recording }
+    fun getResult(): CameraResult = when (cameraMode) {
+        is CameraMode.Reaction ->
+            CameraResult.Reaction(
+                video = Video(
+                    uri = cameraMode.video,
+                    rect = layoutState.rect1,
+                ),
+                reaction = ArrayList(recordingManager.state.recordings),
+            )
+        is CameraMode.Standard ->
+            CameraResult.Record(
+                recordings = ArrayList(recordingManager.state.recordings),
+            )
     }
 
     private fun loadVideo() {

@@ -629,15 +629,14 @@ fun EditorScope.EditorUi(
                                 }
                             }
 
-                            if (uiState.isEditingText && uiState.editingTextCardUiState != null) {
+                            if (uiState.isEditingText) {
                                 EditingTextCard(
                                     modifier = Modifier
                                         .align(Alignment.BottomStart)
                                         .onGloballyPositioned {
                                             viewModel.send(Event.OnKeyboardHeightChange(it.size.height / oneDpInPx))
                                         },
-                                    uiState = uiState.editingTextCardUiState,
-                                    onEvent = onEvent,
+                                    onClose = { viewModel.send(Event.OnKeyboardClose) },
                                 )
                             }
 

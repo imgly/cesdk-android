@@ -1,9 +1,6 @@
 package ly.img.editor.base.dock.options.format
 
 import androidx.annotation.StringRes
-import ly.img.editor.base.engine.effectiveTextRange
-import ly.img.editor.base.engine.resolveTextFont
-import ly.img.editor.base.engine.resolveTextListStyle
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.ui.engine.Scope
 import ly.img.editor.core.ui.library.TypefaceLibraryCategory
@@ -22,8 +19,8 @@ import ly.img.engine.TextDecorationLine
 data class FormatUiState(
     val libraryCategory: LibraryCategory,
     val fontFamily: String,
-    val fontFamilyWeight: FontWeight?,
-    val fontFamilyStyle: FontStyle?,
+    val fontFamilyWeight: FontWeight,
+    val fontFamilyStyle: FontStyle,
     val canToggleBold: Boolean,
     val canToggleItalic: Boolean,
     val isBold: Boolean,
@@ -48,8 +45,31 @@ data class FormatUiState(
     val isArrangeResizeAllowed: Boolean,
     val availableWeights: List<FontData>,
     val subFamily: String,
-    val isSubFamilyMixed: Boolean,
 )
+
+private fun resolveListStyle(
+    designBlock: DesignBlock,
+    engine: Engine,
+): ListStyle? {
+    val cursorRange = runCatching { engine.block.getTextCursorRange() }.getOrNull()
+    val paragraphIndices = if (cursorRange != null) {
+        runCatching {
+            engine.block.getTextParagraphIndices(designBlock, cursorRange.first, cursorRange.last)
+        }.getOrNull()
+    } else {
+        runCatching {
+            val text = engine.block.getString(designBlock, "text/text")
+            engine.block.getTextParagraphIndices(designBlock, 0, text.length)
+        }.getOrNull()
+    }
+    if (paragraphIndices.isNullOrEmpty()) return ListStyle.NONE
+    val styles = paragraphIndices.mapNotNull { index ->
+        runCatching { engine.block.getTextListStyle(designBlock, index) }.getOrNull()
+    }
+    if (styles.isEmpty()) return ListStyle.NONE
+    val first = styles.first()
+    return if (styles.all { it == first }) first else null
+}
 
 internal fun createFormatUiState(
     designBlock: DesignBlock,
@@ -58,7 +78,12 @@ internal fun createFormatUiState(
     val typeface = runCatching { engine.block.getTypeface(designBlock) }.getOrNull()
     val sizeMode = engine.block.getHeightMode(designBlock)
 
-    val currentFont = typeface?.let { engine.block.resolveTextFont(designBlock) }
+    val fontWeight = engine.block.getTextFontWeights(designBlock).firstOrNull() ?: FontWeight.NORMAL
+    val fontStyle = engine.block.getTextFontStyles(designBlock).firstOrNull() ?: FontStyle.NORMAL
+
+    val currentFont = typeface?.fonts?.firstOrNull {
+        it.weight == fontWeight && it.style == fontStyle
+    }
 
     return FormatUiState(
         libraryCategory = TypefaceLibraryCategory,
@@ -70,20 +95,16 @@ internal fun createFormatUiState(
             engine.block.canToggleItalicFont(designBlock)
         } ?: false,
         isBold = typeface?.let {
-            val weights = engine.block.getTextFontWeights(designBlock)
-            weights.isNotEmpty() && weights.all { weight -> weight == FontWeight.BOLD }
+            engine.block.getTextFontWeights(designBlock).contains(FontWeight.BOLD)
         } ?: false,
         isItalic = typeface?.let {
-            val styles = engine.block.getTextFontStyles(designBlock)
-            styles.isNotEmpty() && styles.all { style -> style == FontStyle.ITALIC }
+            engine.block.getTextFontStyles(designBlock).contains(FontStyle.ITALIC)
         } ?: false,
         isUnderline = runCatching {
-            val decorations = engine.block.getTextDecorations(designBlock)
-            decorations.isNotEmpty() && decorations.all { it.lines.contains(TextDecorationLine.UNDERLINE) }
+            engine.block.getTextDecorations(designBlock).any { it.lines.contains(TextDecorationLine.UNDERLINE) }
         }.getOrDefault(false),
         isStrikethrough = runCatching {
-            val decorations = engine.block.getTextDecorations(designBlock)
-            decorations.isNotEmpty() && decorations.all { it.lines.contains(TextDecorationLine.STRIKETHROUGH) }
+            engine.block.getTextDecorations(designBlock).any { it.lines.contains(TextDecorationLine.STRIKETHROUGH) }
         }.getOrDefault(false),
         horizontalAlignment = HorizontalAlignment.valueOf(
             engine.block.getEnum(designBlock, "text/horizontalAlignment"),
@@ -110,12 +131,10 @@ internal fun createFormatUiState(
         hasClippingOption = sizeMode == SizeMode.ABSOLUTE,
         isClipped = engine.block.getBoolean(designBlock, "text/clipLinesOutsideOfFrame"),
         isArrangeResizeAllowed = engine.block.isAllowedByScope(designBlock, Scope.LayerResize),
-        casing = engine.block.effectiveTextRange(designBlock).let { range ->
-            engine.block.getTextCases(designBlock, range.first, range.last).firstOrNull() ?: TextCase.NORMAL
-        },
-        listStyle = engine.block.resolveTextListStyle(designBlock),
+        casing = engine.block.getTextCases(designBlock).firstOrNull() ?: TextCase.NORMAL,
+        listStyle = resolveListStyle(designBlock, engine),
         paragraphSpacing = engine.block.getFloat(designBlock, "text/paragraphSpacing"),
-        fontFamilyWeight = currentFont?.weight,
+        fontFamilyWeight = fontWeight,
         availableWeights = typeface?.fonts?.sortedBy { it.weight.value + if (it.style == FontStyle.ITALIC) 1000 else 0 }?.map {
             FontData(
                 typeface = typeface,
@@ -126,8 +145,7 @@ internal fun createFormatUiState(
                 subFamily = it.subFamily,
             )
         } ?: emptyList(),
-        fontFamilyStyle = currentFont?.style,
+        fontFamilyStyle = fontStyle,
         subFamily = currentFont?.subFamily ?: "",
-        isSubFamilyMixed = typeface != null && currentFont == null,
     )
 }

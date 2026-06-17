@@ -9,17 +9,14 @@ import android.os.Parcelable
  * @param userId an optional unique ID tied to your application's user. This helps us accurately calculate monthly active users (MAU).
  * Especially useful when one person uses the app on multiple devices with a sign-in feature, ensuring they're counted once.
  * Providing this aids in better data accuracy.
- * @param host the integration context embedding the engine, used for license matching.
  */
 data class EngineConfiguration(
     val license: String? = null,
     val userId: String? = null,
-    val host: String = "",
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString(),
         parcel.readString(),
-        parcel.readString() ?: "",
     )
 
     override fun writeToParcel(
@@ -28,7 +25,6 @@ data class EngineConfiguration(
     ) {
         parcel.writeString(license)
         parcel.writeString(userId)
-        parcel.writeString(host)
     }
 
     override fun describeContents(): Int = 0

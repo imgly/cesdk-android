@@ -67,12 +67,6 @@ fun EventsHandler.cropEvents(
     }
 
     register<BlockEvent.OnReplaceCropPreset> {
-        val incomingPreset = it.wrappedAsset?.asset?.payload?.transformPreset
-        if (incomingPreset is AssetTransformPreset.ContentAspectRatio &&
-            !runCatching { engine.block.canRevertToOriginalRatio(block) }.getOrDefault(false)
-        ) {
-            return@register
-        }
         val cropAsset = it.wrappedAsset?.asset
         if (cropAsset != null) {
             bewarePageState {

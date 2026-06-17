@@ -1,7 +1,5 @@
 package ly.img.camera
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -30,8 +28,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ly.img.camera.components.CameraView
 import ly.img.camera.components.TOOLBAR_HEIGHT
-import ly.img.camera.core.CaptureMedia
-import ly.img.camera.core.CaptureType
 import ly.img.camera.core.R
 import ly.img.camera.setup.CameraEngineInitializer
 import ly.img.camera.setup.SetupView
@@ -69,12 +65,9 @@ open class CameraActivity : ComponentActivity() {
                 ) {
                     val context = LocalContext.current
 
-                    val captureType = viewModel.cameraConfiguration.captureType
-                    val micPermissionRequired = captureType != CaptureType.Photo
-
                     var hasRequiredPermissions by remember {
                         mutableStateOf(
-                            (!micPermissionRequired || context.hasMicPermission()) && context.hasCameraPermission(),
+                            context.hasMicPermission() && context.hasCameraPermission(),
                         )
                     }
 
@@ -96,7 +89,6 @@ open class CameraActivity : ComponentActivity() {
                             hasRequiredPermissions = hasRequiredPermissions,
                             isLoading = initResult == null,
                             error = initResult?.exceptionOrNull(),
-                            requestOnlyCameraPermission = !micPermissionRequired,
                             onClose = ::finish,
                             onAllPermissionsGranted = {
                                 hasRequiredPermissions = true
@@ -122,14 +114,6 @@ open class CameraActivity : ComponentActivity() {
                     viewModel.uiEvent.collect {
                         when (it) {
                             is SingleEvent.ErrorLoadingVideo -> showVideoErrorDialog = true
-                            is SingleEvent.FinishCapturing -> {
-                                val result = viewModel.getResult()
-                                val intent = Intent().apply {
-                                    putExtra(CaptureMedia.INTENT_KEY_CAMERA_RESULT, result)
-                                }
-                                setResult(Activity.RESULT_OK, intent)
-                                finish()
-                            }
                         }
                     }
                 }

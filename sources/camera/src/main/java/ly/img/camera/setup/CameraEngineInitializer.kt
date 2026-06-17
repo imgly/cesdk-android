@@ -28,7 +28,6 @@ internal fun CameraEngineInitializer(
                 license = engineConfiguration.license,
                 userId = engineConfiguration.userId,
                 savedStateRegistryOwner = savedStateRegistryOwner,
-                buildHost = engineConfiguration.host,
             )
             loadScene()
         }.onFailure {

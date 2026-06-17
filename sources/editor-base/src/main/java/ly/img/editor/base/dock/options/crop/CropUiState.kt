@@ -53,8 +53,7 @@ suspend fun createCropUiState(
     straightenAngle = getStraightenDegrees(engine, designBlock),
     cropScaleRatio = cropScaleRatio ?: engine.block.getCropScaleRatio(designBlock),
     canResetCrop = canResetCrop(engine, designBlock, initCropTranslationX, initCropTranslationY),
-    canRevertToOriginalRatio = runCatching { engine.block.canRevertToOriginalRatio(designBlock) }.getOrDefault(false),
-    selectedAssetKey = selectedAssetKey,
+    selectedAssetKey,
     contentFillMode = engine.block.getContentFillMode(designBlock),
     resizeState = ResizeUiState(
         width = engine.block.getWidth(engine.getPage(0)),
@@ -157,7 +156,6 @@ data class CropUiState(
     val resizeState: ResizeUiState,
     val allowContentFillMode: Boolean,
     val allowResizeOption: Boolean,
-    val canRevertToOriginalRatio: Boolean = false,
 ) {
     fun contentFillModeTextRes(mode: ContentFillMode) = when (mode) {
         ContentFillMode.CROP -> R.string.ly_img_editor_sheet_crop_fill_mode_option_crop
