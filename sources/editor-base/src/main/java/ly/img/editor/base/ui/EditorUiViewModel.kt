@@ -1,6 +1,7 @@
 package ly.img.editor.base.ui
 
 import android.content.ContentValues
+import android.graphics.Bitmap
 import android.media.MediaScannerConnection
 import android.os.Build
 import android.os.Environment
@@ -18,6 +19,7 @@ import androidx.core.content.FileProvider
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -36,10 +38,13 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ly.img.camera.core.CaptureVideo
+import kotlinx.coroutines.yield
+import ly.img.camera.core.CaptureMedia
 import ly.img.editor.base.applyForceCrop
+import ly.img.editor.base.components.createEditingTextCardUiState
 import ly.img.editor.base.dock.AdjustmentSheetContent
 import ly.img.editor.base.dock.BottomSheetContent
 import ly.img.editor.base.dock.CustomBottomSheetContent
@@ -73,16 +78,20 @@ import ly.img.editor.base.dock.options.speed.SpeedBottomSheetContent
 import ly.img.editor.base.dock.options.speed.SpeedUiState
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheetContent
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundUiState
+import ly.img.editor.base.dock.options.textonpath.TextOnPathBottomSheetContent
+import ly.img.editor.base.dock.options.textonpath.TextOnPathUiState
 import ly.img.editor.base.dock.options.voiceover.VoiceoverOptionsSheet
 import ly.img.editor.base.dock.options.voiceover.VoiceoverUiStateFactory
 import ly.img.editor.base.dock.options.volume.VolumeBottomSheetContent
 import ly.img.editor.base.dock.options.volume.VolumeUiState
 import ly.img.editor.base.engine.CROP_EDIT_MODE
 import ly.img.editor.base.engine.FEATURE_PAGE_CAROUSEL_ENABLED
+import ly.img.editor.base.engine.SOFTWARE_KEYBOARD_SUSPENDED_SETTING
 import ly.img.editor.base.engine.TEXT_EDIT_MODE
 import ly.img.editor.base.engine.TOUCH_ACTION_SCALE
 import ly.img.editor.base.engine.TRANSFORM_EDIT_MODE
 import ly.img.editor.base.engine.duplicate
+import ly.img.editor.base.engine.effectiveTextRange
 import ly.img.editor.base.engine.isPlaceholder
 import ly.img.editor.base.engine.resetHistory
 import ly.img.editor.base.engine.setFillType
@@ -210,8 +219,14 @@ class EditorUiViewModel(
     @Suppress("ktlint:standard:backing-property-naming")
     private val _historyChangeTrigger = MutableSharedFlow<Unit>()
 
-    private val thumbnailGenerationJobs: MutableMap<DesignBlock, Job?> = mutableMapOf()
     private var pagesSessionId = 0
+
+    // In-memory thumbnail cache: survives pages mode exit/re-entry within the session.
+    // Keyed by page UUID (stable across state rebuilds). Bounded to MAX_THUMBNAIL_CACHE_SIZE
+    // entries to prevent unbounded memory growth in scenes with many pages.
+    private val thumbnailCache = object : LinkedHashMap<String, Bitmap>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Bitmap>?): Boolean = size > MAX_THUMBNAIL_CACHE_SIZE
+    }
 
     private val defaultCropSheetType = SheetType.Crop(mode = SheetType.Crop.Mode.Element)
     private var currentCropSheetType: SheetType.Crop? = null
@@ -416,8 +431,19 @@ class EditorUiViewModel(
                 LibraryEvent.OnReplaceUri(it.uploadAssetSourceType, it.uri, it.designBlock),
             )
         }
+        @Suppress("DEPRECATION")
         register<EditorEvent.AddCameraRecordingsToScene> {
             libraryViewModel.onEvent(LibraryEvent.OnAddCameraRecordings(it.uploadAssetSourceType, it.recordings))
+        }
+        register<EditorEvent.AddCameraCapturesToScene> {
+            libraryViewModel.onEvent(
+                LibraryEvent.OnAddCameraCaptures(
+                    photoAssetSource = it.photoUploadAssetSourceType,
+                    videoAssetSource = it.videoUploadAssetSourceType,
+                    captures = it.captures,
+                    appendToBackgroundTrack = it.appendToBackgroundTrack,
+                ),
+            )
         }
         register<EditorEvent.Selection.EnterTextEditMode> {
             timelineState?.playerState?.pause()
@@ -492,11 +518,18 @@ class EditorUiViewModel(
         }
     }
 
+    @OptIn(UnstableEngineApi::class)
     private fun openSheet(type: SheetType) {
         val hasEventBlock = getBlockForEvents() != null
         val block by lazy { requireNotNull(getBlockForEvents()) }
         val designBlock by lazy {
             block.designBlock
+        }
+        // Opening the Fill & Stroke sheet from the EditingTextCard hands the IME slot to the
+        // sheet while text-edit mode stays alive.
+        if (type is SheetType.FillStroke && engine.editor.getEditMode() == TEXT_EDIT_MODE) {
+            engine.editor.setSettingBoolean(SOFTWARE_KEYBOARD_SUSPENDED_SETTING, true)
+            updateKeyboardShowing()
         }
         timelineState?.playerState?.pause()
         setBottomSheetContent {
@@ -571,7 +604,7 @@ class EditorUiViewModel(
                     timelineState?.clampPlayheadPositionToSelectedClip()
                     FillStrokeBottomSheetContent(
                         type = type,
-                        uiState = FillStrokeUiState.create(block, engine, colorPalette),
+                        uiState = FillStrokeUiState.create(block, engine, colorPalette, fillOnly = type.fillOnly),
                     )
                 }
 
@@ -684,6 +717,13 @@ class EditorUiViewModel(
                     AnimationBottomSheetContent(
                         type = type,
                         uiState = AnimationUiState.create(designBlock, engine, editor.currentLanguageCode),
+                    )
+                }
+                is SheetType.TextOnPath -> {
+                    timelineState?.clampPlayheadPositionToSelectedClip()
+                    TextOnPathBottomSheetContent(
+                        type = type,
+                        uiState = TextOnPathUiState.create(designBlock, engine, editor.currentLanguageCode),
                     )
                 }
                 is SheetType.TextBackground -> {
@@ -820,7 +860,12 @@ class EditorUiViewModel(
                     is FillStrokeBottomSheetContent -> {
                         FillStrokeBottomSheetContent(
                             type = content.type,
-                            uiState = FillStrokeUiState.create(block, engine, colorPalette),
+                            uiState = FillStrokeUiState.create(
+                                block,
+                                engine,
+                                colorPalette,
+                                fillOnly = (content.type as? SheetType.FillStroke)?.fillOnly == true,
+                            ),
                         )
                     }
 
@@ -891,6 +936,13 @@ class EditorUiViewModel(
                         AnimationBottomSheetContent(
                             type = content.type,
                             uiState = AnimationUiState.create(designBlock, engine, editor.currentLanguageCode),
+                        )
+                    }
+
+                    is TextOnPathBottomSheetContent -> {
+                        TextOnPathBottomSheetContent(
+                            type = content.type,
+                            uiState = TextOnPathUiState.create(designBlock, engine, editor.currentLanguageCode),
                         )
                     }
 
@@ -1062,11 +1114,17 @@ class EditorUiViewModel(
         publicState.update { it.copy(activeSheet = newValue?.type) }
     }
 
+    @OptIn(UnstableEngineApi::class)
     private fun onSheetClosed() {
         currentCropSheetType = null
         bottomSheetHeight = 0F
         publicState.update { it.copy(activeSheetState = null) }
         setBottomSheetContent { null }
+        // Resume the IME if we suspended it for the just closed sheet.
+        if (engine.editor.getSettingBoolean(SOFTWARE_KEYBOARD_SUSPENDED_SETTING)) {
+            engine.editor.setSettingBoolean(SOFTWARE_KEYBOARD_SUSPENDED_SETTING, false)
+            updateKeyboardShowing()
+        }
         if (engine.isEngineRunning().not()) return
         if (engine.editor.getEditMode() == CROP_EDIT_MODE) {
             engine.editor.setEditMode(TRANSFORM_EDIT_MODE)
@@ -1275,12 +1333,14 @@ class EditorUiViewModel(
 
     private fun onVideoCameraClick(callback: (@Composable () -> Unit) -> Unit) = callback {
         val isImglyCameraAvailable = androidx.compose.runtime.remember {
-            runCatching { CaptureVideo() }.isSuccess
+            runCatching { CaptureMedia() }.isSuccess
         } &&
             IMGLYCameraFeature.enabled
 
         if (isImglyCameraAvailable) {
-            Dock.Button.rememberImglyCamera()
+            // Reached only from the video timeline's add-clip button (Event.OnVideoCameraClick),
+            // so the editor always accepts video → open the camera in Mixed/Multi.
+            Dock.Button.rememberImglyCamera(acceptsVideoCapture = { true })
         } else {
             Dock.Button.rememberSystemCamera()
         }.onClick(Dock.ItemScope(editorScope))
@@ -1459,8 +1519,27 @@ class EditorUiViewModel(
                     ?.copy(engine, markThumbnails = true)
                     ?: createEditorPagesState(pagesSessionId++, engine, pageIndex.value)
             ).applyForceCropConstraints()
-            setPage(pagesState.selectedPageIndex)
-            it.copy(pagesState = pagesState)
+            // Pre-populate cached thumbnails so they display instantly (no scroll debounce needed).
+            // Pages whose content changed have mark = true and will be re-generated on bind;
+            // unchanged pages get their cached bitmap immediately, avoiding a flash to loading state.
+            val populatedState = pagesState.let { state ->
+                val populatedPages = state.pages.map { page ->
+                    if (page.thumbnail == null) {
+                        val uuid = runCatching { engine.block.getUUID(page.block) }.getOrNull()
+                        val cached = uuid?.let { thumbnailCache[it] }
+                        if (cached != null) {
+                            page.copy(mark = false).also { it.thumbnail = cached }
+                        } else {
+                            page
+                        }
+                    } else {
+                        page
+                    }
+                }
+                state.copy(pages = populatedPages)
+            }
+            setPage(populatedState.selectedPageIndex)
+            it.copy(pagesState = populatedState)
         }
     }
 
@@ -1477,43 +1556,127 @@ class EditorUiViewModel(
         }
     }
 
+    private var thumbnailQueueJob: Job? = null
+
+    // LIFO list: newest requests at the end. The consumer always takes from the end
+    // so the most recently visible pages are rendered first. Trimmed to 20 entries
+    // to discard stale requests from pages the user scrolled past.
+    //
+    // Main-thread-only: every caller (`ensureThumbnailConsumerRunning`, `onPagesModePageBind`,
+    // `onStopGenerateAllPageThumbnails`) is reached from `viewModelScope` / `EventsHandler`,
+    // both of which default to `Dispatchers.Main.immediate`. Do not access from background
+    // dispatchers without switching back to Main first.
+    private val pendingThumbnailRequests = mutableListOf<ThumbnailRequest>()
+
+    private data class ThumbnailRequest(
+        val page: EditorPagesState.Page,
+        val pageHeight: Int,
+    )
+
+    private fun ensureThumbnailConsumerRunning() {
+        if (thumbnailQueueJob?.isActive == true) return
+        thumbnailQueueJob = viewModelScope.launch {
+            while (isActive) {
+                // Trim to most recent 20 entries — discard older requests from
+                // pages the user scrolled past during fast scroll
+                if (pendingThumbnailRequests.size > 20) {
+                    val recent = pendingThumbnailRequests.takeLast(20)
+                    pendingThumbnailRequests.clear()
+                    pendingThumbnailRequests.addAll(recent)
+                }
+                val request = pendingThumbnailRequests.removeLastOrNull()
+                if (request != null) {
+                    // Skip if already cached (page was processed while waiting in the list)
+                    val uuid = try {
+                        engine.block.getUUID(request.page.block)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        null
+                    }
+                    if (uuid != null && thumbnailCache.containsKey(uuid)) continue
+                    yield()
+                    generateSingleThumbnail(request)
+                } else {
+                    delay(50)
+                }
+            }
+        }
+    }
+
+    private suspend fun generateSingleThumbnail(request: ThumbnailRequest) {
+        // Cap thumbnail height to 128px — page overview grid cells are small,
+        // higher resolutions waste render time with no visible quality benefit.
+        val height = request.pageHeight.coerceAtMost(128)
+        val result = try {
+            engine.block
+                .generateVideoThumbnailSequence(
+                    block = request.page.block,
+                    thumbnailHeight = height,
+                    timeBegin = 0.0,
+                    timeEnd = 0.1,
+                    numberOfFrames = 1,
+                ).firstOrNull()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        } ?: return
+        val bitmap = withContext(Dispatchers.Default) {
+            createBitmap(result.width, result.height).also {
+                it.copyPixelsFromBuffer(result.imageData)
+            }
+        }
+        // Store in cache keyed by page UUID
+        val uuid = try {
+            engine.block.getUUID(request.page.block)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        }
+        if (uuid != null) {
+            thumbnailCache[uuid] = bitmap
+        }
+        val newPage = request.page.copy(mark = false).also {
+            it.thumbnail = bitmap
+        }
+        _uiState.update {
+            it.copy(pagesState = it.pagesState?.copy(updatedPage = newPage))
+        }
+    }
+
     private fun onPagesModePageBind(
         page: EditorPagesState.Page,
         pageHeight: Int,
     ) {
         if (page.mark.not()) return
         if (pageHeight <= 0) return
-        thumbnailGenerationJobs[page.block] = viewModelScope.launch {
-            val result = runCatching {
-                engine.block
-                    .generateVideoThumbnailSequence(
-                        block = page.block,
-                        thumbnailHeight = pageHeight,
-                        timeBegin = 0.0,
-                        timeEnd = 0.1,
-                        numberOfFrames = 1,
-                    ).firstOrNull()
-            }.getOrNull() ?: return@launch
-            val bitmap = withContext(Dispatchers.Default) {
-                createBitmap(result.width, result.height).also {
-                    it.copyPixelsFromBuffer(result.imageData)
+
+        // Check in-memory cache first (survives pages mode exit/re-entry)
+        val uuid = runCatching { engine.block.getUUID(page.block) }.getOrNull()
+        if (uuid != null) {
+            val cached = thumbnailCache[uuid]
+            if (cached != null) {
+                val newPage = page.copy(mark = false).also { it.thumbnail = cached }
+                _uiState.update {
+                    it.copy(pagesState = it.pagesState?.copy(updatedPage = newPage))
                 }
-            }
-            val newPage = page.copy(mark = false).also {
-                it.thumbnail = bitmap
-            }
-            _uiState.update {
-                it.copy(pagesState = it.pagesState?.copy(updatedPage = newPage))
+                return
             }
         }
+
+        // Cache miss: add to LIFO list (newest at end, processed first).
+        // See the pendingThumbnailRequests declaration for main-thread-only contract.
+        pendingThumbnailRequests.removeAll { it.page.block == page.block }
+        pendingThumbnailRequests.add(ThumbnailRequest(page, pageHeight))
+        ensureThumbnailConsumerRunning()
     }
 
     private fun onStopGenerateAllPageThumbnails() {
-        val iterator = thumbnailGenerationJobs.iterator()
-        while (iterator.hasNext()) {
-            iterator.next().value?.cancel()
-            iterator.remove()
-        }
+        thumbnailQueueJob?.cancel()
+        thumbnailQueueJob = null
+        pendingThumbnailRequests.clear()
     }
 
     private fun updateInsets(
@@ -1666,10 +1829,16 @@ class EditorUiViewModel(
                 isKeyboardShowing,
             ).collect {
                 val pageCount = if (isSceneLoaded.value) engine.scene.getPages().size else 0
+                val editingTextCardUiState = if (isKeyboardShowing.value) {
+                    getBlockForEvents()?.designBlock?.let { createEditingTextCardUiState(it, engine) }
+                } else {
+                    null
+                }
                 _uiState.update {
                     it.copy(
                         allowEditorInteraction = viewMode is EditorViewMode.Edit,
                         isEditingText = isKeyboardShowing.value,
+                        editingTextCardUiState = editingTextCardUiState,
                         timelineState = timelineState,
                         pageCount = pageCount,
                         isSceneLoaded = isSceneLoaded.value,
@@ -1698,6 +1867,10 @@ class EditorUiViewModel(
     private var cursorPos = 0f
     private var lastTextCursorRange: IntRange? = null
 
+    // Dedup key for fill/stroke picker refreshes: cursor moves without a
+    // selection change leave the effective range unchanged, so we skip the work.
+    private var lastEffectiveTextRange: IntRange? = null
+
     private fun observeEvents() {
         viewModelScope.launch {
             engine.event.subscribe().collect {
@@ -1720,25 +1893,48 @@ class EditorUiViewModel(
                     cursorPos = textCursorPositionInScreenSpaceY
                     zoomToText()
                 }
+                val cursorRange = runCatching { engine.block.getTextCursorRange() }.getOrNull()
+                val designBlock = getBlockForEvents()?.designBlock
+                val engineListStyle = if (designBlock != null && cursorRange != null) {
+                    runCatching {
+                        val idx =
+                            engine.block.getTextParagraphIndices(designBlock, cursorRange.first, cursorRange.last).firstOrNull() ?: 0
+                        engine.block.getTextListStyle(designBlock, idx)
+                    }.getOrNull()
+                } else {
+                    null
+                }
+                val cursorChanged = cursorRange != lastTextCursorRange
+
                 val formatSheet = bottomSheetContent.value as? FormatBottomSheetContent
-                if (formatSheet != null) {
-                    val cursorRange = runCatching { engine.block.getTextCursorRange() }.getOrNull()
-                    val designBlock = getBlockForEvents()?.designBlock
-                    val engineListStyle = if (designBlock != null && cursorRange != null) {
-                        runCatching {
-                            val idx =
-                                engine.block.getTextParagraphIndices(designBlock, cursorRange.first, cursorRange.last).firstOrNull() ?: 0
-                            engine.block.getTextListStyle(designBlock, idx)
-                        }.getOrNull()
-                    } else {
-                        null
-                    }
-                    if (cursorRange != lastTextCursorRange ||
-                        (engineListStyle != null && engineListStyle != formatSheet.uiState.listStyle)
-                    ) {
-                        lastTextCursorRange = cursorRange
-                        updateBottomSheetUiState()
-                    }
+                val formatSheetNeedsRefresh = formatSheet != null &&
+                    (cursorChanged || (engineListStyle != null && engineListStyle != formatSheet.uiState.listStyle))
+
+                // The fill/stroke picker's "current fill colour" mirrors the colour of
+                // the live effective range.Only refresh when that range actually changes.
+                val fillStrokePickerOpen = bottomSheetContent.value is FillStrokeBottomSheetContent
+                val effectiveRange = if (fillStrokePickerOpen && designBlock != null) {
+                    engine.block.effectiveTextRange(designBlock)
+                } else {
+                    null
+                }
+                val fillStrokeSheetNeedsRefresh = fillStrokePickerOpen &&
+                    effectiveRange != lastEffectiveTextRange
+
+                val editingCardNeedsRefresh = isKeyboardShowing.value && designBlock != null
+
+                if (formatSheetNeedsRefresh || editingCardNeedsRefresh) {
+                    lastTextCursorRange = cursorRange
+                }
+                if (fillStrokeSheetNeedsRefresh) {
+                    lastEffectiveTextRange = effectiveRange
+                }
+                if (formatSheetNeedsRefresh || fillStrokeSheetNeedsRefresh) {
+                    updateBottomSheetUiState()
+                }
+                if (editingCardNeedsRefresh && designBlock != null) {
+                    val newState = createEditingTextCardUiState(designBlock, engine)
+                    _uiState.update { state -> state.copy(editingTextCardUiState = newState) }
                 }
             }
         }
@@ -1754,6 +1950,7 @@ class EditorUiViewModel(
                 when (editMode) {
                     TEXT_EDIT_MODE -> {
                         lastTextCursorRange = null
+                        lastEffectiveTextRange = null
                         send(EditorEvent.Sheet.Close(animate = false))
                     }
                     CROP_EDIT_MODE -> {
@@ -1807,14 +2004,21 @@ class EditorUiViewModel(
                         }
                     }
                 }
-                val showKeyboard = editMode == TEXT_EDIT_MODE
-                if (isKeyboardShowing.value && showKeyboard.not()) {
-                    onKeyboardHeightChange(heightInDp = 0F)
-                }
-                isKeyboardShowing.update { showKeyboard }
+                updateKeyboardShowing()
                 previousEditMode = editMode
             }
         }
+    }
+
+    @OptIn(UnstableEngineApi::class)
+    private fun updateKeyboardShowing() {
+        val showKeyboard = engine.editor.getEditMode() == TEXT_EDIT_MODE &&
+            !engine.editor.getSettingBoolean(SOFTWARE_KEYBOARD_SUSPENDED_SETTING)
+        if (isKeyboardShowing.value == showKeyboard) return
+        if (isKeyboardShowing.value && !showKeyboard) {
+            onKeyboardHeightChange(heightInDp = 0F)
+        }
+        isKeyboardShowing.update { showKeyboard }
     }
 
     private fun setInitCropValues(block: DesignBlock) {
@@ -1890,6 +2094,13 @@ class EditorUiViewModel(
                 timelineState?.onHistoryUpdated()
                 updateVisiblePageState()
                 updateBottomSheetUiState()
+                // Invalidate the page-overview thumbnail cache on every history step.
+                // Cache entries are keyed by page UUID only, so we can't tell which pages
+                // a given history step touched — any step could have changed any page's
+                // content. Clearing unconditionally matches the pre-cache behaviour
+                // (always regenerate after an edit) while still letting the cache survive
+                // pure navigation (pages-mode enter/exit), which is its main purpose.
+                thumbnailCache.clear()
                 if (_uiState.value.pagesState != null) {
                     updateEditorPagesState()
                 }
@@ -1975,6 +2186,10 @@ class EditorUiViewModel(
         if (deselectAllBlocks) {
             engine.deselectAllBlocks()
         }
+        // Zoom to the target page BEFORE entering edit mode, so the camera position
+        // is correct when the canvas renders its first frame. Without this, viewport
+        // culling may show a blank page because the camera is still at the old position
+        // and the target page isn't in the active set.
         if (engine.editor.getSettingBoolean(keypath = FEATURE_PAGE_CAROUSEL_ENABLED).not()) {
             showPage(pageIndex.value, deselectAllBlocks = deselectAllBlocks)
         }
@@ -2046,6 +2261,7 @@ class EditorUiViewModel(
     }
 
     override fun onCleared() {
+        thumbnailCache.clear()
         engine.stop()
     }
 
@@ -2096,5 +2312,9 @@ class EditorUiViewModel(
     fun provideTimelineOwner(): TimelineOwner = timelineState ?: TimelineState(engine, viewModelScope, this@EditorUiViewModel::send).also {
         timelineState = it
         applyVideoDurationConstraintsToTimeline()
+    }
+
+    companion object {
+        private const val MAX_THUMBNAIL_CACHE_SIZE = 50
     }
 }

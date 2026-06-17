@@ -153,7 +153,11 @@ fun FormatOptionsSheet(
                             }
 
                             PropertyLink(
-                                value = getSubFamilyString(uiState.subFamily),
+                                value = if (uiState.isSubFamilyMixed) {
+                                    stringResource(R.string.ly_img_editor_sheet_format_text_font_subfamily_mixed)
+                                } else {
+                                    getSubFamilyString(uiState.subFamily)
+                                },
                             ) {
                                 screenState = ScreenState.SelectFontWeight
                             }
@@ -393,6 +397,7 @@ fun FormatOptionsSheet(
                     selectedFontFamily = uiState.fontFamily,
                     selectedWeight = uiState.fontFamilyWeight,
                     selectedStyle = uiState.fontFamilyStyle,
+                    selectionMixed = uiState.isSubFamilyMixed,
                     labelMap = { getSubFamilyString(it.subFamily) },
                     onSelectFont = { fontData ->
                         onEvent(BlockEvent.OnChangeFont(fontData.uri, fontData.typeface))
@@ -440,6 +445,7 @@ fun DefaultPreview() {
             hasClippingOption = true,
             isClipped = true,
             subFamily = "Regular",
+            isSubFamilyMixed = false,
         ),
         onEvent = {},
     )

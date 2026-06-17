@@ -36,6 +36,8 @@ sealed interface LibraryContent {
      * and all the assets of the [sourceType] will be displayed. Check [ly.img.engine.AssetSource.getGroups] for more information.
      * @param perPage the number of elements that should loaded on each page.
      * @param assetType the type of assets in this source.
+     * @param title the plain string title of the content. When set, it takes precedence over [titleRes]. It is used for titles
+     * that are resolved at runtime, i.e. for sections expanded from asset groups via [Section.groupTitleKeyPrefix].
      */
     @Immutable
     data class Grid(
@@ -44,6 +46,7 @@ sealed interface LibraryContent {
         val groups: List<String>? = null,
         val perPage: Int = 20,
         val assetType: AssetType,
+        val title: String? = null,
     ) : LibraryContent
 
     /**
@@ -77,6 +80,18 @@ sealed interface LibraryContent {
         val excludedPreviewSourceTypes: List<AssetSourceType>? = null,
         val groups: List<String>? = null,
         val addGroupedSubSections: Boolean = false,
+        /**
+         * Optional localization-key prefix for sections expanded from asset groups
+         * ([addGroupedSubSections]). When set, each group section's title resolves the string
+         * resource named "<prefix><group>" (e.g. prefix
+         * "ly_img_editor_asset_library_section_text_style_presets_" + group "paragraphDefault" resolves
+         * "ly_img_editor_asset_library_section_text_style_presets_paragraphDefault"). Library-shipped
+         * strings merge into the app resource namespace at build time and are found without
+         * additional configuration; a consuming app may add its own strings for new groups.
+         * Falls back to the raw group id when no such resource exists. When null, expanded sections
+         * keep this section's [titleRes]. Only meaningful when [addGroupedSubSections] is true.
+         */
+        val groupTitleKeyPrefix: String? = null,
         val showUpload: Boolean = sourceTypes.size == 1 && sourceTypes[0] is UploadAssetSourceType,
         val count: Int = 10,
         val assetType: AssetType,
@@ -190,19 +205,46 @@ sealed interface LibraryContent {
             get() = images(includeSystemGallery = true)
 
         /**
+         * The unified text style presets section: one sub-section per asset group of the
+         * `ly.img.text.presets` source, titled via the derived localization keys
+         * (ly_img_editor_asset_library_section_text_style_presets_<group>), falling back to the raw
+         * group id when a group has no translation.
+         */
+        internal val textStylePresetsSection by lazy {
+            Section(
+                // Fallback title, used only if the source reports no groups.
+                titleRes = R.string.ly_img_editor_asset_library_section_text_style_presets,
+                sourceTypes = listOf(AssetSourceType.TextStylePresets),
+                addGroupedSubSections = true,
+                groupTitleKeyPrefix = "ly_img_editor_asset_library_section_text_style_presets_",
+                assetType = AssetType.TextStylePreset,
+            )
+        }
+
+        /**
+         * The flat "Add Text" entry: a single text style-presets row whose "See All" opens the
+         * grouped overview ([textStylePresetsSection]), mirroring web's flat-then-grouped flow.
+         */
+        internal val textStylePresetsFlatSection by lazy {
+            Section(
+                titleRes = R.string.ly_img_editor_asset_library_section_text_style_presets,
+                sourceTypes = listOf(AssetSourceType.TextStylePresets),
+                assetType = AssetType.TextStylePreset,
+                expandContent = Sections(
+                    titleRes = R.string.ly_img_editor_asset_library_section_text_style_presets,
+                    sections = listOf(textStylePresetsSection),
+                ),
+            )
+        }
+
+        /**
          * The default content for displaying text assets.
          */
         val Text by lazy {
             Sections(
                 titleRes = R.string.ly_img_editor_asset_library_title_text,
                 sections = listOf(
-                    Section(
-                        titleRes = R.string.ly_img_editor_asset_library_section_plain_text,
-                        sourceTypes = listOf(AssetSourceType.Text),
-                        count = Int.MAX_VALUE,
-                        assetType = AssetType.Text,
-                        expandContent = null,
-                    ),
+                    textStylePresetsFlatSection,
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_font_combinations,
                         sourceTypes = listOf(AssetSourceType.TextComponents),
@@ -222,49 +264,49 @@ sealed interface LibraryContent {
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_filled,
                         sourceTypes = listOf(AssetSourceType.Shapes),
-                        groups = listOf("//ly.img.cesdk.vectorpaths/category/filled"),
+                        groups = listOf("filled"),
                         assetType = AssetType.Shape,
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_outline,
                         sourceTypes = listOf(AssetSourceType.Shapes),
-                        groups = listOf("//ly.img.cesdk.vectorpaths/category/outline"),
+                        groups = listOf("outline"),
                         assetType = AssetType.Shape,
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_gradient,
                         sourceTypes = listOf(AssetSourceType.Shapes),
-                        groups = listOf("//ly.img.cesdk.vectorpaths/category/gradient"),
+                        groups = listOf("gradient"),
                         assetType = AssetType.Shape,
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_image,
                         sourceTypes = listOf(AssetSourceType.Shapes),
-                        groups = listOf("//ly.img.cesdk.vectorpaths/category/image"),
+                        groups = listOf("image"),
                         assetType = AssetType.Shape,
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_abstract_filled,
                         sourceTypes = listOf(AssetSourceType.Shapes),
-                        groups = listOf("//ly.img.cesdk.vectorpaths/category/abstract-filled"),
+                        groups = listOf("abstract-filled"),
                         assetType = AssetType.Shape,
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_abstract_outline,
                         sourceTypes = listOf(AssetSourceType.Shapes),
-                        groups = listOf("//ly.img.cesdk.vectorpaths/category/abstract-outline"),
+                        groups = listOf("abstract-outline"),
                         assetType = AssetType.Shape,
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_abstract_gradient,
                         sourceTypes = listOf(AssetSourceType.Shapes),
-                        groups = listOf("//ly.img.cesdk.vectorpaths/category/abstract-gradient"),
+                        groups = listOf("abstract-gradient"),
                         assetType = AssetType.Shape,
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_abstract_image,
                         sourceTypes = listOf(AssetSourceType.Shapes),
-                        groups = listOf("//ly.img.cesdk.vectorpaths/category/abstract-image"),
+                        groups = listOf("abstract-image"),
                         assetType = AssetType.Shape,
                     ),
                 ),
@@ -281,37 +323,37 @@ sealed interface LibraryContent {
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_emoji,
                         sourceTypes = listOf(AssetSourceType.Stickers),
-                        groups = listOf("//ly.img.cesdk.stickers.emoji/category/emoji"),
+                        groups = listOf("emoji"),
                         assetType = AssetType.Sticker,
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_emoticons,
                         sourceTypes = listOf(AssetSourceType.Stickers),
-                        groups = listOf("//ly.img.cesdk.stickers.emoticons/category/emoticons"),
+                        groups = listOf("emoticons"),
                         assetType = AssetType.Sticker,
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_craft,
                         sourceTypes = listOf(AssetSourceType.Stickers),
-                        groups = listOf("//ly.img.cesdk.stickers.craft/category/craft"),
+                        groups = listOf("craft"),
                         assetType = AssetType.Sticker,
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_3d_stickers,
                         sourceTypes = listOf(AssetSourceType.Stickers),
-                        groups = listOf("//ly.img.cesdk.stickers.3Dstickers/category/3Dstickers"),
+                        groups = listOf("3Dstickers"),
                         assetType = AssetType.Sticker,
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_hand,
                         sourceTypes = listOf(AssetSourceType.Stickers),
-                        groups = listOf("//ly.img.cesdk.stickers.hand/category/hand"),
+                        groups = listOf("hand"),
                         assetType = AssetType.Sticker,
                     ),
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_doodle,
                         sourceTypes = listOf(AssetSourceType.Stickers),
-                        groups = listOf("//ly.img.cesdk.stickers.doodle/category/doodle"),
+                        groups = listOf("doodle"),
                         assetType = AssetType.Sticker,
                     ),
                 ),

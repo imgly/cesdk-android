@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ly.img.camera.core.Capture
 import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.currentLanguageCode
@@ -53,6 +54,7 @@ import ly.img.editor.core.ui.library.state.WrappedAsset
 import ly.img.editor.core.ui.library.util.AssetLibraryUiConfig
 import ly.img.editor.core.ui.library.util.LibraryEvent
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddAsset
+import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddCameraCaptures
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddCameraRecordings
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddUri
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAssetLongClick
@@ -65,6 +67,7 @@ import ly.img.editor.core.ui.library.util.LibraryEvent.OnReplaceAsset
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnReplaceUri
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnSearchTextChange
 import ly.img.editor.core.ui.library.util.LibraryUiEvent
+import ly.img.editor.core.ui.library.util.resolveGroupTitle
 import ly.img.editor.core.ui.register
 import ly.img.engine.Asset
 import ly.img.engine.AssetDefinition
@@ -144,6 +147,9 @@ class LibraryViewModel(
         }
         register<OnAddCameraRecordings> {
             onAddCameraRecordings(it.assetSource, it.recordings)
+        }
+        register<OnAddCameraCaptures> {
+            onAddCameraCaptures(it.photoAssetSource, it.videoAssetSource, it.captures, it.appendToBackgroundTrack)
         }
         register<OnAssetLongClick> {
             onAssetLongClick(it.wrappedAsset)
@@ -314,6 +320,77 @@ class LibraryViewModel(
             resolvedClipDuration = durationInDouble,
             inBackgroundTrack = true,
         )
+    }
+
+    private fun onAddCameraCaptures(
+        photoAssetSource: UploadAssetSourceType,
+        videoAssetSource: UploadAssetSourceType,
+        captures: List<Capture>,
+        appendToBackgroundTrack: Boolean,
+    ) {
+        viewModelScope.launch {
+            engine.awaitEngineAndSceneLoad()
+
+            if (appendToBackgroundTrack) {
+                val page = engine.getCurrentPage()
+                val backgroundTrack = engine.getSafeBackgroundTrack()
+
+                // set playhead position to end of background track
+                engine.block.setPlaybackTime(page, engine.block.getDuration(backgroundTrack))
+
+                captures.forEach { capture ->
+                    when (capture) {
+                        is Capture.Photo -> {
+                            uploadToAssetSource(photoAssetSource, capture.uri)
+                            addCameraPhoto(capture.uri, capture.clipDuration)
+                        }
+                        is Capture.Video -> {
+                            val videoUri = capture.recording.videos.first().uri
+                            val videoDuration = capture.recording.duration
+                            uploadToAssetSource(videoAssetSource, videoUri, videoDuration)
+                            addCameraRecording(videoUri, videoDuration)
+                        }
+                    }
+                }
+
+                engine.editor.addUndoStep()
+            } else {
+                // Non-timeline scenes (design / photo / apparel / postcard): place each capture on the current
+                // page centered, just like the gallery picker does for added images.
+                captures.forEach { capture ->
+                    when (capture) {
+                        is Capture.Photo -> {
+                            val asset = uploadToAssetSource(photoAssetSource, capture.uri) ?: return@forEach
+                            onAddAsset(photoAssetSource, asset, addToBackgroundTrack = false)
+                        }
+                        is Capture.Video -> {
+                            val videoUri = capture.recording.videos.first().uri
+                            val videoDuration = capture.recording.duration
+                            val asset = uploadToAssetSource(videoAssetSource, videoUri, videoDuration) ?: return@forEach
+                            onAddAsset(videoAssetSource, asset, addToBackgroundTrack = false)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun addCameraPhoto(
+        uri: Uri,
+        duration: Duration,
+    ) {
+        val backgroundTrack = engine.getSafeBackgroundTrack()
+        val id = engine.block.create(DesignBlockType.Graphic)
+        val rectShape = engine.block.createShape(ShapeType.Rect)
+        engine.block.setShape(id, rectShape)
+        engine.block.appendChild(parent = backgroundTrack, child = id)
+        engine.block.fillParent(id)
+
+        val durationInDouble = duration.toDouble(DurationUnit.SECONDS)
+        engine.block.setDuration(id, durationInDouble)
+        val fill = engine.block.createFill(FillType.Image)
+        engine.block.setString(fill, "fill/image/imageFileURI", uri.toString())
+        engine.block.setFill(id, fill)
     }
 
     private fun onReplaceAsset(
@@ -557,6 +634,7 @@ class LibraryViewModel(
                 it.copy(
                     isRoot = if (force) true else it.isRoot,
                     titleRes = if (force) libraryCategory.tabTitleRes else it.titleRes,
+                    title = if (force) null else it.title,
                     assetsData = AssetsData(),
                     sectionItems = if (force) listOf() else it.sectionItems,
                 )
@@ -602,7 +680,13 @@ class LibraryViewModel(
 
         if (content is LibraryContent.Sections && AssetLibraryUiConfig.autoExpandSingleSection) {
             val singleSection = content.sections.singleOrNull()
-            val expandedContent = singleSection?.expandContent
+            // Do not auto-expand sections that produce per-group sub-sections via groupTitleKeyPrefix:
+            // those sections must render as grouped sheets, not as a flat grid.
+            val expandedContent = if (singleSection?.groupTitleKeyPrefix == null) {
+                singleSection?.expandContent
+            } else {
+                null
+            }
             if (expandedContent != null) {
                 modifyDataStack(libraryCategory) { stack ->
                     stack.pop()
@@ -625,6 +709,7 @@ class LibraryViewModel(
                 isInSearchMode = if (searchEnabled) it.isInSearchMode else false,
                 isRoot = true,
                 titleRes = libraryCategory.tabTitleRes,
+                title = null,
                 isSearchEnabled = searchEnabled,
             )
         }
@@ -653,6 +738,7 @@ class LibraryViewModel(
             val searchEnabled = supportsSearch(content)
             var state = it.copy(
                 titleRes = content.titleRes,
+                title = content.title,
                 isRoot = categoryData.dataStack.size == 1,
                 assetsData = it.assetsData.copy(
                     assetType = content.assetType,
@@ -730,6 +816,7 @@ class LibraryViewModel(
             val searchEnabled = supportsSearch(content)
             var state = it.copy(
                 titleRes = content.titleRes,
+                title = null,
                 isRoot = categoryData.dataStack.size == 1,
                 loadState = CategoryLoadState.Loading,
                 sectionItems = listOf(LibrarySectionItem.Loading(stackIndex = stackIndex)),
@@ -742,8 +829,35 @@ class LibraryViewModel(
         }
         val context = editor.activity
         content.sections.forEachIndexed { sectionIndex, section ->
+            // Sections that expand into per-group sub-sections render nothing when their asset
+            // source is not registered, instead of falling back to a dead umbrella section.
+            if (section.groupTitleKeyPrefix != null) {
+                val registeredSourceIds = engine.asset.findAllSources()
+                if (section.sourceTypes.none { it.sourceId in registeredSourceIds }) {
+                    return@forEachIndexed
+                }
+            }
             val sectionTitleRes = section.titleRes
-            if (sectionTitleRes != null) {
+            // Resolve sub-sections first so we can decide whether to emit the umbrella header.
+            val subSections: List<LibraryContent.Section> = if (section.addGroupedSubSections) {
+                val groupsResult = runCatching {
+                    engine.asset.getGroups(section.sourceTypes[0].sourceId)
+                }
+                if (groupsResult.isSuccess) {
+                    groupsResult.getOrNull().orEmpty().map { group ->
+                        section.copy(groups = listOf(group), addGroupedSubSections = false)
+                    }
+                } else {
+                    // Asset source is not registered.
+                    listOf(section)
+                }
+            } else {
+                listOf(section)
+            }
+            // Per-group headers replace the umbrella header when the group expansion succeeded.
+            val hasPerGroupHeaders = section.groupTitleKeyPrefix != null &&
+                subSections.any { it.groups?.singleOrNull() != null }
+            if (sectionTitleRes != null && !hasPerGroupHeaders) {
                 val uploadSource = if (section.showUpload) {
                     section.sourceTypes.singleOrNull() as? UploadAssetSourceType
                 } else {
@@ -769,27 +883,39 @@ class LibraryViewModel(
                     expandContent = section.expandContent,
                 ).let(loadingSectionItemsList::add)
             }
-            val subSections: List<LibraryContent.Section> = if (section.addGroupedSubSections) {
-                val groupsResult = runCatching {
-                    engine.asset.getGroups(section.sourceTypes[0].sourceId)
-                }
-                if (groupsResult.isSuccess) {
-                    groupsResult.getOrNull().orEmpty().map { group ->
-                        section.copy(groups = listOf(group), addGroupedSubSections = false)
-                    }
-                } else {
-                    // Asset source is not registered.
-                    listOf(section)
-                }
-            } else {
-                listOf(section)
-            }
             subSections.forEachIndexed { subSectionIndex, subSection ->
+                // When a groupTitleKeyPrefix is set, each sub-section gets its own header and
+                // expanded grid, both carrying the same resolved group title (raw group id when the
+                // group has no translation), so the expanded sheet is titled after the group as well.
+                val groupTitleKeyPrefix = section.groupTitleKeyPrefix
+                val subSectionGroup = subSection.groups?.singleOrNull()
+                var contentSection = subSection
+                if (groupTitleKeyPrefix != null && subSectionGroup != null) {
+                    val groupTitle = resolveGroupTitle(context, groupTitleKeyPrefix, subSectionGroup)
+                    val groupExpandContent = LibraryContent.Grid(
+                        titleRes = sectionTitleRes ?: 0,
+                        sourceType = section.sourceTypes[0],
+                        groups = listOf(subSectionGroup),
+                        assetType = section.assetType,
+                        title = groupTitle,
+                    )
+                    contentSection = subSection.copy(expandContent = groupExpandContent)
+                    LibrarySectionItem.Header(
+                        stackIndex = stackIndex,
+                        sectionIndex = sectionIndex,
+                        titleRes = sectionTitleRes ?: 0,
+                        title = groupTitle,
+                        uploadAssetSourceType = null,
+                        systemGalleryAssetSourceType = null,
+                        expandContent = groupExpandContent,
+                        subSectionIndex = subSectionIndex,
+                    ).let(loadingSectionItemsList::add)
+                }
                 LibrarySectionItem.ContentLoading(
                     stackIndex = stackIndex,
                     sectionIndex = sectionIndex,
                     subSectionIndex = subSectionIndex,
-                    section = subSection,
+                    section = contentSection,
                 ).let(loadingSectionItemsList::add)
             }
         }
@@ -837,6 +963,7 @@ class LibraryViewModel(
                                 LibrarySectionItem.Content(
                                     stackIndex = stackIndex,
                                     sectionIndex = content.sectionIndex,
+                                    subSectionIndex = content.subSectionIndex,
                                     wrappedAssets = wrappedAssets,
                                     assetType = section.assetType,
                                     sourceTypes = section.sourceTypes,
@@ -845,6 +972,7 @@ class LibraryViewModel(
                             } ?: LibrarySectionItem.Error(
                             stackIndex = stackIndex,
                             sectionIndex = content.sectionIndex,
+                            subSectionIndex = content.subSectionIndex,
                             assetType = section.assetType,
                         )
 
@@ -852,7 +980,9 @@ class LibraryViewModel(
                             it.copy(
                                 sectionItems = it.sectionItems.map { item ->
                                     when {
-                                        item is LibrarySectionItem.Header && item.sectionIndex == content.sectionIndex -> {
+                                        item is LibrarySectionItem.Header &&
+                                            item.sectionIndex == content.sectionIndex &&
+                                            (item.subSectionIndex == null || item.subSectionIndex == content.subSectionIndex) -> {
                                             item.copy(count = total)
                                         }
 

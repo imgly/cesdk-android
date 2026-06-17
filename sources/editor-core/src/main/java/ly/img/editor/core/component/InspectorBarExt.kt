@@ -49,9 +49,14 @@ import ly.img.editor.core.iconpack.Replace
 import ly.img.editor.core.iconpack.SelectGroup
 import ly.img.editor.core.iconpack.ShapeIcon
 import ly.img.editor.core.iconpack.Split
+import ly.img.editor.core.iconpack.TextOnPath
+import ly.img.editor.core.iconpack.TextStylePresets
 import ly.img.editor.core.iconpack.Typeface
 import ly.img.editor.core.iconpack.VoiceoverAdd
 import ly.img.editor.core.iconpack.VolumeHigh
+import ly.img.editor.core.library.LibraryCategory
+import ly.img.editor.core.library.LibraryContent
+import ly.img.editor.core.library.data.AssetSourceType
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.ui.EditorIcon
 import ly.img.engine.BlockApi
@@ -683,13 +688,22 @@ private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon
         block.hasColorOrGradientFill(designBlock) &&
         !hideFillForLine &&
         block.isAllowedByScope(designBlock, "fill/change")
+    val fillEnabled = showFill && block.isFillEnabled(designBlock)
+    val isText = DesignBlockType.getOrNull(block.getType(designBlock)) == DesignBlockType.Text
     return EditorIcon.FillStroke(
         showFill = showFill,
         showStroke = showStroke,
-        fill = if (showFill && block.isFillEnabled(designBlock)) {
-            getFill(designBlock)
-        } else {
-            null
+        // A text block can carry several colours across its runs; surface them all as a
+        // multi-colour SolidFill so the swatch stacks them, matching the inline text swatch.
+        fill = when {
+            !fillEnabled -> null
+            isText ->
+                runCatching { block.getTextColors(designBlock).map { it.toComposeColor(this) } }
+                    .getOrNull()
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { SolidFill(it) }
+                    ?: getFill(designBlock)
+            else -> getFill(designBlock)
         },
         stroke = if (showStroke && block.isStrokeEnabled(designBlock)) {
             getStrokeColor(designBlock)
@@ -1173,6 +1187,88 @@ fun InspectorBar.Button.rememberFormatText(builder: InspectorBar.ButtonBuilder.(
         textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_format_text) }
         onClick = {
             editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.FormatText()))
+        }
+        builder()
+    }
+
+/**
+ * The id of the inspector bar button returned by [InspectorBar.Button.rememberTextStylePresets].
+ */
+val InspectorBar.Button.Id.textStylePresets by unsafeLazy {
+    EditorComponentId("ly.img.component.inspectorBar.button.textStylePresets")
+}
+
+private val textStylePresetsCategory by lazy {
+    LibraryCategory(
+        tabTitleRes = R.string.ly_img_editor_asset_library_section_text_style_presets,
+        tabSelectedIcon = IconPack.TextStylePresets,
+        tabUnselectedIcon = IconPack.TextStylePresets,
+        content = LibraryContent.Sections(
+            titleRes = R.string.ly_img_editor_asset_library_section_text_style_presets,
+            sections = listOf(LibraryContent.textStylePresetsSection),
+        ),
+    )
+}
+
+/**
+ * A composable helper function that creates and remembers an [Button] that opens the text style
+ * presets library sheet via [EditorEvent.Sheet.Open]. Selected preset is applied to the currently
+ * selected text block via the engine asset replace path.
+ * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
+ * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
+ *
+ * @param builder the builder lambda to override the default builder.
+ * @return a button that will be displayed in the inspector bar.
+ */
+@Composable
+fun InspectorBar.Button.rememberTextStylePresets(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
+    InspectorBar.Button.remember {
+        id = { InspectorBar.Button.Id.textStylePresets }
+        visible = {
+            remember(this) {
+                editorContext.selection.type == DesignBlockType.Text &&
+                    editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "text/character") &&
+                    editorContext.engine.asset.findAllSources().contains(AssetSourceType.TextStylePresets.sourceId)
+            }
+        }
+        vectorIcon = { IconPack.TextStylePresets }
+        textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_text_styles) }
+        onClick = {
+            editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.LibraryReplace(libraryCategory = textStylePresetsCategory)))
+        }
+        builder()
+    }
+
+/**
+ * The id of the inspector bar button returned by [InspectorBar.Button.rememberTextOnPath].
+ */
+val InspectorBar.Button.Id.textOnPath by unsafeLazy {
+    EditorComponentId("ly.img.component.inspectorBar.button.textOnPath")
+}
+
+/**
+ * A composable helper function that creates and remembers an [Button] that opens the text on path sheet via
+ * [EditorEvent.Sheet.Open].
+ * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
+ * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
+ *
+ * @param builder the builder lambda to override the default builder.
+ * @return a button that will be displayed in the inspector bar.
+ */
+@Composable
+fun InspectorBar.Button.rememberTextOnPath(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
+    InspectorBar.Button.remember {
+        id = { InspectorBar.Button.Id.textOnPath }
+        visible = {
+            remember(this) {
+                editorContext.selection.type == DesignBlockType.Text &&
+                    editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "text/character")
+            }
+        }
+        vectorIcon = { IconPack.TextOnPath }
+        textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_text_on_path) }
+        onClick = {
+            editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.TextOnPath()))
         }
         builder()
     }

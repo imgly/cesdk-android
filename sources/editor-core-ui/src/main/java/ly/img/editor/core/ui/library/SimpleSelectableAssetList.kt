@@ -27,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ly.img.editor.core.ui.GradientCard
 import ly.img.editor.core.ui.iconpack.IconPack
@@ -131,9 +133,14 @@ fun SimpleSelectableAssetList(
                     }
 
                     Text(
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        modifier = Modifier
+                            .width(80.dp)
+                            .align(Alignment.CenterHorizontally),
                         text = wrappedAsset.asset.localizedLabel(),
                         style = MaterialTheme.typography.labelMedium,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }

@@ -69,3 +69,15 @@ sealed interface CameraMode : Parcelable {
         }
     }
 }
+
+/**
+ * Returns whether this [CameraMode] can be combined with the given [captureType].
+ *
+ * Only [CameraMode.Standard] supports photo / mixed capture. [CameraMode.Reaction]'s
+ * pixelstream pipeline cannot host an additional `ImageCapture` use case, so any combination
+ * involving [CaptureType.Photo] or [CaptureType.Mixed] is rejected.
+ */
+fun CameraMode.supports(captureType: CaptureType): Boolean = when (this) {
+    is CameraMode.Standard -> true
+    is CameraMode.Reaction -> captureType == CaptureType.Video
+}

@@ -349,6 +349,21 @@ interface BlockEvent : Event {
     ) : BlockEvent
     // endregion
 
+    // region Text on Path Events
+    data class OnSelectTextOnPath(
+        /** The curve style-preset asset to apply, or `null` to clear the path. */
+        val asset: Asset?,
+    ) : BlockEvent
+
+    data class OnChangeTextOnPathFlipped(
+        val flipped: Boolean,
+    ) : BlockEvent
+
+    data class OnChangeTextOnPathOffset(
+        val offset: Float,
+    ) : BlockEvent
+    // endregion
+
     // region Adjustments Events
     data class OnReplaceEffect(
         val wrappedAsset: WrappedAsset?,

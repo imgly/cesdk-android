@@ -249,6 +249,16 @@ interface SheetType {
     ) : SheetType
 
     /**
+     * A sheet that is used to control placing text along an SVG baseline path.
+     *
+     * @param style the style that should be used to display the sheet.
+     * Default value is the default [SheetStyle].
+     */
+    class TextOnPath(
+        override val style: SheetStyle = SheetStyle(),
+    ) : SheetType
+
+    /**
      * A sheet that is used to control the shape of various blocks.
      *
      * @param style the style that should be used to display the sheet.
@@ -263,9 +273,11 @@ interface SheetType {
      *
      * @param style the style that should be used to display the sheet.
      * Default value is the default [SheetStyle].
+     * @param fillOnly when true, only the fill section is shown (no stroke). Default is false.
      */
     class FillStroke(
         override val style: SheetStyle = SheetStyle(),
+        val fillOnly: Boolean = false,
     ) : SheetType
 
     /**

@@ -4,10 +4,14 @@
     <string name="ly_img_camera_button_continue">Weiter</string>
     <string name="ly_img_camera_button_delete_last_recording">Löschen</string>
     <string name="ly_img_camera_button_flip_camera">Kamera wechseln</string>
+    <string name="ly_img_camera_button_photo_mode">Foto</string>
+    <string name="ly_img_camera_button_photo_preview_back">Zurück</string>
+    <string name="ly_img_camera_button_photo_preview_done">Fertig</string>
     <string name="ly_img_camera_button_reaction">Reaktion</string>
     <string name="ly_img_camera_button_swap_positions">Positionen tauschen</string>
     <string name="ly_img_camera_button_timer">Timer</string>
     <string name="ly_img_camera_button_toggle_flash">Blitz ein/aus</string>
+    <string name="ly_img_camera_button_video_mode">Video</string>
     <string name="ly_img_camera_dialog_delete_last_recording_button_confirm">Löschen</string>
     <string name="ly_img_camera_dialog_delete_last_recording_button_dismiss">Abbrechen</string>
     <string name="ly_img_camera_dialog_delete_last_recording_text">Das Löschen der letzten Aufnahme kann nicht rückgängig gemacht werden.</string>

@@ -43,6 +43,7 @@ fun FontListUi(
     selectedFontFamily: String,
     selectedWeight: FontWeight? = null,
     selectedStyle: FontStyle? = null,
+    selectionMixed: Boolean = false,
     labelMap: @Composable (FontData) -> String = { it.typeface.name },
     onSelectFont: (FontData) -> Unit,
 ) {
@@ -57,13 +58,16 @@ fun FontListUi(
             LazyColumn(state = lazyListState) {
                 items(fontList) {
                     CheckedTextRow(
-                        isChecked = selectedFontFamily == it.typeface.name &&
+                        // A mixed selection (multiple weights/styles in range) highlights nothing.
+                        isChecked = !selectionMixed &&
+                            selectedFontFamily == it.typeface.name &&
                             (selectedWeight == null || it.weight.weight == selectedWeight.value) &&
                             (selectedStyle == null || it.style == selectedStyle),
                         text = labelMap(it),
                         fontData = it,
                         onClick = {
-                            if (it.typeface.name != selectedFontFamily ||
+                            if (selectionMixed ||
+                                it.typeface.name != selectedFontFamily ||
                                 (selectedWeight != null && it.weight.weight != selectedWeight.value) ||
                                 (selectedStyle != null && it.style != selectedStyle)
                             ) {

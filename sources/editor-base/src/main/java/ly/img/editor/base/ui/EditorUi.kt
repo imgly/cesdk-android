@@ -95,6 +95,8 @@ import ly.img.editor.base.dock.options.speed.SpeedBottomSheetContent
 import ly.img.editor.base.dock.options.speed.SpeedSheet
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheet
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheetContent
+import ly.img.editor.base.dock.options.textonpath.TextOnPathBottomSheetContent
+import ly.img.editor.base.dock.options.textonpath.TextOnPathSheet
 import ly.img.editor.base.dock.options.volume.VolumeBottomSheetContent
 import ly.img.editor.base.dock.options.volume.VolumeSheet
 import ly.img.editor.base.engine.EngineCanvasView
@@ -524,6 +526,7 @@ fun EditorScope.EditorUi(
                                     is VolumeBottomSheetContent -> VolumeSheet(content.uiState, onEvent)
                                     is ReorderBottomSheetContent -> ReorderSheet(content.timelineState, onEvent)
                                     is AnimationBottomSheetContent -> AnimationSheet(content.uiState, onEvent)
+                                    is TextOnPathBottomSheetContent -> TextOnPathSheet(content.uiState, onEvent)
                                     is TextBackgroundBottomSheetContent -> TextBackgroundBottomSheet(
                                         uiState = content.uiState,
                                         onColorPickerActiveChanged = onColorPickerActiveChanged,
@@ -629,14 +632,15 @@ fun EditorScope.EditorUi(
                                 }
                             }
 
-                            if (uiState.isEditingText) {
+                            if (uiState.isEditingText && uiState.editingTextCardUiState != null) {
                                 EditingTextCard(
                                     modifier = Modifier
                                         .align(Alignment.BottomStart)
                                         .onGloballyPositioned {
                                             viewModel.send(Event.OnKeyboardHeightChange(it.size.height / oneDpInPx))
                                         },
-                                    onClose = { viewModel.send(Event.OnKeyboardClose) },
+                                    uiState = uiState.editingTextCardUiState,
+                                    onEvent = onEvent,
                                 )
                             }
 

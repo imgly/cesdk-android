@@ -1,9 +1,11 @@
 package ly.img.camera.preview
 
+import android.util.Log
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
-import androidx.camera.core.TorchState
+import androidx.camera.core.UseCase
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.Recorder
 import androidx.camera.video.VideoCapture
@@ -15,10 +17,13 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import ly.img.camera.core.CaptureType
 
 internal class CameraState(
     private val previewBuilder: Preview.Builder,
     private val videoCaptureBuilder: VideoCapture.Builder<Recorder>,
+    private val imageCaptureBuilder: ImageCapture.Builder,
+    private val captureType: CaptureType,
     startWithFrontCamera: Boolean,
 ) {
     val isFlashEnabled: Boolean
@@ -27,8 +32,14 @@ internal class CameraState(
     var showFrontCamera by mutableStateOf(startWithFrontCamera)
         private set
 
-    var cameraFlash by mutableStateOf(false)
-        private set
+    private var _cameraFlash by mutableStateOf(false)
+    var cameraFlash: Boolean
+        get() = _cameraFlash
+        private set(value) {
+            if (_cameraFlash == value) return
+            _cameraFlash = value
+            applyFlashState()
+        }
 
     var isReady by mutableStateOf(false)
 
@@ -37,7 +48,21 @@ internal class CameraState(
     private var lifecycleOwner: LifecycleOwner? = null
 
     lateinit var previewUseCase: Preview
-    lateinit var videoCaptureUseCase: VideoCapture<Recorder>
+
+    /**
+     * Built only when [captureType] != [CaptureType.Photo]. Null in photo-only sessions where the
+     * `Recorder` use case isn't needed.
+     */
+    var videoCaptureUseCase: VideoCapture<Recorder>? = null
+        private set
+
+    /**
+     * Only populated when [captureType] != [CaptureType.Video] AND the device supports the
+     * (Preview + VideoCapture + ImageCapture) combination. Otherwise `null` so callers
+     * (e.g. `PhotoCapture`) can fail loud instead of triggering a runtime CameraX exception.
+     */
+    var imageCaptureUseCase: ImageCapture? = null
+        private set
 
     fun toggleCamera() {
         showFrontCamera = !showFrontCamera
@@ -49,7 +74,16 @@ internal class CameraState(
 
     fun toggleFlash() {
         cameraFlash = !cameraFlash
-        camera?.cameraControl?.enableTorch(cameraFlash)
+    }
+
+    private fun applyFlashState() {
+        // Video mode keeps the continuous-LED torch behavior for preview lighting.
+        // Photo / Mixed mode applies a true flash at takePicture time via flashMode.
+        if (captureType == CaptureType.Video) {
+            camera?.cameraControl?.enableTorch(cameraFlash)
+        } else {
+            imageCaptureUseCase?.flashMode = if (cameraFlash) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
+        }
     }
 
     fun bind(
@@ -61,7 +95,7 @@ internal class CameraState(
         this.lifecycleOwner = lifecycleOwner
         uiScope.launch {
             lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                cameraFlash = camera?.cameraInfo?.torchState?.value == TorchState.ON
+                applyFlashState()
             }
         }
         initUseCases()
@@ -81,12 +115,37 @@ internal class CameraState(
         val lifecycleOwner = lifecycleOwner ?: return
         cameraProvider.unbindAll()
         val cameraSelector = if (showFrontCamera) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
-        camera = cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, previewUseCase, videoCaptureUseCase)
+
+        val allUseCases: Array<UseCase> = listOfNotNull(
+            previewUseCase,
+            videoCaptureUseCase,
+            imageCaptureUseCase,
+        ).toTypedArray()
+
+        camera = try {
+            cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, *allUseCases)
+        } catch (e: IllegalArgumentException) {
+            if (imageCaptureUseCase == null) throw e
+            // The device cannot host Preview + VideoCapture + ImageCapture at once. Drop photo and retry.
+            Log.w(
+                TAG,
+                "Device does not support (Preview + VideoCapture + ImageCapture) — disabling photo capture.",
+                e,
+            )
+            imageCaptureUseCase = null
+            cameraProvider.unbindAll()
+            cameraProvider.bindToLifecycle(
+                lifecycleOwner,
+                cameraSelector,
+                *listOfNotNull(previewUseCase, videoCaptureUseCase).toTypedArray(),
+            )
+        }
     }
 
     private fun initUseCases() {
-        val frontCameraInfo = cameraProvider?.getCameraInfo(CameraSelector.DEFAULT_FRONT_CAMERA) ?: return
-        val backCameraInfo = cameraProvider?.getCameraInfo(CameraSelector.DEFAULT_BACK_CAMERA) ?: return
+        val cameraProvider = cameraProvider ?: return
+        val frontCameraInfo = cameraProvider.getCameraInfo(CameraSelector.DEFAULT_FRONT_CAMERA)
+        val backCameraInfo = cameraProvider.getCameraInfo(CameraSelector.DEFAULT_BACK_CAMERA)
 
         val frontVideoCapabilities = Recorder.getVideoCapabilities(frontCameraInfo)
         val backVideoCapabilities = Recorder.getVideoCapabilities(backCameraInfo)
@@ -99,6 +158,15 @@ internal class CameraState(
             frontPreviewCapabilities.isStabilizationSupported && backPreviewCapabilities.isStabilizationSupported
 
         previewUseCase = previewBuilder.setPreviewStabilizationEnabled(isPreviewStabilisationSupported).build()
-        videoCaptureUseCase = videoCaptureBuilder.setVideoStabilizationEnabled(isVideoStabilisationSupported).build()
+        videoCaptureUseCase = if (captureType == CaptureType.Photo) {
+            null
+        } else {
+            videoCaptureBuilder.setVideoStabilizationEnabled(isVideoStabilisationSupported).build()
+        }
+        imageCaptureUseCase = if (captureType == CaptureType.Video) null else imageCaptureBuilder.build()
+    }
+
+    companion object {
+        private const val TAG = "CameraState"
     }
 }

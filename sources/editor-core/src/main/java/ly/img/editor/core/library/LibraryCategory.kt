@@ -105,13 +105,20 @@ data class LibraryCategory(
                     }
 
                     text.apply {
-                        LibraryContent.Section(
-                            titleRes = R.string.ly_img_editor_asset_library_section_text,
-                            sourceTypes = content.sourceTypes,
-                            excludedPreviewSourceTypes = listOf(AssetSourceType.TextComponents),
-                            assetType = AssetType.Text,
-                            expandContent = content,
-                        ).let(::add)
+                        // Surface the text sections (style presets, then text designs) as their own
+                        // Elements rows, each behaving like the dedicated Text category so every asset
+                        // type renders with its correct renderer. Falls back to a plain-text preview
+                        // for non-standard categories.
+                        val textSections = (content as? LibraryContent.Sections)?.sections
+                            ?: listOf(
+                                LibraryContent.Section(
+                                    titleRes = R.string.ly_img_editor_asset_library_section_text,
+                                    sourceTypes = content.sourceTypes,
+                                    assetType = AssetType.Text,
+                                    expandContent = content,
+                                ),
+                            )
+                        addAll(textSections)
                     }
 
                     shapes.apply {

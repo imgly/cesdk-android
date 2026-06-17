@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -58,6 +59,7 @@ import ly.img.editor.core.ui.UiDefaults
 import ly.img.editor.core.ui.iconpack.Flip
 import ly.img.editor.core.ui.iconpack.FreeCrop
 import ly.img.editor.core.ui.iconpack.IconPack
+import ly.img.editor.core.ui.iconpack.OriginalCrop
 import ly.img.editor.core.ui.iconpack.Reset
 import ly.img.editor.core.ui.iconpack.Rotate90degreesccwoutline
 import ly.img.editor.core.ui.iconpack.SquareCrop
@@ -226,7 +228,7 @@ fun CropSheet(
                 addSeparator = true,
                 hasNoneItem = false,
             ) {
-                AspectRatioItem()
+                AspectRatioItem(canRevert = uiState.canRevertToOriginalRatio)
             }
         }
     }
@@ -345,14 +347,18 @@ fun CropSheet(
 }
 
 @Composable
-fun ItemContentPayload.AspectRatioItem() {
+fun ItemContentPayload.AspectRatioItem(canRevert: Boolean) {
     val wrappedAsset = wrappedAsset
     if (wrappedAsset != null) {
+        val transformPreset = wrappedAsset.asset.payload.transformPreset
+        // Mirror Web: dim + disable the "Original" preset when the content can't revert to its ratio.
+        val isDisabled = transformPreset is AssetTransformPreset.ContentAspectRatio && !canRevert
         Column(
             modifier = Modifier
                 .size(64.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .clickable {
+                .alpha(if (isDisabled) 0.4f else 1f)
+                .clickable(enabled = !isDisabled) {
                     if (isSelected) {
                         onAssetReselected(wrappedAsset)
                     } else {
@@ -361,7 +367,6 @@ fun ItemContentPayload.AspectRatioItem() {
                 }
                 .padding(top = 6.dp, bottom = 4.dp, start = 4.dp, end = 4.dp),
         ) {
-            val transformPreset = wrappedAsset.asset.payload.transformPreset
             Icon(
                 when (transformPreset) {
                     is AssetTransformPreset.FixedAspectRatio -> {
@@ -384,6 +389,7 @@ fun ItemContentPayload.AspectRatioItem() {
                             )
                         }
                     }
+                    is AssetTransformPreset.ContentAspectRatio -> IconPack.OriginalCrop
                     else -> {
                         // Fallback to a square icon if no aspect ratio is defined
                         IconPack.FreeCrop

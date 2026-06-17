@@ -9,6 +9,7 @@ import ly.img.editor.core.ui.library.components.section.LibrarySectionItem
 data class AssetLibraryUiState(
     val libraryCategory: LibraryCategory,
     @StringRes val titleRes: Int,
+    val title: String? = null,
     val searchText: String = "",
     val isInSearchMode: Boolean = false,
     val isSearchEnabled: Boolean = true,

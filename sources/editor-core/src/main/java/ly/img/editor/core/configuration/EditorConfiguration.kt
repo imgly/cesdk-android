@@ -251,14 +251,14 @@ open class EditorConfigurationBuilder {
         val finalOnEvent = onEvent ?: parentConfiguration?.onEvent
         val finalOnUpload = onUpload ?: parentConfiguration?.onUpload
         val finalOnError = onError ?: parentConfiguration?.onError
-        val finalColorPalette = colorPalette?.invoke(scope) ?: parentConfiguration?.colorPalette
-        val finalAssetLibrary = assetLibrary?.invoke(scope) ?: parentConfiguration?.assetLibrary
-        val finalDock = dock?.invoke(scope) ?: parentConfiguration?.dock
-        val finalNavigationBar = navigationBar?.invoke(scope) ?: parentConfiguration?.navigationBar
-        val finalInspectorBar = inspectorBar?.invoke(scope) ?: parentConfiguration?.inspectorBar
-        val finalCanvasMenu = canvasMenu?.invoke(scope) ?: parentConfiguration?.canvasMenu
-        val finalBottomPanel = bottomPanel?.invoke(scope) ?: parentConfiguration?.bottomPanel
-        val finalOverlay = overlay?.invoke(scope) ?: parentConfiguration?.overlay
+        val finalColorPalette = if (colorPalette != null) colorPalette?.invoke(scope) else parentConfiguration?.colorPalette
+        val finalAssetLibrary = if (assetLibrary != null) assetLibrary?.invoke(scope) else parentConfiguration?.assetLibrary
+        val finalDock = if (dock != null) dock?.invoke(scope) else parentConfiguration?.dock
+        val finalNavigationBar = if (navigationBar != null) navigationBar?.invoke(scope) else parentConfiguration?.navigationBar
+        val finalInspectorBar = if (inspectorBar != null) inspectorBar?.invoke(scope) else parentConfiguration?.inspectorBar
+        val finalCanvasMenu = if (canvasMenu != null) canvasMenu?.invoke(scope) else parentConfiguration?.canvasMenu
+        val finalBottomPanel = if (bottomPanel != null) bottomPanel?.invoke(scope) else parentConfiguration?.bottomPanel
+        val finalOverlay = if (overlay != null) overlay?.invoke(scope) else parentConfiguration?.overlay
         return remember(
             finalOnCreate,
             finalOnLoaded,

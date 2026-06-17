@@ -2,6 +2,7 @@ package ly.img.editor.base.ui.handler
 
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.base.engine.changeLightnessBy
+import ly.img.editor.base.engine.effectiveTextRange
 import ly.img.editor.base.engine.setConicalGradientFill
 import ly.img.editor.base.engine.setFillType
 import ly.img.editor.base.engine.setLinearGradientFill
@@ -134,7 +135,8 @@ fun EventsHandler.blockFillEvents(
         engine.block.setFillEnabled(block, true)
         engine.block.setFillType(block, FillType.Color)
         if (DesignBlockType.getOrNull(engine.block.getType(block)) == DesignBlockType.Text) {
-            engine.block.setTextColor(block, it.color.toEngineColor())
+            val range = engine.block.effectiveTextRange(block)
+            engine.block.setTextColor(block, it.color.toEngineColor(), range.first, range.last)
         } else {
             engine.block.setFillSolidColor(block, it.color.toEngineColor())
         }

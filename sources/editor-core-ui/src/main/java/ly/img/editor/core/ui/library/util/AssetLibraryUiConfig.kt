@@ -11,7 +11,7 @@ internal object AssetLibraryUiConfig {
 
     fun contentRowHeight(assetType: AssetType) = when (assetType) {
         AssetType.Image, AssetType.Video, AssetType.Gallery, AssetType.Filter,
-        AssetType.Effect, AssetType.Blur, AssetType.TextComponent,
+        AssetType.Effect, AssetType.Blur, AssetType.TextComponent, AssetType.TextStylePreset,
         -> 96.dp
         AssetType.Audio, AssetType.Text -> 216.dp
         else -> 80.dp
@@ -21,7 +21,7 @@ internal object AssetLibraryUiConfig {
 
     fun contentPadding(assetType: AssetType) = when (assetType) {
         AssetType.Image, AssetType.Video, AssetType.Gallery, AssetType.Filter,
-        AssetType.Effect, AssetType.Blur, AssetType.TextComponent,
+        AssetType.Effect, AssetType.Blur, AssetType.TextComponent, AssetType.TextStylePreset,
         -> 0.dp
         else -> 4.dp
     }
@@ -37,6 +37,7 @@ internal object AssetLibraryUiConfig {
     fun assetGridColumns(assetType: AssetType) = when (assetType) {
         AssetType.Image, AssetType.Video, AssetType.Gallery, AssetType.Filter,
         AssetType.Effect, AssetType.Blur, AssetType.Animation, AssetType.TextComponent,
+        AssetType.TextStylePreset,
         -> 3
         AssetType.Audio, AssetType.Text, AssetType.Typeface -> 1
         AssetType.Shape, AssetType.Sticker -> 4

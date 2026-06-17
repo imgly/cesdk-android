@@ -20,8 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import ly.img.camera.ActiveMixedSubMode
 import ly.img.camera.components.Shadowed
 import ly.img.camera.core.CameraConfiguration
+import ly.img.camera.core.Capture
+import ly.img.camera.core.CaptureCount
+import ly.img.camera.core.CaptureType
 import ly.img.camera.core.R
 import ly.img.camera.preview.CameraState
 import ly.img.camera.record.RecordingManager
@@ -35,14 +39,35 @@ internal fun CameraDock(
     cameraState: CameraState,
     recordingManager: RecordingManager,
     cameraConfiguration: CameraConfiguration,
+    activeMixedSubMode: ActiveMixedSubMode,
     deletePreviousRecording: () -> Unit,
+    capturePhoto: () -> Unit,
     setResult: () -> Unit,
 ) {
+    val isSingleTake = cameraConfiguration.captureCount == CaptureCount.Single
+    // Collapse the (CaptureType, ActiveMixedSubMode) pair into a single Photo/Video routing
+    // decision so the shutter callbacks below stay branch-free. Mixed mode reads the toggle
+    // state; pure Photo / Video ignore it.
+    val behavesAsPhoto = when (cameraConfiguration.captureType) {
+        CaptureType.Photo -> true
+        CaptureType.Video -> false
+        CaptureType.Mixed -> activeMixedSubMode == ActiveMixedSubMode.Photo
+    }
+
     Box(modifier = modifier) {
         val state = recordingManager.state
 
         AnimatedVisibility(
-            visible = state.status is RecordingManager.Status.Idle && state.recordings.isNotEmpty(),
+            // Single-take auto-finishes, so neither the delete-last button nor the
+            // next-button should appear regardless of stack state. Stay rendered through
+            // TakingPhoto so rapid-fire multi captures don't slide the buttons out and back
+            // in between each shot — chrome alpha already hides them visually during the flash.
+            visible = !isSingleTake &&
+                (
+                    state.status is RecordingManager.Status.Idle ||
+                        state.status is RecordingManager.Status.TakingPhoto
+                ) &&
+                state.captures.isNotEmpty(),
             modifier = Modifier
                 .align(Alignment.Center)
                 .offset(x = (-80).dp),
@@ -83,14 +108,15 @@ internal fun CameraDock(
         }
 
         val recordedDurations =
-            remember(state.recordings.count(), (state.status as? RecordingManager.Status.Recording)?.currentRecordingDuration) {
-                val recordings = state.recordings
-                val currentRecordingDuration = (state.status as? RecordingManager.Status.Recording)?.currentRecordingDuration
-                recordings.map { it.duration }.let { durations ->
-                    currentRecordingDuration?.let { currentDuration ->
-                        durations + currentDuration
-                    } ?: durations
+            remember(state.captures, (state.status as? RecordingManager.Status.Recording)?.currentRecordingDuration) {
+                val captureDurations = state.captures.map { capture ->
+                    when (capture) {
+                        is Capture.Photo -> capture.clipDuration
+                        is Capture.Video -> capture.recording.duration
+                    }
                 }
+                val currentRecordingDuration = (state.status as? RecordingManager.Status.Recording)?.currentRecordingDuration
+                currentRecordingDuration?.let { captureDurations + it } ?: captureDurations
             }
 
         val context = LocalContext.current
@@ -104,22 +130,35 @@ internal fun CameraDock(
             hasStartedRecording = recordingManager.hasStartedRecording,
             isRecording = recordingManager.isRecording,
             isTimerRunning = state.status is RecordingManager.Status.TimerRunning,
+            behavesAsPhoto = behavesAsPhoto,
             recordedDurations = recordedDurations,
             onShortPress = {
-                recordingManager.toggleRecording(context)
-            },
-            onLongPress = {
-                if (!recordingManager.hasStartedRecording) {
+                if (behavesAsPhoto) {
+                    capturePhoto()
+                } else {
                     recordingManager.toggleRecording(context)
                 }
             },
+            onLongPress = {
+                if (behavesAsPhoto) return@RecordingButton
+                // Hold-to-record bypasses the timer; tap still respects it.
+                recordingManager.startRecordingImmediately(context)
+            },
             onLongPressRelease = {
+                if (behavesAsPhoto) return@RecordingButton
                 recordingManager.toggleRecording(context)
             },
         )
 
         AnimatedVisibility(
-            visible = state.status is RecordingManager.Status.Idle && state.recordings.isNotEmpty(),
+            // Single-take auto-finishes via SingleEvent.FinishCapturing, so no Next button.
+            // Stay rendered through TakingPhoto so rapid-fire multi captures don't wiggle.
+            visible = !isSingleTake &&
+                (
+                    state.status is RecordingManager.Status.Idle ||
+                        state.status is RecordingManager.Status.TakingPhoto
+                ) &&
+                state.captures.isNotEmpty(),
             modifier = Modifier.align(Alignment.CenterEnd),
             enter = fadeIn() + slideInHorizontally(initialOffsetX = { it / 2 }),
             exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it / 2 }),

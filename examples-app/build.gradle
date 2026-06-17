@@ -97,11 +97,15 @@ buildConfig {
     className "ExamplesBuildConfig"
     packageName "ly.img.editor.examples"
     buildConfigField String, "LICENSE", System.env.CESDK_APP_STORE_LICENSE ?: getLocalProperty("license") ?: ""
+    buildConfigField String, "AI_GATEWAY_API_KEY", System.env.CESDK_AI_GATEWAY_API_KEY ?: getLocalProperty("ai_gateway_api_key") ?: ""
 }
 
 dependencies {
     implementation project(':editor')
     implementation project(':camera')
+    implementation project(':plugin-ai-image-generation')
+    implementation project(':plugin-background-removal-imgly')
+    implementation project(':plugin-background-removal-google')
     implementation libs.cesdk.engine
     implementation libs.cesdk.engine.camera
 

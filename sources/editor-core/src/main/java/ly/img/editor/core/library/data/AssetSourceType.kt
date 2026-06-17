@@ -15,7 +15,7 @@ open class AssetSourceType(
          * The default source type for shapes.
          */
         val Shapes by lazy {
-            AssetSourceType(sourceId = "ly.img.vectorpath")
+            AssetSourceType(sourceId = "ly.img.vector.shape")
         }
 
         /**
@@ -47,8 +47,13 @@ open class AssetSourceType(
         }
 
         /**
-         * The default source type for text.
+         * The legacy source type for plain text, served by [TextAssetSource]. The default text library
+         * now uses [TextStylePresets] and no longer references this source type.
          */
+        @Deprecated(
+            message = "The default text library now uses AssetSourceType.TextStylePresets " +
+                "(source id ly.img.text.presets). Use the text style presets instead.",
+        )
         val Text by lazy {
             AssetSourceType(sourceId = "ly.img.asset.source.text")
         }
@@ -57,7 +62,15 @@ open class AssetSourceType(
          * The default source type for text components.
          */
         val TextComponents by lazy {
-            AssetSourceType(sourceId = "ly.img.textComponents")
+            AssetSourceType(sourceId = "ly.img.text.components")
+        }
+
+        /**
+         * The unified text style presets asset source. Assets carry an opaque
+         * `payload.stylePreset` that the engine applies; sections derive from the source's groups.
+         */
+        val TextStylePresets by lazy {
+            AssetSourceType(sourceId = "ly.img.text.presets")
         }
 
         /**

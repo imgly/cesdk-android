@@ -1,0 +1,11 @@
+apply from: "$projectDir/../editor-library.gradle"
+apply from: "$projectDir/../dokka.gradle"
+
+android {
+    namespace = 'ly.img.editor.plugin.backgroundRemoval.imgly'
+}
+
+dependencies {
+    api project(":plugin-background-removal")
+    implementation(libs.onnxRuntime)
+}

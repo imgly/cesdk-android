@@ -15,16 +15,24 @@ import ly.img.engine.Typeface
 import kotlin.math.ceil
 
 /**
- * A custom asset source that applies different font weight and size when applied to a text block. Note that this source is used in
- * [ly.img.editor.core.library.LibraryCategory.Text] and [ly.img.editor.core.library.LibraryContent.Text]. Therefore, if you are
- * using the category or the content, the asset source should be loaded to the [ly.img.engine.Engine] in the onCreate callback of
- * [ly.img.editor.EngineConfiguration].
+ * A legacy custom asset source that applies a fixed font weight and size (Title / Headline / Body) when applied to a text block.
+ *
+ * The default text library ([ly.img.editor.core.library.LibraryCategory.Text] /
+ * [ly.img.editor.core.library.LibraryContent.Text]) now uses the unified text style presets
+ * ([AssetSourceType.TextStylePresets], source id `ly.img.text.presets`) and no longer references this source. It is retained only
+ * for integrations that still register it explicitly; new integrations should use the text style presets instead.
  *
  * @param engine the engine that is used in the editor.
  * @param typeface the typeface that should be used when applying text asset. You can find typefaces using the
  * [ly.img.engine.DefaultAssetSource.TYPEFACE] asset source that is added through [ly.img.engine.addDefaultAssetSources]. Note
  * that there is a convenience class [TypefaceProvider] which does that.
  */
+@Suppress("DEPRECATION")
+@Deprecated(
+    message = "The default text library now uses the unified text style presets " +
+        "(AssetSourceType.TextStylePresets, source id ly.img.text.presets). Register and use the " +
+        "text style presets source instead.",
+)
 class TextAssetSource(
     private val engine: Engine,
     private val typeface: Typeface,

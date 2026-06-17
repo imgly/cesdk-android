@@ -25,17 +25,21 @@ import ly.img.editor.core.component.remember
 import ly.img.editor.plugin.backgroundRemoval.api.BackgroundRemovalApi.removeBackground
 import ly.img.editor.plugin.backgroundRemoval.iconPack.BackgroundRemoval
 import ly.img.editor.plugin.backgroundRemoval.iconPack.IconPack
-import ly.img.editor.plugin.backgroundRemoval.util.Constants
+import ly.img.editor.plugin.backgroundRemoval.util.BackgroundRemovalConstants
 
 /**
  * A composable helper function that creates and remembers a [Dock.Button] that
  * removes background from the current page.
  *
+ * @param config configuration that selects the background removal backend.
  * @param builder the builder lambda to override the default builder.
  * @return a button that will be displayed in the dock.
  */
 @Composable
-fun Dock.Button.rememberBackgroundRemoval(builder: Dock.ButtonBuilder.() -> Unit = {}): Button<Dock.ItemScope> {
+fun Dock.Button.rememberBackgroundRemoval(
+    config: BackgroundRemovalConfig,
+    builder: Dock.ButtonBuilder.() -> Unit = {},
+): Button<Dock.ItemScope> {
     val scope = rememberCoroutineScope()
     var currentJob: Job? by androidx.compose.runtime.remember { mutableStateOf(null) }
     return Dock.Button.remember {
@@ -59,9 +63,12 @@ fun Dock.Button.rememberBackgroundRemoval(builder: Dock.ButtonBuilder.() -> Unit
             currentJob = scope.launch {
                 try {
                     val currentPage = requireNotNull(editorContext.engine.scene.getCurrentPage())
-                    removeBackground(currentPage)
+                    removeBackground(
+                        targetBlock = currentPage,
+                        config = config,
+                    )
                 } catch (e: Exception) {
-                    Log.e(Constants.TAG, "Failed to remove background: ${e.message}", e)
+                    Log.e(BackgroundRemovalConstants.TAG, "Failed to remove background: ${e.message}", e)
                 } finally {
                     currentJob = null
                 }

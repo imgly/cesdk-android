@@ -7,10 +7,11 @@ import android.util.Log
 import androidx.core.graphics.createBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import ly.img.editor.plugin.backgroundRemoval.BackgroundRemovalMask
+import ly.img.engine.internal.api.bitmap.BitmapNativeApi
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.nio.ByteBuffer
 
 /**
  * Utilities for processing images and applying masks
@@ -20,45 +21,21 @@ internal object ImageProcessor {
      * Applies a segmentation mask to a bitmap to remove the background
      */
     suspend fun applyMaskToBitmap(
-        originalBitmap: Bitmap,
-        maskBuffer: ByteBuffer,
-        maskWidth: Int,
-        maskHeight: Int,
+        srcBitmap: Bitmap,
+        mask: BackgroundRemovalMask,
     ): Bitmap = withContext(Dispatchers.Default) {
-        val originalWidth = originalBitmap.width
-        val originalHeight = originalBitmap.height
-        val resultBitmap = createBitmap(originalWidth, originalHeight)
-
-        val maskConfidences = FloatArray(maskWidth * maskHeight)
-        maskBuffer.rewind()
-
-        for (i in 0 until maskWidth * maskHeight) {
-            maskConfidences[i] = maskBuffer.float
-        }
-
-        val originalPixels = IntArray(originalWidth * originalHeight)
-        originalBitmap.getPixels(originalPixels, 0, originalWidth, 0, 0, originalWidth, originalHeight)
-
-        for (y in 0 until originalHeight) {
-            for (x in 0 until originalWidth) {
-                val pixelIndex = y * originalWidth + x
-
-                val maskX = (x.toFloat() / originalWidth * maskWidth).coerceIn(0f, maskWidth - 1f)
-                val maskY = (y.toFloat() / originalHeight * maskHeight).coerceIn(0f, maskHeight - 1f)
-
-                val maskIndex = (maskY.toInt() * maskWidth + maskX.toInt()).coerceIn(0, maskConfidences.size - 1)
-                val confidence = maskConfidences[maskIndex]
-
-                val originalPixel = originalPixels[pixelIndex]
-                val alpha = (confidence * 255f).toInt().coerceIn(0, 255)
-                val newPixel = (originalPixel and 0x00FFFFFF) or (alpha shl 24)
-                originalPixels[pixelIndex] = newPixel
-            }
-        }
-
-        resultBitmap.setPixels(originalPixels, 0, originalWidth, 0, 0, originalWidth, originalHeight)
-
-        resultBitmap
+        val originalWidth = srcBitmap.width
+        val originalHeight = srcBitmap.height
+        val dstBitmap = createBitmap(originalWidth, originalHeight)
+        mask.buffer.rewind()
+        BitmapNativeApi.applyMaskToBitmap(
+            srcBitmap = srcBitmap,
+            dstBitmap = dstBitmap,
+            maskBuffer = mask.buffer,
+            maskWidth = mask.width,
+            maskHeight = mask.height,
+        )
+        dstBitmap
     }
 
     /**
@@ -77,7 +54,7 @@ internal object ImageProcessor {
                 Uri.fromFile(tempFile)
             }
         } catch (e: IOException) {
-            Log.e(Constants.TAG, "Failed to save bitmap to temp file", e)
+            Log.e(BackgroundRemovalConstants.TAG, "Failed to save bitmap to temp file", e)
             null
         }
     }

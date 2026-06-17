@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ly.img.editor.core.R
@@ -322,6 +323,8 @@ val ItemContent: @Composable ItemContentPayload.() -> Unit = {
             textAlign = TextAlign.Center,
             text = wrappedAsset?.asset?.label ?: stringResource(R.string.ly_img_editor_asset_library_label_none),
             style = MaterialTheme.typography.labelMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
