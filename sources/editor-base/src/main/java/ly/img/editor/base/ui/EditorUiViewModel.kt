@@ -237,6 +237,15 @@ class EditorUiViewModel(
 
     init {
         collectVideoDurationConstraintsData()
+        collectAssetApplyErrors()
+    }
+
+    private fun collectAssetApplyErrors() {
+        viewModelScope.launch {
+            libraryViewModel.assetApplyError.collect { throwable ->
+                sendSingleEvent(SingleEvent.SnackbarError(throwable))
+            }
+        }
     }
 
     private val eventHandler = EventsHandler(coroutineScope = viewModelScope) {

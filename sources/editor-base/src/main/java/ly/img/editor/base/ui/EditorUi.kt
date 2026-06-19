@@ -112,6 +112,7 @@ import ly.img.editor.core.compose.rememberLastValue
 import ly.img.editor.core.configuration.EditorConfiguration
 import ly.img.editor.core.engine.EngineRenderTarget
 import ly.img.editor.core.event.EditorEvent
+import ly.img.editor.core.getDisplayMessage
 import ly.img.editor.core.iconpack.Close
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.navbar.SystemNavBar
@@ -131,6 +132,7 @@ import ly.img.editor.core.ui.sheet.Sheet
 import ly.img.editor.core.ui.utils.activity
 import ly.img.editor.core.ui.utils.lifecycle.LifecycleEventEffect
 import ly.img.editor.core.ui.utils.toPx
+import ly.img.engine.EngineException
 
 @OptIn(FlowPreview::class, UnstableEditorApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -300,6 +302,16 @@ fun EditorScope.EditorUi(
                         snackBarHostState.showSnackbar(
                             // stringResource() doesn't work inside of a LaunchedEffect as it is not a composable
                             message = activity.resources.getString(it.text),
+                            duration = it.duration,
+                        )
+                    }
+                }
+
+                is SingleEvent.SnackbarError -> {
+                    uiScope.launch {
+                        snackBarHostState.showSnackbar(
+                            message = (it.throwable as? EngineException)?.getDisplayMessage(activity)
+                                ?: it.throwable.message ?: "",
                             duration = it.duration,
                         )
                     }

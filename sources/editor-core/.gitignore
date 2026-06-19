@@ -1,1 +1,5 @@
 /build
+# Customer-facing engine error strings, generated from
+# scripts/localization/mobile-errors.tsv at every build (updateErrorLocalizationTask)
+# and compiled into the AAR — so they ship without being committed.
+/src/main/res-errors

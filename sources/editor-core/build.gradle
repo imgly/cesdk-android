@@ -3,13 +3,21 @@ apply from: "$projectDir/../dokka.gradle"
 
 android {
     namespace = 'ly.img.editor.core'
+    // Customer-facing engine error strings are generated into a dedicated res
+    // directory (the Android generator overwrites strings.xml, so they cannot
+    // share res/ with the editor strings). The dir is generated at build time
+    // (see updateErrorLocalizationTask) and git-ignored.
+    sourceSets {
+        main {
+            res.srcDirs += "src/main/res-errors"
+        }
+    }
 }
 
 def UBQ_ROOT_DIR = "${project.projectDir}/../../../.."
 def updateLocalizationTask = tasks.register("updateLocalizationFiles", Exec) {
     workingDir = UBQ_ROOT_DIR
     executable "bash"
-    ignoreExitValue = true
     args = [
         "scripts/localization/android/generate_localization.sh",
         "scripts/localization/mobile-editor.tsv",
@@ -19,6 +27,24 @@ def updateLocalizationTask = tasks.register("updateLocalizationFiles", Exec) {
 }
 tasks.named("preBuild").configure { dependsOn(updateLocalizationTask) }
 tasks.named("build").configure { dependsOn(updateLocalizationTask) }
+
+// Customer-facing engine error strings (catalog-generated; authored in
+// scripts/localization/mobile-errors.tsv). Generated into res-errors under the
+// ly_img_engine_ namespace so they don't overwrite or collide with the editor
+// strings.xml. EngineException.getDisplayMessage resolves errors against these
+// and falls back to the engine message when none is authored.
+def updateErrorLocalizationTask = tasks.register("updateErrorLocalizationFiles", Exec) {
+    workingDir = UBQ_ROOT_DIR
+    executable "bash"
+    args = [
+        "scripts/localization/android/generate_localization.sh",
+        "scripts/localization/mobile-errors.tsv",
+        "apps/cesdk_android/sources/editor-core/src/main/res-errors",
+        "ly_img_engine_"
+    ]
+}
+tasks.named("preBuild").configure { dependsOn(updateErrorLocalizationTask) }
+tasks.named("build").configure { dependsOn(updateErrorLocalizationTask) }
 
 dependencies {
     api libs.cesdk.engine

@@ -15,7 +15,9 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -103,6 +105,13 @@ class LibraryViewModel(
 
     private val _uiEvent = Channel<LibraryUiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
+
+    // Durable, editor-scoped surface for asset-apply failures. Unlike [uiEvent] (a rendezvous
+    // channel consumed only while the library sheet is composed), this is collected at the
+    // editor level so the error still reaches the user after the sheet dismisses. Buffered so
+    // emission never suspends the apply coroutine.
+    private val _assetApplyError = MutableSharedFlow<Throwable>(extraBufferCapacity = 1)
+    val assetApplyError: SharedFlow<Throwable> = _assetApplyError
 
     val assetLibrary
         get() = editor.configuration.value?.assetLibrary
@@ -213,7 +222,7 @@ class LibraryViewModel(
 
             var resolvedAssetSourceType = assetSourceType
             var resolvedAsset = asset
-            var designBlock = runCatching {
+            val applyResult = runCatching {
                 engine.asset.applyAssetSourceAsset(resolvedAssetSourceType.sourceId, resolvedAsset)
             }.onFailure {
                 Log.w(
@@ -221,7 +230,8 @@ class LibraryViewModel(
                     "applyAssetSourceAsset failed for source=${resolvedAssetSourceType.sourceId} assetId=${resolvedAsset.id}",
                     it,
                 )
-            }.getOrNull()
+            }
+            var designBlock = applyResult.getOrNull()
 
             if (designBlock == null && isSystemGallerySelection) {
                 Log.w(
@@ -238,7 +248,10 @@ class LibraryViewModel(
                 }
             }
 
-            val finalDesignBlock = designBlock ?: return@launch
+            val finalDesignBlock = designBlock ?: run {
+                applyResult.exceptionOrNull()?.let { _assetApplyError.tryEmit(it) }
+                return@launch
+            }
 
             runCatching { engine.asset.assetSourceContentsChanged(resolvedAssetSourceType.sourceId) }
             if (isSystemGallerySelection) {
