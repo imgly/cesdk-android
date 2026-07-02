@@ -44,7 +44,7 @@ import ly.img.engine.EngineException
  * The default baseUri value used in [Editor] composable.
  */
 val defaultBaseUri: Uri by lazy {
-    "https://cdn.img.ly/packages/imgly/cesdk-android/1.77.0-rc.4/assets".toUri()
+    "https://cdn.img.ly/packages/imgly/cesdk-android/1.77.0/assets".toUri()
 }
 
 /**

@@ -42,7 +42,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
-import ly.img.camera.ActiveMixedSubMode
 import ly.img.camera.CameraViewModel
 import ly.img.camera.components.sidemenu.SideMenu
 import ly.img.camera.core.CaptureType
@@ -69,13 +68,7 @@ internal fun BoxScope.CameraView(
 
     val previewing = viewModel.previewingPhotoUri != null
     val capturingPhoto = recordingManager.state.status is RecordingManager.Status.TakingPhoto
-    // Same routing decision used by `CameraDock` for shutter callbacks — Mixed reads the toggle,
-    // pure Photo / Video ignore it.
-    val behavesAsPhoto = when (viewModel.cameraConfiguration.captureType) {
-        CaptureType.Photo -> true
-        CaptureType.Video -> false
-        CaptureType.Mixed -> viewModel.activeMixedSubMode == ActiveMixedSubMode.Photo
-    }
+    val behavesAsPhoto = viewModel.activeCaptureBehavesAsPhoto
 
     // Hide the chrome instantly when capture starts so the white flash doesn't reveal it fading
     // away underneath; restore with a smooth animation once the capture/preview window ends.
@@ -114,7 +107,7 @@ internal fun BoxScope.CameraView(
                     recordingManager.state.status is RecordingManager.Status.Idle,
                 activeMixedSubMode = viewModel.activeMixedSubMode,
                 behavesAsPhoto = behavesAsPhoto,
-                toggleFlash = cameraState::toggleFlash,
+                toggleFlash = viewModel::toggleFlash,
                 toggleCamera = viewModel::toggleCamera,
                 swapLayoutPositions = viewModel::swapLayoutPositions,
                 onSubModeChange = viewModel::selectActiveMixedSubMode,

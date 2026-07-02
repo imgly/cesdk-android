@@ -37,6 +37,7 @@ import ly.img.camera.core.CameraResult
 import ly.img.camera.core.Capture
 import ly.img.camera.core.CaptureCount
 import ly.img.camera.core.CaptureMedia
+import ly.img.camera.core.CaptureType
 import ly.img.camera.core.EngineConfiguration
 import ly.img.camera.core.Recording
 import ly.img.camera.core.Video
@@ -150,8 +151,20 @@ internal class CameraViewModel(
     var activeMixedSubMode by mutableStateOf(ActiveMixedSubMode.Photo)
         private set
 
+    val activeCaptureBehavesAsPhoto: Boolean
+        get() = when (cameraConfiguration.captureType) {
+            CaptureType.Photo -> true
+            CaptureType.Video -> false
+            CaptureType.Mixed -> activeMixedSubMode == ActiveMixedSubMode.Photo
+        }
+
     fun selectActiveMixedSubMode(mode: ActiveMixedSubMode) {
         activeMixedSubMode = mode
+        cameraState.applyFlashState(activeCaptureBehavesAsPhoto)
+    }
+
+    fun toggleFlash() {
+        cameraState.toggleFlash(activeCaptureBehavesAsPhoto)
     }
 
     /** Non-null while the photo preview screen is shown. The JPEG only joins
@@ -348,12 +361,14 @@ internal class CameraViewModel(
         engine.setCameraPreview(pixelStreamFill1, cameraState.previewUseCase, mirrored = cameraState.showFrontCamera) {
             engine.block.setVisible(primaryBlock, true)
             cameraState.isReady = true
+            cameraState.applyFlashState(activeCaptureBehavesAsPhoto)
         }
     }
 
     fun toggleCamera() {
         engine.block.setVisible(primaryBlock, false)
         cameraState.toggleCamera()
+        cameraState.applyFlashState(activeCaptureBehavesAsPhoto)
         engine.setCameraPreview(pixelStreamFill1, cameraState.previewUseCase, mirrored = cameraState.showFrontCamera) {
             engine.block.setVisible(primaryBlock, true)
         }

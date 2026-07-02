@@ -105,20 +105,16 @@ data class LibraryCategory(
                     }
 
                     text.apply {
-                        // Surface the text sections (style presets, then text designs) as their own
-                        // Elements rows, each behaving like the dedicated Text category so every asset
-                        // type renders with its correct renderer. Falls back to a plain-text preview
-                        // for non-standard categories.
-                        val textSections = (content as? LibraryContent.Sections)?.sections
-                            ?: listOf(
-                                LibraryContent.Section(
-                                    titleRes = R.string.ly_img_editor_asset_library_section_text,
-                                    sourceTypes = content.sourceTypes,
-                                    assetType = AssetType.Text,
-                                    expandContent = content,
-                                ),
-                            )
-                        addAll(textSections)
+                        // A single "Text" row whose preview mixes all of the text sources (plain,
+                        // styles, combinations, curved). "See all" opens the full text category with
+                        // its per-type sections. Thumbnails are used in the preview, so any non-text
+                        // asset type works here.
+                        LibraryContent.Section(
+                            titleRes = R.string.ly_img_editor_asset_library_section_text,
+                            sourceTypes = content.sourceTypes,
+                            assetType = AssetType.TextStylePreset,
+                            expandContent = content,
+                        ).let(::add)
                     }
 
                     shapes.apply {

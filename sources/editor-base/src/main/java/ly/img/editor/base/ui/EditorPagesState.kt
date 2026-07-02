@@ -30,7 +30,7 @@ data class EditorPagesState(
     val pageAspectRatio: Float,
 ) {
     val selectedPageIndex: Int by lazy {
-        pages.indexOf(selectedPage)
+        pages.indexOfFirst { it.block == selectedPage.block }
     }
 
     data class Page(

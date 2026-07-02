@@ -57,7 +57,7 @@ internal fun StyleSelectionView(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         SheetHeader(
-            title = stringResource(R.string.ly_img_plugin_ai_image_generation_text_style_selection_title),
+            title = stringResource(R.string.ly_img_plugin_ai_image_generation_title_select_style),
             onClose = onCloseSheet,
             actionContent = {
                 IconButton(

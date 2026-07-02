@@ -50,7 +50,7 @@ import ly.img.editor.core.iconpack.SelectGroup
 import ly.img.editor.core.iconpack.ShapeIcon
 import ly.img.editor.core.iconpack.Split
 import ly.img.editor.core.iconpack.TextOnPath
-import ly.img.editor.core.iconpack.TextStylePresets
+import ly.img.editor.core.iconpack.TextPresets
 import ly.img.editor.core.iconpack.Typeface
 import ly.img.editor.core.iconpack.VoiceoverAdd
 import ly.img.editor.core.iconpack.VolumeHigh
@@ -1192,20 +1192,25 @@ fun InspectorBar.Button.rememberFormatText(builder: InspectorBar.ButtonBuilder.(
     }
 
 /**
- * The id of the inspector bar button returned by [InspectorBar.Button.rememberTextStylePresets].
+ * The id of the inspector bar button returned by [InspectorBar.Button.rememberTextPresets].
  */
-val InspectorBar.Button.Id.textStylePresets by unsafeLazy {
-    EditorComponentId("ly.img.component.inspectorBar.button.textStylePresets")
+val InspectorBar.Button.Id.textPresets by unsafeLazy {
+    EditorComponentId("ly.img.component.inspectorBar.button.textPresets")
 }
 
-private val textStylePresetsCategory by lazy {
+private val textPresetsCategory by lazy {
     LibraryCategory(
-        tabTitleRes = R.string.ly_img_editor_asset_library_section_text_style_presets,
-        tabSelectedIcon = IconPack.TextStylePresets,
-        tabUnselectedIcon = IconPack.TextStylePresets,
+        tabTitleRes = R.string.ly_img_editor_inspector_bar_button_text_styles,
+        tabSelectedIcon = IconPack.TextPresets,
+        tabUnselectedIcon = IconPack.TextPresets,
         content = LibraryContent.Sections(
-            titleRes = R.string.ly_img_editor_asset_library_section_text_style_presets,
-            sections = listOf(LibraryContent.textStylePresetsSection),
+            titleRes = R.string.ly_img_editor_inspector_bar_button_text_styles,
+            // Text Combinations are excluded — they are a group (a different block type).
+            sections = listOf(
+                LibraryContent.plainTextFlatSection,
+                LibraryContent.textStylesSection,
+                LibraryContent.curvedTextSection,
+            ),
         ),
     )
 }
@@ -1221,20 +1226,24 @@ private val textStylePresetsCategory by lazy {
  * @return a button that will be displayed in the inspector bar.
  */
 @Composable
-fun InspectorBar.Button.rememberTextStylePresets(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
+fun InspectorBar.Button.rememberTextPresets(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
     InspectorBar.Button.remember {
-        id = { InspectorBar.Button.Id.textStylePresets }
+        id = { InspectorBar.Button.Id.textPresets }
         visible = {
             remember(this) {
                 editorContext.selection.type == DesignBlockType.Text &&
                     editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "text/character") &&
-                    editorContext.engine.asset.findAllSources().contains(AssetSourceType.TextStylePresets.sourceId)
+                    editorContext.engine.asset.findAllSources().let { registered ->
+                        AssetSourceType.TextPlain.sourceId in registered ||
+                            AssetSourceType.TextStyles.sourceId in registered ||
+                            AssetSourceType.TextCurves.sourceId in registered
+                    }
             }
         }
-        vectorIcon = { IconPack.TextStylePresets }
+        vectorIcon = { IconPack.TextPresets }
         textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_text_styles) }
         onClick = {
-            editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.LibraryReplace(libraryCategory = textStylePresetsCategory)))
+            editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.LibraryReplace(libraryCategory = textPresetsCategory)))
         }
         builder()
     }

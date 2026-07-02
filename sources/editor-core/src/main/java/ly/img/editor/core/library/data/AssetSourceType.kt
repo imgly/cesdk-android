@@ -48,11 +48,13 @@ open class AssetSourceType(
 
         /**
          * The legacy source type for plain text, served by [TextAssetSource]. The default text library
-         * now uses [TextStylePresets] and no longer references this source type.
+         * now uses the split text preset sources ([TextPlain], [TextStyles], [TextCurves]) and no
+         * longer references this source type.
          */
         @Deprecated(
-            message = "The default text library now uses AssetSourceType.TextStylePresets " +
-                "(source id ly.img.text.presets). Use the text style presets instead.",
+            message = "The default text library now uses the split text preset sources: " +
+                "TextPlain (ly.img.text), TextStyles (ly.img.text.styles), " +
+                "TextCurves (ly.img.text.curves), TextComponents (ly.img.text.components).",
         )
         val Text by lazy {
             AssetSourceType(sourceId = "ly.img.asset.source.text")
@@ -66,11 +68,25 @@ open class AssetSourceType(
         }
 
         /**
-         * The unified text style presets asset source. Assets carry an opaque
-         * `payload.stylePreset` that the engine applies; sections derive from the source's groups.
+         * Plain text presets. Assets carry an opaque `payload.stylePreset` that the engine applies;
+         * the section drills into the source's groups (default / elegant / modernTech).
          */
-        val TextStylePresets by lazy {
-            AssetSourceType(sourceId = "ly.img.text.presets")
+        val TextPlain by lazy {
+            AssetSourceType(sourceId = "ly.img.text")
+        }
+
+        /**
+         * Decorative text style presets.
+         */
+        val TextStyles by lazy {
+            AssetSourceType(sourceId = "ly.img.text.styles")
+        }
+
+        /**
+         * Curved text presets, used by the text-on-path picker.
+         */
+        val TextCurves by lazy {
+            AssetSourceType(sourceId = "ly.img.text.curves")
         }
 
         /**

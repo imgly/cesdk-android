@@ -112,7 +112,7 @@ fun EditorPagesUi(
                                     .animateGridItem()
                                     .fillMaxWidth(),
                             ) {
-                                val borderColor = if (page == cachedState.selectedPage) {
+                                val borderColor = if (page.block == cachedState.selectedPage.block) {
                                     MaterialTheme.colorScheme.primary
                                 } else {
                                     Color.Transparent

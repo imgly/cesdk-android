@@ -13,13 +13,13 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-val IconPack.TextStylePresets: ImageVector
+val IconPack.TextPresets: ImageVector
     get() {
-        if (textStylePresets != null) {
-            return textStylePresets!!
+        if (textPresets != null) {
+            return textPresets!!
         }
-        textStylePresets = Builder(
-            name = "TextStylePresets",
+        textPresets = Builder(
+            name = "TextPresets",
             defaultWidth = 24.0.dp,
             defaultHeight = 24.0.dp,
             viewportWidth = 24.0f,
@@ -86,11 +86,11 @@ val IconPack.TextStylePresets: ImageVector
                 close()
             }
         }.build()
-        return textStylePresets!!
+        return textPresets!!
     }
 
-private var textStylePresets: ImageVector? = null
+private var textPresets: ImageVector? = null
 
 @Preview
 @Composable
-private fun Preview() = IconPack.TextStylePresets.IconPreview()
+private fun Preview() = IconPack.TextPresets.IconPreview()

@@ -1614,9 +1614,9 @@ class EditorUiViewModel(
     }
 
     private suspend fun generateSingleThumbnail(request: ThumbnailRequest) {
-        // Cap thumbnail height to 128px — page overview grid cells are small,
-        // higher resolutions waste render time with no visible quality benefit.
-        val height = request.pageHeight.coerceAtMost(128)
+        // Render at the cell's measured pixel height; a fixed cap upscaled the
+        // bitmap and blurred previews. Memory is bounded by the LRU thumbnailCache.
+        val height = request.pageHeight
         val result = try {
             engine.block
                 .generateVideoThumbnailSequence(

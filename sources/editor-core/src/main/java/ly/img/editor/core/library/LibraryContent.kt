@@ -205,16 +205,16 @@ sealed interface LibraryContent {
             get() = images(includeSystemGallery = true)
 
         /**
-         * The unified text style presets section: one sub-section per asset group of the
-         * `ly.img.text.presets` source, titled via the derived localization keys
+         * The plain text section: one sub-section per asset group (default / elegant / modernTech)
+         * of the `ly.img.text` source, titled via the derived localization keys
          * (ly_img_editor_asset_library_section_text_style_presets_<group>), falling back to the raw
          * group id when a group has no translation.
          */
-        internal val textStylePresetsSection by lazy {
+        internal val plainTextSection by lazy {
             Section(
                 // Fallback title, used only if the source reports no groups.
-                titleRes = R.string.ly_img_editor_asset_library_section_text_style_presets,
-                sourceTypes = listOf(AssetSourceType.TextStylePresets),
+                titleRes = R.string.ly_img_editor_asset_library_section_plain_text,
+                sourceTypes = listOf(AssetSourceType.TextPlain),
                 addGroupedSubSections = true,
                 groupTitleKeyPrefix = "ly_img_editor_asset_library_section_text_style_presets_",
                 assetType = AssetType.TextStylePreset,
@@ -222,18 +222,39 @@ sealed interface LibraryContent {
         }
 
         /**
-         * The flat "Add Text" entry: a single text style-presets row whose "See All" opens the
-         * grouped overview ([textStylePresetsSection]), mirroring web's flat-then-grouped flow.
+         * The flat plain text row whose "See All" opens the grouped overview ([plainTextSection]).
          */
-        internal val textStylePresetsFlatSection by lazy {
+        internal val plainTextFlatSection by lazy {
             Section(
-                titleRes = R.string.ly_img_editor_asset_library_section_text_style_presets,
-                sourceTypes = listOf(AssetSourceType.TextStylePresets),
+                titleRes = R.string.ly_img_editor_asset_library_section_plain_text,
+                sourceTypes = listOf(AssetSourceType.TextPlain),
                 assetType = AssetType.TextStylePreset,
                 expandContent = Sections(
-                    titleRes = R.string.ly_img_editor_asset_library_section_text_style_presets,
-                    sections = listOf(textStylePresetsSection),
+                    titleRes = R.string.ly_img_editor_asset_library_section_plain_text,
+                    sections = listOf(plainTextSection),
                 ),
+            )
+        }
+
+        /**
+         * The decorative text styles section.
+         */
+        internal val textStylesSection by lazy {
+            Section(
+                titleRes = R.string.ly_img_editor_asset_library_section_text_styles,
+                sourceTypes = listOf(AssetSourceType.TextStyles),
+                assetType = AssetType.TextStylePreset,
+            )
+        }
+
+        /**
+         * The curved text section.
+         */
+        internal val curvedTextSection by lazy {
+            Section(
+                titleRes = R.string.ly_img_editor_asset_library_section_curve_text,
+                sourceTypes = listOf(AssetSourceType.TextCurves),
+                assetType = AssetType.TextStylePreset,
             )
         }
 
@@ -244,12 +265,14 @@ sealed interface LibraryContent {
             Sections(
                 titleRes = R.string.ly_img_editor_asset_library_title_text,
                 sections = listOf(
-                    textStylePresetsFlatSection,
+                    plainTextFlatSection,
+                    textStylesSection,
                     Section(
                         titleRes = R.string.ly_img_editor_asset_library_section_font_combinations,
                         sourceTypes = listOf(AssetSourceType.TextComponents),
                         assetType = AssetType.TextComponent,
                     ),
+                    curvedTextSection,
                 ),
             )
         }

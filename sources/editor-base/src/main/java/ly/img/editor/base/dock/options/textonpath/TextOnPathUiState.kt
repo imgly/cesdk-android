@@ -20,8 +20,7 @@ data class TextOnPathUiState(
     val offset: Float,
 ) {
     companion object {
-        const val SOURCE_ID = "ly.img.text.presets"
-        private const val CURVES_GROUP_ID = "curves"
+        const val SOURCE_ID = "ly.img.text.curves"
 
         suspend fun create(
             designBlock: DesignBlock,
@@ -48,7 +47,6 @@ data class TextOnPathUiState(
                     perPage = Int.MAX_VALUE,
                     page = 0,
                     locale = locale,
-                    groups = listOf(CURVES_GROUP_ID),
                 ),
             ).assets.map {
                 WrappedAsset.GenericAsset(

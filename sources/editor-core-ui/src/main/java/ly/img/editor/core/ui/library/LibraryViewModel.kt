@@ -960,11 +960,20 @@ class LibraryViewModel(
                         }.awaitAll()
                             .mapNotNull { it.getOrNull() }
                             .takeIf { it.isNotEmpty() }
-                            ?.flatMap { (source, findResult) ->
+                            ?.onEach { (_, findResult) ->
                                 total = runCatching {
                                     Math.addExact(total, findResult.total)
                                 }.getOrNull() ?: Int.MAX_VALUE
-                                findResult.assets.map { asset -> source to asset }
+                            }
+                            // Round-robin across the sources so a multi-source preview shows a mix of
+                            // every source instead of exhausting the first one. Identical to plain
+                            // concatenation when the section has a single source.
+                            ?.let { results ->
+                                interleaveBySource(
+                                    results.map { (source, findResult) ->
+                                        findResult.assets.map { asset -> source to asset }
+                                    },
+                                )
                             }
                             ?.filterNot { (source, _) ->
                                 section.excludedPreviewSourceTypes?.contains(source) == true
@@ -1017,6 +1026,22 @@ class LibraryViewModel(
         uiStateFlow.update {
             it.copy(loadState = CategoryLoadState.Success)
         }
+    }
+
+    /**
+     * Interleaves per-source asset lists in round-robin order (first of each source, then second of
+     * each, …). Empty sources are skipped. For a single source the result equals the input list.
+     */
+    private fun <T> interleaveBySource(lists: List<List<T>>): List<T> {
+        if (lists.size <= 1) return lists.flatten()
+        val result = ArrayList<T>(lists.sumOf { it.size })
+        val maxSize = lists.maxOfOrNull { it.size } ?: 0
+        for (index in 0 until maxSize) {
+            for (list in lists) {
+                list.getOrNull(index)?.let(result::add)
+            }
+        }
+        return result
     }
 
     private suspend fun createWrappedAsset(

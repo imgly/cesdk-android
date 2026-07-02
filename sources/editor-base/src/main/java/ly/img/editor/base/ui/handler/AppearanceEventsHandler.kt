@@ -21,6 +21,7 @@ import ly.img.engine.Color
 import ly.img.engine.DesignBlock
 import ly.img.engine.EffectType
 import ly.img.engine.Engine
+import kotlin.math.roundToInt
 
 /**
  * Register all events related to appearance, like adding/removing filters, fx effects, blur effects etc.
@@ -138,8 +139,8 @@ private fun replaceFilter(
     } else {
         val path = EffectType.LutFilter.key
         blockApi.getEffectOrCreateAndAppend(block, EffectType.LutFilter).also { effect ->
-            val verticalTileCountMeta = asset.getMeta("verticalTileCount")?.toInt()
-            val horizontalTileCountMeta = asset.getMeta("horizontalTileCount")?.toInt()
+            val verticalTileCountMeta = asset.getMeta("verticalTileCount")?.toFloat()?.roundToInt()
+            val horizontalTileCountMeta = asset.getMeta("horizontalTileCount")?.toFloat()?.roundToInt()
 
             val verticalTileCount = verticalTileCountMeta ?: horizontalTileCountMeta ?: 5
             val horizontalTileCount = horizontalTileCountMeta ?: verticalTileCountMeta ?: 5

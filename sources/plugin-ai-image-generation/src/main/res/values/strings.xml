@@ -13,7 +13,7 @@
     <string name="ly_img_plugin_ai_image_generation_text_error_failed_to_generate_image">Failed to generate image</string>
     <string name="ly_img_plugin_ai_image_generation_text_image_height_px">Height (px)</string>
     <string name="ly_img_plugin_ai_image_generation_text_image_width_px">Width (px)</string>
-    <string name="ly_img_plugin_ai_image_generation_text_style_selection_title">Select Style</string>
     <string name="ly_img_plugin_ai_image_generation_title_ai_image_generation">AI Image Generation</string>
     <string name="ly_img_plugin_ai_image_generation_title_select_format">Select Format</string>
+    <string name="ly_img_plugin_ai_image_generation_title_select_style">Select Style</string>
 </resources>

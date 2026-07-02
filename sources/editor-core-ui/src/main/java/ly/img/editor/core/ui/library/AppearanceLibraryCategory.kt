@@ -16,9 +16,12 @@ object AppearanceLibraryCategory {
             content = LibraryContent.Sections(
                 titleRes = 0,
                 sections = listOf(
+                    // Fetch the merged `ly.img.filter` source flat. Don't re-enable
+                    // `addGroupedSubSections`: LUT assets use multi-element groups (e.g. ["lut","bw"])
+                    // and the engine's group filter is conjunctive, so per-group queries match none of
+                    // them — leaving only the duotone group (ANDROID-843).
                     LibraryContent.Section(
                         sourceTypes = listOf(AppearanceAssetSourceType.Filter),
-                        addGroupedSubSections = true,
                         count = Int.MAX_VALUE,
                         assetType = AssetType.Filter,
                         expandContent = null,

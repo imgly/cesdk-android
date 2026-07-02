@@ -38,7 +38,6 @@ internal class CameraState(
         private set(value) {
             if (_cameraFlash == value) return
             _cameraFlash = value
-            applyFlashState()
         }
 
     var isReady by mutableStateOf(false)
@@ -72,17 +71,20 @@ internal class CameraState(
         rebind()
     }
 
-    fun toggleFlash() {
+    fun toggleFlash(behavesAsPhoto: Boolean) {
         cameraFlash = !cameraFlash
+        applyFlashState(behavesAsPhoto)
     }
 
-    private fun applyFlashState() {
+    fun applyFlashState(behavesAsPhoto: Boolean) {
         // Video mode keeps the continuous-LED torch behavior for preview lighting.
         // Photo / Mixed mode applies a true flash at takePicture time via flashMode.
-        if (captureType == CaptureType.Video) {
-            camera?.cameraControl?.enableTorch(cameraFlash)
-        } else {
+        if (behavesAsPhoto) {
+            camera?.cameraControl?.enableTorch(false)
             imageCaptureUseCase?.flashMode = if (cameraFlash) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
+        } else {
+            imageCaptureUseCase?.flashMode = ImageCapture.FLASH_MODE_OFF
+            camera?.cameraControl?.enableTorch(cameraFlash)
         }
     }
 
@@ -95,7 +97,9 @@ internal class CameraState(
         this.lifecycleOwner = lifecycleOwner
         uiScope.launch {
             lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                applyFlashState()
+                if (captureType != CaptureType.Mixed) {
+                    applyFlashState(captureType == CaptureType.Photo)
+                }
             }
         }
         initUseCases()

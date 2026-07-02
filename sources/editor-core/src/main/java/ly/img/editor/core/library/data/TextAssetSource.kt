@@ -18,9 +18,10 @@ import kotlin.math.ceil
  * A legacy custom asset source that applies a fixed font weight and size (Title / Headline / Body) when applied to a text block.
  *
  * The default text library ([ly.img.editor.core.library.LibraryCategory.Text] /
- * [ly.img.editor.core.library.LibraryContent.Text]) now uses the unified text style presets
- * ([AssetSourceType.TextStylePresets], source id `ly.img.text.presets`) and no longer references this source. It is retained only
- * for integrations that still register it explicitly; new integrations should use the text style presets instead.
+ * [ly.img.editor.core.library.LibraryContent.Text]) now uses the split text preset sources
+ * ([AssetSourceType.TextPlain], [AssetSourceType.TextStyles], [AssetSourceType.TextCurves]) and no
+ * longer references this source. It is retained only for integrations that still register it
+ * explicitly; new integrations should use the split text preset sources instead.
  *
  * @param engine the engine that is used in the editor.
  * @param typeface the typeface that should be used when applying text asset. You can find typefaces using the
@@ -29,9 +30,8 @@ import kotlin.math.ceil
  */
 @Suppress("DEPRECATION")
 @Deprecated(
-    message = "The default text library now uses the unified text style presets " +
-        "(AssetSourceType.TextStylePresets, source id ly.img.text.presets). Register and use the " +
-        "text style presets source instead.",
+    message = "The default text library now uses the split text preset sources " +
+        "(AssetSourceType.TextPlain, TextStyles, TextCurves). Register and use those instead.",
 )
 class TextAssetSource(
     private val engine: Engine,
