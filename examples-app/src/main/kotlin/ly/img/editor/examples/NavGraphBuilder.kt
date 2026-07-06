@@ -1,23 +1,36 @@
 package ly.img.editor.examples
 
 import AIImageGenerationEditorSolution
+import ActionsEditorSolution
+import AddButtonEditorSolution
 import AutomationActionsEditorSolution
 import BackgroundRemovalEditorSolution
+import BuildYourOwnUIScreen
 import CallbacksEditorSolution
 import ColorPaletteEditorSolution
+import CropPresetsEditorSolution
 import CustomFeaturePluginEditorSolution
+import CustomFontsEditorSolution
 import CustomPanelSolution
+import CustomizeBehaviourEditorSolution
 import DataMergeGuideScreen
 import DesignUnitsScreen
 import EditorStateEditorSolution
 import ForceCropEditorSolution
 import ForceTrimVideoSolution
+import HideElementsEditorSolution
+import IconsEditorSolution
 import ModifyingScenesEngineSolution
+import NewListBuilderDockSolution
 import OverlayEditorSolution
+import PageFormatEditorSolution
 import RearrangeButtonsEditorSolution
 import RecordVoiceoverSolution
 import TemplatingEditorSolution
 import ThemingEditorSolution
+import UiEventsEditorSolution
+import UserInterfaceAssetLibraryEditorSolution
+import android.net.Uri
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavBackStackEntry
@@ -90,14 +103,44 @@ fun NavGraphBuilder.build(navController: NavHostController) {
             onClose = { navController.popBackStack() },
         )
     }
+    composable(destination = Destination.GuideCustomFonts) {
+        CustomFontsEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
     composable(destination = Destination.GuideCallbacks) {
         CallbacksEditorSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
         )
     }
+    composable(destination = Destination.GuideUiEvents) {
+        UiEventsEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
     composable(destination = Destination.GuideForceCrop) {
         ForceCropEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideDock) {
+        NewListBuilderDockSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideCropPresets) {
+        CropPresetsEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuidePageFormat) {
+        PageFormatEditorSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
         )
@@ -114,8 +157,20 @@ fun NavGraphBuilder.build(navController: NavHostController) {
             onClose = { navController.popBackStack() },
         )
     }
+    composable(destination = Destination.GuideIcons) {
+        IconsEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
     composable(destination = Destination.GuideOverlay) {
         OverlayEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideHideElements) {
+        HideElementsEditorSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
         )
@@ -158,8 +213,26 @@ fun NavGraphBuilder.build(navController: NavHostController) {
             onClose = { navController.popBackStack() },
         )
     }
+    composable(destination = Destination.GuideBuildYourOwnUI) {
+        BuildYourOwnUIScreen(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideActions) {
+        ActionsEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
     composable(destination = Destination.GuideAutomationActions) {
         AutomationActionsEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideCustomizeBehaviour) {
+        CustomizeBehaviourEditorSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
         )
@@ -167,6 +240,13 @@ fun NavGraphBuilder.build(navController: NavHostController) {
     composable(destination = Destination.GuideRearrangeButtons) {
         RearrangeButtonsEditorSolution(
             license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideAddButton) {
+        AddButtonEditorSolution(
+            license = Secrets.license,
+            baseUri = Uri.parse(ExamplesBuildConfig.GUIDE_ADD_BUTTON_BASE_URI),
             onClose = { navController.popBackStack() },
         )
     }
@@ -186,6 +266,12 @@ fun NavGraphBuilder.build(navController: NavHostController) {
         AIImageGenerationEditorSolution(
             license = Secrets.license,
             aiGatewayApiKey = Secrets.gatewayApiKey,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideAssetLibrary) {
+        UserInterfaceAssetLibraryEditorSolution(
+            license = Secrets.license,
             onClose = { navController.popBackStack() },
         )
     }
