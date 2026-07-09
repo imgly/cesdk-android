@@ -53,39 +53,14 @@ sealed class Destination(
         title = "Color Palette",
     )
 
-    data object GuideCustomFonts : Destination(
-        route = "guide-custom-fonts",
-        title = "Custom Fonts",
-    )
-
     data object GuideCallbacks : Destination(
         route = "guide-callbacks",
         title = "Callbacks",
     )
 
-    data object GuideUiEvents : Destination(
-        route = "guide-ui-events",
-        title = "UI Events",
-    )
-
     data object GuideForceCrop : Destination(
         route = "guide-force-crop",
         title = "Force Crop",
-    )
-
-    data object GuideDock : Destination(
-        route = "guide-dock",
-        title = "Dock",
-    )
-
-    data object GuideCropPresets : Destination(
-        route = "guide-crop-presets",
-        title = "Crop Presets",
-    )
-
-    data object GuidePageFormat : Destination(
-        route = "guide-page-format",
-        title = "Page Format",
     )
 
     data object GuideCustomPanel : Destination(
@@ -98,19 +73,9 @@ sealed class Destination(
         title = "Theming",
     )
 
-    data object GuideIcons : Destination(
-        route = "guide-icons",
-        title = "Icons",
-    )
-
     data object GuideOverlay : Destination(
         route = "guide-overlay",
         title = "Overlay",
-    )
-
-    data object GuideHideElements : Destination(
-        route = "guide-hide-elements",
-        title = "Hide Elements",
     )
 
     data object GuideForceTrim : Destination(
@@ -148,34 +113,14 @@ sealed class Destination(
         title = "Scenes",
     )
 
-    data object GuideBuildYourOwnUI : Destination(
-        route = "guide-build-your-own-ui",
-        title = "Build Your Own UI",
-    )
-
-    data object GuideActions : Destination(
-        route = "guide-actions",
-        title = "Actions",
-    )
-
     data object GuideAutomationActions : Destination(
         route = "guide-automation-actions",
         title = "Automation Actions",
     )
 
-    data object GuideCustomizeBehaviour : Destination(
-        route = "guide-customize-behaviour",
-        title = "Customize Behaviour",
-    )
-
     data object GuideRearrangeButtons : Destination(
         route = "guide-rearrange-buttons",
         title = "Rearrange Buttons",
-    )
-
-    data object GuideAddButton : Destination(
-        route = "guide-add-button",
-        title = "Add a New Button",
     )
 
     data object GuideCustomFeaturePlugin : Destination(
@@ -193,11 +138,6 @@ sealed class Destination(
         title = "AI Image Generation",
     )
 
-    data object GuideAssetLibrary : Destination(
-        route = "guide-asset-library",
-        title = "Asset Library",
-    )
-
     companion object {
         val starterKits = listOf(
             PhotoEditor,
@@ -211,18 +151,11 @@ sealed class Destination(
             AutoResizeGuide,
             DataMerge,
             GuideColorPalette,
-            GuideCustomFonts,
             GuideCallbacks,
-            GuideUiEvents,
             GuideForceCrop,
-            GuideDock,
-            GuideCropPresets,
-            GuidePageFormat,
             GuideCustomPanel,
             GuideTheming,
-            GuideIcons,
             GuideOverlay,
-            GuideHideElements,
             GuideForceTrim,
             GuideRecordVoiceover,
             AutomateWorkflows,
@@ -230,16 +163,11 @@ sealed class Destination(
             GuideTemplating,
             GuideDesignUnits,
             GuideScenes,
-            GuideBuildYourOwnUI,
-            GuideActions,
             GuideAutomationActions,
-            GuideCustomizeBehaviour,
             GuideRearrangeButtons,
-            GuideAddButton,
             GuideCustomFeaturePlugin,
             GuideBackgroundRemoval,
             GuideAIImageGeneration,
-            GuideAssetLibrary,
         )
     }
 }

@@ -19,11 +19,6 @@ String getLocalProperty(String property) {
     return properties.getProperty(property)
 }
 
-String getUbqVersion() {
-    def versionFile = new File(rootDir, "../../.ubq-version")
-    return versionFile.text.trim()
-}
-
 android {
     namespace = "ly.img.editor.examples"
     compileSdk = libs.versions.androidCompileSdk.get().toInteger()
@@ -103,7 +98,6 @@ buildConfig {
     packageName "ly.img.editor.examples"
     buildConfigField String, "LICENSE", System.env.CESDK_APP_STORE_LICENSE ?: getLocalProperty("license") ?: ""
     buildConfigField String, "AI_GATEWAY_API_KEY", System.env.CESDK_AI_GATEWAY_API_KEY ?: getLocalProperty("ai_gateway_api_key") ?: ""
-    buildConfigField String, "GUIDE_ADD_BUTTON_BASE_URI", "https://cdn.img.ly/packages/imgly/cesdk-android/${getUbqVersion()}/assets"
 }
 
 dependencies {
