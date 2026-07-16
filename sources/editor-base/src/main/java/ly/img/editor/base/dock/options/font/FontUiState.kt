@@ -23,12 +23,12 @@ data class FontUiState(
                 libraryCategory = TypefaceLibraryCategory,
                 fontFamily = typeface?.name ?: "Default",
                 filter = fontFamilies ?: listOf(
-                    "//ly.img.typeface/caveat",
-                    "//ly.img.typeface/amaticsc",
-                    "//ly.img.typeface/courier_prime",
-                    "//ly.img.typeface/archivo",
-                    "//ly.img.typeface/roboto",
-                    "//ly.img.typeface/parisienne",
+                    "ly.img.typeface.caveat",
+                    "ly.img.typeface.amaticsc",
+                    "ly.img.typeface.courier_prime",
+                    "ly.img.typeface.archivo",
+                    "ly.img.typeface.roboto",
+                    "ly.img.typeface.parisienne",
                 ),
             )
         }

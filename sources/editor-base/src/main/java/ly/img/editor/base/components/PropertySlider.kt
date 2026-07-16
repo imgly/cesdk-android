@@ -31,6 +31,7 @@ fun PropertySlider(
     steps: Int = 0,
     step: Float? = null,
     disableAutoPercentage: Boolean = false,
+    enabled: Boolean = true,
 ) {
     val min = valueRange.start
     val max = valueRange.endInclusive
@@ -59,6 +60,7 @@ fun PropertySlider(
                     },
                     valueRange = valueRange,
                     steps = steps,
+                    enabled = enabled,
                     modifier = Modifier.weight(1f),
                     onValueChangeFinished = {
                         if (sliderValue != value) {
@@ -76,7 +78,11 @@ fun PropertySlider(
                 Text(
                     text = formattedText,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (enabled) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    },
                     textAlign = TextAlign.End,
                     modifier = Modifier.widthIn(min = 40.dp).padding(start = 8.dp),
                 )
@@ -95,6 +101,7 @@ fun PropertySlider(
     steps: Int = 0,
     step: Float? = null,
     disableAutoPercentage: Boolean = false,
+    enabled: Boolean = true,
 ) = PropertySlider(
     title = stringResource(title),
     value = value,
@@ -104,4 +111,5 @@ fun PropertySlider(
     steps = steps,
     step = step,
     disableAutoPercentage = disableAutoPercentage,
+    enabled = enabled,
 )

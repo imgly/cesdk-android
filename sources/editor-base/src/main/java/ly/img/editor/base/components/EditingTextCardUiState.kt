@@ -30,6 +30,7 @@ sealed interface EditingTextCardUiState {
         val canToggleBold: Boolean,
         val canToggleItalic: Boolean,
         val listStyle: ListStyle?,
+        val isTextOnPath: Boolean,
         // The first case in the queried range (matching Web). The row marks it active and
         // re-applying it is a no-op, so a mixed range can always be normalised in one tap.
         val casing: TextCase,
@@ -84,6 +85,7 @@ internal fun createEditingTextCardUiState(
                 engine.block.canToggleItalicFont(designBlock, from, to)
             }.getOrDefault(false),
         listStyle = engine.block.resolveTextListStyle(designBlock),
+        isTextOnPath = runCatching { engine.block.getTextOnPath(designBlock) }.getOrNull() != null,
         casing = cases.firstOrNull() ?: TextCase.NORMAL,
         textColors = textColors,
     )

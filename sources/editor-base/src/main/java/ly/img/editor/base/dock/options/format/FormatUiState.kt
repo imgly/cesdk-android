@@ -44,6 +44,7 @@ data class FormatUiState(
     val lineHeight: Float,
     val isClipped: Boolean,
     val hasClippingOption: Boolean,
+    val isTextOnPath: Boolean,
     @StringRes val sizeModeRes: Int,
     val isArrangeResizeAllowed: Boolean,
     val availableWeights: List<FontData>,
@@ -109,6 +110,7 @@ internal fun createFormatUiState(
         }.getText(),
         hasClippingOption = sizeMode == SizeMode.ABSOLUTE,
         isClipped = engine.block.getBoolean(designBlock, "text/clipLinesOutsideOfFrame"),
+        isTextOnPath = runCatching { engine.block.getTextOnPath(designBlock) }.getOrNull() != null,
         isArrangeResizeAllowed = engine.block.isAllowedByScope(designBlock, Scope.LayerResize),
         casing = engine.block.effectiveTextRange(designBlock).let { range ->
             engine.block.getTextCases(designBlock, range.first, range.last).firstOrNull() ?: TextCase.NORMAL

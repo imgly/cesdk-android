@@ -325,6 +325,7 @@ private fun TextListStyleButton(
         IconToggleButton(
             checked = uiState.listStyle != ListStyle.NONE,
             onCheckedChange = { menuExpanded = true },
+            enabled = !uiState.isTextOnPath,
             colors = editingTextCardToggleColors(),
         ) {
             Icon(

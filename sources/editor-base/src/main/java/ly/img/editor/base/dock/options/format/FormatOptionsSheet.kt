@@ -280,6 +280,7 @@ fun FormatOptionsSheet(
                                             onEvent(OnChangeListStyle(ListStyle.NONE))
                                         }
                                     },
+                                    enabled = !uiState.isTextOnPath,
                                 ) {
                                     Icon(
                                         IconPack.DefaultNone,
@@ -295,6 +296,7 @@ fun FormatOptionsSheet(
                                             onEvent(OnChangeListStyle(ListStyle.UNORDERED))
                                         }
                                     },
+                                    enabled = !uiState.isTextOnPath,
                                 ) {
                                     Icon(
                                         IconPack.Listbullet,
@@ -310,6 +312,7 @@ fun FormatOptionsSheet(
                                             onEvent(OnChangeListStyle(ListStyle.ORDERED))
                                         }
                                     },
+                                    enabled = !uiState.isTextOnPath,
                                 ) {
                                     Icon(
                                         IconPack.Listnumber,
@@ -329,6 +332,7 @@ fun FormatOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangeLineHeight(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = 0.5f..2.5f,
+                        enabled = !uiState.isTextOnPath,
                     )
                     Spacer(Modifier.height(16.dp))
                     PropertySlider(
@@ -337,6 +341,7 @@ fun FormatOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangeParagraphSpacing(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = -0.15f..1.4f,
+                        enabled = !uiState.isTextOnPath,
                     )
 
                     if (uiState.isArrangeResizeAllowed) {
@@ -348,6 +353,7 @@ fun FormatOptionsSheet(
                             PropertyPicker(
                                 title = stringResource(R.string.ly_img_editor_sheet_format_text_label_frame_behaviour),
                                 propertyTextRes = uiState.sizeModeRes,
+                                enabled = !uiState.isTextOnPath,
                                 properties = sizeModeList,
                                 onPropertyPicked = { onEvent(BlockEvent.OnChangeSizeMode(it)) },
                             )
@@ -355,6 +361,7 @@ fun FormatOptionsSheet(
                                 Divider(Modifier.padding(horizontal = 16.dp))
                                 PropertySwitch(
                                     title = stringResource(R.string.ly_img_editor_sheet_format_text_label_frame_clipping),
+                                    enabled = !uiState.isTextOnPath,
                                     isChecked = uiState.isClipped,
                                     onPropertyChange = {
                                         onEvent(BlockEvent.OnChangeClipping(it))
@@ -444,6 +451,7 @@ fun DefaultPreview() {
             fontFamilyStyle = FontStyle.NORMAL,
             hasClippingOption = true,
             isClipped = true,
+            isTextOnPath = false,
             subFamily = "Regular",
             isSubFamilyMixed = false,
         ),

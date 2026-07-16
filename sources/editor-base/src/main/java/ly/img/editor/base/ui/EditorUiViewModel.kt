@@ -770,10 +770,12 @@ class EditorUiViewModel(
     }
 
     private fun updateVisiblePageState() {
+        // In Pages mode pageIndex follows the grid selection, not the camera.
+        if (_uiState.value.pagesState != null) return
         val pages = engine.scene.getPages().takeIf { it.isNotEmpty() } ?: return
         val page = engine.scene.getCurrentPage()
         val currentVisible = pages.indexOfFirst { page == it }
-        if (pageIndex.value != currentVisible) {
+        if (currentVisible >= 0 && pageIndex.value != currentVisible) {
             setPage(index = currentVisible, deselectAllBlocks = false)
         }
     }
@@ -1095,11 +1097,14 @@ class EditorUiViewModel(
     private fun setPage(
         index: Int,
         deselectAllBlocks: Boolean = true,
+        closeSheet: Boolean = true,
     ) {
         if (index == pageIndex.value) return
         pageIndex.update { index }
         showPage(index, deselectAllBlocks)
-        send(EditorEvent.Sheet.Close(animate = false))
+        if (closeSheet) {
+            send(EditorEvent.Sheet.Close(animate = false))
+        }
     }
 
     private fun setPageIndex(index: Int) {
@@ -1547,7 +1552,7 @@ class EditorUiViewModel(
                 }
                 state.copy(pages = populatedPages)
             }
-            setPage(populatedState.selectedPageIndex)
+            setPage(populatedState.selectedPageIndex, closeSheet = false)
             it.copy(pagesState = populatedState)
         }
     }
