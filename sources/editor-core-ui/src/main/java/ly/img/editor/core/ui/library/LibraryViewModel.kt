@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -123,6 +124,13 @@ class LibraryViewModel(
         hashMapOf<LibraryCategory, LibraryCategoryStackData>()
     }
 
+    init {
+        viewModelScope.launch {
+            engine.awaitStart()
+            engine.asset.onAssetSourceUpdated().collect(::onAssetSourceUpdated)
+        }
+    }
+
     private val eventHandler = EventsHandler(coroutineScope = viewModelScope) {
         register<OnDispose> {
             onDispose(it.libraryCategories)
@@ -134,6 +142,7 @@ class LibraryViewModel(
             onEnterSearchMode(it.enter, it.libraryCategory)
         }
         register<OnFetch> {
+            getLibraryCategoryData(it.libraryCategory).isActive = true
             onFetch(it.libraryCategory, it.reset)
         }
         register<OnPopStack> {
@@ -595,6 +604,7 @@ class LibraryViewModel(
 
     private fun onDispose(libraryCategories: List<LibraryCategory>) {
         libraryCategories.forEach {
+            getLibraryCategoryData(it).isActive = false
             // clear search
             onSearchTextChange("", it, debounce = false, force = true)
             // get out of search mode
@@ -730,6 +740,39 @@ class LibraryViewModel(
         categoryData.fetchJob = when (content) {
             is LibraryContent.Sections -> loadContent(categoryData, content)
             is LibraryContent.Grid -> loadContent(categoryData, content)
+        }
+    }
+
+    private fun onAssetSourceUpdated(sourceId: String) {
+        libraryStackDataMapping.forEach { (category, data) ->
+            if (data.isActive && data.dataStack.last().referencesAssetSource(sourceId)) {
+                refreshVisibleContent(category)
+            }
+        }
+    }
+
+    private fun refreshVisibleContent(libraryCategory: LibraryCategory) {
+        val categoryData = libraryStackDataMapping[libraryCategory] ?: return
+        val content = categoryData.dataStack.last()
+
+        categoryData.fetchJob?.cancel()
+        categoryData.dirty = true
+        categoryData.uiStateFlow.update { state ->
+            when (content) {
+                is LibraryContent.Grid -> state.copy(
+                    loadState = CategoryLoadState.Idle,
+                    assetsData = AssetsData(),
+                )
+                is LibraryContent.Sections -> state.copy(
+                    loadState = CategoryLoadState.Idle,
+                    sectionItems = emptyList(),
+                )
+            }
+        }
+
+        categoryData.fetchJob = when (content) {
+            is LibraryContent.Grid -> loadContent(categoryData, content)
+            is LibraryContent.Sections -> loadContent(categoryData, content)
         }
     }
 

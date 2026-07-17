@@ -93,6 +93,11 @@ sealed class Destination(
         title = "Custom Panel",
     )
 
+    data object GuideCreateCustomPanel : Destination(
+        route = "guide-create-custom-panel",
+        title = "Create Custom Panel",
+    )
+
     data object GuideTheming : Destination(
         route = "guide-theming",
         title = "Theming",
@@ -173,6 +178,11 @@ sealed class Destination(
         title = "Rearrange Buttons",
     )
 
+    data object GuideQuickActions : Destination(
+        route = "guide-quick-actions",
+        title = "Quick Actions",
+    )
+
     data object GuideAddButton : Destination(
         route = "guide-add-button",
         title = "Add a New Button",
@@ -193,9 +203,29 @@ sealed class Destination(
         title = "AI Image Generation",
     )
 
+    data object GuideAssetLibraryBasics : Destination(
+        route = "guide-asset-library-basics",
+        title = "Asset Library Basics",
+    )
+
     data object GuideAssetLibrary : Destination(
         route = "guide-asset-library",
         title = "Asset Library",
+    )
+
+    data object GuidePhotoRoll : Destination(
+        route = "guide-photo-roll",
+        title = "Photo Roll",
+    )
+
+    data object GuideAssetLibraryCustomize : Destination(
+        route = "guide-asset-library-customize",
+        title = "Asset Library Customize",
+    )
+
+    data object GuideCameraConfiguration : Destination(
+        route = "guide-camera-configuration",
+        title = "Camera Configuration",
     )
 
     companion object {
@@ -219,6 +249,7 @@ sealed class Destination(
             GuideCropPresets,
             GuidePageFormat,
             GuideCustomPanel,
+            GuideCreateCustomPanel,
             GuideTheming,
             GuideIcons,
             GuideOverlay,
@@ -235,11 +266,16 @@ sealed class Destination(
             GuideAutomationActions,
             GuideCustomizeBehaviour,
             GuideRearrangeButtons,
+            GuideQuickActions,
             GuideAddButton,
             GuideCustomFeaturePlugin,
             GuideBackgroundRemoval,
             GuideAIImageGeneration,
+            GuideAssetLibraryBasics,
             GuideAssetLibrary,
+            GuidePhotoRoll,
+            GuideAssetLibraryCustomize,
+            GuideCameraConfiguration,
         )
     }
 }

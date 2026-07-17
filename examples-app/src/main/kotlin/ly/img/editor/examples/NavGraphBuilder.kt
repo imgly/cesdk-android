@@ -3,17 +3,21 @@ package ly.img.editor.examples
 import AIImageGenerationEditorSolution
 import ActionsEditorSolution
 import AddButtonEditorSolution
+import AssetLibraryBasicsEditorSolution
 import AutomationActionsEditorSolution
 import BackgroundRemovalEditorSolution
 import BuildYourOwnUIScreen
 import CallbacksEditorSolution
 import ColorPaletteEditorSolution
+import ConfiguredCameraScreen
+import CreateCustomPanelSolution
 import CropPresetsEditorSolution
+import CustomAssetLibraryPreviewSolution
 import CustomFeaturePluginEditorSolution
 import CustomFontsEditorSolution
-import CustomPanelSolution
 import CustomizeBehaviourEditorSolution
 import DataMergeGuideScreen
+import DefaultPanelSolution
 import DesignUnitsScreen
 import EditorStateEditorSolution
 import ForceCropEditorSolution
@@ -24,6 +28,8 @@ import ModifyingScenesEngineSolution
 import NewListBuilderDockSolution
 import OverlayEditorSolution
 import PageFormatEditorSolution
+import PhotoRollEditorSolution
+import QuickActionsEditorSolution
 import RearrangeButtonsEditorSolution
 import RecordVoiceoverSolution
 import TemplatingEditorSolution
@@ -146,7 +152,13 @@ fun NavGraphBuilder.build(navController: NavHostController) {
         )
     }
     composable(destination = Destination.GuideCustomPanel) {
-        CustomPanelSolution(
+        DefaultPanelSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideCreateCustomPanel) {
+        CreateCustomPanelSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
         )
@@ -243,6 +255,12 @@ fun NavGraphBuilder.build(navController: NavHostController) {
             onClose = { navController.popBackStack() },
         )
     }
+    composable(destination = Destination.GuideQuickActions) {
+        QuickActionsEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
     composable(destination = Destination.GuideAddButton) {
         AddButtonEditorSolution(
             license = Secrets.license,
@@ -269,10 +287,34 @@ fun NavGraphBuilder.build(navController: NavHostController) {
             onClose = { navController.popBackStack() },
         )
     }
+    composable(destination = Destination.GuideAssetLibraryBasics) {
+        AssetLibraryBasicsEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
     composable(destination = Destination.GuideAssetLibrary) {
         UserInterfaceAssetLibraryEditorSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuidePhotoRoll) {
+        PhotoRollEditorSolution(
+            license = Secrets.license,
+            enableFullGalleryAccess = true,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideAssetLibraryCustomize) {
+        CustomAssetLibraryPreviewSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideCameraConfiguration) {
+        ConfiguredCameraScreen(
+            license = Secrets.license,
         )
     }
 }

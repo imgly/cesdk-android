@@ -81,7 +81,7 @@ android {
 
     sourceSets {
         main {
-            def guidePatterns = ['engine-guides-', 'editor-guides-']
+            def guidePatterns = ['engine-guides-', 'editor-guides-', 'camera-guides-']
             def blacklist = ['editor-guides-quickstart']
             file("$projectDir/../../cesdk_android_examples").listFiles().findAll { file ->
                 file.directory && !blacklist.contains(file.name) && guidePatterns.any { pattern ->
