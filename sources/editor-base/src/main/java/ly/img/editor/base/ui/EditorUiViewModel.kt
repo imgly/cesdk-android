@@ -2081,7 +2081,7 @@ class EditorUiViewModel(
 
     private fun openPlaceholderSheetIfNeeded(designBlock: DesignBlock) {
         if (!engine.isPlaceholder(designBlock)) return
-        val block = createBlock(designBlock, engine)
+        val block = createBlock(designBlock, engine) ?: return
         val assetLibrary = requireNotNull(libraryViewModel.assetLibrary)
         val libraryCategory = when (block.type) {
             BlockType.Sticker -> assetLibrary.stickers()

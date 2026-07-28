@@ -32,7 +32,26 @@ data class Selection(
     val isVisibleAtCurrentPlaybackTime: Boolean,
     val `__`: Nothing = nothing,
 ) {
+    /**
+     * Whether the [type] of the selected design block is in [supportedDesignBlockTypes].
+     */
+    val isTypeSupportedByEditorUi: Boolean
+        get() = type in supportedDesignBlockTypes
+
     companion object {
+        /**
+         * The design block types that the selection-driven editor UI components support.
+         * Blocks of other types stay selectable on the canvas, but the editor does not offer
+         * any editing UI for them yet.
+         */
+        val supportedDesignBlockTypes: Set<DesignBlockType> = setOf(
+            DesignBlockType.Text,
+            DesignBlockType.Group,
+            DesignBlockType.Page,
+            DesignBlockType.Audio,
+            DesignBlockType.Graphic,
+        )
+
         /**
          * Default implementation of [Selection] for a given [designBlock].
          *

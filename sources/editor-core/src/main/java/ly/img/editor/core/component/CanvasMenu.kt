@@ -392,7 +392,8 @@ abstract class AbstractCanvasMenuBuilder<Scope : CanvasMenu.Scope> : EditorCompo
     /**
      * Whether the component should be visible.
      * Default value is true when touch is not active, no sheet is displayed currently, a design block is selected,
-     * selected design block does not have a type [DesignBlockType.Audio] or [DesignBlockType.Page] and the keyboard is not visible.
+     * the selected design block has a type in [Selection.supportedDesignBlockTypes] other than [DesignBlockType.Audio]
+     * or [DesignBlockType.Page] and the keyboard is not visible.
      * In addition, selected design block should be visible at current playback time and containing scene should be on pause if design
      * block is selected in a video scene.
      */
@@ -402,6 +403,7 @@ abstract class AbstractCanvasMenuBuilder<Scope : CanvasMenu.Scope> : EditorCompo
             editorState.isTouchActive.not() &&
                 editorState.activeSheet == null &&
                 editorContext.safeSelection != null &&
+                editorContext.selection.isTypeSupportedByEditorUi &&
                 editorContext.selection.type != DesignBlockType.Page &&
                 editorContext.selection.type != DesignBlockType.Audio &&
                 editorContext.engine.editor.getEditMode() != "Text" &&
