@@ -194,10 +194,8 @@ internal fun ClipTrimHandlesView(
                     }
                     val trackCap = zoomState.toPx(trimBounds.leadingMax)
                     val maxWidth = minOf(footageMaxWidth, trackCap)
-                    var initialWidth = 0f
                     detectHorizontalDragGestures(
                         onDragStart = {
-                            initialWidth = width
                             onDragStart(type = ClipDragType.Leading)
                         },
                         onHorizontalDrag = { _, drag ->
@@ -238,12 +236,12 @@ internal fun ClipTrimHandlesView(
                             var timeOffset = clip.timeOffset
                             var duration = clip.duration
 
-                            val delta = zoomState.toSeconds(initialWidth - width)
+                            val delta = duration - zoomState.toSeconds(width)
 
                             if (!clip.isInBackgroundTrack) {
                                 timeOffset = (timeOffset + delta).coerceAtLeast(0.seconds)
                             }
-                            trimOffset += delta
+                            trimOffset = (trimOffset + delta).coerceAtLeast(0.seconds)
                             duration -= delta
 
                             onEvent(

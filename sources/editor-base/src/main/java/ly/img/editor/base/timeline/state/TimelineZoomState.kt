@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ly.img.editor.core.ui.utils.roundedToMilliseconds
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
@@ -23,7 +24,7 @@ class TimelineZoomState(
         zoomLevel = (zoomLevel * zoom).coerceIn(minimumZoomLevel, maximumZoomLevel)
     }
 
-    fun toSeconds(dp: Dp) = (dp.value / zoomLevel / dpToSecondsRatio).toDouble().seconds
+    fun toSeconds(dp: Dp) = (dp.value / zoomLevel / dpToSecondsRatio).toDouble().seconds.roundedToMilliseconds()
 
     fun toSeconds(px: Float) = toSeconds((px / Resources.getSystem().displayMetrics.density).dp)
 
