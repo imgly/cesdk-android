@@ -60,7 +60,8 @@ sealed interface LibraryContent {
      * non-null value only in case [sourceTypes] contains a single source. If null, no filtering will occur and all the assets of
      * [sourceTypes] will be displayed. Check [ly.img.engine.AssetSource.getGroups] for more information.
      * @param addGroupedSubSections if true, the section will be constructed of vertically aligned subsections based on the
-     * available groups of the source. Note that when the flag is set, then [sourceTypes] should contain a single element and
+     * available groups of the source. If the source reports no groups, the section falls back to a single flat section.
+     * Note that when the flag is set, then [sourceTypes] should contain a single element and
      * [groups] should be null as group filtering contradicts to displaying all grouped subsections. Also note that instead of
      * rendering a single section with subsections you may decide to add multiple sections, each containing a single group filter.
      * The result will be identical.

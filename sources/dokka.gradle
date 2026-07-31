@@ -1,5 +1,10 @@
 apply plugin: 'org.jetbrains.dokka'
 
+// Rewrites Dokka GFM's local links (for example `-camera-mode/index.md`) to
+// `${apiReferenceBasePath}/camera-core/.../-camera-mode/index.md` so Markdown
+// remains navigable after the module outputs are merged into `dokka/custom`.
+boolean useAbsoluteGfmLinks = true
+
 // Chrome blocks many of the functionality if you open index.html from the file system.
 // Instead open the file from AS directly. It creates a local server before opening the file.
 // Port 63342 is the default port that Jetbrains uses.
@@ -8,7 +13,7 @@ if (System.getenv("DOCS_BASE_URL") != null) {
     apiReferenceBasePath = System.getenv("DOCS_BASE_URL") + "/android/api-reference"
 } else {
     def projectName = rootProject.name.replace(" ", "%20")
-    apiReferenceBasePath = "http://localhost:63342/$projectName/build/dokka/htmlCustom"
+    apiReferenceBasePath = "http://localhost:63342/$projectName/build/dokka/custom"
 }
 
 static Set<Project> transitiveProjectDependencies(Project start) {
@@ -98,51 +103,92 @@ void configureDokkaFiles(File docsDir) {
     }
 }
 
-tasks.named("dokkaHtml") {
-    moduleName.set("ly.img:${project.name}")
+def configureDokkaTask = { String taskName, String customFormat, boolean configureHtmlFiles ->
+    tasks.named(taskName) {
+        moduleName.set("ly.img:${project.name}")
 
-    def dependencies = transitiveProjectDependencies(project)
-        .findAll { it.plugins.hasPlugin("org.jetbrains.dokka") }
-    def dependencyTasks = dependencies
-        .collect {it.tasks.named("dokkaHtmlCustom") }
-    def docsLocalDir = rootProject.layout.buildDirectory.dir("dokka/htmlCustom").get().asFile
-    // Wait for dependent editor modules' dokka generation
-    dependsOn(dependencyTasks)
-    // Wait for engine dokka generation
-    dependsOn(tasks.named("dokkaHtmlCustomEngine"))
-    doFirst {
-        dokkaSourceSets.configureEach {
-            def engineDependencies = docsLocalDir
-                .listFiles()
-                .findAll { it.name.startsWith("engine") }
-                .collect { it.name }
-            (dependencies.collect { it.name } + engineDependencies).each { name ->
-                def uri = new URI("$apiReferenceBasePath/$name")
-                def packageListUri = new File(docsLocalDir, "$name/ly.img[58]$name/package-list").toURI()
-                externalDocumentationLink {
-                    url.set(uri.toURL())
-                    packageListUrl.set(packageListUri.toURL())
+        def dependencies = transitiveProjectDependencies(project)
+            .findAll { it.plugins.hasPlugin("org.jetbrains.dokka") }
+        def dependencyTasks = dependencies
+            .collect { it.tasks.named("${taskName}Custom") }
+        def docsLocalDir = rootProject.layout.buildDirectory.dir("dokka/$customFormat").get().asFile
+        // Wait for dependent editor modules' dokka generation
+        dependsOn(dependencyTasks)
+        // Wait for engine dokka generation
+        dependsOn(tasks.named("dokkaCustomEngine"))
+        doFirst {
+            dokkaSourceSets.configureEach {
+                def engineDependencies = docsLocalDir
+                    .listFiles()
+                    .findAll { it.name.startsWith("engine") }
+                    .collect { it.name }
+                (dependencies.collect { it.name } + engineDependencies).each { name ->
+                    def uri = new URI("$apiReferenceBasePath/$name")
+                    def packageListUri = new File(docsLocalDir, "$name/ly.img[58]$name/package-list").toURI()
+                    externalDocumentationLink {
+                        url.set(uri.toURL())
+                        packageListUrl.set(packageListUri.toURL())
+                    }
                 }
             }
         }
-    }
-    doLast {
-        configureDokkaFiles(project.layout.buildDirectory.dir("dokka/html").get().asFile)
+        if (configureHtmlFiles) {
+            doLast {
+                configureDokkaFiles(project.layout.buildDirectory.dir("dokka/html").get().asFile)
+            }
+        }
     }
 }
 
-tasks.register("dokkaHtmlCustomEngine") {
-    def dependency = gradle.includedBuild("engine").task(":dokkaHtmlCustom")
-    def engineDocsDir = new File(rootDir, "../../bindings/android/build/dokka/htmlCustom")
-    def editorDocsDir = rootProject.layout.buildDirectory.dir("dokka/htmlCustom").get().asFile
+configureDokkaTask("dokkaHtml", "htmlCustom", true)
+configureDokkaTask("dokkaGfm", "gfmCustom", false)
+
+def rewriteGfmLinks = { File docsDir, String moduleName ->
+    docsDir.eachFileRecurse { file ->
+        if (!file.isFile() || !file.name.endsWith(".md")) return
+
+        def sourcePath = docsDir.toPath().relativize(file.toPath())
+        def sourceDirectory = sourcePath.parent ?: sourcePath.fileSystem.getPath("")
+        def publishedSourceDirectory = sourcePath.fileSystem.getPath(moduleName).resolve(sourceDirectory)
+        def markdown = file.getText("UTF-8")
+        def rewritten = markdown.replaceAll(/\]\(([^\s)]+)\)/) { match, destination ->
+            if (destination ==~ /(?i)([a-z][a-z0-9+.-]*:|\/|#).*/) return match
+
+            def fragmentIndex = destination.indexOf('#')
+            def path = fragmentIndex == -1 ? destination : destination.substring(0, fragmentIndex)
+            def fragment = fragmentIndex == -1 ? "" : destination.substring(fragmentIndex)
+            def absolutePath = publishedSourceDirectory.resolve(path).normalize().toString().replace(File.separator, "/")
+            "](${apiReferenceBasePath}/${absolutePath}${fragment})"
+        }
+        if (rewritten != markdown) {
+            file.write(rewritten, "UTF-8")
+        }
+    }
+}
+
+tasks.register("dokkaCustomEngine") {
+    def dependency = gradle.includedBuild("engine").task(":dokkaCustom")
+    def htmlEngineDocsDir = new File(rootDir, "../../bindings/android/build/dokka/htmlCustom")
+    def gfmEngineDocsDir = new File(rootDir, "../../bindings/android/build/dokka/gfmCustom")
+    def htmlEditorDocsDir = rootProject.layout.buildDirectory.dir("dokka/htmlCustom").get().asFile
+    def gfmEditorDocsDir = rootProject.layout.buildDirectory.dir("dokka/gfmCustom").get().asFile
     dependsOn(dependency)
     doLast {
-        engineDocsDir.listFiles().each {
+        htmlEngineDocsDir.listFiles().each {
             configureDokkaFiles(it)
         }
         copy {
-            from(engineDocsDir)
-            into(editorDocsDir)
+            from(htmlEngineDocsDir)
+            into(htmlEditorDocsDir)
+        }
+        copy {
+            from(gfmEngineDocsDir)
+            into(gfmEditorDocsDir)
+        }
+        if (useAbsoluteGfmLinks) {
+            gfmEngineDocsDir.listFiles().findAll { it.isDirectory() }.each { engineDocsDir ->
+                rewriteGfmLinks(new File(gfmEditorDocsDir, engineDocsDir.name), engineDocsDir.name)
+            }
         }
     }
 }
@@ -152,4 +198,29 @@ tasks.register("dokkaHtmlCustom", Copy) {
     dependsOn(tasks.named("dokkaHtml"))
     from(project.layout.buildDirectory.dir("dokka/html"))
     into(rootProject.layout.buildDirectory.dir("dokka/htmlCustom/${project.name}"))
+}
+
+tasks.register("dokkaGfmAbsoluteLinks", Copy) {
+    group = "documentation"
+    dependsOn(tasks.named("dokkaGfm"))
+    inputs.property("apiReferenceBasePath", apiReferenceBasePath)
+    def sourceDir = project.layout.buildDirectory.dir("dokka/gfm")
+    def outputDir = project.layout.buildDirectory.dir("dokka/gfmAbsoluteLinks")
+    from(sourceDir)
+    into(outputDir)
+    doLast {
+        rewriteGfmLinks(outputDir.get().asFile, project.name)
+    }
+}
+
+tasks.register("dokkaGfmCustom", Copy) {
+    group = "documentation"
+    dependsOn(tasks.named(useAbsoluteGfmLinks ? "dokkaGfmAbsoluteLinks" : "dokkaGfm"))
+    from(project.layout.buildDirectory.dir(useAbsoluteGfmLinks ? "dokka/gfmAbsoluteLinks" : "dokka/gfm"))
+    into(rootProject.layout.buildDirectory.dir("dokka/gfmCustom/${project.name}"))
+}
+
+tasks.register("dokkaCustom") {
+    group = "documentation"
+    dependsOn(tasks.named("dokkaHtmlCustom"), tasks.named("dokkaGfmCustom"))
 }

@@ -511,6 +511,7 @@
     <string name="ly_img_editor_sheet_text_background_title">Hintergrund</string>
     <string name="ly_img_editor_sheet_text_on_path_direction_option_forward">Vorwärts</string>
     <string name="ly_img_editor_sheet_text_on_path_direction_option_reversed">Umgekehrt</string>
+    <string name="ly_img_editor_sheet_text_on_path_label_alignment">Ausrichtung</string>
     <string name="ly_img_editor_sheet_text_on_path_label_direction">Richtung</string>
     <string name="ly_img_editor_sheet_text_on_path_label_offset">Versatz</string>
     <string name="ly_img_editor_sheet_text_on_path_label_path_position">Pfadposition</string>

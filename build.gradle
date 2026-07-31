@@ -39,3 +39,17 @@ subprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+tasks.register("dokkaCustom", Copy) {
+    group = "documentation"
+    dependsOn {
+        subprojects
+            .findAll { it.plugins.hasPlugin("org.jetbrains.dokka") }
+            .collect { it.tasks.named("dokkaCustom") }
+    }
+    // HTML and GFM both emit `<module>/ly.img[58]<module>/package-list`; keep HTML's copy.
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(layout.buildDirectory.dir("dokka/htmlCustom"))
+    from(layout.buildDirectory.dir("dokka/gfmCustom"))
+    into(layout.buildDirectory.dir("dokka/custom"))
+}

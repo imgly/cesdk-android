@@ -192,11 +192,14 @@ fun EventsHandler.textBlockEvents(
         if (asset == null) {
             engine.block.setTextOnPath(block, svgPath = null)
         } else {
+            // Curve presets carry demo text for library insertion; the sheet only re-shapes the block.
+            val text = engine.block.getString(block, "text/text")
             engine.asset.applyAssetSourceAsset(
                 sourceId = TextOnPathUiState.SOURCE_ID,
                 asset = asset,
                 block = block,
             )
+            engine.block.setString(block, "text/text", text)
             // `setTextOnPath` (inside `applyAssetSourceAsset`) clears the external-ref hint; re-stamp it for the picker.
             engine.block.setString(block, "text/pathExternalRef", "${TextOnPathUiState.SOURCE_ID}|${asset.id}")
         }

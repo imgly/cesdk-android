@@ -10,11 +10,14 @@ import ly.img.engine.AssetContext
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
 import ly.img.engine.FindAssetsQuery
+import ly.img.engine.HorizontalAlignment
 
 @Immutable
 data class TextOnPathUiState(
     val curves: List<WrappedAsset>,
     val hasPath: Boolean,
+    val horizontalAlignment: HorizontalAlignment,
+    val effectiveHorizontalAlignment: HorizontalAlignment,
     val verticalAlignment: VerticalAlignment,
     val isFlipped: Boolean,
     val offset: Float,
@@ -58,6 +61,10 @@ data class TextOnPathUiState(
             return TextOnPathUiState(
                 curves = listOf(noneAsset) + curves,
                 hasPath = hasPath,
+                horizontalAlignment = HorizontalAlignment.valueOf(
+                    engine.block.getEnum(designBlock, "text/horizontalAlignment"),
+                ),
+                effectiveHorizontalAlignment = engine.block.getTextEffectiveHorizontalAlignment(designBlock),
                 verticalAlignment = VerticalAlignment.valueOf(
                     engine.block.getEnum(designBlock, "text/verticalAlignment"),
                 ),

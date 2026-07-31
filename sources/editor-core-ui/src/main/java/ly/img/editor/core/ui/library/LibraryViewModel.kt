@@ -703,9 +703,12 @@ class LibraryViewModel(
 
         if (content is LibraryContent.Sections && AssetLibraryUiConfig.autoExpandSingleSection) {
             val singleSection = content.sections.singleOrNull()
-            // Do not auto-expand sections that produce per-group sub-sections via groupTitleKeyPrefix:
-            // those sections must render as grouped sheets, not as a flat grid.
-            val expandedContent = if (singleSection?.groupTitleKeyPrefix == null) {
+            // Do not auto-expand sections that produce per-group sub-sections via
+            // addGroupedSubSections or groupTitleKeyPrefix: those sections must render as grouped
+            // sheets, not as a flat grid.
+            val expandedContent = if (singleSection?.addGroupedSubSections != true &&
+                singleSection?.groupTitleKeyPrefix == null
+            ) {
                 singleSection?.expandContent
             } else {
                 null
@@ -896,17 +899,13 @@ class LibraryViewModel(
             val sectionTitleRes = section.titleRes
             // Resolve sub-sections first so we can decide whether to emit the umbrella header.
             val subSections: List<LibraryContent.Section> = if (section.addGroupedSubSections) {
-                val groupsResult = runCatching {
-                    engine.asset.getGroups(section.sourceTypes[0].sourceId)
-                }
-                if (groupsResult.isSuccess) {
-                    groupsResult.getOrNull().orEmpty().map { group ->
-                        section.copy(groups = listOf(group), addGroupedSubSections = false)
-                    }
-                } else {
-                    // Asset source is not registered.
-                    listOf(section)
-                }
+                // A source that reports no groups (or is not registered, making getGroups fail)
+                // falls back to a single flat section.
+                runCatching { engine.asset.getGroups(section.sourceTypes[0].sourceId) }
+                    .getOrNull()
+                    .orEmpty()
+                    .map { group -> section.copy(groups = listOf(group), addGroupedSubSections = false) }
+                    .ifEmpty { listOf(section) }
             } else {
                 listOf(section)
             }
@@ -1048,7 +1047,12 @@ class LibraryViewModel(
                                         item is LibrarySectionItem.Header &&
                                             item.sectionIndex == content.sectionIndex &&
                                             (item.subSectionIndex == null || item.subSectionIndex == content.subSectionIndex) -> {
-                                            item.copy(count = total)
+                                            // Umbrella headers span all sub-sections; sum their totals.
+                                            item.copy(
+                                                count = runCatching {
+                                                    Math.addExact(item.count ?: 0, total)
+                                                }.getOrNull() ?: Int.MAX_VALUE,
+                                            )
                                         }
 
                                         item is LibrarySectionItem.ContentLoading &&
