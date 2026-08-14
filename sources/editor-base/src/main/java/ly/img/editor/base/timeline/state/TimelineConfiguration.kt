@@ -22,6 +22,17 @@ object TimelineConfiguration {
 
     val clipPadding = 4.dp
 
+    /** Space reserved between adjacent clip backgrounds. */
+    val clipEndGap = 1.dp
+
+    val transitionSeamSize = 24.dp
+
+    val compactTransitionSeamSize = 10.dp
+
+    val largeTransitionSeamMinFreeClipWidth = 30.dp
+
+    val transitionSeamIconSpacing = 2.dp
+
     val rulerHeight = 16.dp
 
     val headerHeight = 48.dp

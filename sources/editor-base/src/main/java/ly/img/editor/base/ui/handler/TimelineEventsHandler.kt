@@ -9,6 +9,7 @@ import ly.img.editor.base.timeline.state.LiveTrimState
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.timeline.state.computeLiveTrimOverrides
+import ly.img.editor.base.timeline.state.transitionOverlap
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.core.R
 import ly.img.editor.core.ui.EventsHandler
@@ -84,6 +85,16 @@ fun EventsHandler.timelineEvents(
         engine.block.setSelected(it.block, !engine.block.isSelected(it.block))
     }
 
+    register<BlockEvent.OnSelectBlock> {
+        val previouslySelectedBlock = timelineState.selectedClip?.id
+        if (it.block != previouslySelectedBlock) {
+            previouslySelectedBlock?.let {
+                engine.block.setSelected(it, false)
+            }
+            engine.block.setSelected(it.block, true)
+        }
+    }
+
     fun setDuration(
         clip: Clip,
         duration: Duration,
@@ -120,18 +131,15 @@ fun EventsHandler.timelineEvents(
         val newOffset = engine.block.getTimeOffset(selectedClip.id).seconds
         val newDuration = engine.block.getDuration(selectedClip.id).seconds
 
-        // Sort by pre-commit offsets so the dragged clip keeps its live-preview index;
-        // the new offset could push it past unshifted siblings. Substitute its new
-        // offset/duration if the async refresh hasn't applied them yet.
+        // Use engine extents consistently. Timeline clips are transition-projected, while the
+        // committed bounds above are raw engine values. Mixing the two removes transition
+        // overlap and leaves a visual gap after a duration change.
         val sorted = track.clips
             .mapTo(ArrayList(track.clips.size)) { sibling ->
-                if (sibling.id == selectedClip.id &&
-                    (sibling.timeOffset != selectedClip.timeOffset || sibling.duration != selectedClip.duration)
-                ) {
-                    sibling.copy(timeOffset = selectedClip.timeOffset, duration = selectedClip.duration)
-                } else {
-                    sibling
-                }
+                sibling.copy(
+                    timeOffset = engine.block.getTimeOffset(sibling.id).seconds,
+                    duration = engine.block.getDuration(sibling.id).seconds,
+                )
             }
         sorted.sortBy { it.timeOffset }
         val overrides = computeLiveTrimOverrides(
@@ -141,6 +149,10 @@ fun EventsHandler.timelineEvents(
                 start = newOffset,
                 end = newOffset + newDuration,
             ),
+            packFollowingClips = selectedClip.isInBackgroundTrack,
+            transitionOverlap = { outgoing, incoming ->
+                engine.transitionOverlap(outgoing.id, incoming.id)
+            },
         )
         overrides.forEach { (id, offset) ->
             engine.block.setTimeOffset(id, offset.toDouble(DurationUnit.SECONDS))

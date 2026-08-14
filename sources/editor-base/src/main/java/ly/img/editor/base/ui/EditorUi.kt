@@ -97,6 +97,8 @@ import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheet
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheetContent
 import ly.img.editor.base.dock.options.textonpath.TextOnPathBottomSheetContent
 import ly.img.editor.base.dock.options.textonpath.TextOnPathSheet
+import ly.img.editor.base.dock.options.transition.TransitionBottomSheetContent
+import ly.img.editor.base.dock.options.transition.TransitionSheet
 import ly.img.editor.base.dock.options.volume.VolumeBottomSheetContent
 import ly.img.editor.base.dock.options.volume.VolumeSheet
 import ly.img.editor.base.engine.EngineCanvasView
@@ -538,6 +540,11 @@ fun EditorScope.EditorUi(
                                     is VolumeBottomSheetContent -> VolumeSheet(content.uiState, onEvent)
                                     is ReorderBottomSheetContent -> ReorderSheet(content.timelineState, onEvent)
                                     is AnimationBottomSheetContent -> AnimationSheet(content.uiState, onEvent)
+                                    is TransitionBottomSheetContent -> TransitionSheet(
+                                        uiState = content.uiState,
+                                        onColorPickerActiveChanged = onColorPickerActiveChanged,
+                                        onEvent = onEvent,
+                                    )
                                     is TextOnPathBottomSheetContent -> TextOnPathSheet(content.uiState, onEvent)
                                     is TextBackgroundBottomSheetContent -> TextBackgroundBottomSheet(
                                         uiState = content.uiState,

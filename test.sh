@@ -23,8 +23,36 @@ if ! adb devices | grep -q "device$"; then
   exit 1
 fi
 
-dry_runnable apps/cesdk_android/gradlew -p apps/cesdk_android smoke-tests-app:connectedDebugAndroidTest
+# Run tests and generate the coverage report separately so a failing test
+# doesn't block report generation (AGP flushes the .ec regardless). Capture the
+# test exit code and re-raise it at the end.
+TEST_EXIT=0
+dry_runnable apps/cesdk_android/gradlew -p apps/cesdk_android \
+  smoke-tests-app:connectedDebugAndroidTest || TEST_EXIT=$?
 
-# TODO(coverage): wire Jacoco → lcov conversion. See bindings/android/test.sh
-# for the same TODO — the two share infrastructure and should ship together.
->&2 echo "apps/cesdk_android: coverage collection not yet wired up (see TODO in test.sh)"
+# `-x ...connectedDebugAndroidTest` reuses the existing .ec instead of re-running.
+dry_runnable apps/cesdk_android/gradlew -p apps/cesdk_android \
+  smoke-tests-app:createDebugAndroidTestCoverageReport \
+  -x smoke-tests-app:connectedDebugAndroidTest
+
+# One --source-root per editor module src dir so jacoco_xml_to_lcov.py resolves
+# <package>/<file> to apps/cesdk_android/sources/ paths the --filter matches.
+JACOCO_XML="apps/cesdk_android/smoke-tests-app/build/reports/coverage/androidTest/debug/connected/report.xml"
+if [[ -f "${JACOCO_XML}" ]]; then
+  SOURCE_ROOT_ARGS=()
+  for module in apps/cesdk_android/sources/*/; do
+    # Skip *-dummy modules (substituted for the real one in the app), whose
+    # sources would duplicate the real module's under the same package.
+    [[ "${module}" == *-dummy/ ]] && continue
+    for src in "${module}src/main/java" "${module}src/main/kotlin"; do
+      [[ -d "$src" ]] && SOURCE_ROOT_ARGS+=(--source-root "$src")
+    done
+  done
+  dry_runnable mkdir -p apps/cesdk_android/coverage
+  dry_runnable python3 scripts/coverage/jacoco_xml_to_lcov.py \
+    "${JACOCO_XML}" apps/cesdk_android/coverage/lcov.info \
+    "${SOURCE_ROOT_ARGS[@]}" \
+    --filter "apps/cesdk_android/sources/"
+fi
+
+exit "${TEST_EXIT}"

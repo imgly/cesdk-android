@@ -233,9 +233,10 @@ fun CropSheet(
         }
     }
     val showResizeOption = uiState.allowResizeOption && uiState.cropMode.hasResizeOption
+    val showContentFillMode = uiState.allowContentFillMode && uiState.cropMode.hasContentFillMode
     val showPresetGroups = uiState.groups.size > 1
 
-    if (showResizeOption || uiState.allowContentFillMode || showPresetGroups) {
+    if (showResizeOption || showContentFillMode || showPresetGroups) {
         Divider(
             modifier = Modifier
                 .fillMaxWidth()
@@ -257,7 +258,7 @@ fun CropSheet(
                 verticalAlignment = Alignment.CenterVertically,
                 state = groupListState,
             ) {
-                if (uiState.allowContentFillMode) {
+                if (showContentFillMode) {
                     item {
                         ContentFillModePicker(uiState = uiState, onEvent = onEvent)
                     }
@@ -294,7 +295,7 @@ fun CropSheet(
                     }
                 }
                 if (showPresetGroups) {
-                    if (showResizeOption || uiState.allowContentFillMode) {
+                    if (showResizeOption || showContentFillMode) {
                         item {
                             Divider(
                                 modifier = Modifier

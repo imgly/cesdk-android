@@ -33,6 +33,8 @@ class TimelineDataSource {
     fun allClips(): Sequence<Clip> = backgroundTrack.clips.asSequence() +
         tracks.asSequence().flatMap { it.clips.asSequence() }
 
+    fun allTracks(): Sequence<Track> = sequenceOf(backgroundTrack) + tracks.asSequence()
+
     fun maxClipEnd(): Duration {
         var max: Duration = ZERO
         backgroundTrack.clips.forEach { clip ->
@@ -63,6 +65,7 @@ class TimelineDataSource {
     fun reset() {
         _tracks.clear()
         backgroundTrack.clips.clear()
+        backgroundTrack.transitionSeams.clear()
     }
 
     override fun toString(): String = "TimelineDataSource: \n tracks=${

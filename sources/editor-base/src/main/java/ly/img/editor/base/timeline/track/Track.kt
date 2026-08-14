@@ -14,6 +14,7 @@ import ly.img.engine.DesignBlock
 data class Track private constructor(
     val id: String,
     val clips: MutableList<Clip> = mutableStateListOf(),
+    val transitionSeams: MutableList<TransitionSeam> = mutableStateListOf(),
     val engineTrackId: DesignBlock? = null,
 ) {
     companion object {
@@ -30,3 +31,10 @@ data class Track private constructor(
 
 /** [clips] sorted by [Clip.timeOffset] ascending. */
 internal fun Track.sortedClips(): List<Clip> = clips.sortedBy { it.timeOffset }
+
+data class TransitionSeam(
+    val outgoingClip: Clip,
+    val incomingClip: Clip,
+    val hasTransition: Boolean,
+    val isCompact: Boolean,
+)

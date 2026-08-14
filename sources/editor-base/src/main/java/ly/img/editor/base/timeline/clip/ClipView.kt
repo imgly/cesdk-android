@@ -157,7 +157,7 @@ fun ClipView(
                 .height(TimelineConfiguration.clipHeight)
                 .width(width.toDp())
                 .zIndex(if (showSelectionUi) 1f else 0f)
-                .absolutePadding(right = 1.dp)
+                .absolutePadding(right = TimelineConfiguration.clipEndGap)
                 .pointerInput(clip.id, clip.allowsSelecting) {
                     if (clip.allowsSelecting) {
                         detectTapGestures {
@@ -197,6 +197,7 @@ fun ClipView(
                         clip = clip,
                         duration = clipDurationText,
                         isSelected = showSelectionUi,
+                        leadingTransitionSeamSize = clip.leadingTransitionSeamSize,
                     )
                 }.first().measure(
                     // Bound the label by the clip's own width so the wrapper clamps to the clip and its rounded-corner clip masks any
@@ -304,15 +305,15 @@ fun ClipView(
                     }
                     offset = zoomState.toPx(snapTime)
 
-                    val backgroundTrack = timelineState.dataSource.backgroundTrack
-                    val isBgNoOpReorder = timelineState.dataSource.findTrack(clip) === backgroundTrack &&
-                        target is DropTarget.ExistingTrack &&
-                        target.trackId == backgroundTrack.id &&
+                    val sourceTrack = timelineState.dataSource.findTrack(clip)
+                    val isNoOpReorder = target is DropTarget.ExistingTrack &&
+                        target.trackId == sourceTrack.id &&
+                        target.effectiveDuration == null &&
                         snapTime == clip.timeOffset
 
-                    if (isBgNoOpReorder) {
-                        // Skip dispatch — `insertChild(idx = current)` is a no-op in the engine
-                        // and would only add an empty undo step.
+                    if (isNoOpReorder) {
+                        // Avoid dispatching a no-op move: re-inserting a clip can detach its transition
+                        // even when its position and duration have not changed.
                         timelineState.dragDrop.overrides.clear()
                     } else {
                         onEvent(

@@ -23,23 +23,34 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.launch
+import ly.img.editor.base.timeline.clip.Clip
 import ly.img.editor.base.timeline.clip.ClipView
+import ly.img.editor.base.timeline.dragdrop.DragDropState
 import ly.img.editor.base.timeline.dragdrop.DropSlotIndicatorView
+import ly.img.editor.base.timeline.dragdrop.DropTarget
 import ly.img.editor.base.timeline.state.LiveTrimState
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.timeline.state.computeLiveTrimOverrides
-import ly.img.editor.base.ui.Event
+import ly.img.editor.base.ui.BlockEvent
+import ly.img.editor.core.event.EditorEvent
+import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.theme.LocalExtendedColorScheme
+import kotlin.math.roundToInt
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.ZERO
 
 private const val VOICE_OVER_DRAFT_PLACEHOLDER_MIN_ALPHA = 0.16f
@@ -53,12 +64,17 @@ fun TrackView(
     modifier: Modifier = Modifier,
     scrollContentOffset: () -> Int = { 0 },
     onLiveTrimChange: ((LiveTrimState?) -> Unit)? = null,
-    onEvent: (Event) -> Unit,
+    onEvent: (EditorEvent) -> Unit,
 ) {
-    val draftVoiceOverPlaceholderClip = track.clips.firstOrNull { clip ->
-        clip.isVoiceOver &&
-            !clip.hasAudioResource &&
-            clip.duration <= ZERO
+    val coroutineScope = rememberCoroutineScope()
+    val draftVoiceOverPlaceholderClip by remember(track) {
+        derivedStateOf {
+            track.clips.firstOrNull { clip ->
+                clip.isVoiceOver &&
+                    !clip.hasAudioResource &&
+                    clip.duration <= ZERO
+            }
+        }
     }
     val isBackgroundTrack = track === timelineState.dataSource.backgroundTrack
 
@@ -127,22 +143,100 @@ fun TrackView(
             snapshotFlow { liveTrim }.collect { currentOnLiveTrimChange?.invoke(it) }
         }
 
-        val isMultiClip = track.clips.size >= 2
         val sortedClips by remember(track) {
             derivedStateOf {
                 track.sortedClips()
             }
         }
-        val currentTrim = liveTrim
-        val trimOverrides = remember(currentTrim) {
-            if (isMultiClip && currentTrim != null) {
-                computeLiveTrimOverrides(
-                    sorted = sortedClips,
-                    trim = currentTrim,
-                    clampStartToZero = !isBackgroundTrack,
+        val trimOverrides = remember(track) {
+            derivedStateOf {
+                val trim = liveTrim
+                if (trim != null && sortedClips.size >= 2) {
+                    computeLiveTrimOverrides(
+                        sorted = sortedClips,
+                        trim = trim,
+                        clampStartToZero = !isBackgroundTrack,
+                        packFollowingClips = isBackgroundTrack,
+                    )
+                } else {
+                    emptyMap()
+                }
+            }
+        }
+        val density = LocalDensity.current
+        val clipEndGapPx = remember(density) {
+            with(density) { TimelineConfiguration.clipEndGap.roundToPx() }
+        }
+        // Only the active target track observes pointer-driven target updates. Other tracks keep
+        // a stable `null` value for the duration of the drag and therefore do not recompose.
+        val dragTarget by remember(timelineState.dragDrop, track.id) {
+            derivedStateOf {
+                ((timelineState.dragDrop.phase as? DragDropState.Dragging)?.context?.dropTarget as? DropTarget.ExistingTrack)
+                    ?.takeIf { it.trackId == track.id }
+            }
+        }
+        val targetSortedSiblings by remember(timelineState.dragDrop, track.id) {
+            derivedStateOf {
+                val context = (timelineState.dragDrop.phase as? DragDropState.Dragging)?.context
+                val target = context?.dropTarget as? DropTarget.ExistingTrack
+                if (target?.trackId == track.id) context.targetSortedSiblings[target.trackId].orEmpty() else emptyList()
+            }
+        }
+        val seamOccupiedByDrag = remember(dragTarget, targetSortedSiblings) {
+            dragTarget?.let { target ->
+                val outgoing = targetSortedSiblings.getOrNull(target.insertIndex - 1)
+                val incoming = targetSortedSiblings.getOrNull(target.insertIndex)
+                if (outgoing != null && incoming != null) outgoing.id to incoming.id else null
+            }
+        }
+
+        fun projectedDragTarget(clip: Clip) = dragTarget?.takeIf {
+            timelineState.dragDrop.draggedClipId == clip.id
+        }
+
+        fun projectedOffset(clip: Clip): Duration {
+            val trim = liveTrim
+            if (trim != null && trim.clipId == clip.id) return trim.start
+            return projectedDragTarget(clip)?.timeOffset
+                ?: timelineState.dragDrop.overrides[clip.id]
+                ?: trimOverrides.value[clip.id]
+                ?: clip.timeOffset
+        }
+
+        fun projectedDuration(clip: Clip): Duration {
+            val trim = liveTrim
+            if (trim != null && trim.clipId == clip.id) return trim.end - trim.start
+            return projectedDragTarget(clip)?.effectiveDuration ?: clip.duration
+        }
+
+        track.transitionSeams.forEach { seam ->
+            val outgoing = seam.outgoingClip
+            val incoming = seam.incomingClip
+            if (seamOccupiedByDrag?.first == outgoing.id && seamOccupiedByDrag.second == incoming.id) {
+                return@forEach
+            }
+            key(outgoing.id, incoming.id) {
+                TransitionSeamView(
+                    // Center between the adjacent clips' live rendered edges. The outgoing clip's
+                    // background is inset by [TimelineConfiguration.clipEndGap]. Evaluated in the
+                    // placement phase so per-frame trim/drag updates skip recomposition.
+                    offsetPx = {
+                        (
+                            timelineState.zoomState.toPx(projectedOffset(outgoing) + projectedDuration(outgoing)).roundToInt() -
+                                clipEndGapPx +
+                                timelineState.zoomState.toPx(projectedOffset(incoming)).roundToInt()
+                        ) / 2f
+                    },
+                    hasTransition = seam.hasTransition,
+                    isCompact = seam.isCompact,
+                    onClick = {
+                        onEvent(BlockEvent.OnSelectBlock(outgoing.id))
+                        coroutineScope.launch {
+                            withFrameNanos { }
+                            onEvent(EditorEvent.Sheet.Open(SheetType.Transition(outgoing.id)))
+                        }
+                    },
                 )
-            } else {
-                emptyMap()
             }
         }
 
@@ -152,9 +246,11 @@ fun TrackView(
             // `remember` blocks invalidate, AsyncImage thumbnails reset, and the user sees
             // a visible jump before the new state lands.
             key(clip.id) {
-                val overrideState = rememberUpdatedState(
-                    timelineState.dragDrop.overrides[clip.id] ?: trimOverrides[clip.id],
-                )
+                val overrideState = remember(clip.id, trimOverrides) {
+                    derivedStateOf {
+                        timelineState.dragDrop.overrides[clip.id] ?: trimOverrides.value[clip.id]
+                    }
+                }
                 ClipView(
                     clip = clip,
                     timelineState = timelineState,

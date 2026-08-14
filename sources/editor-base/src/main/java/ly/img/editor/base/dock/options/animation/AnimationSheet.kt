@@ -73,7 +73,12 @@ fun AnimationSheet(
                     title = selectedAnimation.asset?.localizedLabel() ?: "",
                     designBlockWithProperties = selectedAnimation,
                     onBack = { screenState = ScreenState.Main },
-                    onEvent = onEvent,
+                    onEvent = { event ->
+                        onEvent(event)
+                        if (event is BlockEvent.OnChangeFinish) {
+                            onEvent(BlockEvent.OnPreviewAnimation(animationCategory.designBlock, animationCategory.group))
+                        }
+                    },
                     onOpenColorPicker = { },
                 )
             }
@@ -103,6 +108,7 @@ private fun AnimationCategory(
         },
         onAssetSelected = {
             BlockEvent.OnReplaceAnimation(
+                designBlock = category.designBlock,
                 sourceId = category.sourceId,
                 asset = it.asset,
             ).let(onEvent)

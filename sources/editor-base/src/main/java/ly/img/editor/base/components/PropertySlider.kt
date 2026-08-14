@@ -1,13 +1,15 @@
 package ly.img.editor.base.components
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,10 +18,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.PointMode
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import ly.img.editor.compose.material3.Slider
 import ly.img.editor.core.ui.UiDefaults
+import kotlin.math.roundToInt
+
+private const val MAX_TICK_STEPS = 20
 
 @Composable
 fun PropertySlider(
@@ -28,7 +37,6 @@ fun PropertySlider(
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: () -> Unit,
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
-    steps: Int = 0,
     step: Float? = null,
     disableAutoPercentage: Boolean = false,
     enabled: Boolean = true,
@@ -40,6 +48,9 @@ fun PropertySlider(
     }
     val effectiveStep = remember(step, min, max) {
         step ?: PercentageSliderHelper.stepFromMinMax(min, max)
+    }
+    val steps = remember(effectiveStep, min, max) {
+        (((max - min) / effectiveStep).roundToInt() - 1).coerceAtLeast(0)
     }
 
     Column {
@@ -62,6 +73,58 @@ fun PropertySlider(
                     steps = steps,
                     enabled = enabled,
                     modifier = Modifier.weight(1f),
+                    track = { sliderPositions ->
+                        val activeColor = if (enabled) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        }
+                        val inactiveColor = MaterialTheme.colorScheme.surfaceVariant
+                        val activeTickColor = if (enabled) {
+                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.38f)
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        }
+                        val inactiveTickColor = if (enabled) {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        }
+                        Canvas(
+                            modifier = Modifier.fillMaxWidth().height(4.dp),
+                        ) {
+                            val centerY = size.height / 2
+                            drawLine(
+                                color = inactiveColor,
+                                start = Offset(0f, centerY),
+                                end = Offset(size.width, centerY),
+                                strokeWidth = size.height,
+                                cap = StrokeCap.Round,
+                            )
+                            drawLine(
+                                color = activeColor,
+                                start = Offset(0f, centerY),
+                                end = Offset(size.width * sliderPositions.activeRange.endInclusive, centerY),
+                                strokeWidth = size.height,
+                                cap = StrokeCap.Round,
+                            )
+                            if (steps <= MAX_TICK_STEPS) {
+                                val tickSize = 2.dp.toPx()
+                                sliderPositions.tickFractions.groupBy {
+                                    it > sliderPositions.activeRange.endInclusive ||
+                                        it < sliderPositions.activeRange.start
+                                }.forEach { (outsideFraction, fractions) ->
+                                    drawPoints(
+                                        points = fractions.map { Offset(size.width * it, centerY) },
+                                        pointMode = PointMode.Points,
+                                        color = if (outsideFraction) inactiveTickColor else activeTickColor,
+                                        strokeWidth = tickSize,
+                                        cap = StrokeCap.Round,
+                                    )
+                                }
+                            }
+                        }
+                    },
                     onValueChangeFinished = {
                         if (sliderValue != value) {
                             onValueChangeFinished()
@@ -98,7 +161,6 @@ fun PropertySlider(
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: () -> Unit,
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
-    steps: Int = 0,
     step: Float? = null,
     disableAutoPercentage: Boolean = false,
     enabled: Boolean = true,
@@ -108,7 +170,6 @@ fun PropertySlider(
     onValueChange = onValueChange,
     onValueChangeFinished = onValueChangeFinished,
     valueRange = valueRange,
-    steps = steps,
     step = step,
     disableAutoPercentage = disableAutoPercentage,
     enabled = enabled,

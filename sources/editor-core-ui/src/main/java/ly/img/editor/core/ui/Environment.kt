@@ -29,6 +29,11 @@ object Environment {
                 add(MediaStoreThumbnailFetcher.Factory())
                 add(VideoFrameDecoder.Factory())
             }
+            // Coil 2's default keys file data by path + lastModified, which stats the file on
+            // the main thread mid-measure (StrictMode DiskReadViolation). Path-only keys are
+            // safe here: all file:// thumbnails we produce are unique temp files, never
+            // rewritten in place. Matches Coil 3's default.
+            .addLastModifiedToFileCacheKey(false)
             .build()
     }
 

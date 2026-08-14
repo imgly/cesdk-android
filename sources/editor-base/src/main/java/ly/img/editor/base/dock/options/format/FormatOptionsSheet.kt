@@ -177,6 +177,7 @@ fun FormatOptionsSheet(
                         title = stringResource(fontSizeLabelRes),
                         value = uiState.fontSize,
                         valueRange = fontSizeRange,
+                        step = 0.1F,
                         onValueChange = { onEvent(BlockEvent.OnChangeFontSize(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                     )
@@ -254,6 +255,7 @@ fun FormatOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangeLetterSpacing(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = -0.15f..1.4f,
+                        step = 0.01F,
                     )
 
                     Spacer(Modifier.height(16.dp))
@@ -332,6 +334,7 @@ fun FormatOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangeLineHeight(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = 0.5f..2.5f,
+                        step = 0.01F,
                         enabled = !uiState.isTextOnPath,
                     )
                     Spacer(Modifier.height(16.dp))
@@ -341,6 +344,7 @@ fun FormatOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangeParagraphSpacing(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = -0.15f..1.4f,
+                        step = 0.01F,
                         enabled = !uiState.isTextOnPath,
                     )
 

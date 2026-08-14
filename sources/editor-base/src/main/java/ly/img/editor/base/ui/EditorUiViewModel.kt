@@ -80,6 +80,8 @@ import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheetC
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundUiState
 import ly.img.editor.base.dock.options.textonpath.TextOnPathBottomSheetContent
 import ly.img.editor.base.dock.options.textonpath.TextOnPathUiState
+import ly.img.editor.base.dock.options.transition.TransitionBottomSheetContent
+import ly.img.editor.base.dock.options.transition.TransitionUiState
 import ly.img.editor.base.dock.options.voiceover.VoiceoverOptionsSheet
 import ly.img.editor.base.dock.options.voiceover.VoiceoverUiStateFactory
 import ly.img.editor.base.dock.options.volume.VolumeBottomSheetContent
@@ -102,6 +104,7 @@ import ly.img.editor.base.engine.zoomToSelectedText
 import ly.img.editor.base.migration.EditorMigrationHelper
 import ly.img.editor.base.sheet.LibraryAddToBackgroundTrackSheetType
 import ly.img.editor.base.timeline.state.TimelineState
+import ly.img.editor.base.timeline.state.transitionIncomingClip
 import ly.img.editor.base.ui.handler.animationEvents
 import ly.img.editor.base.ui.handler.appearanceEvents
 import ly.img.editor.base.ui.handler.blockEvents
@@ -321,6 +324,7 @@ class EditorUiViewModel(
         editorEvents()
         animationEvents(
             engine = ::engine,
+            timelineState = { timelineState },
         )
     }
 
@@ -728,6 +732,12 @@ class EditorUiViewModel(
                         uiState = AnimationUiState.create(designBlock, engine, editor.currentLanguageCode),
                     )
                 }
+                is SheetType.Transition -> {
+                    TransitionBottomSheetContent(
+                        type = type,
+                        uiState = TransitionUiState.create(type.outgoingBlock, engine, editor.currentLanguageCode),
+                    )
+                }
                 is SheetType.TextOnPath -> {
                     timelineState?.clampPlayheadPositionToSelectedClip()
                     TextOnPathBottomSheetContent(
@@ -781,6 +791,11 @@ class EditorUiViewModel(
     }
 
     override fun send(event: EditorEvent) {
+        // Any manual timeline interaction takes precedence over a scheduled/running preview.
+        // Animation previews are scheduled by their handlers after this cancellation point.
+        if (event is BlockEvent) {
+            timelineState?.animationPreview?.stop()
+        }
         // TODO: remove this when a better solution is found.
         if (event is BlockEvent && bottomSheetContent.value is CropBottomSheetContent && event != BlockEvent.OnResetCrop) {
             isStraighteningOrRotating = true
@@ -948,6 +963,18 @@ class EditorUiViewModel(
                             type = content.type,
                             uiState = AnimationUiState.create(designBlock, engine, editor.currentLanguageCode),
                         )
+                    }
+                    is TransitionBottomSheetContent -> {
+                        val type = content.type as SheetType.Transition
+                        val outgoing = type.outgoingBlock
+                        if (engine.transitionIncomingClip(outgoing) != null) {
+                            TransitionBottomSheetContent(
+                                type = type,
+                                uiState = TransitionUiState.create(type.outgoingBlock, engine, editor.currentLanguageCode),
+                            )
+                        } else {
+                            null
+                        }
                     }
 
                     is TextOnPathBottomSheetContent -> {

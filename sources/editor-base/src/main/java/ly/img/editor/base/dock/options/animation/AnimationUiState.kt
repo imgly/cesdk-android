@@ -22,6 +22,7 @@ data class AnimationUiState(
     val categories: List<TabItem<Category>>,
 ) {
     data class Category(
+        val designBlock: DesignBlock,
         val sourceId: String,
         val group: String,
         val animations: List<WrappedAsset>,
@@ -35,6 +36,7 @@ data class AnimationUiState(
         private suspend fun getTabItem(
             @StringRes titleRes: Int,
             thumbnailsBaseUri: String,
+            designBlock: DesignBlock,
             engine: Engine,
             group: String,
             animationDesignBlock: DesignBlock,
@@ -64,6 +66,7 @@ data class AnimationUiState(
                 titleRes = titleRes,
                 isSmallIndicatorOn = animationType != null,
                 data = Category(
+                    designBlock = designBlock,
                     sourceId = ANIMATIONS_SOURCE_ID,
                     group = group,
                     animations = animations,
@@ -105,6 +108,7 @@ data class AnimationUiState(
                     getTabItem(
                         titleRes = R.string.ly_img_editor_sheet_animations_tab_in,
                         thumbnailsBaseUri = thumbnailsBaseUri,
+                        designBlock = designBlock,
                         group = "in",
                         animationDesignBlock = engine.block.getInAnimation(designBlock),
                         engine = engine,
@@ -113,6 +117,7 @@ data class AnimationUiState(
                     getTabItem(
                         titleRes = R.string.ly_img_editor_sheet_animations_tab_loop,
                         thumbnailsBaseUri = thumbnailsBaseUri,
+                        designBlock = designBlock,
                         group = "loop",
                         animationDesignBlock = engine.block.getLoopAnimation(designBlock),
                         engine = engine,
@@ -121,6 +126,7 @@ data class AnimationUiState(
                     getTabItem(
                         titleRes = R.string.ly_img_editor_sheet_animations_tab_out,
                         thumbnailsBaseUri = thumbnailsBaseUri,
+                        designBlock = designBlock,
                         group = "out",
                         animationDesignBlock = engine.block.getOutAnimation(designBlock),
                         engine = engine,

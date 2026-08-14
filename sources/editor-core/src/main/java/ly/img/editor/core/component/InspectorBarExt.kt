@@ -51,6 +51,7 @@ import ly.img.editor.core.iconpack.ShapeIcon
 import ly.img.editor.core.iconpack.Split
 import ly.img.editor.core.iconpack.TextOnPath
 import ly.img.editor.core.iconpack.TextPresets
+import ly.img.editor.core.iconpack.Transition
 import ly.img.editor.core.iconpack.Typeface
 import ly.img.editor.core.iconpack.VoiceoverAdd
 import ly.img.editor.core.iconpack.VolumeHigh
@@ -67,6 +68,7 @@ import ly.img.engine.Engine
 import ly.img.engine.FillType
 import ly.img.engine.RGBAColor
 import ly.img.engine.ShapeType
+import kotlin.time.Duration.Companion.seconds
 
 private const val KIND_STICKER = "sticker"
 private const val KIND_ANIMATED_STICKER = "animatedSticker"
@@ -76,6 +78,21 @@ private const val VOLUME_SPEED_CUTOFF = 3f
 private fun Selection.isAnyKindOfSticker(): Boolean = this.kind == KIND_STICKER || this.kind == KIND_ANIMATED_STICKER
 
 private fun Selection.isNotAnyKindOfSticker() = !this.isAnyKindOfSticker()
+
+private fun Engine.canShowTransition(outgoing: DesignBlock): Boolean {
+    if (!block.isValid(outgoing)) return false
+
+    val siblings = block.getParent(outgoing)
+        ?.let(block::getChildren)
+        ?.sortedBy(block::getTimeOffset)
+        .orEmpty()
+    val incoming = siblings.getOrNull(siblings.indexOf(outgoing) + 1) ?: return false
+    val outgoingEnd = (block.getTimeOffset(outgoing) + block.getDuration(outgoing)).seconds
+    val incomingStart = block.getTimeOffset(incoming).seconds
+    return block.supportsTransition(outgoing) &&
+        block.supportsTransition(incoming) &&
+        incomingStart <= outgoingEnd + 0.001.seconds
+}
 
 /**
  * An extension function for checking whether the [designBlock] is a background track.
@@ -181,6 +198,40 @@ fun InspectorBar.Button.rememberAnimations(builder: InspectorBar.ButtonBuilder.(
         textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_animations) }
         onClick = {
             editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Animation()))
+        }
+        builder()
+    }
+
+/**
+ * The id of the inspector bar button returned by [InspectorBar.Button.rememberTransition].
+ */
+val InspectorBar.Button.Id.transition by unsafeLazy {
+    EditorComponentId("ly.img.component.inspectorBar.button.transition")
+}
+
+/**
+ * A helper function that returns a [Button] that opens the transition sheet for the selected design block.
+ * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
+ * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
+ *
+ * @param builder the builder lambda to override the default builder.
+ * @return a button that will be displayed in the inspector bar.
+ */
+@Composable
+fun InspectorBar.Button.rememberTransition(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
+    InspectorBar.Button.remember {
+        id = { InspectorBar.Button.Id.transition }
+        visible = {
+            remember(this) {
+                val engine = editorContext.engine
+                val outgoing = editorContext.selection.designBlock
+                engine.canShowTransition(outgoing)
+            }
+        }
+        vectorIcon = { IconPack.Transition }
+        textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_transition) }
+        onClick = {
+            editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Transition(editorContext.selection.designBlock)))
         }
         builder()
     }

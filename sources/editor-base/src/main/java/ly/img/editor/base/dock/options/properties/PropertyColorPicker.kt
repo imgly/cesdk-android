@@ -16,6 +16,7 @@ fun PropertyColorPicker(
     propertyAndValue: PropertyAndValue,
     onBack: () -> Unit,
     onEvent: (EditorEvent) -> Unit,
+    onColorChangeFinished: () -> Unit = {},
 ) {
     val (property, value) = propertyAndValue
     ColorPickerSheet(
@@ -29,8 +30,11 @@ fun PropertyColorPicker(
                 property = property,
                 newValue = PropertyValue.Color(color),
             ).let { onEvent(it) }
-            onEvent(BlockEvent.OnChangeFinish)
         },
         onEvent = onEvent,
+        onColorChangeFinished = {
+            onEvent(BlockEvent.OnChangeFinish)
+            onColorChangeFinished()
+        },
     )
 }

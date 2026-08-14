@@ -23,6 +23,11 @@ sealed class Destination(
         title = "Video Editor",
     )
 
+    data object MemoriesEditor : Destination(
+        route = "starter-kit-memories-editor",
+        title = "Memories Editor",
+    )
+
     data object DesignEditor : Destination(
         route = "starter-kit-design-editor",
         title = "Design Editor",
@@ -56,6 +61,11 @@ sealed class Destination(
     data object GuideCustomFonts : Destination(
         route = "guide-custom-fonts",
         title = "Custom Fonts",
+    )
+
+    data object GuideVariableFonts : Destination(
+        route = "guide-variable-fonts",
+        title = "Variable Fonts",
     )
 
     data object GuideCallbacks : Destination(
@@ -232,6 +242,7 @@ sealed class Destination(
         val starterKits = listOf(
             PhotoEditor,
             VideoEditor,
+            MemoriesEditor,
             DesignEditor,
             PostcardEditor,
             ApparelEditor,
@@ -242,6 +253,7 @@ sealed class Destination(
             DataMerge,
             GuideColorPalette,
             GuideCustomFonts,
+            GuideVariableFonts,
             GuideCallbacks,
             GuideUiEvents,
             GuideForceCrop,

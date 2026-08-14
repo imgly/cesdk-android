@@ -3,6 +3,8 @@ package ly.img.editor.plugin.backgroundRemoval.api
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.core.net.toUri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import ly.img.editor.core.EditorScope
 import ly.img.editor.plugin.backgroundRemoval.BackgroundRemovalConfig
 import ly.img.editor.plugin.backgroundRemoval.util.FileLoader
@@ -27,12 +29,16 @@ internal object BackgroundRemovalApi {
         var srcBitmap: Bitmap? = null
         var maskedBitmap: Bitmap? = null
         try {
+            val activity = editorContext.activity
             srcBitmap = measureAndGet(step = "loadImageUri") {
-                FileLoader.loadUri(
-                    context = editorContext.activity,
-                    uri = imageUri.toUri(),
-                    httpClient = config.httpClient,
-                ).use { BitmapFactory.decodeStream(it) }
+                // loadUri only opens the stream; the actual reads happen in decodeStream.
+                withContext(Dispatchers.IO) {
+                    FileLoader.loadUri(
+                        context = activity,
+                        uri = imageUri.toUri(),
+                        httpClient = config.httpClient,
+                    ).use { BitmapFactory.decodeStream(it) }
+                }
             }
             requireNotNull(srcBitmap)
 

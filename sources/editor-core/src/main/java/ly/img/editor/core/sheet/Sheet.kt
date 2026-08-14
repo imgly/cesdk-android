@@ -322,6 +322,12 @@ interface SheetType {
         override val style: SheetStyle = SheetStyle(),
     ) : SheetType
 
+    /** A sheet that configures the transition owned by [outgoingBlock]. */
+    class Transition(
+        val outgoingBlock: DesignBlock,
+        override val style: SheetStyle = SheetStyle(),
+    ) : SheetType
+
     /**
      * A sheet that is used to control the background color and shape of text block.
      *

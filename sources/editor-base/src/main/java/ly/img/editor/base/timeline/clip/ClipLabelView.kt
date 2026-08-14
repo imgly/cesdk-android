@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.core.iconpack.Animation
@@ -32,25 +33,34 @@ import ly.img.editor.core.ui.iconpack.Mic
 import ly.img.editor.core.ui.iconpack.Volumeoff
 import ly.img.editor.core.iconpack.IconPack as CoreIconPack
 
+private val ClipLabelHorizontalPadding = 5.dp
+
 @Composable
 fun ClipLabelView(
     modifier: Modifier,
     clip: Clip,
     duration: String,
     isSelected: Boolean,
+    leadingTransitionSeamSize: Dp?,
 ) {
     val backgroundColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
+    val leadingPadding = if (leadingTransitionSeamSize != null) {
+        leadingTransitionSeamSize / 2 +
+            TimelineConfiguration.transitionSeamIconSpacing
+    } else {
+        TimelineConfiguration.clipPadding
+    }
 
     Box(
         modifier = modifier
-            .padding(start = TimelineConfiguration.clipPadding, top = 2.dp, end = 2.dp, bottom = 2.dp)
+            .padding(start = leadingPadding, top = 2.dp, end = 2.dp, bottom = 2.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(backgroundColor),
     ) {
         Row(
             modifier = Modifier
                 .wrapContentWidth(align = Alignment.Start, unbounded = true)
-                .padding(horizontal = 5.dp, vertical = 1.dp),
+                .padding(horizontal = ClipLabelHorizontalPadding, vertical = 1.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

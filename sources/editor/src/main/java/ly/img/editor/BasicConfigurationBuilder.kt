@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
@@ -35,6 +36,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ly.img.editor.core.R
 import ly.img.editor.core.UnstableEditorApi
@@ -192,6 +194,8 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
 
     /**
      * A helper function that opens a system dialog to share the [file].
+     * Note that the uri of the [file] is resolved on a background thread, therefore the system dialog is opened
+     * asynchronously. If the uri resolution fails, the [error] state is set instead of throwing.
      *
      * @param authority the authority of [FileProvider] defined in a <provider> element in your app's manifest.
      * @param file the file that should be shared.
@@ -203,8 +207,18 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
         file: File,
         mimeType: MimeType,
     ) {
-        val uri = FileProvider.getUriForFile(editorContext.activity, authority, file)
-        shareUri(uri = uri, mimeType = mimeType)
+        editorContext.coroutineScope.launch {
+            try {
+                val uri = withContext(Dispatchers.IO) {
+                    FileProvider.getUriForFile(editorContext.activity, authority, file)
+                }
+                shareUri(uri = uri, mimeType = mimeType)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                error = exception
+            }
+        }
     }
 
     /**

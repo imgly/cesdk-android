@@ -106,17 +106,21 @@ private fun ThumbnailImage(thumbnail: VideoThumbnailResult) {
     val cacheKey = remember(thumbnail.width, thumbnail.height, thumbnail.imageData) {
         "VideoThumbnailResult(w=${thumbnail.width},h=${thumbnail.height},hash=${thumbnail.imageData.hashCode()})"
     }
-
+    val context = LocalContext.current
     // Reuse the same key for `placeholderMemoryCacheKey` so a remounted AsyncImage (e.g. clip
     // moved to a new track) paints the cached bitmap on its first frame instead of flickering
     // through Empty → Success.
-    AsyncImage(
-        model = ImageRequest.Builder(LocalContext.current)
+    val imageRequest = remember(context, thumbnail, cacheKey) {
+        ImageRequest.Builder(context)
             .fetcherFactory(thumbnailFetcherFactory)
             .memoryCacheKey(cacheKey)
             .placeholderMemoryCacheKey(cacheKey)
             .data(thumbnail)
-            .build(),
+            .build()
+    }
+
+    AsyncImage(
+        model = imageRequest,
         modifier = Modifier.fillMaxHeight(),
         alignment = Alignment.CenterStart,
         contentScale = ContentScale.FillHeight,

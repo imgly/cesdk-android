@@ -36,6 +36,7 @@ import TemplatingEditorSolution
 import ThemingEditorSolution
 import UiEventsEditorSolution
 import UserInterfaceAssetLibraryEditorSolution
+import VariableFontsEditorSolution
 import android.net.Uri
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.runtime.Composable
@@ -47,6 +48,7 @@ import androidx.navigation.navDeepLink
 import ly.img.editor.Editor
 import ly.img.editor.configuration.apparel.ApparelConfigurationBuilder
 import ly.img.editor.configuration.design.DesignConfigurationBuilder
+import ly.img.editor.configuration.memories.MemoriesApp
 import ly.img.editor.configuration.photo.PhotoConfigurationBuilder
 import ly.img.editor.configuration.postcard.PostcardConfigurationBuilder
 import ly.img.editor.configuration.video.VideoConfigurationBuilder
@@ -111,6 +113,12 @@ fun NavGraphBuilder.build(navController: NavHostController) {
     }
     composable(destination = Destination.GuideCustomFonts) {
         CustomFontsEditorSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideVariableFonts) {
+        VariableFontsEditorSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
         )
@@ -285,6 +293,14 @@ fun NavGraphBuilder.build(navController: NavHostController) {
             license = Secrets.license,
             aiGatewayApiKey = Secrets.gatewayApiKey,
             onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.MemoriesEditor) {
+        // Opens the Memories starter kit through its full picker -> editor flow,
+        // identical to the standalone app.
+        MemoriesApp(
+            license = Secrets.license,
+            onExit = { navController.popBackStack() },
         )
     }
     composable(destination = Destination.GuideAssetLibraryBasics) {

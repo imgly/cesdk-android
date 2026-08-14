@@ -1,7 +1,9 @@
 package ly.img.editor.base.timeline.clip
 
+import androidx.compose.ui.unit.Dp
 import ly.img.engine.DesignBlock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.seconds
 
 data class Clip(
@@ -16,9 +18,13 @@ data class Clip(
     val effectIds: List<DesignBlock>? = null,
     val title: String = "",
     val duration: Duration = 5.seconds,
+    /** Engine duration before transition trims are projected into [duration]. */
+    val rawDuration: Duration = duration,
     val footageDuration: Duration? = null,
     val playbackSpeed: Float = 1f,
     val timeOffset: Duration = 0.seconds,
+    /** Engine time offset before a leading transition trim is projected into [timeOffset]. */
+    val rawTimeOffset: Duration = timeOffset,
     val allowsTrimming: Boolean = false,
     val allowsSelecting: Boolean = true,
     /**
@@ -35,6 +41,9 @@ data class Clip(
     val hasLoaded: Boolean = false,
     val hasAnimation: Boolean = false,
     val isLiveBufferRecording: Boolean = false,
+    val leadingTransitionSeamSize: Dp? = null,
+    val transitionTrimLead: Duration = ZERO,
+    val transitionTrimTail: Duration = ZERO,
 ) {
     val effectiveFootageDuration: Duration?
         get() = footageDuration?.let {

@@ -373,8 +373,32 @@ interface BlockEvent : Event {
 
     // region Animations Events
     data class OnReplaceAnimation(
+        val designBlock: DesignBlock,
         val sourceId: String,
         val asset: Asset,
+    ) : BlockEvent
+
+    data class OnReplaceTransition(
+        val sourceId: String,
+        val outgoingBlock: DesignBlock,
+        val asset: Asset,
+    ) : BlockEvent
+
+    data class OnPreviewAnimation(
+        val designBlock: DesignBlock,
+        val mode: String,
+    ) : BlockEvent
+
+    data class OnPreviewTransition(
+        val outgoingBlock: DesignBlock,
+    ) : BlockEvent
+
+    data class OnApplyTransitionToTrack(
+        val outgoingBlock: DesignBlock,
+    ) : BlockEvent
+
+    data class OnRemoveTransitionsFromTrack(
+        val outgoingBlock: DesignBlock,
     ) : BlockEvent
     // endregion
 
@@ -438,6 +462,10 @@ interface BlockEvent : Event {
     object OnDeselect : BlockEvent
 
     data class OnToggleSelectBlock(
+        val block: DesignBlock,
+    ) : BlockEvent
+
+    data class OnSelectBlock(
         val block: DesignBlock,
     ) : BlockEvent
 
