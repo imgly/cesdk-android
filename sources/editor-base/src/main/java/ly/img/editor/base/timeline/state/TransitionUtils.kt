@@ -52,6 +52,54 @@ internal fun Engine.transitionTrim(clip: DesignBlock): TransitionTrim {
     return TransitionTrim(lead = lead, tail = tail)
 }
 
+/**
+ * Converts a rendered timeline duration to raw engine timing using the transition inset that
+ * will apply after the duration changes. A transition edge is either capped or contributes one
+ * quarter of the raw clip duration, yielding three linear regions.
+ */
+internal fun Engine.transitionTiming(
+    clip: DesignBlock,
+    renderedDuration: Duration,
+): TransitionTiming {
+    val siblings = block.getParent(clip)?.let(block::getChildren).orEmpty()
+    val index = siblings.indexOf(clip)
+    if (index < 0) return TransitionTiming(rawDuration = renderedDuration)
+
+    fun trimCap(
+        outgoing: DesignBlock,
+        incoming: DesignBlock,
+        adjacent: DesignBlock,
+    ): Duration {
+        if (transitionOverlap(outgoing, incoming) == ZERO) return ZERO
+        return minOf(
+            block.getDuration(block.getTransition(outgoing)).seconds / 2,
+            block.getDuration(adjacent).seconds / 4,
+        )
+    }
+
+    val leadingCap = siblings.getOrNull(index - 1)
+        ?.let { outgoing -> trimCap(outgoing, clip, outgoing) }
+        ?: ZERO
+    val trailingCap = siblings.getOrNull(index + 1)
+        ?.let { incoming -> trimCap(clip, incoming, incoming) }
+        ?: ZERO
+    val smallerCap = minOf(leadingCap, trailingCap)
+    val largerCap = maxOf(leadingCap, trailingCap)
+
+    val rawDuration = when {
+        renderedDuration <= smallerCap * 2 -> renderedDuration * 2
+        renderedDuration <= largerCap * 3 - smallerCap -> (renderedDuration + smallerCap) * 4 / 3
+        else -> renderedDuration + smallerCap + largerCap
+    }
+    return TransitionTiming(
+        rawDuration = rawDuration,
+        trim = TransitionTrim(
+            lead = minOf(leadingCap, rawDuration / 4),
+            tail = minOf(trailingCap, rawDuration / 4),
+        ),
+    )
+}
+
 internal fun Engine.transitionOverlap(
     outgoing: DesignBlock,
     incoming: DesignBlock,
@@ -73,4 +121,9 @@ internal fun Engine.transitionOverlap(
 internal data class TransitionTrim(
     val lead: Duration = ZERO,
     val tail: Duration = ZERO,
+)
+
+internal data class TransitionTiming(
+    val rawDuration: Duration,
+    val trim: TransitionTrim = TransitionTrim(),
 )

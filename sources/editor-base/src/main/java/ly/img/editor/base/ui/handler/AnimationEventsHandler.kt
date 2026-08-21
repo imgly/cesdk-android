@@ -2,6 +2,7 @@ package ly.img.editor.base.ui.handler
 
 import ly.img.editor.base.timeline.state.AnimationPreview
 import ly.img.editor.base.timeline.state.TimelineState
+import ly.img.editor.base.timeline.state.transitionIncomingClip
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.inject
@@ -60,11 +61,23 @@ fun EventsHandler.animationEvents(
     register<BlockEvent.OnApplyTransitionToTrack> {
         val activeTransition = engine.block.getTransition(it.outgoingBlock)
         if (!engine.block.isValid(activeTransition)) return@register
-        eligibleOutgoingClips(engine, it.outgoingBlock).forEach { outgoing ->
+        val children = trackChildren(engine, it.outgoingBlock)
+        children.forEach { outgoing ->
             if (outgoing == it.outgoingBlock) return@forEach
-            engine.block.getTransition(outgoing).takeIf { engine.block.isValid(it) }?.let(engine.block::destroy)
+            val previousTransition = engine.block.getTransition(outgoing)
+            val incoming = engine.transitionIncomingClip(outgoing) ?: return@forEach
             val duplicate = engine.block.duplicate(activeTransition, attachToParent = false)
+            val maximumDuration = minOf(
+                engine.block.getDuration(outgoing) / 2,
+                engine.block.getDuration(incoming) / 2,
+            )
+            val current = engine.block.getDuration(duplicate)
+            engine.block.setDuration(
+                block = duplicate,
+                duration = minOf(current, maximumDuration),
+            )
             engine.block.setTransition(outgoing, duplicate)
+            previousTransition.takeIf { engine.block.isValid(it) }?.let(engine.block::destroy)
             clearConflictingAnimations(engine, outgoing)
         }
         engine.editor.addUndoStep()
@@ -120,15 +133,5 @@ private fun clearConflictingAnimations(
         if (engine.block.supportsAnimation(incoming)) {
             engine.block.getInAnimation(incoming).takeIf { engine.block.isValid(it) }?.let(engine.block::destroy)
         }
-    }
-}
-
-private fun eligibleOutgoingClips(
-    engine: Engine,
-    outgoing: DesignBlock,
-): List<DesignBlock> {
-    val children = trackChildren(engine, outgoing)
-    return children.dropLast(1).filterIndexed { index, clip ->
-        engine.block.supportsTransition(clip) && engine.block.supportsTransition(children[index + 1])
     }
 }

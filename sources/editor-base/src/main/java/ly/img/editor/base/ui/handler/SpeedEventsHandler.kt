@@ -77,6 +77,7 @@ private fun detectClipCollision(
     if (trackChildren.size < 2) return false
 
     val currentStartTime = engine.block.getTimeOffset(block)
+    val currentEndTime = currentStartTime + engine.block.getDuration(block)
     val newEndTime = currentStartTime + newDuration
     val nextClipStartTime =
         trackChildren
@@ -87,7 +88,9 @@ private fun detectClipCollision(
             .minOrNull()
             ?: return false
 
-    return newEndTime > nextClipStartTime
+    // A transition intentionally overlaps the outgoing and incoming clips. Only separate the
+    // clip when this speed change creates an overlap that was not present before.
+    return currentEndTime <= nextClipStartTime && newEndTime > nextClipStartTime
 }
 
 private fun moveClipToNewTrack(

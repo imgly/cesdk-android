@@ -164,6 +164,7 @@ private fun DoubleProperty(
             ).let { onEvent(it) }
         },
         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
+        disableAutoPercentage = true,
         step = valueType.step.toFloat(),
     )
 }

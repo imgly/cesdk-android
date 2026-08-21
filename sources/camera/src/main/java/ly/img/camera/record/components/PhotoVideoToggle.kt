@@ -91,19 +91,24 @@ internal fun PhotoVideoToggle(
                     val down = awaitFirstDown(requireUnconsumed = false)
                     isDragging = true
                     var hasMoved = false
+                    // `snapTo` runs in a queued coroutine, so `progress.value` lags behind the finger.
+                    // A tap's move and up events arrive in one input batch, before that queue drains.
+                    // Track the position locally so the release logic reads the real finger position.
+                    var latestProgress = progress.value
                     drag(down.id) { change ->
                         if (change.position == change.previousPosition) return@drag
                         hasMoved = true
                         val clampedX = change.position.x.coerceIn(circleCenterMinPx, circleCenterMaxPx)
                         val newProgress = (clampedX - circleCenterMinPx) / travelPx
-                        val crossedMidline = (progress.value < 0.5f) != (newProgress < 0.5f)
+                        val crossedMidline = (latestProgress < 0.5f) != (newProgress < 0.5f)
+                        latestProgress = newProgress
                         scope.launch { progress.snapTo(newProgress) }
                         if (crossedMidline) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         change.consume()
                     }
                     isDragging = false
                     if (hasMoved) {
-                        val target = if (progress.value < 0.5f) 0f else 1f
+                        val target = if (latestProgress < 0.5f) 0f else 1f
                         val targetMode = if (target == 0f) ActiveMixedSubMode.Photo else ActiveMixedSubMode.Video
                         scope.launch { progress.animateTo(target, tween(durationMillis = 200)) }
                         if (targetMode != currentActive) currentOnChange(targetMode)

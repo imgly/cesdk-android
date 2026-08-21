@@ -10,6 +10,7 @@ import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.timeline.state.computeLiveTrimOverrides
 import ly.img.editor.base.timeline.state.transitionOverlap
+import ly.img.editor.base.timeline.state.transitionTiming
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.core.R
 import ly.img.editor.core.ui.EventsHandler
@@ -25,6 +26,7 @@ import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
 import ly.img.engine.SplitOptions
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
@@ -162,20 +164,21 @@ fun EventsHandler.timelineEvents(
     register<BlockEvent.OnUpdateTrim> {
         val selectedClip = checkNotNull(timelineState.selectedClip)
         val selectedBlock = selectedClip.id
-        setTimeOffset(selectedBlock, it.timeOffset)
+        val timing = engine.transitionTiming(selectedBlock, it.duration)
+        setTimeOffset(selectedBlock, (it.timeOffset - timing.trim.lead).coerceAtLeast(ZERO))
         // `OnUpdateTrim` is called in general for updating timeOffset, trimOffset, and duration simultaneously
         // Don't update trimOffset if the clip doesn't support trimming
         if (selectedClip.allowsTrimming) {
             setTrimOffset(selectedClip.trimmableId, it.trimOffset)
         }
-        setDuration(selectedClip, it.duration)
+        setDuration(selectedClip, timing.rawDuration)
         packAndPersistSiblings(selectedClip)
         engine.editor.addUndoStep()
     }
 
     register<BlockEvent.OnUpdateDuration> {
         val selectedClip = checkNotNull(timelineState.selectedClip)
-        setDuration(selectedClip, it.duration)
+        setDuration(selectedClip, engine.transitionTiming(selectedClip.id, it.duration).rawDuration)
         packAndPersistSiblings(selectedClip)
         engine.editor.addUndoStep()
     }
