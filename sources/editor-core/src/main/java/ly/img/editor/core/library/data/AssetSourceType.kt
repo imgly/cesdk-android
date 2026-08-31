@@ -90,6 +90,14 @@ open class AssetSourceType(
         }
 
         /**
+         * Caption style presets. Assets carry an opaque `payload.stylePreset` that the engine applies to one
+         * caption and syncs across its track.
+         */
+        val CaptionPresets by lazy {
+            AssetSourceType(sourceId = "ly.img.caption.presets")
+        }
+
+        /**
          * The default source type for typeface.
          */
         val Typeface by lazy {

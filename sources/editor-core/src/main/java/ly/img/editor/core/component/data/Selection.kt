@@ -50,6 +50,7 @@ data class Selection(
             DesignBlockType.Page,
             DesignBlockType.Audio,
             DesignBlockType.Graphic,
+            DesignBlockType.Caption,
         )
 
         /**

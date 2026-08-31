@@ -67,7 +67,7 @@ fun EventsHandler.animationEvents(
             val previousTransition = engine.block.getTransition(outgoing)
             val incoming = engine.transitionIncomingClip(outgoing) ?: return@forEach
             val duplicate = engine.block.duplicate(activeTransition, attachToParent = false)
-            val maximumDuration = minOf(
+            val maximumDuration = maxOf(
                 engine.block.getDuration(outgoing) / 2,
                 engine.block.getDuration(incoming) / 2,
             )

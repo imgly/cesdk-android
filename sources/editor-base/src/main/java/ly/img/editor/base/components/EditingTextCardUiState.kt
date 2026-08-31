@@ -3,6 +3,7 @@ package ly.img.editor.base.components
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.base.engine.effectiveTextRange
+import ly.img.editor.base.engine.isCaption
 import ly.img.editor.base.engine.resolveTextListStyle
 import ly.img.editor.core.ui.engine.toComposeColor
 import ly.img.editor.core.ui.engine.toRGBColor
@@ -31,7 +32,7 @@ sealed interface EditingTextCardUiState {
         val canToggleItalic: Boolean,
         val listStyle: ListStyle?,
         val isTextOnPath: Boolean,
-        // The first case in the queried range (matching Web). The row marks it active and
+        // The first case in the queried range. The row marks it active and
         // re-applying it is a no-op, so a mixed range can always be normalised in one tap.
         val casing: TextCase,
         val textColors: List<Color>,
@@ -46,6 +47,8 @@ internal fun createEditingTextCardUiState(
         engine.block.isAllowedByScope(designBlock, "text/character")
     }.getOrDefault(false)
     if (!canFormat) return EditingTextCardUiState.Disabled
+    // Formatting a caption here would style the selection locally but sync the whole block to its siblings.
+    if (engine.block.isCaption(designBlock)) return EditingTextCardUiState.Disabled
     val typeface = runCatching { engine.block.getTypeface(designBlock) }.getOrNull()
 
     val range = engine.block.effectiveTextRange(designBlock)

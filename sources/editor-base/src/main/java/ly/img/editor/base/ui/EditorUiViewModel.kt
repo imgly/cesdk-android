@@ -59,6 +59,11 @@ import ly.img.editor.base.dock.OptionsBottomSheetContent
 import ly.img.editor.base.dock.options.adjustment.AdjustmentUiState
 import ly.img.editor.base.dock.options.animation.AnimationBottomSheetContent
 import ly.img.editor.base.dock.options.animation.AnimationUiState
+import ly.img.editor.base.dock.options.captions.CaptionStyleBottomSheetContent
+import ly.img.editor.base.dock.options.captions.CaptionStyleUiState
+import ly.img.editor.base.dock.options.captions.CaptionsBottomSheetContent
+import ly.img.editor.base.dock.options.captions.CaptionsEngine
+import ly.img.editor.base.dock.options.captions.CaptionsUiStateFactory
 import ly.img.editor.base.dock.options.colors.ColorsBottomSheetContent
 import ly.img.editor.base.dock.options.colors.ColorsUiState
 import ly.img.editor.base.dock.options.crop.CropBottomSheetContent
@@ -94,6 +99,7 @@ import ly.img.editor.base.engine.TOUCH_ACTION_SCALE
 import ly.img.editor.base.engine.TRANSFORM_EDIT_MODE
 import ly.img.editor.base.engine.duplicate
 import ly.img.editor.base.engine.effectiveTextRange
+import ly.img.editor.base.engine.isCaption
 import ly.img.editor.base.engine.isPlaceholder
 import ly.img.editor.base.engine.resetHistory
 import ly.img.editor.base.engine.setFillType
@@ -109,6 +115,7 @@ import ly.img.editor.base.ui.handler.animationEvents
 import ly.img.editor.base.ui.handler.appearanceEvents
 import ly.img.editor.base.ui.handler.blockEvents
 import ly.img.editor.base.ui.handler.blockFillEvents
+import ly.img.editor.base.ui.handler.captionEvents
 import ly.img.editor.base.ui.handler.cropEvents
 import ly.img.editor.base.ui.handler.shapeOptionEvents
 import ly.img.editor.base.ui.handler.speedEvents
@@ -320,11 +327,16 @@ class EditorUiViewModel(
             showError = {
                 sendSingleEvent(SingleEvent.Snackbar(it))
             },
+            onError = ::onError,
         )
         editorEvents()
         animationEvents(
             engine = ::engine,
             timelineState = { timelineState },
+        )
+        captionEvents(
+            engine = ::engine,
+            onError = ::onError,
         )
     }
 
@@ -492,7 +504,12 @@ class EditorUiViewModel(
         register<EditorEvent.Selection.Delete> {
             timelineState?.playerState?.pause()
             getBlockForEvents()?.designBlock?.let { designBlock ->
-                send(BlockEvent.OnDeleteNonSelected(designBlock))
+                if (engine.block.isCaption(designBlock)) {
+                    // The domain layer destroys the caption track once it empties.
+                    CaptionsEngine(engine, ::onError).deleteCaption(designBlock)
+                } else {
+                    send(BlockEvent.OnDeleteNonSelected(designBlock))
+                }
             }
         }
         register<EditorEvent.Selection.BringForward> {
@@ -589,6 +606,23 @@ class EditorUiViewModel(
                                     onEvent = editorContext.eventHandler::send,
                                 )
                             },
+                        )
+                    }
+                }
+                is SheetType.Captions -> {
+                    CaptionsUiStateFactory.create(editorScope)?.let { uiState ->
+                        CaptionsBottomSheetContent(
+                            type = type,
+                            uiState = uiState,
+                        )
+                    }
+                }
+                is SheetType.CaptionStyle -> {
+                    timelineState?.clampPlayheadPositionToSelectedClip()
+                    CaptionStyleUiState.create(engine, editor.currentLanguageCode)?.let { uiState ->
+                        CaptionStyleBottomSheetContent(
+                            type = type,
+                            uiState = uiState,
                         )
                     }
                 }
@@ -982,6 +1016,15 @@ class EditorUiViewModel(
                             type = content.type,
                             uiState = TextOnPathUiState.create(designBlock, engine, editor.currentLanguageCode),
                         )
+                    }
+
+                    is CaptionStyleBottomSheetContent -> {
+                        CaptionStyleUiState.create(engine, editor.currentLanguageCode)?.let { uiState ->
+                            CaptionStyleBottomSheetContent(
+                                type = content.type,
+                                uiState = uiState,
+                            )
+                        } ?: content
                     }
 
                     is TextBackgroundBottomSheetContent -> {
@@ -2082,6 +2125,15 @@ class EditorUiViewModel(
                         }
                         return@collect
                     }
+                    if (bottomSheetContent.value?.type is SheetType.Captions) {
+                        // The captions sheet selects the caption it edits, so it must survive its own changes.
+                        // Anything else is the user picking a different block, which closes the sheet as usual.
+                        if (block != null && block.type != BlockType.Caption) {
+                            send(EditorEvent.Sheet.Close(animate = false))
+                        }
+                        previousSelectedBlock = block?.designBlock
+                        return@collect
+                    }
                     if (block != null &&
                         bottomSheetContent.value is LibraryReplaceBottomSheetContent &&
                         engine.isPlaceholder(block.designBlock)
@@ -2310,7 +2362,11 @@ class EditorUiViewModel(
         designBlock: DesignBlock,
         size: Float,
     ) {
-        engine.block.setFloat(designBlock, "text/fontSize", size)
+        // The run-level setter a caption needs enforces `text/character`, which the reflection write did not,
+        // and this sheet is opened by integrators rather than by a scope-gated button.
+        engine.overrideAndRestore(designBlock, "text/character") {
+            engine.block.setTextFontSize(it, size)
+        }
         engine.editor.addUndoStep()
     }
 

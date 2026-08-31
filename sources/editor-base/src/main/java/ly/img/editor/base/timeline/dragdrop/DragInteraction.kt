@@ -34,12 +34,16 @@ internal fun recomputeDragPreview(
     val backgroundTrack = timelineState.dataSource.backgroundTrack
     // Skip the tick if the bg frame hasn't been published yet — should never happen ideally
     val backgroundFrame = timelineState.dragDrop.trackFrames[backgroundTrack.id] ?: return
+    val captionTrack = timelineState.dataSource.captionTrack
+    val captionFrame = captionTrack?.let { timelineState.dragDrop.trackFrames[it.id] }
     val zone = resolveDropZone(
         pointerY = pointerInWindow.y,
         sourceTrackId = ctx.sourceTrackId,
         draggedClipType = clip.clipType,
         backgroundTrack = backgroundTrack,
         backgroundFrame = backgroundFrame,
+        captionTrack = captionTrack,
+        captionFrame = captionFrame,
         sortedCandidates = timelineState.dragDrop.candidatesSortedByY,
     )
 
@@ -81,6 +85,7 @@ internal fun recomputeDragPreview(
                     desiredStart = desiredStart,
                     draggedDuration = clip.duration,
                     isLiveBufferRecording = clip.isLiveBufferRecording,
+                    allowTrimToFit = !targetTrack.isCaptionTrack,
                 )
             }
             if (slot == null) {
@@ -104,15 +109,17 @@ internal fun recomputeDragPreview(
                 val newCascadeKey = targetTrack.id to slot.insertIndex
                 if (prevCascadeKey != newCascadeKey) {
                     timelineState.dragDrop.overrides.clear()
-                    val cascade = if (isBgTarget) {
-                        computeBackgroundDropOverrides(
+                    val cascade = when {
+                        // A caption is clamped into its neighbours' gap, so nothing gives way
+                        // for it and the lane has no cascade to preview.
+                        targetTrack.isCaptionTrack -> emptyMap()
+                        isBgTarget -> computeBackgroundDropOverrides(
                             sortedSiblings = sortedSiblings,
                             insertIndex = slot.insertIndex,
                             dropStart = slot.dropStart,
                             draggedDuration = slot.effectiveDuration,
                         )
-                    } else {
-                        computeDropOverrides(
+                        else -> computeDropOverrides(
                             sortedSiblings = sortedSiblings,
                             insertIndex = slot.insertIndex,
                             dropStart = slot.dropStart,

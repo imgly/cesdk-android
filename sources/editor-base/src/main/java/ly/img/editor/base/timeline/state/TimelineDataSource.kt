@@ -14,8 +14,27 @@ class TimelineDataSource {
 
     val backgroundTrack = Track.background()
 
+    /** The caption lane, or `null` when the scene has no captions. Always `tracks[0]`. */
+    val captionTrack: Track?
+        get() = _tracks.firstOrNull()?.takeIf { it.isCaptionTrack }
+
+    /**
+     * Inserts the caption lane as the topmost row. Load-bearing: drag & drop rejects a foreign clip
+     * by testing the pointer against the lane's bottom edge alone.
+     *
+     * An existing lane is replaced rather than stacked under a second one. Importing captions over a caption track
+     * that is already there leaves both attached to the page for as long as it takes to style the first caption,
+     * and that styling suspends on an asset fetch, so a rebuild can run while both exist. Stacking would draw two
+     * lanes and — because [addTrack] puts foreground tracks directly below the caption lane — sandwich every other
+     * track between them until the next refresh corrected it.
+     */
+    fun addCaptionTrack(track: Track) {
+        if (captionTrack == null) _tracks.add(0, track) else _tracks[0] = track
+    }
+
+    /** Prepends a foreground track, but never above the caption lane. */
     fun addTrack(track: Track) {
-        _tracks.add(0, track)
+        _tracks.add(if (captionTrack != null) 1 else 0, track)
     }
 
     fun addAudioTrack(track: Track) {
@@ -35,6 +54,10 @@ class TimelineDataSource {
 
     fun allTracks(): Sequence<Track> = sequenceOf(backgroundTrack) + tracks.asSequence()
 
+    /**
+     * Latest end time across all clips, ignoring the caption lane — a caption may legitimately
+     * outlast the footage it annotates, and must not stretch the ruler past it.
+     */
     fun maxClipEnd(): Duration {
         var max: Duration = ZERO
         backgroundTrack.clips.forEach { clip ->
@@ -42,6 +65,7 @@ class TimelineDataSource {
             if (end > max) max = end
         }
         tracks.forEach { track ->
+            if (track.isCaptionTrack) return@forEach
             track.clips.forEach { clip ->
                 val end = clip.timeOffset + clip.duration
                 if (end > max) max = end

@@ -184,7 +184,7 @@ internal fun ClipTrimHandlesView(
                 .align(Alignment.CenterStart)
                 .pointerInput(clip, zoomState.zoomLevel) {
                     if (!clip.hasLoaded) return@pointerInput
-                    val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minClipDuration))
+                    val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minDuration(clip.clipType)))
                         .coerceAtLeast(zoomState.toPx(trimBounds.leadingMin))
                     val footageMaxWidth = if (clip.footageDuration != null) {
                         zoomState.toPx(clip.duration + clip.trimOffset)
@@ -275,7 +275,7 @@ internal fun ClipTrimHandlesView(
                 .align(Alignment.CenterEnd)
                 .pointerInput(clip, zoomState.zoomLevel) {
                     if (!clip.hasLoaded) return@pointerInput
-                    val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minClipDuration))
+                    val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minDuration(clip.clipType)))
                         .coerceAtLeast(zoomState.toPx(trimBounds.trailingMin))
                     val effectiveFootageDuration = clip.effectiveFootageDuration
                     val footageMaxWidth = if (effectiveFootageDuration != null) {

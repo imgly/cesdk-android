@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import ly.img.editor.base.timeline.clip.ClipBackgroundView
+import ly.img.editor.base.timeline.clip.ClipType
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.core.theme.LocalExtendedColorScheme
@@ -68,6 +69,18 @@ fun FloatingClipOverlay(timelineState: TimelineState) {
             val ctx = (timelineState.dragDrop.phase as? DragDropState.Dragging)?.context
                 ?: return@derivedStateOf false
             val dragged = timelineState.dragDrop.draggedClip ?: return@derivedStateOf false
+            // Mirrors `resolveDropZone`'s caption handling — if the two drift, the overlay either
+            // promises a drop the resolver refuses or refuses one it accepts.
+            if (dragged.clipType == ClipType.Caption) {
+                // A caption always resolves back to its lane wherever the pointer travels, so no
+                // vertical position is ever an invalid drop for it.
+                return@derivedStateOf false
+            }
+            val captionFrame = timelineState.dataSource.captionTrack
+                ?.let { timelineState.dragDrop.trackFrames[it.id] }
+            if (captionFrame != null && ctx.currentTouchLocation.y <= captionFrame.bottom) {
+                return@derivedStateOf true
+            }
             if (dragged.isInBackgroundTrack || isBackgroundCompatible(dragged.clipType)) {
                 return@derivedStateOf false
             }

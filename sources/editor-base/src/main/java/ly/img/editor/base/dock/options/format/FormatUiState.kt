@@ -1,9 +1,11 @@
 package ly.img.editor.base.dock.options.format
 
-import androidx.annotation.StringRes
 import ly.img.editor.base.engine.effectiveTextRange
+import ly.img.editor.base.engine.isCaption
 import ly.img.editor.base.engine.resolveTextFont
 import ly.img.editor.base.engine.resolveTextListStyle
+import ly.img.editor.base.engine.textFontSize
+import ly.img.editor.base.engine.textNamespace
 import ly.img.editor.core.library.LibraryCategory
 import ly.img.editor.core.ui.engine.Scope
 import ly.img.editor.core.ui.library.TypefaceLibraryCategory
@@ -36,7 +38,7 @@ data class FormatUiState(
     val effectiveHorizontalAlignment: HorizontalAlignment,
     val verticalAlignment: VerticalAlignment,
     val fontSize: Float,
-    // The unit in which `fontSize` (read via getFloat("text/fontSize")) is expressed. Driven by the
+    // The unit in which `fontSize` (read via getFloat("<namespace>fontSize")) is expressed. Driven by the
     // scene's `fontSizeUnit` and used to label the UI and choose an appropriate slider range.
     val fontSizeUnit: FontUnit,
     val letterSpacing: Float,
@@ -45,11 +47,13 @@ data class FormatUiState(
     val isClipped: Boolean,
     val hasClippingOption: Boolean,
     val isTextOnPath: Boolean,
-    @StringRes val sizeModeRes: Int,
+    val sizeMode: SizeModeUi,
     val isArrangeResizeAllowed: Boolean,
     val availableWeights: List<FontData>,
     val subFamily: String,
     val isSubFamilyMixed: Boolean,
+    // Captions reuse this sheet, minus the controls the engine cannot sync and the ones a preset owns.
+    val isCaption: Boolean,
 )
 
 internal fun createFormatUiState(
@@ -58,6 +62,7 @@ internal fun createFormatUiState(
 ): FormatUiState {
     val typeface = runCatching { engine.block.getTypeface(designBlock) }.getOrNull()
     val sizeMode = engine.block.getHeightMode(designBlock)
+    val namespace = engine.block.textNamespace(designBlock)
 
     val currentFont = typeface?.let { engine.block.resolveTextFont(designBlock) }
 
@@ -87,17 +92,17 @@ internal fun createFormatUiState(
             decorations.isNotEmpty() && decorations.all { it.lines.contains(TextDecorationLine.STRIKETHROUGH) }
         }.getOrDefault(false),
         horizontalAlignment = HorizontalAlignment.valueOf(
-            engine.block.getEnum(designBlock, "text/horizontalAlignment"),
+            engine.block.getEnum(designBlock, "${namespace}horizontalAlignment"),
         ),
         effectiveHorizontalAlignment = engine.block.getTextEffectiveHorizontalAlignment(designBlock),
         verticalAlignment = VerticalAlignment.valueOf(
-            engine.block.getEnum(designBlock, "text/verticalAlignment"),
+            engine.block.getEnum(designBlock, "${namespace}verticalAlignment"),
         ),
-        fontSize = engine.block.getFloat(designBlock, "text/fontSize"),
+        fontSize = engine.block.textFontSize(designBlock),
         fontSizeUnit = engine.scene.getFontSizeUnit(),
-        letterSpacing = engine.block.getFloat(designBlock, "text/letterSpacing"),
-        lineHeight = engine.block.getFloat(designBlock, "text/lineHeight"),
-        sizeModeRes = when (sizeMode) {
+        letterSpacing = engine.block.getFloat(designBlock, "${namespace}letterSpacing"),
+        lineHeight = engine.block.getFloat(designBlock, "${namespace}lineHeight"),
+        sizeMode = when (sizeMode) {
             SizeMode.ABSOLUTE -> SizeModeUi.ABSOLUTE
             SizeMode.AUTO ->
                 when (engine.block.getWidthMode(designBlock)) {
@@ -107,16 +112,16 @@ internal fun createFormatUiState(
                 }
 
             SizeMode.PERCENT -> SizeModeUi.UNKNOWN
-        }.getText(),
+        },
         hasClippingOption = sizeMode == SizeMode.ABSOLUTE,
-        isClipped = engine.block.getBoolean(designBlock, "text/clipLinesOutsideOfFrame"),
+        isClipped = engine.block.getBoolean(designBlock, "${namespace}clipLinesOutsideOfFrame"),
         isTextOnPath = runCatching { engine.block.getTextOnPath(designBlock) }.getOrNull() != null,
         isArrangeResizeAllowed = engine.block.isAllowedByScope(designBlock, Scope.LayerResize),
         casing = engine.block.effectiveTextRange(designBlock).let { range ->
             engine.block.getTextCases(designBlock, range.first, range.last).firstOrNull() ?: TextCase.NORMAL
         },
         listStyle = engine.block.resolveTextListStyle(designBlock),
-        paragraphSpacing = engine.block.getFloat(designBlock, "text/paragraphSpacing"),
+        paragraphSpacing = engine.block.getFloat(designBlock, "${namespace}paragraphSpacing"),
         fontFamilyWeight = currentFont?.weight,
         availableWeights = typeface?.fonts?.sortedBy { it.weight.value + if (it.style == FontStyle.ITALIC) 1000 else 0 }?.map {
             FontData(
@@ -131,5 +136,6 @@ internal fun createFormatUiState(
         fontFamilyStyle = currentFont?.style,
         subFamily = currentFont?.subFamily ?: "",
         isSubFamilyMixed = typeface != null && currentFont == null,
+        isCaption = engine.block.isCaption(designBlock),
     )
 }

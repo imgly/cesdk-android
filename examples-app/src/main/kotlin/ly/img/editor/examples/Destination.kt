@@ -138,6 +138,16 @@ sealed class Destination(
         title = "Record Voiceover",
     )
 
+    data object GuideEditCaptions : Destination(
+        route = "guide-edit-captions",
+        title = "Edit Captions",
+    )
+
+    data object GuideAutoCaptions : Destination(
+        route = "guide-auto-captions",
+        title = "Auto Captions",
+    )
+
     data object AutomateWorkflows : Destination(
         route = "guide-automate-workflows",
         title = "Automate Workflows",
@@ -268,6 +278,8 @@ sealed class Destination(
             GuideHideElements,
             GuideForceTrim,
             GuideRecordVoiceover,
+            GuideEditCaptions,
+            GuideAutoCaptions,
             AutomateWorkflows,
             GuideEditorState,
             GuideTemplating,

@@ -7,7 +7,7 @@ fun BlurType.getProperties() = when (this) {
     BlurType.Uniform -> listOf(
         Property(
             key = "$key/intensity",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_intensity,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_intensity),
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -17,7 +17,7 @@ fun BlurType.getProperties() = when (this) {
     BlurType.Linear -> listOf(
         Property(
             key = "$key/blurRadius",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_intensity,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_intensity),
             valueType = PropertyValueType.Float(
                 range = 0F..100F,
                 step = 0.5F,
@@ -25,7 +25,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/x1",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_point_x1,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_point_x1),
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -33,7 +33,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/y1",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_point_y1,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_point_y1),
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -41,7 +41,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/x2",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_point_x2,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_point_x2),
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -49,7 +49,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/y2",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_point_y2,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_point_y2),
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -59,7 +59,7 @@ fun BlurType.getProperties() = when (this) {
     BlurType.Mirrored -> listOf(
         Property(
             key = "$key/blurRadius",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_intensity,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_intensity),
             valueType = PropertyValueType.Float(
                 range = 0F..100F,
                 step = 1F,
@@ -67,7 +67,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/gradientSize",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_gradient_size,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_gradient_size),
             valueType = PropertyValueType.Float(
                 range = 0F..1000F,
                 step = 1F,
@@ -75,7 +75,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/size",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_non_blurred_size,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_non_blurred_size),
             valueType = PropertyValueType.Float(
                 range = 0F..1000F,
                 step = 1F,
@@ -83,7 +83,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/x1",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_point_x1,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_point_x1),
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -91,7 +91,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/y1",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_point_y1,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_point_y1),
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -99,7 +99,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/x2",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_point_x2,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_point_x2),
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -107,7 +107,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/y2",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_point_y2,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_point_y2),
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -117,7 +117,7 @@ fun BlurType.getProperties() = when (this) {
     BlurType.Radial -> listOf(
         Property(
             key = "$key/blurRadius",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_intensity,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_intensity),
             valueType = PropertyValueType.Float(
                 range = 0F..100F,
                 step = 1F,
@@ -125,7 +125,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/gradientRadius",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_gradient_size,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_gradient_size),
             valueType = PropertyValueType.Float(
                 range = 0F..1000F,
                 step = 1F,
@@ -133,7 +133,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/radius",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_non_blurred_size,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_non_blurred_size),
             valueType = PropertyValueType.Float(
                 range = 0F..1000F,
                 step = 1F,
@@ -141,7 +141,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/x",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_point_x,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_point_x),
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,
@@ -149,7 +149,7 @@ fun BlurType.getProperties() = when (this) {
         ),
         Property(
             key = "$key/y",
-            titleRes = R.string.ly_img_editor_sheet_blur_label_point_y,
+            title = PropertyText.Resource(R.string.ly_img_editor_sheet_blur_label_point_y),
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
                 step = 0.01F,

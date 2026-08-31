@@ -20,6 +20,7 @@ import ly.img.editor.core.iconpack.Delete
 import ly.img.editor.core.iconpack.Duplicate
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.iconpack.SendBackward
+import ly.img.engine.DesignBlockType
 
 /**
  * The id of the canvas menu button returned by [CanvasMenu.Button.rememberBringForward].
@@ -106,7 +107,9 @@ fun CanvasMenu.Button.rememberDuplicate(builder: CanvasMenu.ButtonBuilder.() -> 
     CanvasMenu.Button.remember {
         id = { CanvasMenu.Button.Id.duplicate }
         visible = {
-            editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/duplicate")
+            // A duplicate would land outside the caption track, matching the inspector bar's exclusion.
+            editorContext.selection.type != DesignBlockType.Caption &&
+                editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/duplicate")
         }
         vectorIcon = { IconPack.Duplicate }
         contentDescription = { stringResource(R.string.ly_img_editor_canvas_menu_button_duplicate) }

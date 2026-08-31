@@ -25,6 +25,7 @@ import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.library.SimpleSelectableAssetList
 import ly.img.editor.core.ui.library.getMeta
 import ly.img.editor.core.ui.library.localizedLabel
+import ly.img.editor.core.ui.library.state.WrappedAsset
 
 @Composable
 fun AnimationSheet(
@@ -93,28 +94,26 @@ private fun AnimationCategory(
     onEvent: (EditorEvent) -> Unit,
     onShowProperties: () -> Unit,
 ) {
+    val hasProperties = category.selectedAnimation?.properties?.isNotEmpty() == true
+    val applyAnimation: (WrappedAsset) -> Unit = {
+        onEvent(
+            BlockEvent.OnReplaceAnimation(
+                designBlock = category.designBlock,
+                sourceId = category.sourceId,
+                asset = it.asset,
+            ),
+        )
+    }
     SimpleSelectableAssetList(
         modifier = Modifier,
         listState = listState,
         listId = category.group,
         assets = category.animations,
         thumbnail = { category.thumbnailsBaseUri + "/" + it.asset.getMeta("type") + ".png" },
-        selectedIcon = {
-            if (category.selectedAnimation?.properties?.isNotEmpty() == true) {
-                IconPack.Filteradjustments
-            } else {
-                null
-            }
-        },
-        onAssetSelected = {
-            BlockEvent.OnReplaceAnimation(
-                designBlock = category.designBlock,
-                sourceId = category.sourceId,
-                asset = it.asset,
-            ).let(onEvent)
-        },
+        selectedIcon = { IconPack.Filteradjustments.takeIf { hasProperties } },
+        onAssetSelected = applyAnimation,
         onAssetReselected = {
-            if (category.selectedAnimation != null && category.selectedAnimation.properties.isNotEmpty()) {
+            if (hasProperties) {
                 onShowProperties()
             }
         },

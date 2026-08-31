@@ -1,5 +1,6 @@
 package ly.img.editor.base.ui.handler
 
+import ly.img.editor.base.dock.options.captions.CaptionsEngine
 import ly.img.editor.base.engine.containsAudio
 import ly.img.editor.base.timeline.clip.Clip
 import ly.img.editor.base.timeline.clip.ClipType
@@ -19,6 +20,7 @@ import ly.img.editor.core.ui.engine.Scope
 import ly.img.editor.core.ui.engine.getKindEnum
 import ly.img.editor.core.ui.engine.getSafeBackgroundTrack
 import ly.img.editor.core.ui.engine.isBackgroundTrack
+import ly.img.editor.core.ui.engine.isCaptionTrack
 import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register
 import ly.img.engine.DesignBlock
@@ -36,6 +38,7 @@ fun EventsHandler.timelineEvents(
     engine: () -> Engine,
     timelineState: () -> TimelineState,
     showError: (Int) -> Unit,
+    onError: (Throwable) -> Unit,
 ) {
     val engine by inject(engine)
     val timelineState by inject(timelineState)
@@ -124,11 +127,12 @@ fun EventsHandler.timelineEvents(
 
     /**
      * After a trim commit, push unlocked siblings outward to clear residual overlaps so the
-     * persisted layout matches the live preview. No-op for single-clip tracks.
+     * persisted layout matches the live preview. No-op for single-clip tracks, and for the caption
+     * lane — a caption is clamped to its neighbours' gap rather than pushing them.
      */
     fun packAndPersistSiblings(selectedClip: Clip) {
         val track = timelineState.dataSource.findTrack(selectedClip)
-        if (track.clips.size < 2) return
+        if (track.isCaptionTrack || track.clips.size < 2) return
 
         val newOffset = engine.block.getTimeOffset(selectedClip.id).seconds
         val newDuration = engine.block.getDuration(selectedClip.id).seconds
@@ -186,6 +190,17 @@ fun EventsHandler.timelineEvents(
     register<BlockEvent.OnSplit> {
         val playheadPosition = timelineState.playerState.playheadPosition
         val selectedClip = checkNotNull(timelineState.selectedClip)
+
+        if (selectedClip.clipType == ClipType.Caption) {
+            // The generic split would leave both halves holding the whole line, and captions routinely run
+            // shorter than `minClipDuration`.
+            CaptionsEngine(engine, onError).splitCaptionAtPlayhead(
+                caption = selectedClip.id,
+                playheadSeconds = playheadPosition.toDouble(DurationUnit.SECONDS),
+            )
+            return@register
+        }
+
         val originalClipDuration = selectedClip.duration
         val absoluteStartTime = selectedClip.timeOffset
         val minClipDuration = TimelineConfiguration.minClipDuration
@@ -337,6 +352,7 @@ fun EventsHandler.timelineEvents(
                     insertAt = target.insertAt,
                     isAudioBlock = { child -> engine.block.containsAudio(child) },
                     isBackgroundTrack = { child -> engine.block.isBackgroundTrack(child) },
+                    isCaptionTrack = { child -> engine.block.isCaptionTrack(child) },
                 )
                 val newTrack = engine.block.create(DesignBlockType.Track)
                 engine.block.setBoolean(newTrack, TRACK_AUTO_OFFSET_KEY, false)

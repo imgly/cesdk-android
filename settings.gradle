@@ -10,6 +10,11 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }
 
+def remoteBuildCache = file("$settingsDir/../../config/gradle/remote-build-cache.settings.gradle")
+if (remoteBuildCache.exists()) {
+    apply from: remoteBuildCache
+}
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {

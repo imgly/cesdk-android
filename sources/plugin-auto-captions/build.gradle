@@ -1,0 +1,16 @@
+apply from: "$projectDir/../editor-library.gradle"
+apply from: "$projectDir/../dokka.gradle"
+
+android {
+    namespace = 'ly.img.editor.plugin.autoCaptions'
+}
+
+dependencies {
+    api project(":editor")
+    api libs.okhttp
+    api libs.kotlin.coroutines
+
+    // `org.json` only ships as stubs in android.jar, so the unit tests need a real implementation to link against.
+    testImplementation libs.junit
+    testImplementation libs.json
+}

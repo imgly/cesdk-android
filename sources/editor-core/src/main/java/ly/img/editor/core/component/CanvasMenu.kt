@@ -91,6 +91,7 @@ data class CanvasMenu<Scope : CanvasMenu.Scope>(
             selection?.parentDesignBlock ?: return@lazy emptyList()
             val childIsAlwaysOnTop = editorContext.engine.block.isAlwaysOnTop(selection.designBlock)
             val childIsAlwaysOnBottom = editorContext.engine.block.isAlwaysOnBottom(selection.designBlock)
+            val childIsCaptionTrack = editorContext.engine.isCaptionTrack(selection.designBlock)
             val children = editorContext.engine.block.getChildren(selection.parentDesignBlock)
             // contains at least internalSelection.designBlock
             children.filter { childToCompare ->
@@ -98,7 +99,8 @@ data class CanvasMenu<Scope : CanvasMenu.Scope>(
                 val matchingIsAlwaysOnBottom = childIsAlwaysOnBottom == editorContext.engine.block.isAlwaysOnBottom(
                     childToCompare,
                 )
-                matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom
+                val matchingIsCaptionTrack = childIsCaptionTrack == editorContext.engine.isCaptionTrack(childToCompare)
+                matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom && matchingIsCaptionTrack
             }
         }
 
@@ -119,7 +121,9 @@ data class CanvasMenu<Scope : CanvasMenu.Scope>(
 
         private val _canSelectionMove by lazy {
             val selection = selection ?: return@lazy false
-            editorContext.engine.block.isAllowedByScope(selection.designBlock, "layer/move") &&
+            // A caption is always on top of its page, so z-order has no meaning inside a caption track.
+            selection.type != DesignBlockType.Caption &&
+                editorContext.engine.block.isAllowedByScope(selection.designBlock, "layer/move") &&
                 run {
                     selection.parentDesignBlock?.let {
                         DesignBlockType.get(editorContext.engine.block.getType(it)) == DesignBlockType.Track &&
@@ -839,6 +843,12 @@ private fun Engine.canSendBackward(designBlock: DesignBlock): Boolean {
     return children.first() != designBlock
 }
 
+/**
+ * The caption track, which reorders against nothing: captions draw above the whole page whatever the track order
+ * is, and the track itself is not always-on-top, so cutouts still outrank it.
+ */
+private fun Engine.isCaptionTrack(designBlock: DesignBlock): Boolean = block.getType(designBlock) == DesignBlockType.CaptionTrack.key
+
 private fun Engine.reorderableChildren(
     parent: DesignBlock,
     child: DesignBlock,
@@ -846,12 +856,14 @@ private fun Engine.reorderableChildren(
     val childIsAlwaysOnTop = block.isAlwaysOnTop(child)
     val childIsAlwaysOnBottom = block.isAlwaysOnBottom(child)
     val childContainsAudio = containsAudio(child)
+    val childIsCaptionTrack = isCaptionTrack(child)
 
     return block.getChildren(parent).filter { childToCompare ->
         val matchingIsAlwaysOnTop = childIsAlwaysOnTop == block.isAlwaysOnTop(childToCompare)
         val matchingIsAlwaysOnBottom = childIsAlwaysOnBottom == block.isAlwaysOnBottom(childToCompare)
         val matchingType = containsAudio(childToCompare) == childContainsAudio
-        matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom && matchingType
+        val matchingIsCaptionTrack = childIsCaptionTrack == isCaptionTrack(childToCompare)
+        matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom && matchingType && matchingIsCaptionTrack
     }
 }
 

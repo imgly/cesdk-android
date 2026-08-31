@@ -65,26 +65,26 @@ fun StrokeOptions(
             Divider(Modifier.padding(horizontal = 16.dp))
             PropertyPicker(
                 title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_style),
-                propertyTextRes = uiState.strokeStyleRes,
-                properties = strokeStylePropertiesList,
+                propertyValue = uiState.strokeStyle,
+                properties = strokeStyleProperties,
                 onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokeStyle(it)) },
             )
             if (uiState.showPositionAndJoin) {
                 Divider(Modifier.padding(horizontal = 16.dp))
                 PropertyPicker(
                     title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_position),
-                    propertyTextRes = uiState.strokePositionRes,
+                    propertyValue = uiState.strokePosition,
                     enabled = uiState.isStrokePositionEnabled,
-                    properties = strokePositionPropertiesList,
+                    properties = strokePositionProperties,
                     onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokePosition(it)) },
                 )
                 Divider(Modifier.padding(horizontal = 16.dp))
                 PropertyPicker(
                     title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_join),
-                    propertyTextRes = uiState.strokeJoinRes,
-                    properties = strokeJoinPropertiesList,
+                    propertyValue = uiState.strokeJoin,
+                    properties = strokeJoinProperties,
                     enabled = uiState.isStrokeJointEnabled,
-                    onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokeJoin(it)) },
+                    onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokeCornerGeometry(it)) },
                 )
             }
         }

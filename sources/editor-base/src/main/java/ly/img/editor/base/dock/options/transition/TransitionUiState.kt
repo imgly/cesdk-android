@@ -2,7 +2,6 @@ package ly.img.editor.base.dock.options.transition
 
 import androidx.compose.runtime.Immutable
 import ly.img.editor.base.engine.DesignBlockWithProperties
-import ly.img.editor.base.engine.getAvailableProperties
 import ly.img.editor.base.engine.toPropertyAndValueList
 import ly.img.editor.core.library.AssetType
 import ly.img.editor.core.library.data.AssetSourceType
@@ -48,11 +47,19 @@ data class TransitionUiState(
                     designBlock = transition,
                     objectType = type,
                     properties = selectedAsset.payload.properties?.toPropertyAndValueList(
-                        engine,
-                        SOURCE_ID,
-                        selectedAsset,
-                        type.getAvailableProperties(),
+                        engine = engine,
+                        sourceId = SOURCE_ID,
+                        asset = selectedAsset,
                     ).orEmpty(),
+                    // legacy way. Delete it when decision is 100% made regarding the desired approach.
+//                    properties = selectedAsset.payload.properties?.let {
+//                        type.getAvailableProperties().combineWithValues(
+//                            engine = engine,
+//                            sourceId = SOURCE_ID,
+//                            asset = selectedAsset,
+//                            guidance = it,
+//                        )
+//                    }.orEmpty(),
                     asset = selectedAsset,
                 )
             } else {

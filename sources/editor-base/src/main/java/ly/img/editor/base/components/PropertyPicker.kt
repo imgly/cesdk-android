@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import ly.img.editor.base.engine.PropertyText
 import ly.img.editor.core.theme.surface1
 import ly.img.editor.core.ui.iconpack.Arrowdropdown
 import ly.img.editor.core.ui.iconpack.Check
@@ -34,9 +35,9 @@ import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.utils.ifTrue
 
 @Composable
-fun <T : Any> PropertyPicker(
+fun <T> PropertyPicker(
     title: String,
-    @StringRes propertyTextRes: Int,
+    propertyValue: T,
     enabled: Boolean = true,
     properties: List<PropertyOption<T>>,
     onPropertyPicked: (T) -> Unit,
@@ -70,8 +71,11 @@ fun <T : Any> PropertyPicker(
                 modifier = Modifier.padding(ButtonDefaults.TextButtonContentPadding),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                val text = remember(properties, propertyValue) {
+                    properties.firstOrNull { it.value == propertyValue }?.text
+                }?.value ?: ""
                 Text(
-                    stringResource(propertyTextRes),
+                    text = text,
                     modifier = Modifier.padding(horizontal = 10.dp),
                     style = MaterialTheme.typography.labelLarge,
                 )
@@ -81,16 +85,18 @@ fun <T : Any> PropertyPicker(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false },
                     ) {
-                        properties.forEach {
-                            PropertyItem(
-                                checked = it.textRes == propertyTextRes,
-                                textRes = it.textRes,
-                                icon = it.icon,
-                                onClick = {
-                                    onPropertyPicked(it.value)
-                                    showMenu = false
-                                },
-                            )
+                        properties.forEach { property ->
+                            if (property.selectable) {
+                                PropertyItem(
+                                    checked = property.value == propertyValue,
+                                    text = property.text.value,
+                                    icon = property.icon,
+                                    onClick = {
+                                        onPropertyPicked(property.value)
+                                        showMenu = false
+                                    },
+                                )
+                            }
                         }
                     }
                 }
@@ -150,8 +156,12 @@ fun PropertyItem(
     )
 }
 
-data class PropertyOption<T : Any>(
-    @StringRes val textRes: Int,
+data class PropertyOption<T>(
+    val text: PropertyText,
     val value: T,
     val icon: ImageVector? = null,
+    /** This should be false only in case our UI does not support the engine value, i.e.
+     * FillType.ConicalGradient or FillType.RadialGradient.
+     */
+    val selectable: Boolean = true,
 )

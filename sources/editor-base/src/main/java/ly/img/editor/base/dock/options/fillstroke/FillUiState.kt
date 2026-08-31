@@ -3,7 +3,6 @@ package ly.img.editor.base.dock.options.fillstroke
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.base.engine.effectiveTextRange
 import ly.img.editor.base.ui.Block
-import ly.img.editor.core.R
 import ly.img.editor.core.component.data.Fill
 import ly.img.editor.core.component.data.SolidFill
 import ly.img.editor.core.ui.engine.BlockType
@@ -19,7 +18,7 @@ data class FillUiState(
     val isFillEnabled: Boolean,
     val supportFillTypes: Boolean,
     val colorPalette: List<Color>,
-    val fillTypeRes: Int,
+    val fillType: FillType?,
     val fillState: Fill?,
 )
 
@@ -31,8 +30,9 @@ internal fun createFillUiState(
     val designBlock = block.designBlock
     val isEnabled = engine.block.isFillEnabled(designBlock)
     val fillType = engine.block.getFillType(designBlock)
-    val supportFillTypes = block.type != BlockType.Text
-    val fillState = if (block.type == BlockType.Text && fillType == FillType.Color) {
+    val isTextLike = block.type == BlockType.Text || block.type == BlockType.Caption
+    val supportFillTypes = !isTextLike
+    val fillState = if (isTextLike && fillType == FillType.Color) {
         textRangeFill(designBlock, engine)
     } else {
         checkNotNull(engine.getFill(designBlock))
@@ -42,7 +42,7 @@ internal fun createFillUiState(
         isFillEnabled = isEnabled,
         supportFillTypes = supportFillTypes,
         fillState = fillState,
-        fillTypeRes = getFillTypeRes(fillType.takeIf { isEnabled }),
+        fillType = fillType.takeIf { isEnabled },
     )
 }
 
@@ -59,16 +59,4 @@ private fun textRangeFill(
     }.getOrDefault(emptyList())
     return colors.takeIf { it.isNotEmpty() }?.let { SolidFill(it) }
         ?: checkNotNull(engine.getFill(designBlock))
-}
-
-private fun getFillTypeRes(fillType: FillType?): Int = if (fillType == null) {
-    R.string.ly_img_editor_sheet_fill_stroke_type_option_none
-} else {
-    when (fillType) {
-        FillType.Color -> R.string.ly_img_editor_sheet_fill_stroke_type_option_solid
-        FillType.RadialGradient -> R.string.ly_img_editor_sheet_fill_stroke_type_option_gradient_radial
-        FillType.LinearGradient -> R.string.ly_img_editor_sheet_fill_stroke_type_option_gradient_linear
-        FillType.ConicalGradient -> R.string.ly_img_editor_sheet_fill_stroke_type_option_gradient_conical
-        else -> throw IllegalArgumentException("Unknown fill type: $fillType")
-    }
 }

@@ -2,7 +2,7 @@ package ly.img.editor.base.ui.handler
 
 import ly.img.editor.base.engine.toEngineColor
 import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeColor
-import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeJoin
+import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeCornerGeometry
 import ly.img.editor.base.ui.BlockEvent.OnChangeStrokePosition
 import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeStyle
 import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeWidth
@@ -12,9 +12,6 @@ import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
-import ly.img.engine.StrokeCornerGeometry
-import ly.img.engine.StrokePosition
-import ly.img.engine.StrokeStyle
 import kotlin.math.exp
 
 @Suppress("NAME_SHADOWING")
@@ -25,26 +22,23 @@ fun EventsHandler.strokeEvents(
     val engine by inject(engine)
     val block by inject(block)
 
-    register<OnChangeStrokeJoin> {
-        val strokeJoinEnum = StrokeCornerGeometry.valueOf(it.join)
-        if (engine.block.getStrokeCornerGeometry(block) != strokeJoinEnum) {
-            engine.block.setStrokeCornerGeometry(block, strokeJoinEnum)
+    register<OnChangeStrokeCornerGeometry> {
+        if (engine.block.getStrokeCornerGeometry(block) != it.join) {
+            engine.block.setStrokeCornerGeometry(block, it.join)
             engine.editor.addUndoStep()
         }
     }
 
     register<OnChangeStrokePosition> {
-        val strokePositionEnum = StrokePosition.valueOf(it.position)
-        if (engine.block.getStrokePosition(block) != strokePositionEnum) {
-            engine.block.setStrokePosition(block, strokePositionEnum)
+        if (engine.block.getStrokePosition(block) != it.position) {
+            engine.block.setStrokePosition(block, it.position)
             engine.editor.addUndoStep()
         }
     }
 
     register<OnChangeStrokeStyle> {
-        val strokeStyleEnum = StrokeStyle.valueOf(it.style)
-        if (engine.block.getStrokeStyle(block) != strokeStyleEnum) {
-            engine.block.setStrokeStyle(block, strokeStyleEnum)
+        if (engine.block.getStrokeStyle(block) != it.style) {
+            engine.block.setStrokeStyle(block, it.style)
             engine.editor.addUndoStep()
         }
     }

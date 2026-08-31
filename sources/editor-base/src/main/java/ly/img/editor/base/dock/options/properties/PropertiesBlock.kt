@@ -14,7 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ly.img.editor.base.components.PropertyPicker
 import ly.img.editor.base.components.PropertySlider
@@ -97,7 +96,7 @@ private fun IntProperty(
 ) {
     val (property, value) = propertyAndValue
     PropertySlider(
-        title = property.titleRes,
+        title = property.title.value,
         value = (value as PropertyValue.Int).value.toFloat(),
         valueRange = remember((property.valueType as PropertyValueType.Int).range) {
             property.valueType.range.let {
@@ -125,7 +124,7 @@ private fun FloatProperty(
     val (property, value) = propertyAndValue
     val valueType = property.valueType as PropertyValueType.Float
     PropertySlider(
-        title = property.titleRes,
+        title = property.title.value,
         value = (value as PropertyValue.Float).value,
         valueRange = valueType.range,
         onValueChange = { newValue ->
@@ -149,7 +148,7 @@ private fun DoubleProperty(
     val (property, value) = propertyAndValue
     val valueType = property.valueType as PropertyValueType.Double
     PropertySlider(
-        title = property.titleRes,
+        title = property.title.value,
         value = (value as PropertyValue.Double).value.toFloat(),
         valueRange = remember(valueType.range) {
             valueType.range.let {
@@ -203,7 +202,7 @@ private fun ColorPropertyWithListAndPicker(
 ) {
     val (property, value) = propertyAndValue
     val currentColor = (value as PropertyValue.Color).value ?: Color.Black
-    SectionHeader(text = property.titleRes)
+    SectionHeader(text = property.title.value)
     androidx.compose.material3.Card(
         colors = UiDefaults.cardColors,
     ) {
@@ -251,7 +250,7 @@ private fun ColorPropertyWithPickerOnly(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = stringResource(id = property.titleRes),
+                text = property.title.value,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -274,7 +273,7 @@ private fun BooleanProperty(
         colors = UiDefaults.cardColors,
     ) {
         PropertySwitch(
-            title = stringResource(property.titleRes),
+            title = property.title.value,
             isChecked = (value as PropertyValue.Boolean).value,
             onPropertyChange = { newValue ->
                 BlockEvent.OnChangeProperty(
@@ -296,15 +295,12 @@ private fun StringEnumProperty(
 ) {
     val (property, value) = propertyAndValue
     val options = (property.valueType as PropertyValueType.StringEnum).options
-    val propertyTextRes = remember(options, value) {
-        options.first { it.value == (value as PropertyValue.Enum).value }.textRes
-    }
     androidx.compose.material3.Card(
         colors = UiDefaults.cardColors,
     ) {
         PropertyPicker(
-            title = stringResource(property.titleRes),
-            propertyTextRes = propertyTextRes,
+            title = property.title.value,
+            propertyValue = (value as PropertyValue.Enum).value,
             properties = options,
             onPropertyPicked = { newValue ->
                 BlockEvent.OnChangeProperty(

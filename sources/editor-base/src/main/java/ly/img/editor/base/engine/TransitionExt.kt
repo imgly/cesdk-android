@@ -127,26 +127,56 @@ fun TransitionType.getAvailableProperties(): List<Property> = when (this) {
 }
 
 private val duration = Property(
-    titleRes = R.string.ly_img_editor_sheet_transition_label_duration,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_label_duration),
     key = "playback/duration",
     valueType = PropertyValueType.Double(),
 )
 
 private val easing = Property(
-    titleRes = R.string.ly_img_editor_sheet_transition_label_easing,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_label_easing),
     key = "animationEasing",
     valueType = PropertyValueType.StringEnum(
-        listOf(
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_linear, AnimationEasingType.LINEAR.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_smooth_accelerate, AnimationEasingType.EASE_IN_QUINT.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_smooth_decelerate, AnimationEasingType.EASE_OUT_QUINT.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_smooth_natural, AnimationEasingType.EASE_IN_OUT_QUINT.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_bounce_away, AnimationEasingType.EASE_IN_BACK.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_bounce_in, AnimationEasingType.EASE_OUT_BACK.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_bounce_double, AnimationEasingType.EASE_IN_OUT_BACK.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_away, AnimationEasingType.EASE_IN_SPRING.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_in, AnimationEasingType.EASE_OUT_SPRING.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_double, AnimationEasingType.EASE_IN_OUT_SPRING.key),
+        options = listOf(
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_linear),
+                value = AnimationEasingType.LINEAR.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_smooth_accelerate),
+                value = AnimationEasingType.EASE_IN_QUINT.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_smooth_decelerate),
+                value = AnimationEasingType.EASE_OUT_QUINT.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_smooth_natural),
+                value = AnimationEasingType.EASE_IN_OUT_QUINT.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_bounce_away),
+                value = AnimationEasingType.EASE_IN_BACK.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_bounce_in),
+                value = AnimationEasingType.EASE_OUT_BACK.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_bounce_double),
+                value = AnimationEasingType.EASE_IN_OUT_BACK.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_away),
+                value = AnimationEasingType.EASE_IN_SPRING.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_in),
+                value = AnimationEasingType.EASE_OUT_SPRING.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_double),
+                value = AnimationEasingType.EASE_IN_OUT_SPRING.key,
+            ),
         ),
     ),
 )
@@ -184,25 +214,36 @@ private fun TransitionType.corner() = property(
 private fun TransitionType.blur() = property(
     suffix = "sigma",
     title = R.string.ly_img_editor_sheet_transition_label_blur,
-    valueType = PropertyValueType.Float(0f..100f, 1f),
+    valueType = PropertyValueType.Float(
+        range = 0f..100f,
+        step = 1f,
+    ),
 )
 
 private fun TransitionType.zoom() = property(
     suffix = "zoom",
     title = R.string.ly_img_editor_sheet_transition_label_zoom,
-    valueType = PropertyValueType.Float(0f..2.5f, .05f),
+    valueType = PropertyValueType.Float(
+        range = 0f..2.5f,
+        step = .05f,
+    ),
 )
 
 private fun TransitionType.intensity() = property(
     suffix = "intensity",
     title = R.string.ly_img_editor_sheet_transition_label_intensity,
-    valueType = PropertyValueType.Float(1f..3f, 1.0f),
+    valueType = PropertyValueType.Float(
+        range = 1f..3f,
+        step = 1.0f,
+    ),
 )
 
 private fun TransitionType.bandCount() = property(
     suffix = "bandCount",
     title = R.string.ly_img_editor_sheet_transition_label_band_count,
-    valueType = PropertyValueType.Int(3..20),
+    valueType = PropertyValueType.Int(
+        range = 3..20,
+    ),
 )
 
 private fun TransitionType.color() = property(
@@ -219,36 +260,78 @@ private fun TransitionType.morph() = property(
 
 private val transitionDirections = PropertyValueType.StringEnum(
     options = listOf(
-        PropertyOption(R.string.ly_img_editor_sheet_transition_direction_up, "Up"),
-        PropertyOption(R.string.ly_img_editor_sheet_transition_direction_right, "Right"),
-        PropertyOption(R.string.ly_img_editor_sheet_transition_direction_down, "Down"),
-        PropertyOption(R.string.ly_img_editor_sheet_transition_direction_left, "Left"),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_direction_up),
+            value = "Up",
+        ),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_direction_right),
+            value = "Right",
+        ),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_direction_down),
+            value = "Down",
+        ),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_direction_left),
+            value = "Left",
+        ),
     ),
 )
 private val spinDirections = PropertyValueType.StringEnum(
     options = listOf(
-        PropertyOption(R.string.ly_img_editor_sheet_transition_direction_clockwise, "Clockwise"),
-        PropertyOption(R.string.ly_img_editor_sheet_transition_direction_counter_clockwise, "CounterClockwise"),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_direction_clockwise),
+            value = "Clockwise",
+        ),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_direction_counter_clockwise),
+            value = "CounterClockwise",
+        ),
     ),
 )
 private val diagonalSpliceDirections = PropertyValueType.StringEnum(
     options = listOf(
-        PropertyOption(R.string.ly_img_editor_sheet_transition_direction_raised_ramp, "RaisedRamp"),
-        PropertyOption(R.string.ly_img_editor_sheet_transition_direction_lowered_ramp, "LoweredRamp"),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_direction_raised_ramp),
+            value = "RaisedRamp",
+        ),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_direction_lowered_ramp),
+            value = "LoweredRamp",
+        ),
     ),
 )
 private val stripesDirections = PropertyValueType.StringEnum(
     options = listOf(
-        PropertyOption(R.string.ly_img_editor_sheet_transition_direction_horizontal, "Horizontal"),
-        PropertyOption(R.string.ly_img_editor_sheet_transition_direction_vertical, "Vertical"),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_direction_horizontal),
+            value = "Horizontal",
+        ),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_direction_vertical),
+            value = "Vertical",
+        ),
     ),
 )
 private val corners = PropertyValueType.StringEnum(
     options = listOf(
-        PropertyOption(R.string.ly_img_editor_sheet_transition_corner_top_left, "TopLeft"),
-        PropertyOption(R.string.ly_img_editor_sheet_transition_corner_top_right, "TopRight"),
-        PropertyOption(R.string.ly_img_editor_sheet_transition_corner_bottom_left, "BottomLeft"),
-        PropertyOption(R.string.ly_img_editor_sheet_transition_corner_bottom_right, "BottomRight"),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_corner_top_left),
+            value = "TopLeft",
+        ),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_corner_top_right),
+            value = "TopRight",
+        ),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_corner_bottom_left),
+            value = "BottomLeft",
+        ),
+        PropertyOption(
+            text = PropertyText.Resource(R.string.ly_img_editor_sheet_transition_corner_bottom_right),
+            value = "BottomRight",
+        ),
     ),
 )
 
@@ -257,7 +340,7 @@ private fun TransitionType.property(
     title: Int,
     valueType: PropertyValueType,
 ) = Property(
-    titleRes = title,
+    title = PropertyText.Resource(title),
     key = "$key/$suffix",
     valueType = valueType,
 )

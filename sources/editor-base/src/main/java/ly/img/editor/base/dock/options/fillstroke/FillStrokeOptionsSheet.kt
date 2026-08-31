@@ -62,10 +62,10 @@ fun FillStrokeOptionsSheet(
                             if (uiState.fillUiState.supportFillTypes) {
                                 PropertyPicker(
                                     title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_type),
-                                    propertyTextRes = uiState.fillUiState.fillTypeRes,
-                                    properties = fillTypePropertiesList,
+                                    propertyValue = uiState.fillUiState.fillType,
+                                    properties = fillTypeProperties,
                                     onPropertyPicked = {
-                                        if (it == "NONE") {
+                                        if (it == null) {
                                             onEvent(BlockEvent.OnDisableFill)
                                         } else if (uiState.fillUiState.isFillEnabled) {
                                             onEvent(BlockEvent.OnChangeFillStyle(it))

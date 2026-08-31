@@ -7,6 +7,7 @@ import ly.img.editor.core.ui.engine.dpToCanvasUnit
 import ly.img.editor.core.ui.engine.getCamera
 import ly.img.editor.core.ui.engine.getPage
 import ly.img.editor.core.ui.engine.getStackOrNull
+import ly.img.editor.core.ui.engine.isCaptionTrack
 import ly.img.editor.core.ui.engine.overrideAndRestore
 import ly.img.engine.BlockApi
 import ly.img.engine.DesignBlock
@@ -59,6 +60,9 @@ fun Engine.canSendBackward(designBlock: DesignBlock): Boolean {
 /**
  * Get all reorderable children for a given parent and contained child.
  * This method filters out children that are not reorderable with the given child.
+ *
+ * The caption track reorders against nothing: captions draw above the whole page whatever the track order is, and
+ * the track itself is not always-on-top, so cutouts still outrank it.
  */
 private fun Engine.getReorderableChildren(
     parent: DesignBlock,
@@ -67,6 +71,7 @@ private fun Engine.getReorderableChildren(
     val childIsAlwaysOnTop = block.isAlwaysOnTop(child)
     val childIsAlwaysOnBottom = block.isAlwaysOnBottom(child)
     val childContainsAudio = block.containsAudio(child)
+    val childIsCaptionTrack = block.isCaptionTrack(child)
 
     val children = block.getChildren(parent)
 
@@ -74,7 +79,8 @@ private fun Engine.getReorderableChildren(
         val matchingIsAlwaysOnTop = childIsAlwaysOnTop == block.isAlwaysOnTop(childToCompare)
         val matchingIsAlwaysOnBottom = childIsAlwaysOnBottom == block.isAlwaysOnBottom(childToCompare)
         val matchingType = block.containsAudio(childToCompare) == childContainsAudio
-        matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom && matchingType
+        val matchingIsCaptionTrack = childIsCaptionTrack == block.isCaptionTrack(childToCompare)
+        matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom && matchingType && matchingIsCaptionTrack
     }
 }
 

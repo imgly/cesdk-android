@@ -59,7 +59,7 @@ internal fun TimelineBaseView(
                         timelineState.setZoom(zoom)
                     },
                     onZoomEnd = {
-                        timelineState.refreshThumbnails()
+                        timelineState.refreshZoomDependentThumbnails()
                     },
                 )
             }

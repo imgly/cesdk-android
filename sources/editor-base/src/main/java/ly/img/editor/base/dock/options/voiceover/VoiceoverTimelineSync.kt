@@ -1,5 +1,6 @@
 package ly.img.editor.base.dock.options.voiceover
 
+import ly.img.editor.core.ui.engine.isCaptionTrack
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
 import java.util.ArrayDeque
@@ -45,6 +46,11 @@ internal object VoiceoverTimelineSync {
         toVisit.add(root)
         while (toVisit.isNotEmpty()) {
             val current = toVisit.removeFirst()
+            // Skip the caption lane entirely. A caption may legitimately run past the end of the
+            // footage it annotates, and letting it count as content would stretch the page to fit
+            // it every time a recording is finalised.
+            if (current != root && engine.block.isCaptionTrack(current)) continue
+
             runCatching { engine.block.getChildren(current) }
                 .getOrDefault(emptyList())
                 .forEach { child -> toVisit.add(child) }

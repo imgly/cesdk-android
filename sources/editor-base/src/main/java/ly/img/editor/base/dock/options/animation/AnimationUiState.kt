@@ -4,7 +4,6 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import ly.img.editor.base.components.TabItem
 import ly.img.editor.base.engine.DesignBlockWithProperties
-import ly.img.editor.base.engine.getAvailableProperties
 import ly.img.editor.base.engine.toPropertyAndValueList
 import ly.img.editor.core.R
 import ly.img.editor.core.library.AssetType
@@ -78,8 +77,16 @@ data class AnimationUiState(
                                 engine = engine,
                                 sourceId = ANIMATIONS_SOURCE_ID,
                                 asset = selectedAnimation,
-                                availableProperties = animationType.getAvailableProperties(),
-                            ) ?: emptyList(),
+                            ).orEmpty(),
+                            // legacy way. Delete it when decision is 100% made regarding the desired approach.
+//                            properties = selectedAnimation.payload.properties?.let {
+//                                animationType.getAvailableProperties().combineWithValues(
+//                                    engine = engine,
+//                                    sourceId = ANIMATIONS_SOURCE_ID,
+//                                    asset = selectedAnimation,
+//                                    guidance = it,
+//                                )
+//                            }.orEmpty(),
                             asset = selectedAnimation,
                         )
                     },
@@ -93,7 +100,8 @@ data class AnimationUiState(
             engine: Engine,
             locale: String,
         ): AnimationUiState {
-            val isTextBlock = engine.block.getType(designBlock) == DesignBlockType.Text.key
+            val type = engine.block.getType(designBlock)
+            val isTextBlock = type == DesignBlockType.Text.key
             // Resolve from the editor's configured base path (the single source of truth, set via
             // EditorUiSettings). engine.defaultAssetSourcesBaseUri is null once an app registers
             // sources via Engine.asset.addLocalSourceFromJSON instead of addDefaultAssetSources.

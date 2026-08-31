@@ -76,6 +76,10 @@ import ly.img.editor.base.dock.OptionsBottomSheetContent
 import ly.img.editor.base.dock.options.adjustment.AdjustmentOptionsSheet
 import ly.img.editor.base.dock.options.animation.AnimationBottomSheetContent
 import ly.img.editor.base.dock.options.animation.AnimationSheet
+import ly.img.editor.base.dock.options.captions.CaptionStyleBottomSheetContent
+import ly.img.editor.base.dock.options.captions.CaptionStyleSheet
+import ly.img.editor.base.dock.options.captions.CaptionsBottomSheetContent
+import ly.img.editor.base.dock.options.captions.CaptionsSheet
 import ly.img.editor.base.dock.options.colors.ColorsBottomSheetContent
 import ly.img.editor.base.dock.options.colors.ColorsSheet
 import ly.img.editor.base.dock.options.crop.CropBottomSheetContent
@@ -423,7 +427,10 @@ fun EditorScope.EditorUi(
                                         }
                                     }
                                 }
-                                if (content !is CustomBottomSheetContent && content.type !is SheetType.Voiceover) {
+                                if (content !is CustomBottomSheetContent &&
+                                    content.type !is SheetType.Voiceover &&
+                                    content.type !is SheetType.Captions
+                                ) {
                                     Spacer(Modifier.height(8.dp))
                                 }
                                 when (content) {
@@ -567,9 +574,22 @@ fun EditorScope.EditorUi(
                                             onColorPickerActiveChanged = onColorPickerActiveChanged,
                                             onEvent = onEvent,
                                         )
+                                    is CaptionsBottomSheetContent ->
+                                        CaptionsSheet(
+                                            uiState = content.uiState,
+                                            onEvent = onEvent,
+                                        )
+                                    is CaptionStyleBottomSheetContent ->
+                                        CaptionStyleSheet(
+                                            uiState = content.uiState,
+                                            onEvent = onEvent,
+                                        )
                                     is CustomBottomSheetContent -> content.content(this@EditorUi)
                                 }
-                                if (content !is CustomBottomSheetContent && content.type !is SheetType.Voiceover) {
+                                if (content !is CustomBottomSheetContent &&
+                                    content.type !is SheetType.Voiceover &&
+                                    content.type !is SheetType.Captions
+                                ) {
                                     Spacer(Modifier.height(8.dp))
                                 }
                             }

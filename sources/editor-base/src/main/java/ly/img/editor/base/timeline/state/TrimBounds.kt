@@ -46,6 +46,8 @@ internal fun TimelineDataSource.trimBounds(clip: Clip): TrimBounds {
     val pivotIndex = sorted.indexOfFirst { it.id == clip.id }
     if (pivotIndex < 0) return unbounded
 
+    if (track.isCaptionTrack) return captionTrimBounds(clip, sorted, pivotIndex)
+
     // Leading: walk predecessors nearest-first, stop at first locked one.
     var durationBefore = 0.seconds
     var wallFloor: Duration? = null
@@ -79,6 +81,31 @@ internal fun TimelineDataSource.trimBounds(clip: Clip): TrimBounds {
     return TrimBounds(
         leadingMax = leadingMax,
         trailingMax = trailingMax,
+    )
+}
+
+/**
+ * Bounds clamped to the gap the immediate neighbours leave. Unlike the ordinary walk, neighbours
+ * are never pulled or pushed: the silences between cues are authored content.
+ *
+ * Both edges are floored at the clip's own duration so an already-overlapping cue — which SRT/VTT
+ * files do contain — pins the handle instead of inverting the bound.
+ */
+private fun captionTrimBounds(
+    clip: Clip,
+    sorted: List<Clip>,
+    pivotIndex: Int,
+): TrimBounds {
+    val previousEnd = sorted.getOrNull(pivotIndex - 1)
+        ?.let { it.timeOffset + it.duration }
+        ?: Duration.ZERO
+    val nextStart = sorted.getOrNull(pivotIndex + 1)?.timeOffset
+    return TrimBounds(
+        leadingMax = (clip.duration + (clip.timeOffset - previousEnd)).coerceAtLeast(clip.duration),
+        trailingMax = nextStart
+            ?.minus(clip.timeOffset)
+            ?.coerceAtLeast(clip.duration)
+            ?: Duration.INFINITE,
     )
 }
 

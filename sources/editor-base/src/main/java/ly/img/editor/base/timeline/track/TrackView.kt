@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.drop
@@ -151,7 +152,9 @@ fun TrackView(
         val trimOverrides = remember(track) {
             derivedStateOf {
                 val trim = liveTrim
-                if (trim != null && sortedClips.size >= 2) {
+                // Captions are clamped to their neighbours instead of displacing them, so the lane has no live
+                // cascade — previewing one would slide siblings that then snap back.
+                if (!track.isCaptionTrack && trim != null && sortedClips.size >= 2) {
                     computeLiveTrimOverrides(
                         sorted = sortedClips,
                         trim = trim,
@@ -240,7 +243,17 @@ fun TrackView(
             }
         }
 
-        track.clips.forEach { clip ->
+        // A caption track holds one clip per cue, and an imported SRT file routinely has hundreds. Every clip is a
+        // real subcomposition with its own gesture handlers, so composing the whole lane turned scrolling into a
+        // slideshow — measured at 2.4 s per frame with 800 captions. The lane therefore composes only the clips
+        // near the viewport. Every other track holds a handful of clips and is left alone.
+        val clipsToCompose = if (track.isCaptionTrack) {
+            visibleClips(track, timelineState, scrollContentOffset)
+        } else {
+            track.clips
+        }
+
+        clipsToCompose.forEach { clip ->
             // Key each slot by stable clip id so a reorder moves the existing ClipView's
             // compose slot rather than reusing it positionally. Otherwise per-position
             // `remember` blocks invalidate, AsyncImage thumbnails reset, and the user sees
@@ -264,4 +277,40 @@ fun TrackView(
 
         DropSlotIndicatorView(trackId = track.id, timelineState = timelineState)
     }
+}
+
+/**
+ * The clips of [track] that are close enough to the viewport to be worth composing.
+ *
+ * The filter itself re-runs on every scroll frame, but it is a cheap arithmetic pass and the result only differs
+ * when a clip enters or leaves, so the rows are not recomposed while scrolling inside the composed window. A
+ * screen of margin on each side means a clip is composed before it is scrolled into view. The clip being dragged
+ * is always kept: disposing it would cancel the drag ([ClipView] pins itself for the same reason).
+ */
+@Composable
+private fun visibleClips(
+    track: Track,
+    timelineState: TimelineState,
+    scrollContentOffset: () -> Int,
+): List<Clip> {
+    val viewportPx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
+    val clips by remember(track, timelineState, viewportPx) {
+        derivedStateOf {
+            val zoomState = timelineState.zoomState
+            val draggedClipId = timelineState.dragDrop.draggedClipId
+            val overrides = timelineState.dragDrop.overrides
+            val offset = scrollContentOffset()
+            val windowStart = offset - viewportPx
+            val windowEnd = offset + viewportPx * 2
+            track.clips.filter { clip ->
+                if (clip.id == draggedClipId) return@filter true
+                // A clip with a live override is drawn where the drag put it, not where the engine still thinks it
+                // is. Measure the drawn position: a clip dropped more than a screen from its old offset would
+                // otherwise be culled the frame the drag ends, and blink out until the engine refresh lands.
+                val clipStart = zoomState.toPx(overrides[clip.id] ?: clip.timeOffset)
+                clipStart <= windowEnd && clipStart + zoomState.toPx(clip.duration) >= windowStart
+            }
+        }
+    }
+    return clips
 }

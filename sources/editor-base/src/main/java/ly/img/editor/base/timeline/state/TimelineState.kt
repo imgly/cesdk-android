@@ -122,6 +122,14 @@ class TimelineState(
         }
     }
 
+    /** Skips text and caption labels, which render the same at any zoom. */
+    fun refreshZoomDependentThumbnails() {
+        dataSource.allClips().forEach { clip ->
+            if (clip.clipType == ClipType.Text || clip.clipType == ClipType.Caption) return@forEach
+            thumbnailsManager.refreshThumbnails(clip, zoomState.toDp(clip.duration))
+        }
+    }
+
     fun onHistoryUpdated() {
         // Rebuild clips from engine state first. Voiceover recording mutates a draft audio block
         // in place, so a provider-only refresh can otherwise keep stale draft metadata.
@@ -449,8 +457,13 @@ class TimelineState(
                     refresh(child, dataSource.findClip(child))
                 }
             } else {
-                val track = Track.engine(engineTrackId = designBlock)
-                addTrackForChildren(children, track)
+                val isCaptionTrack = type == DesignBlockType.CaptionTrack
+                val track = if (isCaptionTrack) {
+                    Track.caption(engineTrackId = designBlock)
+                } else {
+                    Track.engine(engineTrackId = designBlock)
+                }
+                addTrackForChildren(children, track, isCaptionTrack)
                 children.forEach { child ->
                     refresh(child, dataSource.findClip(child), track)
                 }
@@ -467,6 +480,10 @@ class TimelineState(
         var title = ""
 
         when {
+            blockType == DesignBlockType.Caption.key -> {
+                clipType = ClipType.Caption
+            }
+
             fillType == FillType.Image -> {
                 clipType = when (kind) {
                     BlockKind.Sticker -> ClipType.Sticker
@@ -659,7 +676,12 @@ class TimelineState(
     private fun addTrackForChildren(
         children: List<DesignBlock>,
         track: Track,
+        isCaptionTrack: Boolean,
     ) {
+        if (isCaptionTrack) {
+            dataSource.addCaptionTrack(track)
+            return
+        }
         val isAudioTrack = children.all { child ->
             engine.block.getType(child) == DesignBlockType.Audio.key
         }
@@ -683,8 +705,9 @@ class TimelineState(
                 oldTrack.clips.remove(existingClip)
                 insertClipAtEngineIndex(track, newClip)
             } else {
-                val index = track.clips.indexOf(existingClip)
-                track.clips[index] = newClip
+                // By id, not by value: a Clip compares all of its fields, and a caption track can hold hundreds.
+                val index = track.clips.indexOfFirst { it.id == existingClip.id }
+                if (index >= 0) track.clips[index] = newClip
             }
             val audioResourceChanged = newClip.clipType == ClipType.Audio &&
                 existingClip.hasAudioResource != newClip.hasAudioResource

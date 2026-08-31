@@ -2,7 +2,6 @@ package ly.img.editor.base.dock.options.properties
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import ly.img.editor.base.dock.options.fillstroke.ColorPickerSheet
 import ly.img.editor.base.engine.PropertyAndValue
 import ly.img.editor.base.engine.PropertyValue
@@ -21,7 +20,7 @@ fun PropertyColorPicker(
     val (property, value) = propertyAndValue
     ColorPickerSheet(
         color = (value as PropertyValue.Color).value ?: Color.Black,
-        title = stringResource(id = property.titleRes),
+        title = property.title.value,
         showOpacity = false,
         onBack = onBack,
         onColorChange = { color ->

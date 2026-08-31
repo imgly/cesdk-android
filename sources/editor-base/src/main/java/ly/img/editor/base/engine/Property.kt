@@ -1,7 +1,9 @@
 package ly.img.editor.base.engine
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.res.stringResource
 import ly.img.editor.base.components.PropertyOption
 import ly.img.editor.core.ui.engine.toComposeColor
 import ly.img.editor.core.ui.engine.toRGBColor
@@ -14,7 +16,6 @@ import ly.img.engine.AssetFloatProperty
 import ly.img.engine.AssetIntProperty
 import ly.img.engine.AssetProperty
 import ly.img.engine.AssetStringProperty
-import ly.img.engine.Color
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
 import ly.img.engine.ObjectType
@@ -32,20 +33,39 @@ data class PropertyAndValue(
     val value: PropertyValue,
 )
 
+sealed interface PropertyText {
+    val value: String
+        @Composable get
+
+    data class Raw(
+        private val text: String,
+    ) : PropertyText {
+        override val value: String
+            @Composable get() = text
+    }
+
+    data class Resource(
+        @StringRes private val textRes: Int,
+    ) : PropertyText {
+        override val value: String
+            @Composable get() = stringResource(textRes)
+    }
+}
+
 data class Property(
-    @StringRes val titleRes: Int,
+    val title: PropertyText,
     val keys: List<String>,
     val valueType: PropertyValueType,
     val combineStrategy: PropertyValueCombineStrategy,
     val assetData: PropertyAssetData? = null,
 ) {
     constructor(
-        titleRes: Int,
+        title: PropertyText,
         key: String,
         valueType: PropertyValueType,
         assetData: PropertyAssetData? = null,
     ) : this(
-        titleRes = titleRes,
+        title = title,
         keys = listOf(key),
         valueType = valueType,
         combineStrategy = PropertyValueCombineStrategy.First,
@@ -163,19 +183,79 @@ sealed interface PropertyValueType {
     ) : PropertyValueType
 }
 
+/**
+ * Builds PropertyAndValue list purely based on [AssetProperty] data.
+ */
 fun List<AssetProperty>.toPropertyAndValueList(
     engine: Engine,
     sourceId: String,
     asset: Asset,
-    availableProperties: List<Property>,
-): List<PropertyAndValue> = this.mapNotNull { assetProperty ->
-    val property = availableProperties
-        .firstOrNull { it.keys.first().endsWith(assetProperty.property) } ?: return@mapNotNull null
+): List<PropertyAndValue> = map { it.toProperty(sourceId, asset) }
+    .zip(this)
+    .map { (property, assetProperty) ->
+        PropertyAndValue(
+            property = property,
+            value = assetProperty.getValue(engine),
+        )
+    }
+
+/**
+ * Builds list of [PropertyAndValue]s based on the list of [Property]s and current engine state.
+ */
+fun List<Property>.combineWithValues(
+    engine: Engine,
+    designBlock: DesignBlock,
+): List<PropertyAndValue> = this.map {
+    PropertyAndValue(
+        property = it,
+        value = it.getValue(engine, designBlock),
+    )
+}
+
+/**
+ * Builds list of [PropertyAndValue]s based on the list of [Property]s and current engine state, guided by [override].
+ * This is a workaround legacy and should be avoided at all cost!
+ *
+ * This overload is used when List<Property>.combineWithValues is not sufficient to get the [PropertyValue] pairings.
+ * For instance, "animation/slide/direction" is represented as an enum property in [override],
+ * however the underlying type is a float. Calling setEnum or getEnum on the property will cause crash!
+ *
+ * We read the property value correctly thanks to the [AssetProperty] type in [override], and we write the value correctly
+ * thanks to the [ly.img.engine.AssetApi.applyAssetSourceProperty] in BlockEventsHandler.
+ *
+ * This means that AssetProperty can be an enum, but underlying property can be a Float.
+ *
+ * That is why for animations we cannot call the very logical:
+ *
+ * ```
+ * kotlin
+ * animationType.getAvailableProperties().combineWithValues(engine, animation)
+ * ```
+ *
+ */
+fun List<Property>.combineWithValues(
+    engine: Engine,
+    sourceId: String,
+    asset: Asset,
+    override: List<AssetProperty>,
+): List<PropertyAndValue> = override.mapNotNull { assetProperty ->
+    val property = firstOrNull { it.keys.first().endsWith(assetProperty.property) } ?: return@mapNotNull null
     PropertyAndValue(
         property = property.getUpdatedProperty(sourceId, asset, assetProperty),
         value = assetProperty.getValue(engine),
     )
 }
+
+/**
+ * Builds [PropertyAndValue] based on the [Property] and current engine state.
+ */
+fun Property.combineWithValue(
+    engine: Engine,
+    designBlock: DesignBlock,
+): PropertyAndValue = PropertyAndValue(
+    property = this,
+    value = this.getValue(engine, designBlock),
+)
 
 private fun Property.getUpdatedProperty(
     sourceId: String,
@@ -206,6 +286,36 @@ private fun Property.getUpdatedProperty(
     )
 }
 
+private fun AssetProperty.toProperty(
+    sourceId: String,
+    asset: Asset,
+) = Property(
+    title = AssetPropertyLabels.title(sourceId, property),
+    keys = listOf(property),
+    valueType = when (this) {
+        is AssetIntProperty -> PropertyValueType.Int(min..max, step)
+        is AssetFloatProperty -> PropertyValueType.Float(min..max, step)
+        is AssetDoubleProperty -> PropertyValueType.Double(min..max, step)
+        is AssetBooleanProperty -> PropertyValueType.Boolean
+        is AssetColorProperty -> PropertyValueType.Color()
+        is AssetStringProperty -> PropertyValueType.String
+        is AssetEnumProperty -> PropertyValueType.StringEnum(
+            options = options.map {
+                PropertyOption(
+                    text = AssetPropertyLabels.option(sourceId, it),
+                    value = it,
+                )
+            },
+        )
+    },
+    combineStrategy = PropertyValueCombineStrategy.First,
+    assetData = PropertyAssetData(
+        sourceId = sourceId,
+        asset = asset,
+        assetProperty = this,
+    ),
+)
+
 private fun AssetProperty.getValue(engine: Engine): PropertyValue = when (this) {
     is AssetIntProperty -> PropertyValue.Int(value)
     is AssetFloatProperty -> PropertyValue.Float(value)
@@ -214,24 +324,6 @@ private fun AssetProperty.getValue(engine: Engine): PropertyValue = when (this) 
     is AssetColorProperty -> PropertyValue.Color(value = value.toRGBColor(engine).toComposeColor())
     is AssetStringProperty -> PropertyValue.String(value)
     is AssetEnumProperty -> PropertyValue.Enum(value)
-}
-
-fun Property.combineWithValue(
-    engine: Engine,
-    designBlock: DesignBlock,
-): PropertyAndValue = PropertyAndValue(
-    property = this,
-    value = this.getValue(engine, designBlock),
-)
-
-fun List<Property>.combineWithValues(
-    engine: Engine,
-    designBlock: DesignBlock,
-): List<PropertyAndValue> = this.map {
-    PropertyAndValue(
-        property = it,
-        value = it.getValue(engine, designBlock),
-    )
 }
 
 private fun Property.getValue(

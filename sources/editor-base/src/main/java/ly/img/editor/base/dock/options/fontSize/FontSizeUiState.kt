@@ -2,6 +2,7 @@ package ly.img.editor.base.dock.options.fontSize
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import ly.img.editor.base.dock.options.fontSize.FontSizeUiState.Size.Large
+import ly.img.editor.base.engine.textFontSize
 import ly.img.editor.core.iconpack.SizeL
 import ly.img.editor.core.iconpack.SizeM
 import ly.img.editor.core.iconpack.SizeS
@@ -27,7 +28,9 @@ data class FontSizeUiState(
             designBlock: DesignBlock,
             engine: Engine,
         ): FontSizeUiState {
-            val size = engine.block.getFloat(designBlock, "text/fontSize")
+            // A run's size wins over the block property, so a caption — whose preset stamps the run — reports
+            // a stale size when read straight from `text/fontSize`, and falls through to Large.
+            val size = engine.block.textFontSize(designBlock)
             return FontSizeUiState(
                 designBlock = designBlock,
                 selectedSize = Size.entries.firstOrNull { it.size == size } ?: Large,

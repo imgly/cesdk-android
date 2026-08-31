@@ -50,8 +50,11 @@ internal data class DropSlot(
  * Resolves the dragged clip's snapped start time at [insertIndex] in a foreground track.
  *
  * Three outcomes:
- *  - **Free placement** — gap fits and no locked successor squeezes the cascade.
- *  - **Trim-to-fit** — cascade is too tight; the tail is shortened to fill the slot.
+ *  - **Free placement** — no locked successor squeezes the cascade. A gap narrower than
+ *    the dragged clip is not a constraint on its own: unlocked successors cascade right
+ *    (see [computeDropOverrides]), so the clip pins to the predecessor's end and pushes.
+ *  - **Trim-to-fit** — a locked successor leaves too little room even at the predecessor's
+ *    end; unlocked predecessors pull left and the tail is shortened to fill the slot.
  *  - **Reject** (returns `null`) — slot below [TimelineConfiguration.minClipDuration],
  *    or a live-buffer recording can't be shortened. Caller snaps back to origin.
  *
@@ -64,6 +67,8 @@ internal data class DropSlot(
  * @param draggedDuration The dragged clip's duration.
  * @param isLiveBufferRecording See [Clip.isLiveBufferRecording] — live-buffer clips
  * can't be tail-shortened, so trim-to-fit slots return `null` for them.
+ * @param allowTrimToFit `false` reduces the outcomes to free placement or reject. The caption lane
+ * passes `false` — trim-to-fit left-packs the slot and shortens the tail, closing authored gaps.
  */
 internal fun computeDropSlot(
     sortedSiblings: List<Clip>,
@@ -71,11 +76,11 @@ internal fun computeDropSlot(
     desiredStart: Duration,
     draggedDuration: Duration,
     isLiveBufferRecording: Boolean,
+    allowTrimToFit: Boolean = true,
 ): DropSlot? {
     val prev = sortedSiblings.getOrNull(insertIndex - 1)
     val next = sortedSiblings.getOrNull(insertIndex)
     val prevEnd = prev?.let { it.timeOffset + it.duration } ?: 0.seconds
-    val slotHasEnoughRoom = next?.let { it.timeOffset - prevEnd >= draggedDuration } ?: true
 
     // Nearest locked successor's start, minus the durations of unlocked siblings the
     // cascade would push right ahead of it — i.e. the wall the dragged clip's tail
@@ -106,18 +111,22 @@ internal fun computeDropSlot(
         unlockedBefore += sibling.duration
     }
 
+    // Only a locked successor blocks free placement. `nextCap` is a soft cap that keeps
+    // the clip off an unlocked successor, then collapses to `prevEnd` in a narrow gap.
     val nextCap = next?.let { it.timeOffset - draggedDuration } ?: Duration.INFINITE
     val lockedCap = lockedSuccessorWall - draggedDuration
-    val cap = minOf(nextCap, lockedCap)
-    val canPlaceFreely = slotHasEnoughRoom && cap >= prevEnd
+    val canPlaceFreely = lockedCap >= prevEnd
 
     return if (canPlaceFreely) {
+        val cap = maxOf(prevEnd, minOf(nextCap, lockedCap))
         val unsnappedDropStart = maxOf(0.seconds, desiredStart).coerceIn(prevEnd, cap)
         DropSlot(
             insertIndex = insertIndex,
             dropStart = unsnappedDropStart,
             effectiveDuration = draggedDuration,
         )
+    } else if (!allowTrimToFit) {
+        null
     } else {
         val pulledLowerBound = lockedPredecessorWall + unlockedBefore
         trimToFit(
@@ -339,17 +348,23 @@ internal fun computeBackgroundDropOverrides(
  * Whether the dragged clip can be dropped onto the target track. The engine refuses
  * audio clips inside video tracks (and vice versa), so the drag preview rejects those
  * targets before anything user-visible happens.
+ *
+ * The caption lane is a closed partition both ways. Keyed off [Track.isCaptionTrack] rather than
+ * the first clip, because an empty track otherwise answers "compatible" to everything.
  */
 internal fun isTypeCompatible(
     draggedClip: Clip,
     targetTrack: Track,
 ): Boolean {
+    if (targetTrack.isCaptionTrack || draggedClip.clipType == ClipType.Caption) {
+        return targetTrack.isCaptionTrack && draggedClip.clipType == ClipType.Caption
+    }
     val example = targetTrack.clips.firstOrNull() ?: return true
     return (draggedClip.clipType == ClipType.Audio) == (example.clipType == ClipType.Audio)
 }
 
-/** Whether [clipType] is allowed in the background track (everything except audio). */
-internal fun isBackgroundCompatible(clipType: ClipType): Boolean = clipType != ClipType.Audio
+/** Whether [clipType] is allowed in the background track (everything except audio and captions). */
+internal fun isBackgroundCompatible(clipType: ClipType): Boolean = clipType != ClipType.Audio && clipType != ClipType.Caption
 
 /**
  * Type-compatible drop zone candidate for [resolveDropZone].
@@ -382,11 +397,18 @@ internal sealed interface DropZone {
  * The background track only accepts image/video from foreground sources (and any clip
  * from itself); other types fall through to a foreground target so the release isn't lost.
  *
+ * A caption resolves to its lane or to nothing. A foreign clip is rejected at or above the lane's
+ * bottom edge. That test is deliberately open-ended upward, which also costs the gap zone above
+ * the topmost ordinary row while a scene has captions.
+ *
  * @param pointerY Pointer Y in window space.
  * @param sourceTrackId Source track of the dragged clip.
  * @param draggedClipType Dragged clip's type.
  * @param backgroundTrack The background track.
  * @param backgroundFrame Background track frame in window space.
+ * @param captionTrack The caption lane, or `null` when the scene has no captions.
+ * @param captionFrame Caption lane frame in window space, or `null` when the scene has no captions
+ *  or the lane is currently scrolled out of the viewport.
  * @param sortedCandidates Type-compatible foreground tracks with published frames,
  *  ascending by `frame.top`.
  */
@@ -396,8 +418,17 @@ internal fun resolveDropZone(
     draggedClipType: ClipType,
     backgroundTrack: Track,
     backgroundFrame: Rect,
+    captionTrack: Track?,
+    captionFrame: Rect?,
     sortedCandidates: List<DropCandidate>,
 ): DropZone? {
+    if (draggedClipType == ClipType.Caption) {
+        // From the track, not the candidate list — those are viewport-filtered, so scrolling the
+        // lane off-screen mid-drag would otherwise make the gesture a silent no-op.
+        return captionTrack?.let { DropZone.ExistingTrack(it) }
+    }
+    if (captionFrame != null && pointerY <= captionFrame.bottom) return null
+
     val sourceIsBackground = sourceTrackId == backgroundTrack.id
     if ((sourceIsBackground || isBackgroundCompatible(draggedClipType)) && pointerY >= backgroundFrame.top) {
         return DropZone.ExistingTrack(backgroundTrack)
@@ -499,10 +530,14 @@ private fun nearestCandidate(
  *  - **Audio drag**: position just before the `(insertAt - foregroundCount)`-th audio,
  *    or after all audios when `insertAt == tracks.size`.
  *
+ * The caption lane is excluded from both sides of the mapping — it is pinned to `tracks[0]`
+ * whatever its page-child position, so counting it would shift every other row by one.
+ *
  * @param isAudioBlock Classifies each `pageChildren` entry by kind. Predicate-based to
  * keep the engine reference out of `dragdrop/`.
  * @param isBackgroundTrack Identifies the background `Track`, which lives outside
  * [tracks] and is skipped during the foreground walk.
+ * @param isCaptionTrack Identifies the caption lane, which is pinned rather than ordered.
  */
 internal fun resolveAnchorPageIndex(
     dragged: Clip,
@@ -511,12 +546,14 @@ internal fun resolveAnchorPageIndex(
     insertAt: Int,
     isAudioBlock: (DesignBlock) -> Boolean,
     isBackgroundTrack: (DesignBlock) -> Boolean,
+    isCaptionTrack: (DesignBlock) -> Boolean,
 ): Int {
     if (pageChildren.isEmpty()) return 0
     // Data-source invariant: all foreground tracks come before all audio tracks, so the
     // first audio track's index in [tracks] equals the foreground track count.
     val foregroundCount = tracks.indexOfFirst { it.clips.firstOrNull()?.clipType == ClipType.Audio }
         .let { if (it < 0) tracks.size else it }
+    val captionRows = if (tracks.firstOrNull()?.isCaptionTrack == true) 1 else 0
     val clamped = insertAt.coerceIn(0, tracks.size)
     val isAudioDrag = dragged.clipType == ClipType.Audio
     return if (isAudioDrag) {
@@ -536,14 +573,16 @@ internal fun resolveAnchorPageIndex(
         // No audio at the target ordinal — insert just after the last audio (or at end if none).
         if (lastAudioPos >= 0) lastAudioPos + 1 else pageChildren.size
     } else {
-        // Foreground: place NEW just after the `(foregroundCount - clamped)`-th foreground
-        // child in pageChildren order. `foregroundCount - clamped == 0` means NEW is the
-        // very first foreground child → start of pageChildren.
-        val skipForeground = (foregroundCount - clamped).coerceAtLeast(0)
+        // Foreground: place NEW just after the `(orderedCount - targetRow)`-th ordered foreground
+        // child in pageChildren order, where "ordered" excludes the pinned caption lane.
+        // A skip count of 0 means NEW is the very first such child → start of pageChildren.
+        val orderedCount = foregroundCount - captionRows
+        val targetRow = (clamped - captionRows).coerceIn(0, orderedCount)
+        val skipForeground = orderedCount - targetRow
         var seenForeground = 0
         for ((i, child) in pageChildren.withIndex()) {
             if (seenForeground == skipForeground) return i
-            if (!isAudioBlock(child) && !isBackgroundTrack(child)) seenForeground++
+            if (!isAudioBlock(child) && !isBackgroundTrack(child) && !isCaptionTrack(child)) seenForeground++
         }
         pageChildren.size
     }

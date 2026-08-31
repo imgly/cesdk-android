@@ -4,6 +4,7 @@ import AIImageGenerationEditorSolution
 import ActionsEditorSolution
 import AddButtonEditorSolution
 import AssetLibraryBasicsEditorSolution
+import AutoCaptionsPluginSolution
 import AutomationActionsEditorSolution
 import BackgroundRemovalEditorSolution
 import BuildYourOwnUIScreen
@@ -19,6 +20,7 @@ import CustomizeBehaviourEditorSolution
 import DataMergeGuideScreen
 import DefaultPanelSolution
 import DesignUnitsScreen
+import EditCaptionsSolution
 import EditorStateEditorSolution
 import ForceCropEditorSolution
 import ForceTrimVideoSolution
@@ -204,6 +206,19 @@ fun NavGraphBuilder.build(navController: NavHostController) {
     composable(destination = Destination.GuideRecordVoiceover) {
         RecordVoiceoverSolution(
             license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideEditCaptions) {
+        EditCaptionsSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideAutoCaptions) {
+        AutoCaptionsPluginSolution(
+            license = Secrets.license,
+            gatewayApiKey = Secrets.gatewayApiKey,
             onClose = { navController.popBackStack() },
         )
     }

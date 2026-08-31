@@ -13,4 +13,6 @@ dependencies {
 
     compileOnly(project(":camera-core"))
     implementation project(":editor-debug-menu-dummy")
+
+    testImplementation libs.junit
 }

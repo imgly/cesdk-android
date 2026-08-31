@@ -5,6 +5,7 @@ import ly.img.editor.base.dock.options.format.SizeModeUi
 import ly.img.editor.base.dock.options.format.VerticalAlignment
 import ly.img.editor.base.dock.options.textonpath.TextOnPathUiState
 import ly.img.editor.base.engine.effectiveTextRange
+import ly.img.editor.base.engine.textProperty
 import ly.img.editor.base.ui.BlockEvent.OnBoldToggle
 import ly.img.editor.base.ui.BlockEvent.OnChangeClipping
 import ly.img.editor.base.ui.BlockEvent.OnChangeFont
@@ -109,7 +110,7 @@ fun EventsHandler.textBlockEvents(
     }
 
     register<OnChangeFontSize> {
-        engine.block.setFloat(block, "text/fontSize", it.fontSize)
+        engine.block.setTextFontSize(block, it.fontSize)
     }
 
     register<OnChangeTypeface> {
@@ -117,33 +118,35 @@ fun EventsHandler.textBlockEvents(
     }
 
     register<OnChangeHorizontalAlignment> {
-        if (HorizontalAlignment.valueOf(engine.block.getEnum(block, "text/horizontalAlignment")) != it.alignment) {
-            engine.block.setEnum(block, "text/horizontalAlignment", it.alignment.name)
+        val property = engine.block.textProperty(block, "horizontalAlignment")
+        if (HorizontalAlignment.valueOf(engine.block.getEnum(block, property)) != it.alignment) {
+            engine.block.setEnum(block, property, it.alignment.name)
             engine.editor.addUndoStep()
         }
     }
 
     register<OnChangeVerticalAlignment> {
-        if (VerticalAlignment.valueOf(engine.block.getEnum(block, "text/verticalAlignment")) != it.alignment) {
-            engine.block.setEnum(block, "text/verticalAlignment", it.alignment.name)
+        val property = engine.block.textProperty(block, "verticalAlignment")
+        if (VerticalAlignment.valueOf(engine.block.getEnum(block, property)) != it.alignment) {
+            engine.block.setEnum(block, property, it.alignment.name)
             engine.editor.addUndoStep()
         }
     }
 
     register<OnChangeLetterSpacing> {
-        engine.block.setFloat(block, "text/letterSpacing", it.spacing)
+        engine.block.setFloat(block, engine.block.textProperty(block, "letterSpacing"), it.spacing)
     }
 
     register<OnChangeParagraphSpacing> {
-        engine.block.setFloat(block, "text/paragraphSpacing", it.spacing)
+        engine.block.setFloat(block, engine.block.textProperty(block, "paragraphSpacing"), it.spacing)
     }
 
     register<OnChangeLineHeight> {
-        engine.block.setFloat(block, "text/lineHeight", it.height)
+        engine.block.setFloat(block, engine.block.textProperty(block, "lineHeight"), it.height)
     }
 
     register<OnChangeSizeMode> {
-        val changedSizeMode = SizeModeUi.valueOf(it.sizeMode)
+        val changedSizeMode = it.sizeMode
 
         val (newHeightMode, newWidthMode) = when (changedSizeMode) {
             SizeModeUi.ABSOLUTE ->
@@ -173,7 +176,7 @@ fun EventsHandler.textBlockEvents(
     }
 
     register<OnChangeClipping> {
-        engine.block.setBoolean(block, "text/clipLinesOutsideOfFrame", it.enabled)
+        engine.block.setBoolean(block, engine.block.textProperty(block, "clipLinesOutsideOfFrame"), it.enabled)
         engine.editor.addUndoStep()
     }
 

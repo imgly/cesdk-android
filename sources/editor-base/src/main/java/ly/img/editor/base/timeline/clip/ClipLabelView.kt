@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.core.iconpack.Animation
+import ly.img.editor.core.iconpack.Captions
 import ly.img.editor.core.iconpack.GroupEnter
 import ly.img.editor.core.iconpack.ImageOutline
 import ly.img.editor.core.iconpack.Music
@@ -101,6 +102,7 @@ private fun ClipIcon(clip: Clip) {
     } else {
         when (clip.clipType) {
             ClipType.Audio -> if (clip.isVoiceOver) IconPack.Mic else CoreIconPack.Music
+            ClipType.Caption -> CoreIconPack.Captions
             ClipType.Image -> ly.img.editor.core.iconpack.IconPack.ImageOutline
             ClipType.Shape -> ly.img.editor.core.iconpack.IconPack.ShapesOutline
             ClipType.Sticker -> ly.img.editor.core.iconpack.IconPack.StickerEmojiOutline

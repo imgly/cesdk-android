@@ -16,6 +16,20 @@
         android:label="CE.SDK Examples"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.DayNight.NoActionBar">
+        <!-- Engine deployment mode (see EngineMode), fed by env-driven
+             placeholders from build.gradle. -->
+        <meta-data
+            android:name="ly.img.engine.INTERNAL_DEPLOY"
+            android:value="${imglyEngineInternalDeploy}" />
+        <meta-data
+            android:name="ly.img.engine.ENABLE_LOGGING"
+            android:value="${imglyEngineLogging}" />
+        <meta-data
+            android:name="ly.img.engine.STAGING_LICENSE"
+            android:value="${imglyEngineStagingLicense}" />
+        <meta-data
+            android:name="ly.img.engine.OVERRIDE_TRACKING_ENDPOINT"
+            android:value="${imglyEngineTrackingEndpoint}" />
         <activity
             android:name=".ExamplesActivity"
             android:exported="true"

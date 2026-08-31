@@ -1,11 +1,13 @@
 package ly.img.editor.base.dock.options.fillstroke
 
-import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.base.ui.Block
 import ly.img.editor.core.ui.engine.BlockType
 import ly.img.editor.core.ui.engine.getStrokeColor
 import ly.img.engine.Engine
+import ly.img.engine.StrokeCornerGeometry
+import ly.img.engine.StrokePosition
+import ly.img.engine.StrokeStyle
 import kotlin.math.ln
 
 data class StrokeUiState(
@@ -13,13 +15,13 @@ data class StrokeUiState(
     val isStrokeEnabled: Boolean,
     val strokeColor: Color,
     val strokeWidth: Float,
-    @StringRes val strokeStyleRes: Int,
+    val strokeStyle: StrokeStyle,
     val isStrokePositionEnabled: Boolean,
     val isStrokeJointEnabled: Boolean = true,
     // Position and Join pickers don't apply to a 1-D primitive.
     val showPositionAndJoin: Boolean,
-    @StringRes val strokePositionRes: Int,
-    @StringRes val strokeJoinRes: Int,
+    val strokePosition: StrokePosition,
+    val strokeJoin: StrokeCornerGeometry,
 )
 
 internal fun createStrokeUiState(
@@ -37,12 +39,14 @@ internal fun createStrokeUiState(
         strokeWidth = engine.block.getStrokeWidth(designBlock).takeIf {
             it > 0
         }?.let { ln(it) } ?: STROKE_WIDTH_LOWER_BOUND,
-        strokeStyleRes = engine.block.getStrokeStyle(designBlock).getText(),
-        isStrokePositionEnabled = block.type != BlockType.Text && block.type != BlockType.Page,
+        strokeStyle = engine.block.getStrokeStyle(designBlock),
+        isStrokePositionEnabled = block.type != BlockType.Text &&
+            block.type != BlockType.Caption &&
+            block.type != BlockType.Page,
         isStrokeJointEnabled = block.type != BlockType.Page,
         showPositionAndJoin = !isLineOrigin,
-        strokePositionRes = engine.block.getStrokePosition(designBlock).getText(),
-        strokeJoinRes = engine.block.getStrokeCornerGeometry(designBlock).getText(),
+        strokePosition = engine.block.getStrokePosition(designBlock),
+        strokeJoin = engine.block.getStrokeCornerGeometry(designBlock),
     )
 }
 

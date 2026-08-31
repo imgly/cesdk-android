@@ -50,6 +50,7 @@ import ly.img.editor.core.iconpack.AddSticker
 import ly.img.editor.core.iconpack.AddText
 import ly.img.editor.core.iconpack.Adjustments
 import ly.img.editor.core.iconpack.Blur
+import ly.img.editor.core.iconpack.Captions
 import ly.img.editor.core.iconpack.CropRotate
 import ly.img.editor.core.iconpack.Effect
 import ly.img.editor.core.iconpack.Elements
@@ -859,6 +860,36 @@ fun Dock.Button.rememberResizeAll(builder: Dock.ButtonBuilder.() -> Unit = {}): 
     textString = { stringResource(R.string.ly_img_editor_dock_button_resize) }
     onClick = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.ResizeAll()))
+    }
+    builder()
+}
+
+/**
+ * The id of the dock button returned by [Dock.Button.rememberCaptions].
+ */
+val Dock.Button.Id.captions by unsafeLazy {
+    EditorComponentId("ly.img.component.dock.button.captions")
+}
+
+/**
+ * A composable helper function that creates and remembers a [Dock.Button] that
+ * opens the captions sheet via [EditorEvent.Sheet.Open].
+ *
+ * The video starter kit's dock carries this button. It has no visibility condition of its own, and it is the
+ * only entry point that works before a caption exists — [InspectorBar.Button.rememberEditCaptions] opens the
+ * same sheet, but needs a caption selected. A dock built without this button leaves an empty scene with no way
+ * to add captions.
+ *
+ * @param builder the builder lambda to override the default builder.
+ * @return a button that will be displayed in the dock.
+ */
+@Composable
+fun Dock.Button.rememberCaptions(builder: Dock.ButtonBuilder.() -> Unit = {}): Button<Dock.ItemScope> = Dock.Button.remember {
+    id = { Dock.Button.Id.captions }
+    vectorIcon = { IconPack.Captions }
+    textString = { stringResource(R.string.ly_img_editor_dock_button_captions) }
+    onClick = {
+        editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Captions()))
     }
     builder()
 }

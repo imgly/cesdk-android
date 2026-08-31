@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import ly.img.editor.base.dock.options.format.SizeModeUi
 import ly.img.editor.base.dock.options.format.VerticalAlignment
 import ly.img.editor.base.engine.Property
 import ly.img.editor.base.engine.PropertyValue
@@ -21,9 +22,13 @@ import ly.img.engine.BlendMode
 import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignUnit
+import ly.img.engine.FillType
 import ly.img.engine.FontUnit
 import ly.img.engine.HorizontalAlignment
 import ly.img.engine.ListStyle
+import ly.img.engine.StrokeCornerGeometry
+import ly.img.engine.StrokePosition
+import ly.img.engine.StrokeStyle
 import ly.img.engine.TextCase
 import ly.img.engine.Typeface
 import kotlin.time.Duration
@@ -249,19 +254,19 @@ interface BlockEvent : Event {
     ) : BlockEvent
 
     data class OnChangeStrokeStyle(
-        val style: String,
+        val style: StrokeStyle,
     ) : BlockEvent
 
     data class OnChangeFillStyle(
-        val style: String,
+        val type: FillType,
     ) : BlockEvent
 
     data class OnChangeStrokePosition(
-        val position: String,
+        val position: StrokePosition,
     ) : BlockEvent
 
-    data class OnChangeStrokeJoin(
-        val join: String,
+    data class OnChangeStrokeCornerGeometry(
+        val join: StrokeCornerGeometry,
     ) : BlockEvent
     // endregion
 
@@ -304,7 +309,7 @@ interface BlockEvent : Event {
     ) : BlockEvent
 
     data class OnChangeSizeMode(
-        val sizeMode: String,
+        val sizeMode: SizeModeUi,
     ) : BlockEvent
 
     data class OnChangeClipping(
@@ -399,6 +404,15 @@ interface BlockEvent : Event {
 
     data class OnRemoveTransitionsFromTrack(
         val outgoingBlock: DesignBlock,
+    ) : BlockEvent
+    // endregion
+
+    // region Captions Events
+
+    /** Styles the selected caption with a preset; the engine syncs the style across the whole caption track. */
+    data class OnApplyCaptionPreset(
+        val sourceId: String,
+        val asset: Asset,
     ) : BlockEvent
     // endregion
 

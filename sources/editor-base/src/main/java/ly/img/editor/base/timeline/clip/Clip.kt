@@ -57,6 +57,7 @@ data class Clip(
 
 enum class ClipType {
     Audio,
+    Caption,
     Image,
     Shape,
     Sticker,

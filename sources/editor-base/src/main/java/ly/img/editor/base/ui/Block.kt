@@ -29,6 +29,7 @@ internal fun createBlock(
         DesignBlockType.Group -> BlockType.Group
         DesignBlockType.Page -> BlockType.Page
         DesignBlockType.Audio -> BlockType.Audio
+        DesignBlockType.Caption -> BlockType.Caption
         DesignBlockType.Graphic -> {
             when (engine.block.getFillType(designBlock)) {
                 FillType.Image -> {
