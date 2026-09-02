@@ -3,6 +3,7 @@ package ly.img.editor.base.dock.options.transition
 import androidx.compose.runtime.Immutable
 import ly.img.editor.base.engine.DesignBlockWithProperties
 import ly.img.editor.base.engine.toPropertyAndValueList
+import ly.img.editor.base.timeline.state.hasRealTransition
 import ly.img.editor.core.library.AssetType
 import ly.img.editor.core.library.data.AssetSourceType
 import ly.img.editor.core.ui.library.getMeta
@@ -67,10 +68,7 @@ data class TransitionUiState(
             }
             val children = engine.block.getParent(outgoingBlock)?.let(engine.block::getChildren).orEmpty()
             val hasTransitions = children.any { child ->
-                engine.block.supportsTransition(child) &&
-                    engine.block.getTransition(child).let { assigned ->
-                        engine.block.isValid(assigned) && engine.block.getType(assigned) != "//ly.img.ubq/transition/none"
-                    }
+                engine.block.supportsTransition(child) && engine.hasRealTransition(child)
             }
             return TransitionUiState(
                 outgoingBlock = outgoingBlock,

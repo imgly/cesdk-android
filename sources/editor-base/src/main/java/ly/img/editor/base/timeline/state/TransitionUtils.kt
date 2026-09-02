@@ -35,7 +35,7 @@ internal fun Engine.transitionIncomingClip(outgoing: DesignBlock): DesignBlock? 
 
 internal fun Engine.hasRealTransition(outgoing: DesignBlock): Boolean {
     val transition = block.getTransition(outgoing)
-    return block.isValid(transition) && block.getType(transition) != "//ly.img.ubq/transition/none"
+    return block.isValid(transition)
 }
 
 internal fun Engine.transitionTrim(clip: DesignBlock): TransitionTrim {

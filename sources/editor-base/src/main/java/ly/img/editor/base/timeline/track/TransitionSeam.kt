@@ -15,10 +15,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import ly.img.editor.base.timeline.state.TimelineConfiguration
+import ly.img.editor.core.R
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.iconpack.Plus
 import ly.img.editor.core.iconpack.Transition
@@ -67,7 +69,13 @@ internal fun TransitionSeamView(
                         .matchParentSize()
                         .padding(4.dp),
                     imageVector = if (hasTransition) IconPack.Transition else IconPack.Plus,
-                    contentDescription = null,
+                    contentDescription = stringResource(
+                        id = if (hasTransition) {
+                            R.string.ly_img_editor_timeline_button_view_transition
+                        } else {
+                            R.string.ly_img_editor_timeline_button_add_transition
+                        },
+                    ),
                 )
             }
         }

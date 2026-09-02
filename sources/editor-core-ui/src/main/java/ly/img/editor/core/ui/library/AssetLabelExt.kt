@@ -16,7 +16,11 @@ import ly.img.engine.Asset
 @Composable
 fun Asset.localizedLabel(): String {
     val engineLabel = label.orEmpty()
-    val assetKey = id.substringAfterLast('/')
+    // Android keys cannot contain "-", that is why we replace with "_"
+    val assetKey = id
+        .substringAfterLast('/') // may be in/pan, out/pan
+        .substringAfterLast('.') // may be ly.img.transition.zoom
+        .replace('-', '_') // may be ly.img.transition.cross-blur
     if (assetKey.isEmpty()) return engineLabel
     val ctx = LocalContext.current
     val resName = "ly_img_editor_asset_label_$assetKey"
