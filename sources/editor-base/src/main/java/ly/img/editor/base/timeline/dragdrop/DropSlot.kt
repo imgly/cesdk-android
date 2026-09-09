@@ -47,6 +47,26 @@ internal data class DropSlot(
 )
 
 /**
+ * Resolves a caption's horizontal move within the gap between its immediate neighbours.
+ * Captions never reorder or move their siblings; a drag only changes the caption's own offset.
+ */
+internal fun computeCaptionMoveOffset(
+    sortedClips: List<Clip>,
+    caption: Clip,
+    desiredStart: Duration,
+): Duration? {
+    val pivotIndex = sortedClips.indexOfFirst { it.id == caption.id }
+    if (pivotIndex < 0) return null
+
+    val previousEnd = sortedClips.getOrNull(pivotIndex - 1)
+        ?.let { it.timeOffset + it.duration }
+        ?: Duration.ZERO
+    val nextStart = sortedClips.getOrNull(pivotIndex + 1)?.timeOffset ?: Duration.INFINITE
+    val upperBound = maxOf(previousEnd, nextStart - caption.duration)
+    return maxOf(Duration.ZERO, desiredStart).coerceIn(previousEnd, upperBound)
+}
+
+/**
  * Resolves the dragged clip's snapped start time at [insertIndex] in a foreground track.
  *
  * Three outcomes:
@@ -67,8 +87,6 @@ internal data class DropSlot(
  * @param draggedDuration The dragged clip's duration.
  * @param isLiveBufferRecording See [Clip.isLiveBufferRecording] — live-buffer clips
  * can't be tail-shortened, so trim-to-fit slots return `null` for them.
- * @param allowTrimToFit `false` reduces the outcomes to free placement or reject. The caption lane
- * passes `false` — trim-to-fit left-packs the slot and shortens the tail, closing authored gaps.
  */
 internal fun computeDropSlot(
     sortedSiblings: List<Clip>,
@@ -76,7 +94,6 @@ internal fun computeDropSlot(
     desiredStart: Duration,
     draggedDuration: Duration,
     isLiveBufferRecording: Boolean,
-    allowTrimToFit: Boolean = true,
 ): DropSlot? {
     val prev = sortedSiblings.getOrNull(insertIndex - 1)
     val next = sortedSiblings.getOrNull(insertIndex)
@@ -125,8 +142,6 @@ internal fun computeDropSlot(
             dropStart = unsnappedDropStart,
             effectiveDuration = draggedDuration,
         )
-    } else if (!allowTrimToFit) {
-        null
     } else {
         val pulledLowerBound = lockedPredecessorWall + unlockedBefore
         trimToFit(
@@ -397,16 +412,15 @@ internal sealed interface DropZone {
  * The background track only accepts image/video from foreground sources (and any clip
  * from itself); other types fall through to a foreground target so the release isn't lost.
  *
- * A caption resolves to its lane or to nothing. A foreign clip is rejected at or above the lane's
- * bottom edge. That test is deliberately open-ended upward, which also costs the gap zone above
- * the topmost ordinary row while a scene has captions.
+ * A foreign clip is rejected at or above the caption lane's bottom edge. That test is deliberately
+ * open-ended upward, which also costs the gap zone above the topmost ordinary row while a scene
+ * has captions.
  *
  * @param pointerY Pointer Y in window space.
  * @param sourceTrackId Source track of the dragged clip.
  * @param draggedClipType Dragged clip's type.
  * @param backgroundTrack The background track.
  * @param backgroundFrame Background track frame in window space.
- * @param captionTrack The caption lane, or `null` when the scene has no captions.
  * @param captionFrame Caption lane frame in window space, or `null` when the scene has no captions
  *  or the lane is currently scrolled out of the viewport.
  * @param sortedCandidates Type-compatible foreground tracks with published frames,
@@ -418,15 +432,9 @@ internal fun resolveDropZone(
     draggedClipType: ClipType,
     backgroundTrack: Track,
     backgroundFrame: Rect,
-    captionTrack: Track?,
     captionFrame: Rect?,
     sortedCandidates: List<DropCandidate>,
 ): DropZone? {
-    if (draggedClipType == ClipType.Caption) {
-        // From the track, not the candidate list — those are viewport-filtered, so scrolling the
-        // lane off-screen mid-drag would otherwise make the gesture a silent no-op.
-        return captionTrack?.let { DropZone.ExistingTrack(it) }
-    }
     if (captionFrame != null && pointerY <= captionFrame.bottom) return null
 
     val sourceIsBackground = sourceTrackId == backgroundTrack.id

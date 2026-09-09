@@ -121,7 +121,7 @@ fun ClipView(
     Box(
         modifier = modifier
             .zIndex(if (showSelectionUi) 1f else 0f)
-            .alpha(if (isBeingDragged) 0f else 1f),
+            .alpha(if (isBeingDragged && clip.clipType != ClipType.Caption) 0f else 1f),
     ) {
         val zoomState = timelineState.zoomState
 
@@ -291,8 +291,25 @@ fun ClipView(
                 } else {
                     timelineState.dragDrop.phase.context?.dropTarget
                 }
+                val captionMoveOffset = if (clip.clipType == ClipType.Caption) {
+                    (target as? DropTarget.ExistingTrack)?.timeOffset
+                } else {
+                    null
+                }
 
-                if (target == null) {
+                if (captionMoveOffset != null) {
+                    timelineState.dragDrop.overrides.clear()
+                    timelineState.dragDrop.overrides[clip.id] = captionMoveOffset
+                    offset = zoomState.toPx(captionMoveOffset)
+                    onEvent(
+                        BlockEvent.OnUpdateTrim(
+                            trimOffset = clip.trimOffset,
+                            timeOffset = captionMoveOffset,
+                            duration = clip.duration,
+                        ),
+                    )
+                    viewForHapticFeedback.performHapticFeedback(dropFinishHaptic)
+                } else if (target == null) {
                     // No drop — `offset` already matches engine truth, so just clear overrides.
                     timelineState.dragDrop.overrides.clear()
                 } else {

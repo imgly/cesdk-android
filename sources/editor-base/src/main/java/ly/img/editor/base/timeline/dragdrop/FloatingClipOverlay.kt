@@ -57,6 +57,7 @@ fun FloatingClipOverlay(timelineState: TimelineState) {
         Box(modifier = Modifier.onGloballyPositioned { overlayCoords = it })
         return
     }
+    if (clip.clipType == ClipType.Caption) return
 
     val zoomState = timelineState.zoomState
     val widthPx = zoomState.toPx(clip.duration)
@@ -71,11 +72,6 @@ fun FloatingClipOverlay(timelineState: TimelineState) {
             val dragged = timelineState.dragDrop.draggedClip ?: return@derivedStateOf false
             // Mirrors `resolveDropZone`'s caption handling — if the two drift, the overlay either
             // promises a drop the resolver refuses or refuses one it accepts.
-            if (dragged.clipType == ClipType.Caption) {
-                // A caption always resolves back to its lane wherever the pointer travels, so no
-                // vertical position is ever an invalid drop for it.
-                return@derivedStateOf false
-            }
             val captionFrame = timelineState.dataSource.captionTrack
                 ?.let { timelineState.dragDrop.trackFrames[it.id] }
             if (captionFrame != null && ctx.currentTouchLocation.y <= captionFrame.bottom) {

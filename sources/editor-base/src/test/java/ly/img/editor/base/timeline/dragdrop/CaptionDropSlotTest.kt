@@ -70,81 +70,6 @@ class CaptionDropSlotTest {
     }
 
     // endregion
-    // region resolveDropZone — captions stay in the lane
-
-    @Test
-    fun `a caption resolves to the lane wherever the pointer goes`() {
-        val lane = captionTrack(caption(id = 1))
-        val candidates = listOf(candidate(lane, index = 0, top = 0f, bottom = 40f))
-
-        for (pointerY in listOf(-500f, 20f, 500f, 5000f)) {
-            val zone = resolveDropZone(
-                pointerY = pointerY,
-                sourceTrackId = lane.id,
-                draggedClipType = ClipType.Caption,
-                backgroundTrack = Track.background(),
-                backgroundFrame = Rect(0f, 300f, 1000f, 360f),
-                captionTrack = lane,
-                captionFrame = Rect(0f, 0f, 1000f, 40f),
-                sortedCandidates = candidates,
-            )
-            assertEquals("pointerY=$pointerY", DropZone.ExistingTrack(lane), zone)
-        }
-    }
-
-    @Test
-    fun `a caption never spawns a new track`() {
-        // Without the caption short-circuit, a pointer below the bottommost candidate resolves to
-        // `NewTrack`, which would lift the caption out of its lane into a track of its own.
-        val lane = captionTrack(caption(id = 1), caption(id = 2))
-        val zone = resolveDropZone(
-            pointerY = 900f,
-            sourceTrackId = lane.id,
-            draggedClipType = ClipType.Caption,
-            backgroundTrack = Track.background(),
-            backgroundFrame = Rect(0f, 1000f, 1000f, 1060f),
-            captionTrack = lane,
-            captionFrame = Rect(0f, 0f, 1000f, 40f),
-            sortedCandidates = listOf(candidate(lane, index = 0, top = 0f, bottom = 40f)),
-        )
-        assertEquals(DropZone.ExistingTrack(lane), zone)
-    }
-
-    @Test
-    fun `a caption still resolves when the lane is scrolled out of the viewport`() {
-        // Candidates are filtered to the visible viewport and the frame goes unpublished once the
-        // row is recycled. Resolving from the candidate list would turn the whole gesture into a
-        // silent no-op; the lane is the only possible target, so it is taken directly.
-        val lane = captionTrack(caption(id = 1), caption(id = 2))
-        val zone = resolveDropZone(
-            pointerY = 20f,
-            sourceTrackId = lane.id,
-            draggedClipType = ClipType.Caption,
-            backgroundTrack = Track.background(),
-            backgroundFrame = Rect(0f, 300f, 1000f, 360f),
-            captionTrack = lane,
-            captionFrame = null,
-            sortedCandidates = emptyList(),
-        )
-        assertEquals(DropZone.ExistingTrack(lane), zone)
-    }
-
-    @Test
-    fun `a caption resolves to nothing when the scene has no lane`() {
-        val zone = resolveDropZone(
-            pointerY = 20f,
-            sourceTrackId = "caption-1",
-            draggedClipType = ClipType.Caption,
-            backgroundTrack = Track.background(),
-            backgroundFrame = Rect(0f, 300f, 1000f, 360f),
-            captionTrack = null,
-            captionFrame = null,
-            sortedCandidates = emptyList(),
-        )
-        assertNull(zone)
-    }
-
-    // endregion
     // region resolveDropZone — foreign clips stay out
 
     @Test
@@ -160,7 +85,6 @@ class CaptionDropSlotTest {
                 draggedClipType = ClipType.Video,
                 backgroundTrack = Track.background(),
                 backgroundFrame = Rect(0f, 300f, 1000f, 360f),
-                captionTrack = lane,
                 captionFrame = Rect(0f, 0f, 1000f, 40f),
                 sortedCandidates = listOf(candidate(videoTrack, index = 1, top = 50f, bottom = 90f)),
             )
@@ -178,7 +102,6 @@ class CaptionDropSlotTest {
             draggedClipType = ClipType.Video,
             backgroundTrack = Track.background(),
             backgroundFrame = Rect(0f, 300f, 1000f, 360f),
-            captionTrack = lane,
             captionFrame = Rect(0f, 0f, 1000f, 40f),
             sortedCandidates = listOf(candidate(videoTrack, index = 1, top = 50f, bottom = 90f)),
         )
@@ -199,7 +122,6 @@ class CaptionDropSlotTest {
             draggedClipType = ClipType.Video,
             backgroundTrack = Track.background(),
             backgroundFrame = Rect(0f, 300f, 1000f, 360f),
-            captionTrack = null,
             captionFrame = null,
             sortedCandidates = listOf(candidate(videoTrack, index = 0, top = 50f, bottom = 90f)),
         )
@@ -207,58 +129,24 @@ class CaptionDropSlotTest {
     }
 
     // endregion
-    // region computeDropSlot — gaps are preserved
+    // region caption move — neighbouring captions remain fixed
 
     @Test
-    fun `a caption drop is clamped between its neighbours`() {
-        // Siblings at [0,2) and [8,10); the dragged 2s caption may sit anywhere in [2,6].
-        val siblings = listOf(
-            caption(id = 1, offset = 0.seconds, duration = 2.seconds),
-            caption(id = 2, offset = 8.seconds, duration = 2.seconds),
-        )
-        val slot = computeDropSlot(
-            sortedSiblings = siblings,
-            insertIndex = 1,
-            desiredStart = 30.seconds,
-            draggedDuration = 2.seconds,
-            isLiveBufferRecording = false,
-            allowTrimToFit = false,
-        )
-        assertEquals(6.seconds, slot?.dropStart)
-        assertEquals(2.seconds, slot?.effectiveDuration)
+    fun `a caption move is clamped to the gap between its neighbours`() {
+        val first = caption(id = 1, offset = 0.seconds, duration = 2.seconds)
+        val moved = caption(id = 2, offset = 3.seconds, duration = 2.seconds)
+        val last = caption(id = 3, offset = 7.seconds, duration = 2.seconds)
+        val captions = listOf(first, moved, last)
 
-        val clampedLeft = computeDropSlot(
-            sortedSiblings = siblings,
-            insertIndex = 1,
-            desiredStart = (-5).seconds,
-            draggedDuration = 2.seconds,
-            isLiveBufferRecording = false,
-            allowTrimToFit = false,
-        )
-        assertEquals(2.seconds, clampedLeft?.dropStart)
+        assertEquals(2.seconds, computeCaptionMoveOffset(captions, moved, (-5).seconds))
+        assertEquals(5.seconds, computeCaptionMoveOffset(captions, moved, 20.seconds))
     }
 
-    @Test
-    fun `a caption is rejected rather than shortened when the gap is too small`() {
-        // A 4s caption dropped into a 2s gap. Trim-to-fit would left-pack it and cut it to 2s,
-        // closing an authored silence and retiming a cue the user did not touch.
-        val siblings = listOf(
-            caption(id = 1, offset = 0.seconds, duration = 2.seconds),
-            caption(id = 2, offset = 4.seconds, duration = 2.seconds),
-        )
-        val slot = computeDropSlot(
-            sortedSiblings = siblings,
-            insertIndex = 1,
-            desiredStart = 2.seconds,
-            draggedDuration = 4.seconds,
-            isLiveBufferRecording = false,
-            allowTrimToFit = false,
-        )
-        assertNull(slot)
-    }
+    // endregion
+    // region computeDropSlot
 
     @Test
-    fun `ordinary tracks still place the clip rather than bouncing`() {
+    fun `an ordinary track places a clip rather than bouncing`() {
         val siblings = listOf(
             clip(id = 1, type = ClipType.Video, offset = 0.seconds, duration = 2.seconds),
             clip(id = 2, type = ClipType.Video, offset = 4.seconds, duration = 2.seconds),
@@ -270,8 +158,8 @@ class CaptionDropSlotTest {
             draggedDuration = 4.seconds,
             isLiveBufferRecording = false,
         )
-        // Same too-small gap that the caption lane rejects. An ordinary track instead packs the
-        // clip against its predecessor and pushes the successor along, keeping its full duration.
+        // A too-small gap instead packs the clip against its predecessor and pushes the successor
+        // along, keeping its full duration.
         assertEquals(2.seconds, slot?.dropStart)
         assertEquals(4.seconds, slot?.effectiveDuration)
     }
