@@ -27,10 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ly.img.editor.core.ui.GradientCard
 import ly.img.editor.core.ui.iconpack.IconPack
@@ -79,21 +75,17 @@ fun SimpleSelectableAssetList(
             state = listState,
         ) {
             items(assets) { wrappedAsset ->
-                val isSelected = remember(wrappedAsset, isInitialPositionSettled.value) {
-                    isInitialPositionSettled.value && wrappedAsset.asset.active
-                }
                 Column(
-                    // One node per tile: the thumbnail carries the tap but only the caption below it is
-                    // readable, so screen readers otherwise announce an unlabelled button.
-                    modifier = Modifier
-                        .padding(end = if (wrappedAsset.isNone) 16.dp else 0.dp)
-                        .semantics(mergeDescendants = true) { selected = isSelected },
+                    modifier = Modifier.padding(end = if (wrappedAsset.isNone) 16.dp else 0.dp),
                 ) {
                     Column(
                         modifier = Modifier
                             .wrapContentSize()
                             .padding(bottom = 8.dp),
                     ) {
+                        val isSelected = remember(wrappedAsset, isInitialPositionSettled.value) {
+                            isInitialPositionSettled.value && wrappedAsset.asset.active
+                        }
                         SelectableAssetWrapper(
                             isSelected = isSelected,
                             selectedIcon = selectedIcon(wrappedAsset),
@@ -139,14 +131,9 @@ fun SimpleSelectableAssetList(
                     }
 
                     Text(
-                        modifier = Modifier
-                            .width(80.dp)
-                            .align(Alignment.CenterHorizontally),
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
                         text = wrappedAsset.asset.localizedLabel(),
                         style = MaterialTheme.typography.labelMedium,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }

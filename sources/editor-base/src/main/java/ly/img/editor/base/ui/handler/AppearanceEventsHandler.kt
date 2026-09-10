@@ -7,8 +7,10 @@ import ly.img.editor.base.engine.removeEffectByType
 import ly.img.editor.base.engine.setBlurType
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.core.library.LibraryCategory
+import ly.img.editor.core.library.data.AssetSourceType
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.inject
+import ly.img.editor.core.ui.library.AppearanceAssetSourceType
 import ly.img.editor.core.ui.library.AppearanceLibraryCategory
 import ly.img.editor.core.ui.library.getMeta
 import ly.img.editor.core.ui.library.getUri
@@ -21,7 +23,6 @@ import ly.img.engine.Color
 import ly.img.engine.DesignBlock
 import ly.img.engine.EffectType
 import ly.img.engine.Engine
-import kotlin.math.roundToInt
 
 /**
  * Register all events related to appearance, like adding/removing filters, fx effects, blur effects etc.
@@ -59,6 +60,7 @@ private fun replaceEffect(
             replaceFilter(
                 blockApi = engine.block,
                 block = block,
+                assetSourceType = wrappedAsset?.assetSourceType,
                 asset = asset,
             )
         }
@@ -100,28 +102,22 @@ private fun replaceFxEffect(
 private fun replaceFilter(
     blockApi: BlockApi,
     block: DesignBlock,
+    assetSourceType: AssetSourceType?,
     asset: Asset?,
 ) {
-    // The merged `ly.img.filter` source contains both LUT and duotone assets. Duotone assets
-    // carry `lightColor` / `darkColor` metadata — LUT assets don't.
-    val isDuotone = asset?.getMeta("lightColor") != null && asset.getMeta("darkColor") != null
-    val keepEffect = if (asset == null) {
-        null
-    } else if (isDuotone) {
-        EffectType.DuoToneFilter
-    } else {
-        EffectType.LutFilter
-    }
-
     EffectType.values().filter {
-        it != keepEffect && it.getGroup() == EffectGroup.Filter
+        when (it) {
+            EffectType.LutFilter -> assetSourceType !== AppearanceAssetSourceType.LutFilter
+            EffectType.DuoToneFilter -> assetSourceType !== AppearanceAssetSourceType.DuoToneFilter
+            else -> it.getGroup() == EffectGroup.Filter
+        }
     }.forEach {
         blockApi.removeEffectByType(block, it)
     }
 
     asset ?: return
 
-    if (isDuotone) {
+    if (assetSourceType === AppearanceAssetSourceType.DuoToneFilter) {
         val path = EffectType.DuoToneFilter.key
         blockApi.getEffectOrCreateAndAppend(block, EffectType.DuoToneFilter).also { effect ->
             blockApi.setColor(
@@ -136,11 +132,11 @@ private fun replaceFilter(
                 Color.fromHex(asset.getMeta("lightColor")!!),
             )
         }
-    } else {
+    } else if (assetSourceType === AppearanceAssetSourceType.LutFilter) {
         val path = EffectType.LutFilter.key
         blockApi.getEffectOrCreateAndAppend(block, EffectType.LutFilter).also { effect ->
-            val verticalTileCountMeta = asset.getMeta("verticalTileCount")?.toFloat()?.roundToInt()
-            val horizontalTileCountMeta = asset.getMeta("horizontalTileCount")?.toFloat()?.roundToInt()
+            val verticalTileCountMeta = asset.getMeta("verticalTileCount")?.toInt()
+            val horizontalTileCountMeta = asset.getMeta("horizontalTileCount")?.toInt()
 
             val verticalTileCount = verticalTileCountMeta ?: horizontalTileCountMeta ?: 5
             val horizontalTileCount = horizontalTileCountMeta ?: verticalTileCountMeta ?: 5

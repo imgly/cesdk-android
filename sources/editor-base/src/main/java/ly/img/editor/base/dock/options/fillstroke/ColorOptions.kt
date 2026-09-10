@@ -18,7 +18,7 @@ import ly.img.editor.core.ui.utils.ThemePreview
 @Composable
 fun ColorOptions(
     enabled: Boolean,
-    selectedColors: List<Color>,
+    selectedColor: Color,
     onNoColorSelected: () -> Unit,
     onColorSelected: (Color) -> Unit,
     openColorPicker: () -> Unit,
@@ -26,8 +26,6 @@ fun ColorOptions(
     punchHole: Boolean = false,
     colors: List<Color> = fillAndStrokeColors,
 ) {
-    val uniformColor = selectedColors.singleOrNull()
-    val pickerColor = selectedColors.firstOrNull() ?: Color.Black
     Row(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -48,7 +46,7 @@ fun ColorOptions(
             ColorButton(
                 color = color,
                 modifier = Modifier.weight(1f),
-                selected = enabled && color == uniformColor,
+                selected = color == selectedColor && enabled,
                 punchHole = punchHole,
                 onClick = {
                     onColorSelected(color)
@@ -56,7 +54,7 @@ fun ColorOptions(
             )
         }
         ColorPickerButton(
-            color = pickerColor,
+            color = selectedColor,
             modifier = Modifier.weight(1f),
             onClick = openColorPicker,
             punchHole = punchHole,
@@ -70,7 +68,7 @@ private fun ColorOptionsPreview() {
     EditorTheme {
         ColorOptions(
             enabled = true,
-            selectedColors = listOf(fillAndStrokeColors.random()),
+            selectedColor = fillAndStrokeColors.random(),
             onNoColorSelected = { },
             onColorSelected = {},
             openColorPicker = { },
@@ -85,7 +83,7 @@ private fun ColorOptionsWithoutDisableColorPreview() {
     EditorTheme {
         ColorOptions(
             enabled = true,
-            selectedColors = listOf(fillAndStrokeColors.random()),
+            selectedColor = fillAndStrokeColors.random(),
             onNoColorSelected = { },
             onColorSelected = {},
             openColorPicker = { },
@@ -101,7 +99,7 @@ private fun ColorOptionsWithPunchHolePreview() {
     EditorTheme {
         ColorOptions(
             enabled = true,
-            selectedColors = listOf(fillAndStrokeColors.random()),
+            selectedColor = fillAndStrokeColors.random(),
             onNoColorSelected = { },
             onColorSelected = {},
             openColorPicker = { },

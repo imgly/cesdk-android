@@ -1,45 +1,18 @@
 package ly.img.editor.examples
 
-import AIImageGenerationEditorSolution
-import ActionsEditorSolution
-import AddButtonEditorSolution
-import AssetLibraryBasicsEditorSolution
-import AutoCaptionsPluginSolution
 import AutomationActionsEditorSolution
-import BackgroundRemovalEditorSolution
-import BuildYourOwnUIScreen
 import CallbacksEditorSolution
 import ColorPaletteEditorSolution
-import ConfiguredCameraScreen
-import CreateCustomPanelSolution
-import CropPresetsEditorSolution
-import CustomAssetLibraryPreviewSolution
-import CustomFeaturePluginEditorSolution
-import CustomFontsEditorSolution
-import CustomizeBehaviourEditorSolution
+import CustomPanelSolution
 import DataMergeGuideScreen
-import DefaultPanelSolution
 import DesignUnitsScreen
-import EditCaptionsSolution
 import EditorStateEditorSolution
 import ForceCropEditorSolution
 import ForceTrimVideoSolution
-import HideElementsEditorSolution
-import IconsEditorSolution
 import ModifyingScenesEngineSolution
-import NewListBuilderDockSolution
 import OverlayEditorSolution
-import PageFormatEditorSolution
-import PhotoRollEditorSolution
-import QuickActionsEditorSolution
-import RearrangeButtonsEditorSolution
-import RecordVoiceoverSolution
 import TemplatingEditorSolution
 import ThemingEditorSolution
-import UiEventsEditorSolution
-import UserInterfaceAssetLibraryEditorSolution
-import VariableFontsEditorSolution
-import android.net.Uri
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavBackStackEntry
@@ -50,7 +23,6 @@ import androidx.navigation.navDeepLink
 import ly.img.editor.Editor
 import ly.img.editor.configuration.apparel.ApparelConfigurationBuilder
 import ly.img.editor.configuration.design.DesignConfigurationBuilder
-import ly.img.editor.configuration.memories.MemoriesApp
 import ly.img.editor.configuration.photo.PhotoConfigurationBuilder
 import ly.img.editor.configuration.postcard.PostcardConfigurationBuilder
 import ly.img.editor.configuration.video.VideoConfigurationBuilder
@@ -113,26 +85,8 @@ fun NavGraphBuilder.build(navController: NavHostController) {
             onClose = { navController.popBackStack() },
         )
     }
-    composable(destination = Destination.GuideCustomFonts) {
-        CustomFontsEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideVariableFonts) {
-        VariableFontsEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
     composable(destination = Destination.GuideCallbacks) {
         CallbacksEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideUiEvents) {
-        UiEventsEditorSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
         )
@@ -143,32 +97,8 @@ fun NavGraphBuilder.build(navController: NavHostController) {
             onClose = { navController.popBackStack() },
         )
     }
-    composable(destination = Destination.GuideDock) {
-        NewListBuilderDockSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideCropPresets) {
-        CropPresetsEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuidePageFormat) {
-        PageFormatEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
     composable(destination = Destination.GuideCustomPanel) {
-        DefaultPanelSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideCreateCustomPanel) {
-        CreateCustomPanelSolution(
+        CustomPanelSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
         )
@@ -179,20 +109,8 @@ fun NavGraphBuilder.build(navController: NavHostController) {
             onClose = { navController.popBackStack() },
         )
     }
-    composable(destination = Destination.GuideIcons) {
-        IconsEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
     composable(destination = Destination.GuideOverlay) {
         OverlayEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideHideElements) {
-        HideElementsEditorSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
         )
@@ -200,25 +118,6 @@ fun NavGraphBuilder.build(navController: NavHostController) {
     composable(destination = Destination.GuideForceTrim) {
         ForceTrimVideoSolution(
             license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideRecordVoiceover) {
-        RecordVoiceoverSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideEditCaptions) {
-        EditCaptionsSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideAutoCaptions) {
-        AutoCaptionsPluginSolution(
-            license = Secrets.license,
-            gatewayApiKey = Secrets.gatewayApiKey,
             onClose = { navController.popBackStack() },
         )
     }
@@ -248,104 +147,10 @@ fun NavGraphBuilder.build(navController: NavHostController) {
             onClose = { navController.popBackStack() },
         )
     }
-    composable(destination = Destination.GuideBuildYourOwnUI) {
-        BuildYourOwnUIScreen(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideActions) {
-        ActionsEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
     composable(destination = Destination.GuideAutomationActions) {
         AutomationActionsEditorSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideCustomizeBehaviour) {
-        CustomizeBehaviourEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideRearrangeButtons) {
-        RearrangeButtonsEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideQuickActions) {
-        QuickActionsEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideAddButton) {
-        AddButtonEditorSolution(
-            license = Secrets.license,
-            baseUri = Uri.parse(ExamplesBuildConfig.GUIDE_ADD_BUTTON_BASE_URI),
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideCustomFeaturePlugin) {
-        CustomFeaturePluginEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideBackgroundRemoval) {
-        BackgroundRemovalEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideAIImageGeneration) {
-        AIImageGenerationEditorSolution(
-            license = Secrets.license,
-            aiGatewayApiKey = Secrets.gatewayApiKey,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.MemoriesEditor) {
-        // Opens the Memories starter kit through its full picker -> editor flow,
-        // identical to the standalone app.
-        MemoriesApp(
-            license = Secrets.license,
-            onExit = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideAssetLibraryBasics) {
-        AssetLibraryBasicsEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideAssetLibrary) {
-        UserInterfaceAssetLibraryEditorSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuidePhotoRoll) {
-        PhotoRollEditorSolution(
-            license = Secrets.license,
-            enableFullGalleryAccess = true,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideAssetLibraryCustomize) {
-        CustomAssetLibraryPreviewSolution(
-            license = Secrets.license,
-            onClose = { navController.popBackStack() },
-        )
-    }
-    composable(destination = Destination.GuideCameraConfiguration) {
-        ConfiguredCameraScreen(
-            license = Secrets.license,
         )
     }
 }

@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.Stable
-import ly.img.editor.base.components.EditingTextCardUiState
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.core.event.EditorEvent
 
@@ -12,7 +11,6 @@ import ly.img.editor.core.event.EditorEvent
 data class EditorUiViewState(
     val allowEditorInteraction: Boolean = false,
     val isEditingText: Boolean = false,
-    val editingTextCardUiState: EditingTextCardUiState? = null,
     val bottomPanelMaxHeightInDp: Float = Float.MAX_VALUE,
     val timelineState: TimelineState? = null,
     val pageCount: Int = 0,

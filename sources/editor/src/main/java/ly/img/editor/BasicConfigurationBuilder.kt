@@ -17,14 +17,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
@@ -36,21 +34,18 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ly.img.editor.core.R
 import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.component.data.Insets
 import ly.img.editor.core.configuration.EditorConfigurationBuilder
 import ly.img.editor.core.event.EditorEvent
-import ly.img.editor.core.getDisplayMessage
 import ly.img.editor.core.iconpack.CloudAlertOutline
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.iconpack.WifiCancel
 import ly.img.editor.core.library.data.SystemGalleryConfiguration
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
-import ly.img.engine.EngineException
 import ly.img.engine.MimeType
 import java.io.File
 import java.nio.ByteBuffer
@@ -194,8 +189,6 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
 
     /**
      * A helper function that opens a system dialog to share the [file].
-     * Note that the uri of the [file] is resolved on a background thread, therefore the system dialog is opened
-     * asynchronously. If the uri resolution fails, the [error] state is set instead of throwing.
      *
      * @param authority the authority of [FileProvider] defined in a <provider> element in your app's manifest.
      * @param file the file that should be shared.
@@ -207,18 +200,8 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
         file: File,
         mimeType: MimeType,
     ) {
-        editorContext.coroutineScope.launch {
-            try {
-                val uri = withContext(Dispatchers.IO) {
-                    FileProvider.getUriForFile(editorContext.activity, authority, file)
-                }
-                shareUri(uri = uri, mimeType = mimeType)
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                error = exception
-            }
-        }
+        val uri = FileProvider.getUriForFile(editorContext.activity, authority, file)
+        shareUri(uri = uri, mimeType = mimeType)
     }
 
     /**
@@ -404,10 +387,7 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
             Text(text = stringResource(R.string.ly_img_editor_dialog_error_title))
         },
         text: @Composable (() -> Unit)? = {
-            Text(
-                text = (throwable as? EngineException)?.getDisplayMessage(LocalContext.current)
-                    ?: throwable.message ?: "",
-            )
+            Text(text = throwable.message ?: "")
         },
         confirmButton: @Composable () -> Unit = {
             TextButton(

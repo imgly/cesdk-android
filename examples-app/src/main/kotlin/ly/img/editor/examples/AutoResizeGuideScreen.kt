@@ -19,14 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import autoResize
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import ly.img.engine.Engine
-
-private val autoResizeEngineMutex = Mutex()
+import runAutoResizeGuide
 
 @Composable
 fun AutoResizeGuideScreen(license: String?) {
@@ -34,28 +28,20 @@ fun AutoResizeGuideScreen(license: String?) {
     var state by remember { mutableStateOf<AutoResizeGuideState>(AutoResizeGuideState.Running) }
 
     LaunchedEffect(Unit) {
-        state = autoResizeEngineMutex.withLock {
-            val application = context.applicationContext as Application
-            Engine.init(application)
-            val engine = Engine.getInstance(id = "ly.img.engine.autoResize.preview")
-            var engineStarted = false
+        val application = context.applicationContext as Application
+        Engine.init(application)
+        val engine = Engine.getInstance(id = "ly.img.engine.autoResize.preview")
+        engine.start(license = license, userId = "guide-auto-resize")
+        engine.bindOffscreen(width = 1080, height = 1920)
 
+        state =
             try {
-                engineStarted = engine.start(license = license, userId = "guide-auto-resize")
-                check(engineStarted) { "Unable to start the auto-resize guide Engine." }
-
-                engine.bindOffscreen(width = 1080, height = 1920)
-                AutoResizeGuideState.Success(autoResize(engine))
+                AutoResizeGuideState.Success(runAutoResizeGuide(engine))
             } catch (throwable: Throwable) {
                 AutoResizeGuideState.Error(throwable.message ?: throwable::class.simpleName.orEmpty())
             } finally {
-                if (engineStarted) {
-                    withContext(NonCancellable) {
-                        engine.stop()
-                    }
-                }
+                engine.stop()
             }
-        }
     }
 
     Column(

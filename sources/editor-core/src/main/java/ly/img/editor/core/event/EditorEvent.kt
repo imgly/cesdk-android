@@ -2,7 +2,6 @@ package ly.img.editor.core.event
 
 import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContract
-import ly.img.camera.core.Capture
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.component.data.ForceCropConfiguration
@@ -252,37 +251,9 @@ interface EditorEvent {
      * @param uploadAssetSourceType the asset source where [recordings] should be added.
      * @param recordings the list of the recordings.
      */
-    @Deprecated(
-        message = "Use AddCameraCapturesToScene, which supports a heterogeneous photo + video capture stack.",
-        replaceWith = ReplaceWith("AddCameraCapturesToScene"),
-    )
     class AddCameraRecordingsToScene(
         val uploadAssetSourceType: UploadAssetSourceType,
         val recordings: List<Pair<Uri, Duration>>,
-    ) : EditorEvent
-
-    /**
-     * An event for adding a heterogeneous capture stack (photos + videos in one camera session) to the scene.
-     * When [appendToBackgroundTrack] is `true` (default), each capture is appended to the background track —
-     * [Capture.Photo]s become image-fill graphic blocks with duration `Capture.Photo.clipDuration`, and
-     * [Capture.Video]s become video clips. When [appendToBackgroundTrack] is `false`, each capture is placed
-     * on the current page centered like the gallery picker does — appropriate for design / photo / apparel /
-     * postcard editors that don't have a background track.
-     *
-     * Photos are uploaded to [photoUploadAssetSourceType] and videos to [videoUploadAssetSourceType] as
-     * [ly.img.engine.AssetDefinition]s.
-     *
-     * @param photoUploadAssetSourceType the asset source where photo captures should be added (e.g. [ly.img.editor.core.library.data.AssetSourceType.ImageUploads]).
-     * @param videoUploadAssetSourceType the asset source where video captures should be added (e.g. [ly.img.editor.core.library.data.AssetSourceType.VideoUploads]).
-     * @param captures the list of heterogeneous captures.
-     * @param appendToBackgroundTrack whether to append the captures to the background track (`true`) or place
-     * each on the current page (`false`). Defaults to `true`.
-     */
-    class AddCameraCapturesToScene(
-        val photoUploadAssetSourceType: UploadAssetSourceType,
-        val videoUploadAssetSourceType: UploadAssetSourceType,
-        val captures: List<Capture>,
-        val appendToBackgroundTrack: Boolean = true,
     ) : EditorEvent
 
     /**

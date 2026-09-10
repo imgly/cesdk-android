@@ -145,8 +145,7 @@ internal fun ClipTrimHandlesView(
             if (hasReachedMaxWidth != null) {
                 return if (hasReachedMaxWidth) IconStyle.Neutral else IconStyle.Right
             }
-            val maxDuration = (clip.effectiveFootageDuration ?: 0.seconds) -
-                clip.trimOffset - clip.duration - clip.transitionTrimLead - clip.transitionTrimTail
+            val maxDuration = (clip.effectiveFootageDuration ?: 0.seconds) - clip.trimOffset - clip.duration
             return if (maxDuration.almostEquals(0.seconds)) {
                 IconStyle.Neutral
             } else {
@@ -184,7 +183,7 @@ internal fun ClipTrimHandlesView(
                 .align(Alignment.CenterStart)
                 .pointerInput(clip, zoomState.zoomLevel) {
                     if (!clip.hasLoaded) return@pointerInput
-                    val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minDuration(clip.clipType)))
+                    val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minClipDuration))
                         .coerceAtLeast(zoomState.toPx(trimBounds.leadingMin))
                     val footageMaxWidth = if (clip.footageDuration != null) {
                         zoomState.toPx(clip.duration + clip.trimOffset)
@@ -195,8 +194,10 @@ internal fun ClipTrimHandlesView(
                     }
                     val trackCap = zoomState.toPx(trimBounds.leadingMax)
                     val maxWidth = minOf(footageMaxWidth, trackCap)
+                    var initialWidth = 0f
                     detectHorizontalDragGestures(
                         onDragStart = {
+                            initialWidth = width
                             onDragStart(type = ClipDragType.Leading)
                         },
                         onHorizontalDrag = { _, drag ->
@@ -237,19 +238,19 @@ internal fun ClipTrimHandlesView(
                             var timeOffset = clip.timeOffset
                             var duration = clip.duration
 
-                            val delta = duration - zoomState.toSeconds(width)
+                            val delta = zoomState.toSeconds(initialWidth - width)
 
                             if (!clip.isInBackgroundTrack) {
                                 timeOffset = (timeOffset + delta).coerceAtLeast(0.seconds)
                             }
-                            trimOffset = (trimOffset + delta).coerceAtLeast(0.seconds)
+                            trimOffset += delta
                             duration -= delta
 
                             onEvent(
                                 BlockEvent.OnUpdateTrim(
                                     trimOffset = trimOffset,
-                                    timeOffset = (timeOffset - clip.transitionTrimLead).coerceAtLeast(0.seconds),
-                                    duration = duration + clip.transitionTrimLead + clip.transitionTrimTail,
+                                    timeOffset = timeOffset,
+                                    duration = duration,
                                 ),
                             )
                             // Note: `liveTrim` is cleared by TrackView once the engine refresh lands. Clearing it here would
@@ -275,14 +276,11 @@ internal fun ClipTrimHandlesView(
                 .align(Alignment.CenterEnd)
                 .pointerInput(clip, zoomState.zoomLevel) {
                     if (!clip.hasLoaded) return@pointerInput
-                    val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minDuration(clip.clipType)))
+                    val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minClipDuration))
                         .coerceAtLeast(zoomState.toPx(trimBounds.trailingMin))
                     val effectiveFootageDuration = clip.effectiveFootageDuration
                     val footageMaxWidth = if (effectiveFootageDuration != null) {
-                        zoomState.toPx(
-                            effectiveFootageDuration - clip.trimOffset -
-                                clip.transitionTrimLead - clip.transitionTrimTail,
-                        ).coerceAtLeast(minWidth)
+                        zoomState.toPx(effectiveFootageDuration - clip.trimOffset).coerceAtLeast(minWidth)
                     } else {
                         Float.POSITIVE_INFINITY
                     }
@@ -326,11 +324,7 @@ internal fun ClipTrimHandlesView(
                             trailingTrimHandleOvershoot.value = 0f
                             onDragEnd()
                             val newDuration = zoomState.toSeconds(width)
-                            onEvent(
-                                BlockEvent.OnUpdateDuration(
-                                    newDuration + clip.transitionTrimLead + clip.transitionTrimTail,
-                                ),
-                            )
+                            onEvent(BlockEvent.OnUpdateDuration(newDuration))
                             // `liveTrim` is cleared by TrackView on engine refresh; see
                             // comment in the leading trim onDragEnd above.
                         },

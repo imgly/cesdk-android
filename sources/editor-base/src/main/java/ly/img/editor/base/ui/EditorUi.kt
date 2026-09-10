@@ -76,10 +76,6 @@ import ly.img.editor.base.dock.OptionsBottomSheetContent
 import ly.img.editor.base.dock.options.adjustment.AdjustmentOptionsSheet
 import ly.img.editor.base.dock.options.animation.AnimationBottomSheetContent
 import ly.img.editor.base.dock.options.animation.AnimationSheet
-import ly.img.editor.base.dock.options.captions.CaptionStyleBottomSheetContent
-import ly.img.editor.base.dock.options.captions.CaptionStyleSheet
-import ly.img.editor.base.dock.options.captions.CaptionsBottomSheetContent
-import ly.img.editor.base.dock.options.captions.CaptionsSheet
 import ly.img.editor.base.dock.options.colors.ColorsBottomSheetContent
 import ly.img.editor.base.dock.options.colors.ColorsSheet
 import ly.img.editor.base.dock.options.crop.CropBottomSheetContent
@@ -99,10 +95,6 @@ import ly.img.editor.base.dock.options.speed.SpeedBottomSheetContent
 import ly.img.editor.base.dock.options.speed.SpeedSheet
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheet
 import ly.img.editor.base.dock.options.textBackground.TextBackgroundBottomSheetContent
-import ly.img.editor.base.dock.options.textonpath.TextOnPathBottomSheetContent
-import ly.img.editor.base.dock.options.textonpath.TextOnPathSheet
-import ly.img.editor.base.dock.options.transition.TransitionBottomSheetContent
-import ly.img.editor.base.dock.options.transition.TransitionSheet
 import ly.img.editor.base.dock.options.volume.VolumeBottomSheetContent
 import ly.img.editor.base.dock.options.volume.VolumeSheet
 import ly.img.editor.base.engine.EngineCanvasView
@@ -118,7 +110,6 @@ import ly.img.editor.core.compose.rememberLastValue
 import ly.img.editor.core.configuration.EditorConfiguration
 import ly.img.editor.core.engine.EngineRenderTarget
 import ly.img.editor.core.event.EditorEvent
-import ly.img.editor.core.getDisplayMessage
 import ly.img.editor.core.iconpack.Close
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.navbar.SystemNavBar
@@ -138,7 +129,6 @@ import ly.img.editor.core.ui.sheet.Sheet
 import ly.img.editor.core.ui.utils.activity
 import ly.img.editor.core.ui.utils.lifecycle.LifecycleEventEffect
 import ly.img.editor.core.ui.utils.toPx
-import ly.img.engine.EngineException
 
 @OptIn(FlowPreview::class, UnstableEditorApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -312,16 +302,6 @@ fun EditorScope.EditorUi(
                         )
                     }
                 }
-
-                is SingleEvent.SnackbarError -> {
-                    uiScope.launch {
-                        snackBarHostState.showSnackbar(
-                            message = (it.throwable as? EngineException)?.getDisplayMessage(activity)
-                                ?: it.throwable.message ?: "",
-                            duration = it.duration,
-                        )
-                    }
-                }
                 else -> {}
             }
         }
@@ -427,10 +407,7 @@ fun EditorScope.EditorUi(
                                         }
                                     }
                                 }
-                                if (content !is CustomBottomSheetContent &&
-                                    content.type !is SheetType.Voiceover &&
-                                    content.type !is SheetType.Captions
-                                ) {
+                                if (content !is CustomBottomSheetContent && content.type !is SheetType.Voiceover) {
                                     Spacer(Modifier.height(8.dp))
                                 }
                                 when (content) {
@@ -547,12 +524,6 @@ fun EditorScope.EditorUi(
                                     is VolumeBottomSheetContent -> VolumeSheet(content.uiState, onEvent)
                                     is ReorderBottomSheetContent -> ReorderSheet(content.timelineState, onEvent)
                                     is AnimationBottomSheetContent -> AnimationSheet(content.uiState, onEvent)
-                                    is TransitionBottomSheetContent -> TransitionSheet(
-                                        uiState = content.uiState,
-                                        onColorPickerActiveChanged = onColorPickerActiveChanged,
-                                        onEvent = onEvent,
-                                    )
-                                    is TextOnPathBottomSheetContent -> TextOnPathSheet(content.uiState, onEvent)
                                     is TextBackgroundBottomSheetContent -> TextBackgroundBottomSheet(
                                         uiState = content.uiState,
                                         onColorPickerActiveChanged = onColorPickerActiveChanged,
@@ -574,22 +545,9 @@ fun EditorScope.EditorUi(
                                             onColorPickerActiveChanged = onColorPickerActiveChanged,
                                             onEvent = onEvent,
                                         )
-                                    is CaptionsBottomSheetContent ->
-                                        CaptionsSheet(
-                                            uiState = content.uiState,
-                                            onEvent = onEvent,
-                                        )
-                                    is CaptionStyleBottomSheetContent ->
-                                        CaptionStyleSheet(
-                                            uiState = content.uiState,
-                                            onEvent = onEvent,
-                                        )
                                     is CustomBottomSheetContent -> content.content(this@EditorUi)
                                 }
-                                if (content !is CustomBottomSheetContent &&
-                                    content.type !is SheetType.Voiceover &&
-                                    content.type !is SheetType.Captions
-                                ) {
+                                if (content !is CustomBottomSheetContent && content.type !is SheetType.Voiceover) {
                                     Spacer(Modifier.height(8.dp))
                                 }
                             }
@@ -671,15 +629,14 @@ fun EditorScope.EditorUi(
                                 }
                             }
 
-                            if (uiState.isEditingText && uiState.editingTextCardUiState != null) {
+                            if (uiState.isEditingText) {
                                 EditingTextCard(
                                     modifier = Modifier
                                         .align(Alignment.BottomStart)
                                         .onGloballyPositioned {
                                             viewModel.send(Event.OnKeyboardHeightChange(it.size.height / oneDpInPx))
                                         },
-                                    uiState = uiState.editingTextCardUiState,
-                                    onEvent = onEvent,
+                                    onClose = { viewModel.send(Event.OnKeyboardClose) },
                                 )
                             }
 

@@ -9,5 +9,4 @@ enum class BlockType {
     Page,
     Video,
     Audio,
-    Caption,
 }

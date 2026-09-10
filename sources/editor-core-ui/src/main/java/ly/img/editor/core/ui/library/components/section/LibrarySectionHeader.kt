@@ -72,7 +72,7 @@ internal fun LibrarySectionHeader(
             .fillMaxWidth(),
         content = {
             Text(
-                text = item.title ?: stringResource(id = item.titleRes),
+                text = stringResource(id = item.titleRes),
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

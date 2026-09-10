@@ -15,21 +15,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.LinearGradientShader
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RadialGradientShader
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.unit.Dp
@@ -131,9 +127,7 @@ internal fun FillButton(
     val primaryColor = MaterialTheme.colorScheme.primary
     val outlineColor = MaterialTheme.colorScheme.outline
     val noStroke = fill == null
-    val solidColors = (fill as? SolidFill)?.colors
-    val multiColor = (solidColors?.size ?: 0) > 1
-    val colorFill = (fill as? SolidFill)?.mainColor
+    val colorFill = if (fill is SolidFill) fill.mainColor else null
     val fillSize = buttonSize.toPx()
     val brush: Brush? = when (fill) {
         is SolidFill -> null
@@ -211,24 +205,7 @@ internal fun FillButton(
 
                 val circleRadius = size.minDimension / 2 - selectionStrokeWidthPx * 2 - contrastStrokeWidthPx
 
-                if (multiColor) {
-                    val stripeColors = checkNotNull(solidColors)
-                    val circlePath = Path().apply {
-                        addOval(Rect(center = center, radius = circleRadius))
-                    }
-                    clipPath(circlePath) {
-                        val stripeWidth = circleRadius * 2f / stripeColors.size
-                        val left = center.x - circleRadius
-                        val top = center.y - circleRadius
-                        stripeColors.forEachIndexed { index, stripeColor ->
-                            drawRect(
-                                color = stripeColor,
-                                topLeft = Offset(left + stripeWidth * index, top),
-                                size = Size(stripeWidth, circleRadius * 2f),
-                            )
-                        }
-                    }
-                } else if (brush != null) {
+                if (brush != null) {
                     drawCircle(
                         brush = brush,
                         radius = circleRadius,

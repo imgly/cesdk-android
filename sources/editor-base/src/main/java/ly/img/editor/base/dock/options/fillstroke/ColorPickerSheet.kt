@@ -22,7 +22,6 @@ fun ColorPickerSheet(
     onBack: () -> Unit,
     onColorChange: (Color) -> Unit,
     onEvent: (EditorEvent) -> Unit,
-    onColorChangeFinished: () -> Unit = { onEvent(BlockEvent.OnChangeFinish) },
 ) {
     BackHandler {
         onBack()
@@ -39,7 +38,9 @@ fun ColorPickerSheet(
             color = color,
             showOpacity = showOpacity,
             onColorChange = onColorChange,
-            onColorChangeFinished = onColorChangeFinished,
+            onColorChangeFinished = {
+                onEvent(BlockEvent.OnChangeFinish)
+            },
         )
 
         // Disable allowing undo/redo while color picker is open

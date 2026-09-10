@@ -1,7 +1,7 @@
 package ly.img.camera.core
 
 /**
- * Determines the layout of the two video feeds in reaction mode.
+ * Determines the layout of the camera in case of dual camera or reactions.
  */
 enum class CameraLayoutMode {
     /**

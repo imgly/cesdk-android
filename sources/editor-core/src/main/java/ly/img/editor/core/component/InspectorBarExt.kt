@@ -34,7 +34,6 @@ import ly.img.editor.core.iconpack.Animation
 import ly.img.editor.core.iconpack.AsClip
 import ly.img.editor.core.iconpack.AsOverlay
 import ly.img.editor.core.iconpack.Blur
-import ly.img.editor.core.iconpack.Captions
 import ly.img.editor.core.iconpack.CropRotate
 import ly.img.editor.core.iconpack.Delete
 import ly.img.editor.core.iconpack.Duplicate
@@ -50,15 +49,9 @@ import ly.img.editor.core.iconpack.Replace
 import ly.img.editor.core.iconpack.SelectGroup
 import ly.img.editor.core.iconpack.ShapeIcon
 import ly.img.editor.core.iconpack.Split
-import ly.img.editor.core.iconpack.TextOnPath
-import ly.img.editor.core.iconpack.TextPresets
-import ly.img.editor.core.iconpack.Transition
 import ly.img.editor.core.iconpack.Typeface
 import ly.img.editor.core.iconpack.VoiceoverAdd
 import ly.img.editor.core.iconpack.VolumeHigh
-import ly.img.editor.core.library.LibraryCategory
-import ly.img.editor.core.library.LibraryContent
-import ly.img.editor.core.library.data.AssetSourceType
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.ui.EditorIcon
 import ly.img.engine.BlockApi
@@ -69,8 +62,6 @@ import ly.img.engine.Engine
 import ly.img.engine.FillType
 import ly.img.engine.RGBAColor
 import ly.img.engine.ShapeType
-import java.text.BreakIterator
-import kotlin.time.Duration.Companion.seconds
 
 private const val KIND_STICKER = "sticker"
 private const val KIND_ANIMATED_STICKER = "animatedSticker"
@@ -80,21 +71,6 @@ private const val VOLUME_SPEED_CUTOFF = 3f
 private fun Selection.isAnyKindOfSticker(): Boolean = this.kind == KIND_STICKER || this.kind == KIND_ANIMATED_STICKER
 
 private fun Selection.isNotAnyKindOfSticker() = !this.isAnyKindOfSticker()
-
-private fun Engine.canShowTransition(outgoing: DesignBlock): Boolean {
-    if (!block.isValid(outgoing)) return false
-
-    val siblings = block.getParent(outgoing)
-        ?.let(block::getChildren)
-        ?.sortedBy(block::getTimeOffset)
-        .orEmpty()
-    val incoming = siblings.getOrNull(siblings.indexOf(outgoing) + 1) ?: return false
-    val outgoingEnd = (block.getTimeOffset(outgoing) + block.getDuration(outgoing)).seconds
-    val incomingStart = block.getTimeOffset(incoming).seconds
-    return block.supportsTransition(outgoing) &&
-        block.supportsTransition(incoming) &&
-        incomingStart <= outgoingEnd + 0.001.seconds
-}
 
 /**
  * An extension function for checking whether the [designBlock] is a background track.
@@ -133,39 +109,6 @@ private fun Engine.getPlaybackControlBlock(designBlock: DesignBlock): DesignBloc
     }
     else -> null
 }
-
-/**
- * How far from a caption's edges the playhead has to sit for a split to be offered.
- *
- * Kept equal to the timeline's `minCaptionClipDuration`, which this module cannot read: a split cuts on the
- * playhead, so this margin is exactly what stops either half coming out shorter than the timeline will let
- * the user grab back.
- */
-private const val CAPTION_SPLIT_MARGIN_SECONDS = 0.1
-
-/**
- * Whether [caption] can be divided where the playhead sits: the playhead has to be inside it, and the text has
- * to have somewhere to cut, since a caption divides its line as well as its time.
- */
-private fun Engine.isCaptionSplittable(caption: DesignBlock): Boolean = runCatching {
-    val page = scene.getCurrentPage() ?: return@runCatching false
-    val playhead = block.getPlaybackTime(page)
-    val start = block.getTimeOffset(caption)
-    val duration = block.getDuration(caption)
-    val isPlayheadInside = playhead > start + CAPTION_SPLIT_MARGIN_SECONDS &&
-        playhead < start + duration - CAPTION_SPLIT_MARGIN_SECONDS
-    isPlayheadInside && hasTwoCharacters(block.getString(caption, CAPTION_TEXT_PROPERTY))
-}.getOrDefault(false)
-
-/** Whether [text] holds the two user-perceived characters a split needs. A single emoji is two UTF-16 units but one. */
-private fun hasTwoCharacters(text: String): Boolean {
-    val characters = BreakIterator.getCharacterInstance().apply { setText(text) }
-    characters.first()
-    return characters.next() != BreakIterator.DONE && characters.next() != BreakIterator.DONE
-}
-
-/** The property holding a caption's text. Captions live in the `caption/` namespace, never `text/`. */
-private const val CAPTION_TEXT_PROPERTY = "caption/text"
 
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.rememberReorder].
@@ -226,51 +169,13 @@ fun InspectorBar.Button.rememberAnimations(builder: InspectorBar.ButtonBuilder.(
         visible = {
             remember(this) {
                 val selection = editorContext.selection
-                // The engine animates a caption but does not sync animations across a caption track, so one
-                // caption would animate while the rest of the subtitles stayed still.
-                selection.type != DesignBlockType.Page &&
-                    selection.type != DesignBlockType.Audio &&
-                    selection.type != DesignBlockType.Caption
+                selection.type != DesignBlockType.Page && selection.type != DesignBlockType.Audio
             }
         }
         vectorIcon = { IconPack.Animation }
         textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_animations) }
         onClick = {
             editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Animation()))
-        }
-        builder()
-    }
-
-/**
- * The id of the inspector bar button returned by [InspectorBar.Button.rememberTransition].
- */
-val InspectorBar.Button.Id.transition by unsafeLazy {
-    EditorComponentId("ly.img.component.inspectorBar.button.transition")
-}
-
-/**
- * A helper function that returns a [Button] that opens the transition sheet for the selected design block.
- * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
- * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
- *
- * @param builder the builder lambda to override the default builder.
- * @return a button that will be displayed in the inspector bar.
- */
-@Composable
-fun InspectorBar.Button.rememberTransition(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
-    InspectorBar.Button.remember {
-        id = { InspectorBar.Button.Id.transition }
-        visible = {
-            remember(this) {
-                val engine = editorContext.engine
-                val outgoing = editorContext.selection.designBlock
-                engine.canShowTransition(outgoing)
-            }
-        }
-        vectorIcon = { IconPack.Transition }
-        textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_transition) }
-        onClick = {
-            editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Transition(editorContext.selection.designBlock)))
         }
         builder()
     }
@@ -583,8 +488,6 @@ fun InspectorBar.Button.rememberDuplicate(builder: InspectorBar.ButtonBuilder.()
         visible = {
             remember(this) {
                 editorContext.selection.type != DesignBlockType.Page &&
-                    // A duplicate would land outside the caption track.
-                    editorContext.selection.type != DesignBlockType.Caption &&
                     editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/duplicate")
             }
         }
@@ -621,8 +524,6 @@ fun InspectorBar.Button.rememberLayer(builder: InspectorBar.ButtonBuilder.() -> 
                 val selection = editorContext.selection
                 selection.type != DesignBlockType.Page &&
                     selection.type != DesignBlockType.Audio &&
-                    // Layer order has no meaning inside a caption track.
-                    selection.type != DesignBlockType.Caption &&
                     (
                         editorContext.engine.block.isAllowedByScope(selection.designBlock, "layer/blendMode") ||
                             editorContext.engine.block.isAllowedByScope(selection.designBlock, "layer/opacity") ||
@@ -650,7 +551,6 @@ val InspectorBar.Button.Id.split by unsafeLazy {
 /**
  * A composable helper function that creates and remembers an [Button] that splits currently selected
  * design block via [EditorEvent.Selection.Split] in a video scene.
- * A caption is only enabled while the playhead sits inside it, since a caption divides where the playhead is.
  * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
  * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
  *
@@ -668,23 +568,6 @@ fun InspectorBar.Button.rememberSplit(builder: InspectorBar.ButtonBuilder.() -> 
         }
         vectorIcon = { IconPack.Split }
         textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_split) }
-        enabled = {
-            val selection = editorContext.selection
-            if (selection.type != DesignBlockType.Caption) {
-                true
-            } else {
-                val engine = editorContext.engine
-                val initial = remember(selection.designBlock) { engine.isCaptionSplittable(selection.designBlock) }
-                // Only the derived boolean is observed, so playback republishes at most once per crossing.
-                val splittable by remember(selection.designBlock) {
-                    engine.event.subscribe()
-                        .map { engine.isCaptionSplittable(selection.designBlock) }
-                        .distinctUntilChanged()
-                        .onStart { emit(initial) }
-                }.collectAsState(initial = initial)
-                splittable
-            }
-        }
         onClick = {
             editorContext.eventHandler.send(EditorEvent.Selection.Split())
         }
@@ -723,8 +606,7 @@ internal fun Engine.getFill(designBlock: DesignBlock): Fill? = if (!block.suppor
 } else {
     when (block.getFillType(designBlock)) {
         FillType.Color -> {
-            val type = DesignBlockType.getOrNull(block.getType(designBlock))
-            val rgbaColor = if (type == DesignBlockType.Text || type == DesignBlockType.Caption) {
+            val rgbaColor = if (DesignBlockType.getOrNull(block.getType(designBlock)) == DesignBlockType.Text) {
                 block.getTextColors(designBlock).first()
             } else {
                 block.getColor(designBlock, "fill/solid/color")
@@ -801,23 +683,13 @@ private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon
         block.hasColorOrGradientFill(designBlock) &&
         !hideFillForLine &&
         block.isAllowedByScope(designBlock, "fill/change")
-    val fillEnabled = showFill && block.isFillEnabled(designBlock)
-    val type = DesignBlockType.getOrNull(block.getType(designBlock))
-    val isTextLike = type == DesignBlockType.Text || type == DesignBlockType.Caption
     return EditorIcon.FillStroke(
         showFill = showFill,
         showStroke = showStroke,
-        // A text block can carry several colours across its runs; surface them all as a
-        // multi-colour SolidFill so the swatch stacks them, matching the inline text swatch.
-        fill = when {
-            !fillEnabled -> null
-            isTextLike ->
-                runCatching { block.getTextColors(designBlock).map { it.toComposeColor(this) } }
-                    .getOrNull()
-                    ?.takeIf { it.isNotEmpty() }
-                    ?.let { SolidFill(it) }
-                    ?: getFill(designBlock)
-            else -> getFill(designBlock)
+        fill = if (showFill && block.isFillEnabled(designBlock)) {
+            getFill(designBlock)
+        } else {
+            null
         },
         stroke = if (showStroke && block.isStrokeEnabled(designBlock)) {
             getStrokeColor(designBlock)
@@ -958,8 +830,6 @@ fun InspectorBar.Button.rememberMoveAsClip(builder: InspectorBar.ButtonBuilder.(
         visible = {
             remember(this) {
                 editorContext.selection.type != DesignBlockType.Audio &&
-                    // A caption lives only on the caption track.
-                    editorContext.selection.type != DesignBlockType.Caption &&
                     editorContext.selection.parentDesignBlock.let {
                         it != null && editorContext.engine.isBackgroundTrack(it).not()
                     }
@@ -1295,7 +1165,7 @@ fun InspectorBar.Button.rememberFormatText(builder: InspectorBar.ButtonBuilder.(
         id = { InspectorBar.Button.Id.formatText }
         visible = {
             remember(this) {
-                editorContext.selection.type.isTextLike &&
+                editorContext.selection.type == DesignBlockType.Text &&
                     editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "text/character")
             }
         }
@@ -1303,97 +1173,6 @@ fun InspectorBar.Button.rememberFormatText(builder: InspectorBar.ButtonBuilder.(
         textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_format_text) }
         onClick = {
             editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.FormatText()))
-        }
-        builder()
-    }
-
-/**
- * The id of the inspector bar button returned by [InspectorBar.Button.rememberTextPresets].
- */
-val InspectorBar.Button.Id.textPresets by unsafeLazy {
-    EditorComponentId("ly.img.component.inspectorBar.button.textPresets")
-}
-
-private val textPresetsCategory by lazy {
-    LibraryCategory(
-        tabTitleRes = R.string.ly_img_editor_inspector_bar_button_text_styles,
-        tabSelectedIcon = IconPack.TextPresets,
-        tabUnselectedIcon = IconPack.TextPresets,
-        content = LibraryContent.Sections(
-            titleRes = R.string.ly_img_editor_inspector_bar_button_text_styles,
-            // Text Combinations are excluded — they are a group (a different block type).
-            sections = listOf(
-                LibraryContent.plainTextFlatSection,
-                LibraryContent.textStylesSection,
-                LibraryContent.curvedTextSection,
-            ),
-        ),
-    )
-}
-
-/**
- * A composable helper function that creates and remembers an [Button] that opens the text style
- * presets library sheet via [EditorEvent.Sheet.Open]. Selected preset is applied to the currently
- * selected text block via the engine asset replace path.
- * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
- * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
- *
- * @param builder the builder lambda to override the default builder.
- * @return a button that will be displayed in the inspector bar.
- */
-@Composable
-fun InspectorBar.Button.rememberTextPresets(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
-    InspectorBar.Button.remember {
-        id = { InspectorBar.Button.Id.textPresets }
-        visible = {
-            remember(this) {
-                editorContext.selection.type == DesignBlockType.Text &&
-                    editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "text/character") &&
-                    editorContext.engine.asset.findAllSources().let { registered ->
-                        AssetSourceType.TextPlain.sourceId in registered ||
-                            AssetSourceType.TextStyles.sourceId in registered ||
-                            AssetSourceType.TextCurves.sourceId in registered
-                    }
-            }
-        }
-        vectorIcon = { IconPack.TextPresets }
-        textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_text_styles) }
-        onClick = {
-            editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.LibraryReplace(libraryCategory = textPresetsCategory)))
-        }
-        builder()
-    }
-
-/**
- * The id of the inspector bar button returned by [InspectorBar.Button.rememberTextOnPath].
- */
-val InspectorBar.Button.Id.textOnPath by unsafeLazy {
-    EditorComponentId("ly.img.component.inspectorBar.button.textOnPath")
-}
-
-/**
- * A composable helper function that creates and remembers an [Button] that opens the text on path sheet via
- * [EditorEvent.Sheet.Open].
- * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
- * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
- *
- * @param builder the builder lambda to override the default builder.
- * @return a button that will be displayed in the inspector bar.
- */
-@Composable
-fun InspectorBar.Button.rememberTextOnPath(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
-    InspectorBar.Button.remember {
-        id = { InspectorBar.Button.Id.textOnPath }
-        visible = {
-            remember(this) {
-                editorContext.selection.type == DesignBlockType.Text &&
-                    editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "text/character")
-            }
-        }
-        vectorIcon = { IconPack.TextOnPath }
-        textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_text_on_path) }
-        onClick = {
-            editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.TextOnPath()))
         }
         builder()
     }
@@ -1538,7 +1317,7 @@ fun InspectorBar.Button.rememberTextBackground(
     id = { InspectorBar.Button.Id.textBackground }
     visible = {
         remember(this) {
-            editorContext.selection.type.isTextLike &&
+            editorContext.selection.type == DesignBlockType.Text &&
                 editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "text/character")
         }
     }
@@ -1552,76 +1331,3 @@ fun InspectorBar.Button.rememberTextBackground(
     }
     builder()
 }
-
-/** Whether blocks of this type keep their text properties in a text namespace, and so share its surfaces. */
-private val DesignBlockType.isTextLike: Boolean
-    get() = this == DesignBlockType.Text || this == DesignBlockType.Caption
-
-/**
- * The id of the inspector bar button returned by [InspectorBar.Button.rememberEditCaptions].
- */
-val InspectorBar.Button.Id.editCaptions by unsafeLazy {
-    EditorComponentId("ly.img.component.inspectorBar.button.editCaptions")
-}
-
-/**
- * A composable helper function that creates and remembers an [Button] that opens the captions sheet via
- * [EditorEvent.Sheet.Open], with the selected caption revealed in the list.
- * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
- * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
- *
- * @param builder the builder lambda to override the default builder.
- * @return a button that will be displayed in the inspector bar.
- */
-@Composable
-fun InspectorBar.Button.rememberEditCaptions(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
-    InspectorBar.Button.remember {
-        id = { InspectorBar.Button.Id.editCaptions }
-        visible = {
-            remember(this) {
-                editorContext.selection.type == DesignBlockType.Caption &&
-                    editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "text/edit")
-            }
-        }
-        vectorIcon = { IconPack.Captions }
-        textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_edit_captions) }
-        onClick = {
-            editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Captions()))
-        }
-        builder()
-    }
-
-/**
- * The id of the inspector bar button returned by [InspectorBar.Button.rememberCaptionStyle].
- */
-val InspectorBar.Button.Id.captionStyle by unsafeLazy {
-    EditorComponentId("ly.img.component.inspectorBar.button.captionStyle")
-}
-
-/**
- * A composable helper function that creates and remembers an [Button] that opens the caption style preset
- * grid via [EditorEvent.Sheet.Open]. A preset is applied to the selected caption and the engine syncs the
- * style across every caption on its track. Hidden when [AssetSourceType.CaptionPresets] is not registered.
- * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
- * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
- *
- * @param builder the builder lambda to override the default builder.
- * @return a button that will be displayed in the inspector bar.
- */
-@Composable
-fun InspectorBar.Button.rememberCaptionStyle(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
-    InspectorBar.Button.remember {
-        id = { InspectorBar.Button.Id.captionStyle }
-        visible = {
-            remember(this) {
-                editorContext.selection.type == DesignBlockType.Caption &&
-                    AssetSourceType.CaptionPresets.sourceId in editorContext.engine.asset.findAllSources()
-            }
-        }
-        vectorIcon = { IconPack.TextPresets }
-        textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_caption_style) }
-        onClick = {
-            editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.CaptionStyle()))
-        }
-        builder()
-    }

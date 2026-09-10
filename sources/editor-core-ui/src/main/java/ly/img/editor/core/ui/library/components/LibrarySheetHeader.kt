@@ -118,7 +118,7 @@ internal fun LibrarySearchHeader(
                         Text(
                             stringResource(
                                 R.string.ly_img_editor_asset_library_label_search_placeholder,
-                                uiState.title ?: stringResource(id = uiState.titleRes),
+                                stringResource(id = uiState.titleRes),
                             ),
                         )
                     },
@@ -164,7 +164,7 @@ internal fun LibrarySearchHeader(
                 TopAppBar(
                     title = {
                         Text(
-                            uiState.title ?: stringResource(id = uiState.titleRes),
+                            stringResource(id = uiState.titleRes),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )

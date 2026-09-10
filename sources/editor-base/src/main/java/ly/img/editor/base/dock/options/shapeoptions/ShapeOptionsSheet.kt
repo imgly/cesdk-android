@@ -36,7 +36,7 @@ fun ShapeOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangePolygonSides(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = 3f..12f,
-                        step = 1f,
+                        steps = 8,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     PropertySlider(
@@ -55,7 +55,7 @@ fun ShapeOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangeStarPoints(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = 3f..12f,
-                        step = 1f,
+                        steps = 8,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     PropertySlider(

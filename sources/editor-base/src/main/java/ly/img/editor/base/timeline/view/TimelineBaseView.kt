@@ -15,7 +15,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
@@ -56,10 +55,10 @@ internal fun TimelineBaseView(
             .pointerInput(Unit) {
                 detectZoomGestures(
                     onZoom = { zoom ->
-                        timelineState.setZoom(zoom)
+                        zoomState.setZoom(zoom)
                     },
                     onZoomEnd = {
-                        timelineState.refreshZoomDependentThumbnails()
+                        timelineState.refreshThumbnails()
                     },
                 )
             }
@@ -89,15 +88,11 @@ internal fun TimelineBaseView(
 
         // Set playback time corresponding to scroll position
         val onePxInDp = 1f.toDp()
-        LaunchedEffect(scrollState, zoomState) {
-            snapshotFlow { scrollState.value to scrollState.isScrollInProgress }
-                .collect { (scrollOffset, isScrolling) ->
-                    if (isScrolling && timelineState.dragDrop.phase !is DragDropState.Dragging) {
-                        val time = zoomState.toSeconds(maxOf(0, scrollOffset) * onePxInDp)
-                            .coerceAtMost(timelineState.totalDuration)
-                        playerState.setPlaybackTime(time)
-                    }
-                }
+        LaunchedEffect(scrollState.value) {
+            if (isScrollInProgress && timelineState.dragDrop.phase !is DragDropState.Dragging) {
+                val time = zoomState.toSeconds(maxOf(0, scrollState.value) * onePxInDp).coerceAtMost(timelineState.totalDuration)
+                playerState.setPlaybackTime(time)
+            }
         }
 
         // Set scroll position corresponding to playback time

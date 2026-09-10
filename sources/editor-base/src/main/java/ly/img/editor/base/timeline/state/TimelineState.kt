@@ -17,8 +17,6 @@ import ly.img.editor.base.timeline.dragdrop.DragDropState
 import ly.img.editor.base.timeline.dragdrop.DragDropStore
 import ly.img.editor.base.timeline.thumbnail.ThumbnailsManager
 import ly.img.editor.base.timeline.track.Track
-import ly.img.editor.base.timeline.track.TransitionSeam
-import ly.img.editor.base.timeline.track.sortedClips
 import ly.img.editor.base.timeline.view.TimelineView
 import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.component.TimelineOwner
@@ -38,7 +36,6 @@ import ly.img.engine.Engine
 import ly.img.engine.EngineException
 import ly.img.engine.FillType
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.seconds
 
 private const val VOICEOVER_KIND = "voiceover"
@@ -71,8 +68,7 @@ class TimelineState(
         }
     }
 
-    val animationPreview = AnimationPreview(engine, coroutineScope)
-    val playerState = PlayerState(engine, animationPreview::stop)
+    val playerState = PlayerState(engine)
     val dataSource = TimelineDataSource()
     val zoomState = TimelineZoomState()
     val dragDrop = DragDropStore(
@@ -87,21 +83,13 @@ class TimelineState(
 
     fun getThumbnailProvider(designBlock: DesignBlock) = thumbnailsManager.getProvider(designBlock)
 
-    fun setZoom(zoom: Float) {
-        zoomState.setZoom(zoom)
-        updateTransitionSeams()
-    }
-
     fun refresh(events: List<DesignBlockEvent>) {
         if (consumeSuppressedRefresh()) return
 
-        val affectedTracks = applyEngineEvents(events)
+        applyEngineEvents(events)
 
-        val selectionTracks = updateSelection(engine.block.findAllSelected().firstOrNull())
+        updateSelection(engine.block.findAllSelected().firstOrNull())
         updateDuration()
-        if (affectedTracks.isNotEmpty() || selectionTracks.isNotEmpty()) {
-            updateTransitionSeams(affectedTracks + selectionTracks)
-        }
         playerState.refresh()
         clearOverridesIfIdle()
     }
@@ -119,14 +107,6 @@ class TimelineState(
         dataSource.allClips().forEach { clip ->
             val width = zoomState.toDp(clip.duration)
             thumbnailsManager.refreshThumbnails(clip, width)
-        }
-    }
-
-    /** Skips text and caption labels, which render the same at any zoom. */
-    fun refreshZoomDependentThumbnails() {
-        dataSource.allClips().forEach { clip ->
-            if (clip.clipType == ClipType.Text || clip.clipType == ClipType.Caption) return@forEach
-            thumbnailsManager.refreshThumbnails(clip, zoomState.toDp(clip.duration))
         }
     }
 
@@ -177,9 +157,7 @@ class TimelineState(
      * block order changed or any block was created/destroyed; otherwise targeted
      * per-clip updates for UPDATED events.
      */
-
-    /** @return tracks whose seam geometry may have changed. */
-    private fun applyEngineEvents(events: List<DesignBlockEvent>): Set<Track> {
+    private fun applyEngineEvents(events: List<DesignBlockEvent>) {
         cleanUpEmptyTracks()
 
         val blocks = engine.block.getChildren(page)
@@ -191,20 +169,14 @@ class TimelineState(
         ) {
             pageChildren = blocks
             refresh()
-            return dataSource.allTracks().toSet()
         } else {
             // dedup updated blocks in a single pass — no intermediate list
             val processed = HashSet<DesignBlock>()
-            val affectedTracks = linkedSetOf<Track>()
             events.forEach { event ->
                 if (event.type == DesignBlockEvent.Type.UPDATED && processed.add(event.block)) {
-                    dataSource.findClip(event.block)?.let {
-                        refresh(it.id, it)
-                        affectedTracks += dataSource.findTrack(it)
-                    }
+                    dataSource.findClip(event.block)?.let { refresh(it.id, it) }
                 }
             }
-            return affectedTracks
         }
     }
 
@@ -225,191 +197,22 @@ class TimelineState(
         refresh()
         updateSelection(engine.block.findAllSelected().firstOrNull())
         updateDuration()
-        updateTransitionSeams()
         playerState.refresh()
     }
 
-    private fun updateSelection(designBlock: DesignBlock?): Set<Track> {
-        val newClip = if (designBlock == null) {
+    private fun updateSelection(designBlock: DesignBlock?) {
+        val selection = if (designBlock == null) {
             null
         } else {
             dataSource.findClip(designBlock)
         }
-        val previousClip = selectedClip
-        selectedClip = newClip
 
-        if (newClip?.id == previousClip?.id) return emptySet()
-
-        val affectedTracks = buildSet {
-            previousClip
-                ?.let { dataSource.findClip(it.id) }
-                ?.let { add(dataSource.findTrack(it)) }
-            newClip?.let { add(dataSource.findTrack(it)) }
-        }
-
-        if (newClip != null) {
+        if (selection != null && selection.id != selectedClip?.id) {
             playerState.pause()
         }
 
-        return affectedTracks
+        selectedClip = selection
     }
-
-    private fun updateTransitionSeams(tracks: Iterable<Track> = dataSource.allTracks().toList()) {
-        val selectedClipId = selectedClip?.id
-        val playbackDuration = totalDuration
-        tracks.forEach { track ->
-            val clipsById = track.clips.associateBy { it.id }
-            val transitionPairs = mutableMapOf<Pair<DesignBlock, DesignBlock>, TransitionPairGeometry>()
-
-            fun transitionPair(
-                outgoing: DesignBlock,
-                incoming: DesignBlock,
-            ): TransitionPairGeometry {
-                return transitionPairs.getOrPut(outgoing to incoming) {
-                    val outgoingClip = clipsById[outgoing] ?: return@getOrPut TransitionPairGeometry()
-                    val incomingClip = clipsById[incoming] ?: return@getOrPut TransitionPairGeometry()
-                    val canShow = engine.canShowTransition(
-                        outgoing = outgoing,
-                        incoming = incoming,
-                        outgoingEnd = outgoingClip.rawTimeOffset + outgoingClip.rawDuration,
-                        incomingStart = incomingClip.rawTimeOffset,
-                    )
-                    if (!canShow) return@getOrPut TransitionPairGeometry()
-
-                    val transition = engine.block.getTransition(outgoing)
-                    val hasTransition = engine.block.isValid(transition)
-                    TransitionPairGeometry(
-                        canShow = true,
-                        hasTransition = hasTransition,
-                        overlap = if (hasTransition) {
-                            minOf(
-                                engine.block.getDuration(transition).seconds,
-                                outgoingClip.rawDuration / 2,
-                                incomingClip.rawDuration / 2,
-                            ).coerceAtLeast(ZERO)
-                        } else {
-                            ZERO
-                        },
-                    )
-                }
-            }
-            val trims = clipsById.keys.associateWith { TransitionTrim() }.toMutableMap()
-            val engineSiblings = track.clips.firstOrNull()?.id
-                ?.let(engine.block::getParent)
-                ?.let(engine.block::getChildren)
-                .orEmpty()
-            engineSiblings.zipWithNext().forEach pairLoop@{ (outgoing, incoming) ->
-                val overlap = transitionPair(outgoing, incoming).overlap
-                if (overlap == ZERO) return@pairLoop
-                trims[outgoing] = trims.getValue(outgoing).copy(tail = overlap / 2)
-                trims[incoming] = trims.getValue(incoming).copy(lead = overlap / 2)
-            }
-
-            // Transition blocks emit their own engine events, not clip events. Refresh the
-            // transition-derived clip state here so a selected clip's trim handles never retain
-            // the pre-transition geometry.
-            track.clips.indices.forEach { index ->
-                val clip = track.clips[index]
-                val transitionTrim = trims.getValue(clip.id)
-                val duration = (
-                    clip.rawDuration - transitionTrim.lead - transitionTrim.tail
-                ).coerceAtLeast(ZERO)
-                val timeOffset = clip.rawTimeOffset + transitionTrim.lead
-                if (clip.duration != duration ||
-                    clip.timeOffset != timeOffset ||
-                    clip.transitionTrimLead != transitionTrim.lead ||
-                    clip.transitionTrimTail != transitionTrim.tail
-                ) {
-                    val updatedClip = clip.copy(
-                        duration = duration,
-                        timeOffset = timeOffset,
-                        transitionTrimLead = transitionTrim.lead,
-                        transitionTrimTail = transitionTrim.tail,
-                    )
-                    track.clips[index] = updatedClip
-                    if (selectedClip?.id == updatedClip.id) {
-                        selectedClip = updatedClip
-                    }
-                }
-            }
-
-            val sortedClips = track.sortedClips()
-            val availableClipWidths = sortedClips.associate { clip ->
-                clip.id to zoomState.toDp(clip.duration)
-            }.toMutableMap()
-            val seams = buildList {
-                sortedClips.zipWithNext().forEach seamLoop@{ (outgoing, incoming) ->
-                    val pair = transitionPair(outgoing.id, incoming.id)
-                    val renderedOutgoingEnd = outgoing.timeOffset + outgoing.duration
-                    val renderedIncomingStart = incoming.timeOffset
-                    val renderedSeamTime = (renderedOutgoingEnd + renderedIncomingStart) / 2
-                    if (selectedClipId == outgoing.id ||
-                        selectedClipId == incoming.id ||
-                        !pair.canShow ||
-                        renderedSeamTime >= playbackDuration ||
-                        renderedIncomingStart > renderedOutgoingEnd + 0.001.seconds
-                    ) {
-                        return@seamLoop
-                    }
-
-                    val largeSeamRadius = TimelineConfiguration.transitionSeamSize / 2
-                    val hasSpaceForLargeSeam = listOf(outgoing, incoming).all { clip ->
-                        (availableClipWidths.getValue(clip.id) - largeSeamRadius) >=
-                            TimelineConfiguration.largeTransitionSeamMinFreeClipWidth
-                    }
-                    val isCompact = !hasSpaceForLargeSeam
-                    if (isCompact && !pair.hasTransition) return@seamLoop
-
-                    add(
-                        TransitionSeam(
-                            outgoingClip = outgoing,
-                            incomingClip = incoming,
-                            hasTransition = pair.hasTransition,
-                            isCompact = isCompact,
-                        ),
-                    )
-                    val seamRadius = if (isCompact) {
-                        TimelineConfiguration.compactTransitionSeamSize / 2
-                    } else {
-                        largeSeamRadius
-                    }
-                    availableClipWidths[outgoing.id] = availableClipWidths.getValue(outgoing.id) - seamRadius
-                    availableClipWidths[incoming.id] = availableClipWidths.getValue(incoming.id) - seamRadius
-                }
-            }
-            if (seams != track.transitionSeams) {
-                track.transitionSeams.apply {
-                    clear()
-                    addAll(seams)
-                }
-            }
-
-            val leadingTransitionSeamSizes = seams.associate { seam ->
-                seam.incomingClip.id to if (seam.isCompact) {
-                    TimelineConfiguration.compactTransitionSeamSize
-                } else {
-                    TimelineConfiguration.transitionSeamSize
-                }
-            }
-            track.clips.indices.forEach { index ->
-                val clip = track.clips[index]
-                val leadingTransitionSeamSize = leadingTransitionSeamSizes[clip.id]
-                if (clip.leadingTransitionSeamSize != leadingTransitionSeamSize) {
-                    val updatedClip = clip.copy(leadingTransitionSeamSize = leadingTransitionSeamSize)
-                    track.clips[index] = updatedClip
-                    if (selectedClip?.id == updatedClip.id) {
-                        selectedClip = updatedClip
-                    }
-                }
-            }
-        }
-    }
-
-    private data class TransitionPairGeometry(
-        val canShow: Boolean = false,
-        val hasTransition: Boolean = false,
-        val overlap: Duration = ZERO,
-    )
 
     private fun refresh() {
         dataSource.reset()
@@ -457,13 +260,8 @@ class TimelineState(
                     refresh(child, dataSource.findClip(child))
                 }
             } else {
-                val isCaptionTrack = type == DesignBlockType.CaptionTrack
-                val track = if (isCaptionTrack) {
-                    Track.caption(engineTrackId = designBlock)
-                } else {
-                    Track.engine(engineTrackId = designBlock)
-                }
-                addTrackForChildren(children, track, isCaptionTrack)
+                val track = Track.engine(engineTrackId = designBlock)
+                addTrackForChildren(children, track)
                 children.forEach { child ->
                     refresh(child, dataSource.findClip(child), track)
                 }
@@ -480,10 +278,6 @@ class TimelineState(
         var title = ""
 
         when {
-            blockType == DesignBlockType.Caption.key -> {
-                clipType = ClipType.Caption
-            }
-
             fillType == FillType.Image -> {
                 clipType = when (kind) {
                     BlockKind.Sticker -> ClipType.Sticker
@@ -549,11 +343,8 @@ class TimelineState(
 
         val isInBackgroundTrack = engine.block.isParentBackgroundTrack(designBlock)
 
-        val rawDuration = engine.block.getDuration(designBlock).seconds
-        val rawTimeOffset = engine.block.getTimeOffset(designBlock).seconds
-        val transitionTrim = engine.transitionTrim(designBlock)
-        val duration = (rawDuration - transitionTrim.lead - transitionTrim.tail).coerceAtLeast(ZERO)
-        val timeOffset = rawTimeOffset + transitionTrim.lead
+        val duration = engine.block.getDuration(designBlock).seconds
+        val timeOffset = engine.block.getTimeOffset(designBlock).seconds
         val audioFileUri = if (clipType == ClipType.Audio) {
             runCatching { engine.block.getString(designBlock, "audio/fileURI") }.getOrDefault("")
         } else {
@@ -631,11 +422,9 @@ class TimelineState(
             effectIds = effectIds,
             title = title,
             duration = duration,
-            rawDuration = rawDuration,
             footageDuration = footageDuration,
             playbackSpeed = playbackSpeed,
             timeOffset = timeOffset,
-            rawTimeOffset = rawTimeOffset,
             allowsTrimming = allowsTrimming,
             allowsSelecting = allowsSelecting,
             trimOffset = trimOffset,
@@ -646,8 +435,6 @@ class TimelineState(
             isLooping = isLooping,
             hasAnimation = anyAnimationBlock != null,
             isLiveBufferRecording = isLiveBufferAudio,
-            transitionTrimLead = transitionTrim.lead,
-            transitionTrimTail = transitionTrim.tail,
         )
 
         // Find which track the clip will go to
@@ -676,12 +463,7 @@ class TimelineState(
     private fun addTrackForChildren(
         children: List<DesignBlock>,
         track: Track,
-        isCaptionTrack: Boolean,
     ) {
-        if (isCaptionTrack) {
-            dataSource.addCaptionTrack(track)
-            return
-        }
         val isAudioTrack = children.all { child ->
             engine.block.getType(child) == DesignBlockType.Audio.key
         }
@@ -705,9 +487,8 @@ class TimelineState(
                 oldTrack.clips.remove(existingClip)
                 insertClipAtEngineIndex(track, newClip)
             } else {
-                // By id, not by value: a Clip compares all of its fields, and a caption track can hold hundreds.
-                val index = track.clips.indexOfFirst { it.id == existingClip.id }
-                if (index >= 0) track.clips[index] = newClip
+                val index = track.clips.indexOf(existingClip)
+                track.clips[index] = newClip
             }
             val audioResourceChanged = newClip.clipType == ClipType.Audio &&
                 existingClip.hasAudioResource != newClip.hasAudioResource

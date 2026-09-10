@@ -105,14 +105,11 @@ data class LibraryCategory(
                     }
 
                     text.apply {
-                        // A single "Text" row whose preview mixes all of the text sources (plain,
-                        // styles, combinations, curved). "See all" opens the full text category with
-                        // its per-type sections. Thumbnails are used in the preview, so any non-text
-                        // asset type works here.
                         LibraryContent.Section(
                             titleRes = R.string.ly_img_editor_asset_library_section_text,
                             sourceTypes = content.sourceTypes,
-                            assetType = AssetType.TextStylePreset,
+                            excludedPreviewSourceTypes = listOf(AssetSourceType.TextComponents),
+                            assetType = AssetType.Text,
                             expandContent = content,
                         ).let(::add)
                     }

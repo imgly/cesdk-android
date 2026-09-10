@@ -96,11 +96,6 @@ internal fun CountdownTimerView(
                 delay(hideDelay)
                 scale = 0f
             }
-
-            State.Capturing -> {
-                // Photo countdown reached zero — hide instantly, no morph symbol.
-                scale = 0f
-            }
         }
     }
 
@@ -115,10 +110,6 @@ internal fun CountdownTimerView(
 
             prevStatus is RecordingManager.Status.TimerRunning && newStatus is RecordingManager.Status.StartRecording -> {
                 state = State.Recording
-            }
-
-            prevStatus is RecordingManager.Status.TimerRunning && newStatus is RecordingManager.Status.TakingPhoto -> {
-                state = State.Capturing
             }
 
             prevStatus is RecordingManager.Status.TimerRunning && newStatus is RecordingManager.Status.Idle -> {
@@ -245,5 +236,4 @@ private enum class State {
     TimerRunning,
     Recording,
     TimerCancelled,
-    Capturing,
 }

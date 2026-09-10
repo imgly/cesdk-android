@@ -19,17 +19,9 @@ String getLocalProperty(String property) {
     return properties.getProperty(property)
 }
 
-String getUbqVersion() {
-    def versionFile = new File(rootDir, "../../.ubq-version")
-    return versionFile.text.trim()
-}
-
 android {
     namespace = "ly.img.editor.examples"
     compileSdk = libs.versions.androidCompileSdk.get().toInteger()
-
-    def engineInternalDeploy = Boolean.parseBoolean(System.getenv("UBQ_ANDROID_INTERNAL_DEPLOY") ?: "false")
-    def engineForceProductionLicense = Boolean.parseBoolean(System.getenv("UBQ_ANDROID_FORCE_PRODUCTION_LICENSE") ?: "false")
 
     defaultConfig {
         applicationId = "ly.img.editor.guides"
@@ -37,12 +29,6 @@ android {
         targetSdk = libs.versions.androidTargetSdk.get().toInteger()
         versionCode = 1
         versionName = "local"
-        manifestPlaceholders += [
-            imglyEngineInternalDeploy: engineInternalDeploy,
-            imglyEngineLogging: engineInternalDeploy,
-            imglyEngineStagingLicense: engineInternalDeploy && !engineForceProductionLicense,
-            imglyEngineTrackingEndpoint: System.getenv("CESDK_QA_TRACKING_ENDPOINT") ?: "",
-        ]
         testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
         ndk {
             abiFilters "arm64-v8a", "armeabi-v7a", "x86_64", "x86"
@@ -64,11 +50,6 @@ android {
             minifyEnabled false
             shrinkResources = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // Nothing consumes the extracted symbol outputs: this app has no
-            // Crashlytics and never ships through Play.
-            ndk {
-                debugSymbolLevel 'none'
-            }
         }
         debug {
             // Keep default debug settings
@@ -95,7 +76,7 @@ android {
 
     sourceSets {
         main {
-            def guidePatterns = ['engine-guides-', 'editor-guides-', 'camera-guides-']
+            def guidePatterns = ['engine-guides-', 'editor-guides-']
             def blacklist = ['editor-guides-quickstart']
             file("$projectDir/../../cesdk_android_examples").listFiles().findAll { file ->
                 file.directory && !blacklist.contains(file.name) && guidePatterns.any { pattern ->
@@ -116,17 +97,11 @@ buildConfig {
     className "ExamplesBuildConfig"
     packageName "ly.img.editor.examples"
     buildConfigField String, "LICENSE", System.env.CESDK_APP_STORE_LICENSE ?: getLocalProperty("license") ?: ""
-    buildConfigField String, "AI_GATEWAY_API_KEY", System.env.CESDK_AI_GATEWAY_API_KEY ?: getLocalProperty("ai_gateway_api_key") ?: ""
-    buildConfigField String, "GUIDE_ADD_BUTTON_BASE_URI", "https://cdn.img.ly/packages/imgly/cesdk-android/${getUbqVersion()}/assets"
 }
 
 dependencies {
     implementation project(':editor')
     implementation project(':camera')
-    implementation project(':plugin-ai-image-generation')
-    implementation project(':plugin-auto-captions')
-    implementation project(':plugin-background-removal-imgly')
-    implementation project(':plugin-background-removal-google')
     implementation libs.cesdk.engine
     implementation libs.cesdk.engine.camera
 

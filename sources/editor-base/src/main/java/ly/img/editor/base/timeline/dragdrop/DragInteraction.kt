@@ -4,10 +4,8 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.compose.ui.geometry.Offset
 import ly.img.editor.base.timeline.clip.Clip
-import ly.img.editor.base.timeline.clip.ClipType
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.timeline.state.TimelineZoomState
-import ly.img.editor.base.timeline.track.sortedClips
 import ly.img.engine.DesignBlock
 import kotlin.time.Duration
 
@@ -33,40 +31,15 @@ internal fun recomputeDragPreview(
     val desiredStart = clip.timeOffset + zoomState.toSeconds(effectiveDeltaPx)
     val pointerTime = desiredStart + zoomState.toSeconds(ctx.grabOffsetX)
 
-    if (clip.clipType == ClipType.Caption) {
-        val sourceTrack = timelineState.dataSource.findTrack(clip)
-        val clampedOffset = computeCaptionMoveOffset(
-            sortedClips = sourceTrack.sortedClips(),
-            caption = clip,
-            desiredStart = desiredStart,
-        ) ?: return
-        timelineState.dragDrop.phase = DragDropState.Dragging(
-            ctx.copy(
-                currentTouchLocation = pointerInWindow,
-                // Publish an in-lane target solely for the yellow drop-slot hint. Caption
-                // commits use this offset directly, so this never triggers DnD or reordering.
-                dropTarget = DropTarget.ExistingTrack(
-                    trackId = sourceTrack.id,
-                    insertIndex = 0,
-                    timeOffset = clampedOffset,
-                ),
-            ),
-        )
-        return
-    }
-
     val backgroundTrack = timelineState.dataSource.backgroundTrack
     // Skip the tick if the bg frame hasn't been published yet — should never happen ideally
     val backgroundFrame = timelineState.dragDrop.trackFrames[backgroundTrack.id] ?: return
-    val captionFrame = timelineState.dataSource.captionTrack
-        ?.let { timelineState.dragDrop.trackFrames[it.id] }
     val zone = resolveDropZone(
         pointerY = pointerInWindow.y,
         sourceTrackId = ctx.sourceTrackId,
         draggedClipType = clip.clipType,
         backgroundTrack = backgroundTrack,
         backgroundFrame = backgroundFrame,
-        captionFrame = captionFrame,
         sortedCandidates = timelineState.dragDrop.candidatesSortedByY,
     )
 

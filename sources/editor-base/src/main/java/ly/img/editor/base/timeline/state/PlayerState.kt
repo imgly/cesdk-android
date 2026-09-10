@@ -14,7 +14,6 @@ import kotlin.time.DurationUnit
 
 class PlayerState(
     private val engine: Engine,
-    private val stopAnimationPreview: () -> Unit = {},
 ) {
     var isPlaying: Boolean by mutableStateOf(false)
         private set
@@ -55,7 +54,6 @@ class PlayerState(
     }
 
     fun play() {
-        stopAnimationPreview()
         val duration = maxPlaybackDuration ?: engine.block.getDuration(page).seconds
         if (duration == ZERO) return
         if (playheadPosition >= duration) {
@@ -65,13 +63,6 @@ class PlayerState(
     }
 
     fun pause() {
-        stopAnimationPreview()
-        // Only stop playback if actually playing. `setPlaying(page, false)` is not a no-op when
-        // idle: the engine flips edit mode to TRANSFORM, which would tear down an active text-edit
-        // session (e.g. when opening a sheet over the keyboard). Skipping it when idle keeps pause
-        // purely about playback. Query the engine directly rather than the cached `isPlaying` flag,
-        // which lags `play()` until the next `refresh()`.
-        if (!engine.block.isPlaying(page)) return
         engine.block.setPlaying(page, false)
     }
 
@@ -84,12 +75,10 @@ class PlayerState(
     }
 
     fun toggleLooping() {
-        stopAnimationPreview()
         engine.block.setLooping(page, !isLooping)
     }
 
     fun setPlaybackTime(duration: Duration) {
-        stopAnimationPreview()
         val clampedDuration = maxPlaybackDuration?.let { duration.coerceAtMost(it) } ?: duration
         engine.block.setPlaybackTime(page, clampedDuration.toDouble(DurationUnit.SECONDS))
         // Optimistic mirror so the playhead doesn't visibly jump back for one tick before the

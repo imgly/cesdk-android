@@ -91,7 +91,6 @@ data class CanvasMenu<Scope : CanvasMenu.Scope>(
             selection?.parentDesignBlock ?: return@lazy emptyList()
             val childIsAlwaysOnTop = editorContext.engine.block.isAlwaysOnTop(selection.designBlock)
             val childIsAlwaysOnBottom = editorContext.engine.block.isAlwaysOnBottom(selection.designBlock)
-            val childIsCaptionTrack = editorContext.engine.isCaptionTrack(selection.designBlock)
             val children = editorContext.engine.block.getChildren(selection.parentDesignBlock)
             // contains at least internalSelection.designBlock
             children.filter { childToCompare ->
@@ -99,8 +98,7 @@ data class CanvasMenu<Scope : CanvasMenu.Scope>(
                 val matchingIsAlwaysOnBottom = childIsAlwaysOnBottom == editorContext.engine.block.isAlwaysOnBottom(
                     childToCompare,
                 )
-                val matchingIsCaptionTrack = childIsCaptionTrack == editorContext.engine.isCaptionTrack(childToCompare)
-                matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom && matchingIsCaptionTrack
+                matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom
             }
         }
 
@@ -121,9 +119,7 @@ data class CanvasMenu<Scope : CanvasMenu.Scope>(
 
         private val _canSelectionMove by lazy {
             val selection = selection ?: return@lazy false
-            // A caption is always on top of its page, so z-order has no meaning inside a caption track.
-            selection.type != DesignBlockType.Caption &&
-                editorContext.engine.block.isAllowedByScope(selection.designBlock, "layer/move") &&
+            editorContext.engine.block.isAllowedByScope(selection.designBlock, "layer/move") &&
                 run {
                     selection.parentDesignBlock?.let {
                         DesignBlockType.get(editorContext.engine.block.getType(it)) == DesignBlockType.Track &&
@@ -396,8 +392,7 @@ abstract class AbstractCanvasMenuBuilder<Scope : CanvasMenu.Scope> : EditorCompo
     /**
      * Whether the component should be visible.
      * Default value is true when touch is not active, no sheet is displayed currently, a design block is selected,
-     * the selected design block has a type in [Selection.supportedDesignBlockTypes] other than [DesignBlockType.Audio]
-     * or [DesignBlockType.Page] and the keyboard is not visible.
+     * selected design block does not have a type [DesignBlockType.Audio] or [DesignBlockType.Page] and the keyboard is not visible.
      * In addition, selected design block should be visible at current playback time and containing scene should be on pause if design
      * block is selected in a video scene.
      */
@@ -407,7 +402,6 @@ abstract class AbstractCanvasMenuBuilder<Scope : CanvasMenu.Scope> : EditorCompo
             editorState.isTouchActive.not() &&
                 editorState.activeSheet == null &&
                 editorContext.safeSelection != null &&
-                editorContext.selection.isTypeSupportedByEditorUi &&
                 editorContext.selection.type != DesignBlockType.Page &&
                 editorContext.selection.type != DesignBlockType.Audio &&
                 editorContext.engine.editor.getEditMode() != "Text" &&
@@ -843,12 +837,6 @@ private fun Engine.canSendBackward(designBlock: DesignBlock): Boolean {
     return children.first() != designBlock
 }
 
-/**
- * The caption track, which reorders against nothing: captions draw above the whole page whatever the track order
- * is, and the track itself is not always-on-top, so cutouts still outrank it.
- */
-private fun Engine.isCaptionTrack(designBlock: DesignBlock): Boolean = block.getType(designBlock) == DesignBlockType.CaptionTrack.key
-
 private fun Engine.reorderableChildren(
     parent: DesignBlock,
     child: DesignBlock,
@@ -856,14 +844,12 @@ private fun Engine.reorderableChildren(
     val childIsAlwaysOnTop = block.isAlwaysOnTop(child)
     val childIsAlwaysOnBottom = block.isAlwaysOnBottom(child)
     val childContainsAudio = containsAudio(child)
-    val childIsCaptionTrack = isCaptionTrack(child)
 
     return block.getChildren(parent).filter { childToCompare ->
         val matchingIsAlwaysOnTop = childIsAlwaysOnTop == block.isAlwaysOnTop(childToCompare)
         val matchingIsAlwaysOnBottom = childIsAlwaysOnBottom == block.isAlwaysOnBottom(childToCompare)
         val matchingType = containsAudio(childToCompare) == childContainsAudio
-        val matchingIsCaptionTrack = childIsCaptionTrack == isCaptionTrack(childToCompare)
-        matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom && matchingType && matchingIsCaptionTrack
+        matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom && matchingType
     }
 }
 

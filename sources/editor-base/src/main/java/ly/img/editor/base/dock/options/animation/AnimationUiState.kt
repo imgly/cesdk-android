@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import ly.img.editor.base.components.TabItem
 import ly.img.editor.base.engine.DesignBlockWithProperties
+import ly.img.editor.base.engine.getAvailableProperties
 import ly.img.editor.base.engine.toPropertyAndValueList
 import ly.img.editor.core.R
 import ly.img.editor.core.library.AssetType
@@ -15,13 +16,13 @@ import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
 import ly.img.engine.FindAssetsQuery
+import ly.img.engine.defaultAssetSourcesBaseUri
 
 @Immutable
 data class AnimationUiState(
     val categories: List<TabItem<Category>>,
 ) {
     data class Category(
-        val designBlock: DesignBlock,
         val sourceId: String,
         val group: String,
         val animations: List<WrappedAsset>,
@@ -35,7 +36,6 @@ data class AnimationUiState(
         private suspend fun getTabItem(
             @StringRes titleRes: Int,
             thumbnailsBaseUri: String,
-            designBlock: DesignBlock,
             engine: Engine,
             group: String,
             animationDesignBlock: DesignBlock,
@@ -65,7 +65,6 @@ data class AnimationUiState(
                 titleRes = titleRes,
                 isSmallIndicatorOn = animationType != null,
                 data = Category(
-                    designBlock = designBlock,
                     sourceId = ANIMATIONS_SOURCE_ID,
                     group = group,
                     animations = animations,
@@ -77,16 +76,8 @@ data class AnimationUiState(
                                 engine = engine,
                                 sourceId = ANIMATIONS_SOURCE_ID,
                                 asset = selectedAnimation,
-                            ).orEmpty(),
-                            // legacy way. Delete it when decision is 100% made regarding the desired approach.
-//                            properties = selectedAnimation.payload.properties?.let {
-//                                animationType.getAvailableProperties().combineWithValues(
-//                                    engine = engine,
-//                                    sourceId = ANIMATIONS_SOURCE_ID,
-//                                    asset = selectedAnimation,
-//                                    guidance = it,
-//                                )
-//                            }.orEmpty(),
+                                availableProperties = animationType.getAvailableProperties(),
+                            ) ?: emptyList(),
                             asset = selectedAnimation,
                         )
                     },
@@ -100,23 +91,18 @@ data class AnimationUiState(
             engine: Engine,
             locale: String,
         ): AnimationUiState {
-            val type = engine.block.getType(designBlock)
-            val isTextBlock = type == DesignBlockType.Text.key
-            // Resolve from the editor's configured base path (the single source of truth, set via
-            // EditorUiSettings). engine.defaultAssetSourcesBaseUri is null once an app registers
-            // sources via Engine.asset.addLocalSourceFromJSON instead of addDefaultAssetSources.
-            val basePath = engine.editor.getSettingString("basePath")
+            val isTextBlock = engine.block.getType(designBlock) == DesignBlockType.Text.key
+            val defaultAssetSourcesBaseUri = engine.defaultAssetSourcesBaseUri
             val thumbnailsBaseUri = if (isTextBlock) {
-                "$basePath/ly.img.animation.text/thumbnails"
+                "$defaultAssetSourcesBaseUri/ly.img.animation.text/thumbnails"
             } else {
-                "$basePath/ly.img.animation/thumbnails"
+                "$defaultAssetSourcesBaseUri/ly.img.animation/thumbnails"
             }
             return AnimationUiState(
                 categories = listOf(
                     getTabItem(
                         titleRes = R.string.ly_img_editor_sheet_animations_tab_in,
                         thumbnailsBaseUri = thumbnailsBaseUri,
-                        designBlock = designBlock,
                         group = "in",
                         animationDesignBlock = engine.block.getInAnimation(designBlock),
                         engine = engine,
@@ -125,7 +111,6 @@ data class AnimationUiState(
                     getTabItem(
                         titleRes = R.string.ly_img_editor_sheet_animations_tab_loop,
                         thumbnailsBaseUri = thumbnailsBaseUri,
-                        designBlock = designBlock,
                         group = "loop",
                         animationDesignBlock = engine.block.getLoopAnimation(designBlock),
                         engine = engine,
@@ -134,7 +119,6 @@ data class AnimationUiState(
                     getTabItem(
                         titleRes = R.string.ly_img_editor_sheet_animations_tab_out,
                         thumbnailsBaseUri = thumbnailsBaseUri,
-                        designBlock = designBlock,
                         group = "out",
                         animationDesignBlock = engine.block.getOutAnimation(designBlock),
                         engine = engine,

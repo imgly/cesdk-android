@@ -20,6 +20,6 @@ android {
 }
 
 dependencies {
-    api project(":editor")
-    api(libs.okhttp)
+    implementation project(":editor")
+    implementation(libs.segmentation.selfie)
 }

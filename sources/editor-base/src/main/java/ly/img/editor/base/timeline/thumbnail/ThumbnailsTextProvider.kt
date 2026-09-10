@@ -13,13 +13,9 @@ import ly.img.engine.Engine
  * the text directly (not as a rendered image).
  *
  * Text loading is synchronous and instant, so isLoading is always false.
- *
- * @param property Engine property holding the content. Captions keep their text in the `caption/`
- * namespace, so they pass their own key instead of the text default.
  */
 class ThumbnailsTextProvider(
     private val engine: Engine,
-    private val property: String = "text/text",
 ) : ThumbnailsProvider {
     private var _text = mutableStateOf("")
     val text: String
@@ -36,18 +32,13 @@ class ThumbnailsTextProvider(
         width: Dp,
     ) {
         _text.value = runCatching {
-            engine.block.getString(clip.id, property)
+            engine.block.getString(clip.id, "text/text")
                 // Replace engine line/paragraph separators (\u2028, \u2029) that Compose can't render.
-                .replace(SEPARATORS, " ")
+                .replace(Regex("[\u2028\u2029\n]"), " ")
         }.getOrDefault("")
     }
 
     override fun cancel() {
         // No async operation to cancel for text content
-    }
-
-    private companion object {
-        /** Hoisted: this runs once per clip on every timeline refresh, and compiling it each time is not free. */
-        private val SEPARATORS = Regex("[\u2028\u2029\n]")
     }
 }

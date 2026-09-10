@@ -1,13 +1,11 @@
 package ly.img.editor.base.dock.options.fillstroke
 
+import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.base.ui.Block
 import ly.img.editor.core.ui.engine.BlockType
 import ly.img.editor.core.ui.engine.getStrokeColor
 import ly.img.engine.Engine
-import ly.img.engine.StrokeCornerGeometry
-import ly.img.engine.StrokePosition
-import ly.img.engine.StrokeStyle
 import kotlin.math.ln
 
 data class StrokeUiState(
@@ -15,13 +13,13 @@ data class StrokeUiState(
     val isStrokeEnabled: Boolean,
     val strokeColor: Color,
     val strokeWidth: Float,
-    val strokeStyle: StrokeStyle,
+    @StringRes val strokeStyleRes: Int,
     val isStrokePositionEnabled: Boolean,
     val isStrokeJointEnabled: Boolean = true,
     // Position and Join pickers don't apply to a 1-D primitive.
     val showPositionAndJoin: Boolean,
-    val strokePosition: StrokePosition,
-    val strokeJoin: StrokeCornerGeometry,
+    @StringRes val strokePositionRes: Int,
+    @StringRes val strokeJoinRes: Int,
 )
 
 internal fun createStrokeUiState(
@@ -39,14 +37,12 @@ internal fun createStrokeUiState(
         strokeWidth = engine.block.getStrokeWidth(designBlock).takeIf {
             it > 0
         }?.let { ln(it) } ?: STROKE_WIDTH_LOWER_BOUND,
-        strokeStyle = engine.block.getStrokeStyle(designBlock),
-        isStrokePositionEnabled = block.type != BlockType.Text &&
-            block.type != BlockType.Caption &&
-            block.type != BlockType.Page,
+        strokeStyleRes = engine.block.getStrokeStyle(designBlock).getText(),
+        isStrokePositionEnabled = block.type != BlockType.Text && block.type != BlockType.Page,
         isStrokeJointEnabled = block.type != BlockType.Page,
         showPositionAndJoin = !isLineOrigin,
-        strokePosition = engine.block.getStrokePosition(designBlock),
-        strokeJoin = engine.block.getStrokeCornerGeometry(designBlock),
+        strokePositionRes = engine.block.getStrokePosition(designBlock).getText(),
+        strokeJoinRes = engine.block.getStrokeCornerGeometry(designBlock).getText(),
     )
 }
 

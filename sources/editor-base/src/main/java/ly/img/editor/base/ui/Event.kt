@@ -4,7 +4,6 @@ import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import ly.img.editor.base.dock.options.format.SizeModeUi
 import ly.img.editor.base.dock.options.format.VerticalAlignment
 import ly.img.editor.base.engine.Property
 import ly.img.editor.base.engine.PropertyValue
@@ -22,13 +21,9 @@ import ly.img.engine.BlendMode
 import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignUnit
-import ly.img.engine.FillType
 import ly.img.engine.FontUnit
 import ly.img.engine.HorizontalAlignment
 import ly.img.engine.ListStyle
-import ly.img.engine.StrokeCornerGeometry
-import ly.img.engine.StrokePosition
-import ly.img.engine.StrokeStyle
 import ly.img.engine.TextCase
 import ly.img.engine.Typeface
 import kotlin.time.Duration
@@ -254,19 +249,19 @@ interface BlockEvent : Event {
     ) : BlockEvent
 
     data class OnChangeStrokeStyle(
-        val style: StrokeStyle,
+        val style: String,
     ) : BlockEvent
 
     data class OnChangeFillStyle(
-        val type: FillType,
+        val style: String,
     ) : BlockEvent
 
     data class OnChangeStrokePosition(
-        val position: StrokePosition,
+        val position: String,
     ) : BlockEvent
 
-    data class OnChangeStrokeCornerGeometry(
-        val join: StrokeCornerGeometry,
+    data class OnChangeStrokeJoin(
+        val join: String,
     ) : BlockEvent
     // endregion
 
@@ -309,7 +304,7 @@ interface BlockEvent : Event {
     ) : BlockEvent
 
     data class OnChangeSizeMode(
-        val sizeMode: SizeModeUi,
+        val sizeMode: String,
     ) : BlockEvent
 
     data class OnChangeClipping(
@@ -354,21 +349,6 @@ interface BlockEvent : Event {
     ) : BlockEvent
     // endregion
 
-    // region Text on Path Events
-    data class OnSelectTextOnPath(
-        /** The curve style-preset asset to apply, or `null` to clear the path. */
-        val asset: Asset?,
-    ) : BlockEvent
-
-    data class OnChangeTextOnPathFlipped(
-        val flipped: Boolean,
-    ) : BlockEvent
-
-    data class OnChangeTextOnPathOffset(
-        val offset: Float,
-    ) : BlockEvent
-    // endregion
-
     // region Adjustments Events
     data class OnReplaceEffect(
         val wrappedAsset: WrappedAsset?,
@@ -378,39 +358,6 @@ interface BlockEvent : Event {
 
     // region Animations Events
     data class OnReplaceAnimation(
-        val designBlock: DesignBlock,
-        val sourceId: String,
-        val asset: Asset,
-    ) : BlockEvent
-
-    data class OnReplaceTransition(
-        val sourceId: String,
-        val outgoingBlock: DesignBlock,
-        val asset: Asset,
-    ) : BlockEvent
-
-    data class OnPreviewAnimation(
-        val designBlock: DesignBlock,
-        val mode: String,
-    ) : BlockEvent
-
-    data class OnPreviewTransition(
-        val outgoingBlock: DesignBlock,
-    ) : BlockEvent
-
-    data class OnApplyTransitionToTrack(
-        val outgoingBlock: DesignBlock,
-    ) : BlockEvent
-
-    data class OnRemoveTransitionsFromTrack(
-        val outgoingBlock: DesignBlock,
-    ) : BlockEvent
-    // endregion
-
-    // region Captions Events
-
-    /** Styles the selected caption with a preset; the engine syncs the style across the whole caption track. */
-    data class OnApplyCaptionPreset(
         val sourceId: String,
         val asset: Asset,
     ) : BlockEvent
@@ -476,10 +423,6 @@ interface BlockEvent : Event {
     object OnDeselect : BlockEvent
 
     data class OnToggleSelectBlock(
-        val block: DesignBlock,
-    ) : BlockEvent
-
-    data class OnSelectBlock(
         val block: DesignBlock,
     ) : BlockEvent
 

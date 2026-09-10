@@ -14,24 +14,14 @@ import ly.img.engine.DesignBlock
 data class Track private constructor(
     val id: String,
     val clips: MutableList<Clip> = mutableStateListOf(),
-    val transitionSeams: MutableList<TransitionSeam> = mutableStateListOf(),
     val engineTrackId: DesignBlock? = null,
-    /** Carried on the track, not derived from its clips, so an empty lane still answers. */
-    val isCaptionTrack: Boolean = false,
 ) {
     companion object {
         /** The singleton background track row at the bottom of the timeline. */
         fun background(): Track = Track(id = "background")
 
-        /** A foreground track backed by an engine [ly.img.engine.DesignBlockType.Track] block. */
+        /** A foreground track backed by an engine Track / CaptionTrack block. */
         fun engine(engineTrackId: DesignBlock): Track = Track(id = "engine-$engineTrackId", engineTrackId = engineTrackId)
-
-        /** The caption lane, backed by an engine [ly.img.engine.DesignBlockType.CaptionTrack] block. */
-        fun caption(engineTrackId: DesignBlock): Track = Track(
-            id = "caption-$engineTrackId",
-            engineTrackId = engineTrackId,
-            isCaptionTrack = true,
-        )
 
         /** A virtual foreground track hosting a single direct page child standalone clip. */
         fun standalone(clipBlock: DesignBlock): Track = Track(id = "standalone-$clipBlock")
@@ -40,10 +30,3 @@ data class Track private constructor(
 
 /** [clips] sorted by [Clip.timeOffset] ascending. */
 internal fun Track.sortedClips(): List<Clip> = clips.sortedBy { it.timeOffset }
-
-data class TransitionSeam(
-    val outgoingClip: Clip,
-    val incomingClip: Clip,
-    val hasTransition: Boolean,
-    val isCompact: Boolean,
-)

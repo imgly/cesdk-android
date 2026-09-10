@@ -121,7 +121,7 @@ fun ClipView(
     Box(
         modifier = modifier
             .zIndex(if (showSelectionUi) 1f else 0f)
-            .alpha(if (isBeingDragged && clip.clipType != ClipType.Caption) 0f else 1f),
+            .alpha(if (isBeingDragged) 0f else 1f),
     ) {
         val zoomState = timelineState.zoomState
 
@@ -157,7 +157,7 @@ fun ClipView(
                 .height(TimelineConfiguration.clipHeight)
                 .width(width.toDp())
                 .zIndex(if (showSelectionUi) 1f else 0f)
-                .absolutePadding(right = TimelineConfiguration.clipEndGap)
+                .absolutePadding(right = 1.dp)
                 .pointerInput(clip.id, clip.allowsSelecting) {
                     if (clip.allowsSelecting) {
                         detectTapGestures {
@@ -197,7 +197,6 @@ fun ClipView(
                         clip = clip,
                         duration = clipDurationText,
                         isSelected = showSelectionUi,
-                        leadingTransitionSeamSize = clip.leadingTransitionSeamSize,
                     )
                 }.first().measure(
                     // Bound the label by the clip's own width so the wrapper clamps to the clip and its rounded-corner clip masks any
@@ -291,25 +290,8 @@ fun ClipView(
                 } else {
                     timelineState.dragDrop.phase.context?.dropTarget
                 }
-                val captionMoveOffset = if (clip.clipType == ClipType.Caption) {
-                    (target as? DropTarget.ExistingTrack)?.timeOffset
-                } else {
-                    null
-                }
 
-                if (captionMoveOffset != null) {
-                    timelineState.dragDrop.overrides.clear()
-                    timelineState.dragDrop.overrides[clip.id] = captionMoveOffset
-                    offset = zoomState.toPx(captionMoveOffset)
-                    onEvent(
-                        BlockEvent.OnUpdateTrim(
-                            trimOffset = clip.trimOffset,
-                            timeOffset = captionMoveOffset,
-                            duration = clip.duration,
-                        ),
-                    )
-                    viewForHapticFeedback.performHapticFeedback(dropFinishHaptic)
-                } else if (target == null) {
+                if (target == null) {
                     // No drop — `offset` already matches engine truth, so just clear overrides.
                     timelineState.dragDrop.overrides.clear()
                 } else {
@@ -322,15 +304,15 @@ fun ClipView(
                     }
                     offset = zoomState.toPx(snapTime)
 
-                    val sourceTrack = timelineState.dataSource.findTrack(clip)
-                    val isNoOpReorder = target is DropTarget.ExistingTrack &&
-                        target.trackId == sourceTrack.id &&
-                        target.effectiveDuration == null &&
+                    val backgroundTrack = timelineState.dataSource.backgroundTrack
+                    val isBgNoOpReorder = timelineState.dataSource.findTrack(clip) === backgroundTrack &&
+                        target is DropTarget.ExistingTrack &&
+                        target.trackId == backgroundTrack.id &&
                         snapTime == clip.timeOffset
 
-                    if (isNoOpReorder) {
-                        // Avoid dispatching a no-op move: re-inserting a clip can detach its transition
-                        // even when its position and duration have not changed.
+                    if (isBgNoOpReorder) {
+                        // Skip dispatch — `insertChild(idx = current)` is a no-op in the engine
+                        // and would only add an empty undo step.
                         timelineState.dragDrop.overrides.clear()
                     } else {
                         onEvent(

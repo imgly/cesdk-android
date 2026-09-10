@@ -1,6 +1,5 @@
 package ly.img.editor.base.ui.handler
 
-import ly.img.editor.base.dock.options.captions.CaptionsEngine
 import ly.img.editor.base.engine.containsAudio
 import ly.img.editor.base.timeline.clip.Clip
 import ly.img.editor.base.timeline.clip.ClipType
@@ -10,8 +9,6 @@ import ly.img.editor.base.timeline.state.LiveTrimState
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.timeline.state.computeLiveTrimOverrides
-import ly.img.editor.base.timeline.state.transitionOverlap
-import ly.img.editor.base.timeline.state.transitionTiming
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.core.R
 import ly.img.editor.core.ui.EventsHandler
@@ -20,7 +17,6 @@ import ly.img.editor.core.ui.engine.Scope
 import ly.img.editor.core.ui.engine.getKindEnum
 import ly.img.editor.core.ui.engine.getSafeBackgroundTrack
 import ly.img.editor.core.ui.engine.isBackgroundTrack
-import ly.img.editor.core.ui.engine.isCaptionTrack
 import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register
 import ly.img.engine.DesignBlock
@@ -28,7 +24,6 @@ import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
 import ly.img.engine.SplitOptions
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
@@ -38,7 +33,6 @@ fun EventsHandler.timelineEvents(
     engine: () -> Engine,
     timelineState: () -> TimelineState,
     showError: (Int) -> Unit,
-    onError: (Throwable) -> Unit,
 ) {
     val engine by inject(engine)
     val timelineState by inject(timelineState)
@@ -90,16 +84,6 @@ fun EventsHandler.timelineEvents(
         engine.block.setSelected(it.block, !engine.block.isSelected(it.block))
     }
 
-    register<BlockEvent.OnSelectBlock> {
-        val previouslySelectedBlock = timelineState.selectedClip?.id
-        if (it.block != previouslySelectedBlock) {
-            previouslySelectedBlock?.let {
-                engine.block.setSelected(it, false)
-            }
-            engine.block.setSelected(it.block, true)
-        }
-    }
-
     fun setDuration(
         clip: Clip,
         duration: Duration,
@@ -127,25 +111,27 @@ fun EventsHandler.timelineEvents(
 
     /**
      * After a trim commit, push unlocked siblings outward to clear residual overlaps so the
-     * persisted layout matches the live preview. No-op for single-clip tracks, and for the caption
-     * lane — a caption is clamped to its neighbours' gap rather than pushing them.
+     * persisted layout matches the live preview. No-op for single-clip tracks.
      */
     fun packAndPersistSiblings(selectedClip: Clip) {
         val track = timelineState.dataSource.findTrack(selectedClip)
-        if (track.isCaptionTrack || track.clips.size < 2) return
+        if (track.clips.size < 2) return
 
         val newOffset = engine.block.getTimeOffset(selectedClip.id).seconds
         val newDuration = engine.block.getDuration(selectedClip.id).seconds
 
-        // Use engine extents consistently. Timeline clips are transition-projected, while the
-        // committed bounds above are raw engine values. Mixing the two removes transition
-        // overlap and leaves a visual gap after a duration change.
+        // Sort by pre-commit offsets so the dragged clip keeps its live-preview index;
+        // the new offset could push it past unshifted siblings. Substitute its new
+        // offset/duration if the async refresh hasn't applied them yet.
         val sorted = track.clips
             .mapTo(ArrayList(track.clips.size)) { sibling ->
-                sibling.copy(
-                    timeOffset = engine.block.getTimeOffset(sibling.id).seconds,
-                    duration = engine.block.getDuration(sibling.id).seconds,
-                )
+                if (sibling.id == selectedClip.id &&
+                    (sibling.timeOffset != selectedClip.timeOffset || sibling.duration != selectedClip.duration)
+                ) {
+                    sibling.copy(timeOffset = selectedClip.timeOffset, duration = selectedClip.duration)
+                } else {
+                    sibling
+                }
             }
         sorted.sortBy { it.timeOffset }
         val overrides = computeLiveTrimOverrides(
@@ -155,10 +141,6 @@ fun EventsHandler.timelineEvents(
                 start = newOffset,
                 end = newOffset + newDuration,
             ),
-            packFollowingClips = selectedClip.isInBackgroundTrack,
-            transitionOverlap = { outgoing, incoming ->
-                engine.transitionOverlap(outgoing.id, incoming.id)
-            },
         )
         overrides.forEach { (id, offset) ->
             engine.block.setTimeOffset(id, offset.toDouble(DurationUnit.SECONDS))
@@ -168,21 +150,20 @@ fun EventsHandler.timelineEvents(
     register<BlockEvent.OnUpdateTrim> {
         val selectedClip = checkNotNull(timelineState.selectedClip)
         val selectedBlock = selectedClip.id
-        val timing = engine.transitionTiming(selectedBlock, it.duration)
-        setTimeOffset(selectedBlock, (it.timeOffset - timing.trim.lead).coerceAtLeast(ZERO))
+        setTimeOffset(selectedBlock, it.timeOffset)
         // `OnUpdateTrim` is called in general for updating timeOffset, trimOffset, and duration simultaneously
         // Don't update trimOffset if the clip doesn't support trimming
         if (selectedClip.allowsTrimming) {
             setTrimOffset(selectedClip.trimmableId, it.trimOffset)
         }
-        setDuration(selectedClip, timing.rawDuration)
+        setDuration(selectedClip, it.duration)
         packAndPersistSiblings(selectedClip)
         engine.editor.addUndoStep()
     }
 
     register<BlockEvent.OnUpdateDuration> {
         val selectedClip = checkNotNull(timelineState.selectedClip)
-        setDuration(selectedClip, engine.transitionTiming(selectedClip.id, it.duration).rawDuration)
+        setDuration(selectedClip, it.duration)
         packAndPersistSiblings(selectedClip)
         engine.editor.addUndoStep()
     }
@@ -190,17 +171,6 @@ fun EventsHandler.timelineEvents(
     register<BlockEvent.OnSplit> {
         val playheadPosition = timelineState.playerState.playheadPosition
         val selectedClip = checkNotNull(timelineState.selectedClip)
-
-        if (selectedClip.clipType == ClipType.Caption) {
-            // The generic split would leave both halves holding the whole line, and captions routinely run
-            // shorter than `minClipDuration`.
-            CaptionsEngine(engine, onError).splitCaptionAtPlayhead(
-                caption = selectedClip.id,
-                playheadSeconds = playheadPosition.toDouble(DurationUnit.SECONDS),
-            )
-            return@register
-        }
-
         val originalClipDuration = selectedClip.duration
         val absoluteStartTime = selectedClip.timeOffset
         val minClipDuration = TimelineConfiguration.minClipDuration
@@ -352,7 +322,6 @@ fun EventsHandler.timelineEvents(
                     insertAt = target.insertAt,
                     isAudioBlock = { child -> engine.block.containsAudio(child) },
                     isBackgroundTrack = { child -> engine.block.isBackgroundTrack(child) },
-                    isCaptionTrack = { child -> engine.block.isCaptionTrack(child) },
                 )
                 val newTrack = engine.block.create(DesignBlockType.Track)
                 engine.block.setBoolean(newTrack, TRACK_AUTO_OFFSET_KEY, false)

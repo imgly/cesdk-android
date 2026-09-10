@@ -15,35 +15,20 @@ sealed class LibrarySectionItem(
         val stackIndex: Int,
         val sectionIndex: Int,
         @StringRes val titleRes: Int,
-        val title: String? = null,
         val uploadAssetSourceType: UploadAssetSourceType?,
         val systemGalleryAssetSourceType: SystemGalleryAssetSourceType? = null,
         val count: Int? = null,
         val expandContent: LibraryContent?,
-        val subSectionIndex: Int? = null,
-    ) : LibrarySectionItem(
-            if (subSectionIndex != null) {
-                "Header $stackIndex $sectionIndex $subSectionIndex"
-            } else {
-                "Header $stackIndex $sectionIndex"
-            },
-        )
+    ) : LibrarySectionItem("Header $stackIndex $sectionIndex")
 
     data class Content(
         val stackIndex: Int,
         val sectionIndex: Int,
-        val subSectionIndex: Int? = null,
         val wrappedAssets: List<WrappedAsset>,
         val assetType: AssetType,
         val sourceTypes: List<AssetSourceType>,
         val expandContent: LibraryContent?,
-    ) : LibrarySectionItem(
-            if (subSectionIndex != null) {
-                "Content $stackIndex $sectionIndex $subSectionIndex"
-            } else {
-                "Content $stackIndex $sectionIndex"
-            },
-        )
+    ) : LibrarySectionItem("Content $stackIndex $sectionIndex")
 
     data class ContentLoading(
         val stackIndex: Int,
@@ -59,13 +44,6 @@ sealed class LibrarySectionItem(
     data class Error(
         val stackIndex: Int,
         val sectionIndex: Int,
-        val subSectionIndex: Int? = null,
         val assetType: AssetType,
-    ) : LibrarySectionItem(
-            if (subSectionIndex != null) {
-                "Error $stackIndex $sectionIndex $subSectionIndex"
-            } else {
-                "Error $stackIndex $sectionIndex"
-            },
-        )
+    ) : LibrarySectionItem("Error $stackIndex $sectionIndex")
 }

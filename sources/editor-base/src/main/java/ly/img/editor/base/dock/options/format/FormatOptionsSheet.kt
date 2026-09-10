@@ -153,11 +153,7 @@ fun FormatOptionsSheet(
                             }
 
                             PropertyLink(
-                                value = if (uiState.isSubFamilyMixed) {
-                                    stringResource(R.string.ly_img_editor_sheet_format_text_font_subfamily_mixed)
-                                } else {
-                                    getSubFamilyString(uiState.subFamily)
-                                },
+                                value = getSubFamilyString(uiState.subFamily),
                             ) {
                                 screenState = ScreenState.SelectFontWeight
                             }
@@ -177,7 +173,6 @@ fun FormatOptionsSheet(
                         title = stringResource(fontSizeLabelRes),
                         value = uiState.fontSize,
                         valueRange = fontSizeRange,
-                        step = 0.1F,
                         onValueChange = { onEvent(BlockEvent.OnChangeFontSize(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                     )
@@ -255,75 +250,69 @@ fun FormatOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangeLetterSpacing(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = -0.15f..1.4f,
-                        step = 0.01F,
                     )
 
-                    if (!uiState.isCaption) {
-                        Spacer(Modifier.height(16.dp))
-                        Card(
-                            colors = UiDefaults.cardColors,
+                    Spacer(Modifier.height(16.dp))
+                    Card(
+                        colors = UiDefaults.cardColors,
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.ly_img_editor_sheet_format_text_label_list_style),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                )
-                                Row {
-                                    ToggleIconButton(
-                                        checked = uiState.listStyle == ListStyle.NONE,
-                                        onCheckedChange = {
-                                            if (uiState.listStyle != ListStyle.NONE) {
-                                                onEvent(OnChangeListStyle(ListStyle.NONE))
-                                            }
-                                        },
-                                        enabled = !uiState.isTextOnPath,
-                                    ) {
-                                        Icon(
-                                            IconPack.DefaultNone,
-                                            contentDescription = stringResource(
-                                                R.string.ly_img_editor_sheet_format_text_list_style_option_none,
-                                            ),
-                                        )
-                                    }
-                                    ToggleIconButton(
-                                        checked = uiState.listStyle == ListStyle.UNORDERED,
-                                        onCheckedChange = {
-                                            if (uiState.listStyle != ListStyle.UNORDERED) {
-                                                onEvent(OnChangeListStyle(ListStyle.UNORDERED))
-                                            }
-                                        },
-                                        enabled = !uiState.isTextOnPath,
-                                    ) {
-                                        Icon(
-                                            IconPack.Listbullet,
-                                            contentDescription = stringResource(
-                                                R.string.ly_img_editor_sheet_format_text_list_style_option_unordered,
-                                            ),
-                                        )
-                                    }
-                                    ToggleIconButton(
-                                        checked = uiState.listStyle == ListStyle.ORDERED,
-                                        onCheckedChange = {
-                                            if (uiState.listStyle != ListStyle.ORDERED) {
-                                                onEvent(OnChangeListStyle(ListStyle.ORDERED))
-                                            }
-                                        },
-                                        enabled = !uiState.isTextOnPath,
-                                    ) {
-                                        Icon(
-                                            IconPack.Listnumber,
-                                            contentDescription = stringResource(
-                                                R.string.ly_img_editor_sheet_format_text_list_style_option_ordered,
-                                            ),
-                                        )
-                                    }
+                            Text(
+                                text = stringResource(R.string.ly_img_editor_sheet_format_text_label_list_style),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            Row {
+                                ToggleIconButton(
+                                    checked = uiState.listStyle == ListStyle.NONE,
+                                    onCheckedChange = {
+                                        if (uiState.listStyle != ListStyle.NONE) {
+                                            onEvent(OnChangeListStyle(ListStyle.NONE))
+                                        }
+                                    },
+                                ) {
+                                    Icon(
+                                        IconPack.DefaultNone,
+                                        contentDescription = stringResource(
+                                            R.string.ly_img_editor_sheet_format_text_list_style_option_none,
+                                        ),
+                                    )
+                                }
+                                ToggleIconButton(
+                                    checked = uiState.listStyle == ListStyle.UNORDERED,
+                                    onCheckedChange = {
+                                        if (uiState.listStyle != ListStyle.UNORDERED) {
+                                            onEvent(OnChangeListStyle(ListStyle.UNORDERED))
+                                        }
+                                    },
+                                ) {
+                                    Icon(
+                                        IconPack.Listbullet,
+                                        contentDescription = stringResource(
+                                            R.string.ly_img_editor_sheet_format_text_list_style_option_unordered,
+                                        ),
+                                    )
+                                }
+                                ToggleIconButton(
+                                    checked = uiState.listStyle == ListStyle.ORDERED,
+                                    onCheckedChange = {
+                                        if (uiState.listStyle != ListStyle.ORDERED) {
+                                            onEvent(OnChangeListStyle(ListStyle.ORDERED))
+                                        }
+                                    },
+                                ) {
+                                    Icon(
+                                        IconPack.Listnumber,
+                                        contentDescription = stringResource(
+                                            R.string.ly_img_editor_sheet_format_text_list_style_option_ordered,
+                                        ),
+                                    )
                                 }
                             }
                         }
@@ -336,8 +325,6 @@ fun FormatOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangeLineHeight(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = 0.5f..2.5f,
-                        step = 0.01F,
-                        enabled = !uiState.isTextOnPath,
                     )
                     Spacer(Modifier.height(16.dp))
                     PropertySlider(
@@ -346,12 +333,9 @@ fun FormatOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangeParagraphSpacing(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = -0.15f..1.4f,
-                        step = 0.01F,
-                        enabled = !uiState.isTextOnPath,
                     )
 
-                    // UNKNOWN has no option to pick, so the picker is hidden rather than shown with nothing selected.
-                    if (uiState.isArrangeResizeAllowed && !uiState.isCaption && uiState.sizeMode != SizeModeUi.UNKNOWN) {
+                    if (uiState.isArrangeResizeAllowed) {
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Card(
@@ -359,16 +343,14 @@ fun FormatOptionsSheet(
                         ) {
                             PropertyPicker(
                                 title = stringResource(R.string.ly_img_editor_sheet_format_text_label_frame_behaviour),
-                                propertyValue = uiState.sizeMode,
-                                enabled = !uiState.isTextOnPath,
-                                properties = sizeModeProperties,
+                                propertyTextRes = uiState.sizeModeRes,
+                                properties = sizeModeList,
                                 onPropertyPicked = { onEvent(BlockEvent.OnChangeSizeMode(it)) },
                             )
                             if (uiState.hasClippingOption) {
                                 Divider(Modifier.padding(horizontal = 16.dp))
                                 PropertySwitch(
                                     title = stringResource(R.string.ly_img_editor_sheet_format_text_label_frame_clipping),
-                                    enabled = !uiState.isTextOnPath,
                                     isChecked = uiState.isClipped,
                                     onPropertyChange = {
                                         onEvent(BlockEvent.OnChangeClipping(it))
@@ -411,7 +393,6 @@ fun FormatOptionsSheet(
                     selectedFontFamily = uiState.fontFamily,
                     selectedWeight = uiState.fontFamilyWeight,
                     selectedStyle = uiState.fontFamilyStyle,
-                    selectionMixed = uiState.isSubFamilyMixed,
                     labelMap = { getSubFamilyString(it.subFamily) },
                     onSelectFont = { fontData ->
                         onEvent(BlockEvent.OnChangeFont(fontData.uri, fontData.typeface))
@@ -447,7 +428,7 @@ fun DefaultPreview() {
             horizontalAlignment = HorizontalAlignment.Left,
             effectiveHorizontalAlignment = HorizontalAlignment.Left,
             verticalAlignment = VerticalAlignment.Top,
-            sizeMode = SizeModeUi.ABSOLUTE,
+            sizeModeRes = R.string.ly_img_editor_sheet_format_text_frame_behavior_option_fixed_size,
             isArrangeResizeAllowed = true,
             libraryCategory = LibraryCategory.Text,
             casing = TextCase.UPPER_CASE,
@@ -458,10 +439,7 @@ fun DefaultPreview() {
             fontFamilyStyle = FontStyle.NORMAL,
             hasClippingOption = true,
             isClipped = true,
-            isTextOnPath = false,
             subFamily = "Regular",
-            isSubFamilyMixed = false,
-            isCaption = false,
         ),
         onEvent = {},
     )

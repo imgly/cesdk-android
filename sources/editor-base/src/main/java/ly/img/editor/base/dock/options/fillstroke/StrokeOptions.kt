@@ -31,7 +31,7 @@ fun StrokeOptions(
     ) {
         ColorOptions(
             enabled = uiState.isStrokeEnabled,
-            selectedColors = listOf(uiState.strokeColor),
+            selectedColor = uiState.strokeColor,
             onNoColorSelected = { onEvent(BlockEvent.OnDisableStroke) },
             onColorSelected = {
                 onEvent(BlockEvent.OnChangeStrokeColor(it))
@@ -65,26 +65,26 @@ fun StrokeOptions(
             Divider(Modifier.padding(horizontal = 16.dp))
             PropertyPicker(
                 title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_style),
-                propertyValue = uiState.strokeStyle,
-                properties = strokeStyleProperties,
+                propertyTextRes = uiState.strokeStyleRes,
+                properties = strokeStylePropertiesList,
                 onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokeStyle(it)) },
             )
             if (uiState.showPositionAndJoin) {
                 Divider(Modifier.padding(horizontal = 16.dp))
                 PropertyPicker(
                     title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_position),
-                    propertyValue = uiState.strokePosition,
+                    propertyTextRes = uiState.strokePositionRes,
                     enabled = uiState.isStrokePositionEnabled,
-                    properties = strokePositionProperties,
+                    properties = strokePositionPropertiesList,
                     onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokePosition(it)) },
                 )
                 Divider(Modifier.padding(horizontal = 16.dp))
                 PropertyPicker(
                     title = stringResource(R.string.ly_img_editor_sheet_fill_stroke_label_join),
-                    propertyValue = uiState.strokeJoin,
-                    properties = strokeJoinProperties,
+                    propertyTextRes = uiState.strokeJoinRes,
+                    properties = strokeJoinPropertiesList,
                     enabled = uiState.isStrokeJointEnabled,
-                    onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokeCornerGeometry(it)) },
+                    onPropertyPicked = { onEvent(BlockEvent.OnChangeStrokeJoin(it)) },
                 )
             }
         }

@@ -2,7 +2,7 @@ package ly.img.editor.base.ui.handler
 
 import ly.img.editor.base.engine.toEngineColor
 import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeColor
-import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeCornerGeometry
+import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeJoin
 import ly.img.editor.base.ui.BlockEvent.OnChangeStrokePosition
 import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeStyle
 import ly.img.editor.base.ui.BlockEvent.OnChangeStrokeWidth
@@ -12,6 +12,10 @@ import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
+import ly.img.engine.StrokeCap
+import ly.img.engine.StrokeCornerGeometry
+import ly.img.engine.StrokePosition
+import ly.img.engine.StrokeStyle
 import kotlin.math.exp
 
 @Suppress("NAME_SHADOWING")
@@ -22,23 +26,34 @@ fun EventsHandler.strokeEvents(
     val engine by inject(engine)
     val block by inject(block)
 
-    register<OnChangeStrokeCornerGeometry> {
-        if (engine.block.getStrokeCornerGeometry(block) != it.join) {
-            engine.block.setStrokeCornerGeometry(block, it.join)
+    register<OnChangeStrokeJoin> {
+        val strokeJoinEnum = StrokeCornerGeometry.valueOf(it.join)
+        if (engine.block.getStrokeCornerGeometry(block) != strokeJoinEnum) {
+            engine.block.setStrokeCornerGeometry(block, strokeJoinEnum)
             engine.editor.addUndoStep()
         }
     }
 
     register<OnChangeStrokePosition> {
-        if (engine.block.getStrokePosition(block) != it.position) {
-            engine.block.setStrokePosition(block, it.position)
+        val strokePositionEnum = StrokePosition.valueOf(it.position)
+        if (engine.block.getStrokePosition(block) != strokePositionEnum) {
+            engine.block.setStrokePosition(block, strokePositionEnum)
             engine.editor.addUndoStep()
         }
     }
 
     register<OnChangeStrokeStyle> {
-        if (engine.block.getStrokeStyle(block) != it.style) {
-            engine.block.setStrokeStyle(block, it.style)
+        val strokeStyleEnum = StrokeStyle.valueOf(it.style)
+        if (engine.block.getStrokeStyle(block) != strokeStyleEnum) {
+            engine.block.setStrokeStyle(block, strokeStyleEnum)
+            // Apply the cap the preset implies, like the web editor. Dotted/*Round presets need
+            // a Round cap, else a Dotted stroke is invisible (ANDROID-814). All four caps are set
+            // equal for the renderer's fast path; the dash pattern comes from the style preset.
+            val cap = strokeStyleEnum.presetCap()
+            engine.block.setStrokeStartCap(block, cap)
+            engine.block.setStrokeEndCap(block, cap)
+            engine.block.setStrokeDashStartCap(block, cap)
+            engine.block.setStrokeDashEndCap(block, cap)
             engine.editor.addUndoStep()
         }
     }
@@ -58,4 +73,11 @@ fun EventsHandler.strokeEvents(
             engine.editor.addUndoStep()
         }
     }
+}
+
+// Round-cap presets (Dotted, DashedRound, LongDashedRound) imply round dash/line caps, matching
+// the web editor and the engine's preset rendering; the rest use a butt cap.
+private fun StrokeStyle.presetCap(): StrokeCap = when (this) {
+    StrokeStyle.DOTTED, StrokeStyle.DASHED_ROUND, StrokeStyle.LONG_DASHED_ROUND -> StrokeCap.ROUND
+    else -> StrokeCap.BUTT
 }
