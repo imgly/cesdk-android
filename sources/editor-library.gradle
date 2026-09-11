@@ -41,7 +41,7 @@ afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
-                def artifactoryUrl = "https://artifactory.img.ly/artifactory/maven"
+                def mavenUrl = "https://maven.img.ly/maven"
                 def libGroupId = "ly.img"
                 def libArtifactId = project.name
                 def libVersion = new File("${project.rootDir}/../..", ".ubq-version").text.trim()
@@ -68,7 +68,7 @@ afterEvaluate {
                     licenses {
                         license {
                             name = "LICENSE"
-                            url = "$artifactoryUrl/${libGroupId.replace('.', "/")}/$artifactId/$libVersion/$artifactId-$libVersion-LICENSE.md"
+                            url = "$mavenUrl/${libGroupId.replace('.', "/")}/$artifactId/$libVersion/$artifactId-$libVersion-LICENSE.md"
                         }
                     }
                     developers {
@@ -83,10 +83,10 @@ afterEvaluate {
                 repositories {
                     maven {
                         credentials {
-                            username = "${System.getenv("UBQ_ANDROID_ARTIFACTORY_USERNAME")}"
-                            password = "${System.getenv("UBQ_ANDROID_ARTIFACTORY_PASSWORD")}"
+                            username = "${System.getenv("UBQ_MAVEN_USERNAME")}"
+                            password = "${System.getenv("UBQ_MAVEN_PASSWORD")}"
                         }
-                        url = artifactoryUrl
+                        url = mavenUrl
                     }
                 }
 
