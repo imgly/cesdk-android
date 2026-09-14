@@ -29,6 +29,10 @@ data class PolygonShapeOptionsUiState(
 ) : ShapeOptionsUiState,
     RoundableShapeUiState
 
+data class LineShapeOptionsUiState(
+    val width: Float,
+) : ShapeOptionsUiState
+
 internal fun createShapeOptionsUiState(
     designBlock: DesignBlock,
     engine: Engine,
@@ -50,6 +54,11 @@ internal fun createShapeOptionsUiState(
                 ) / (engine.block.getSmallerSide(designBlock) / 2f),
             )
 
+        ShapeType.Line ->
+            LineShapeOptionsUiState(
+                width = engine.block.getFrameHeight(designBlock),
+            )
+
         ShapeType.Rect -> {
             val maxRadius = engine.block.getSmallerSide(designBlock) / 2f
             RectShapeUiState(
@@ -61,7 +70,7 @@ internal fun createShapeOptionsUiState(
         }
 
         else -> throw IllegalArgumentException(
-            "Options are only supported for star, polygon shape types and rects.",
+            "Options are only supported for star, polygon, line shape types and rects.",
         )
     }
 }

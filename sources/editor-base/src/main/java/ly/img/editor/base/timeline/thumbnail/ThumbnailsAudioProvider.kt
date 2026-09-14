@@ -71,7 +71,7 @@ class ThumbnailsAudioProvider(
         } else {
             ""
         }
-        val isLiveBufferResource = clip.isLiveBufferRecording
+        val isLiveBufferResource = audioUri.startsWith("buffer://")
         val now = SystemClock.elapsedRealtime()
 
         val sameRequest = clip.trimOffset == requestedTrimOffset &&

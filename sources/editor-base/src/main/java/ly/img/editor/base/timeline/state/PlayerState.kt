@@ -40,13 +40,16 @@ class PlayerState(
             if (isPlaying) {
                 if (isLooping) {
                     setPlaybackTime(0.seconds)
+                    playheadPosition = 0.seconds
                 } else {
                     pause()
                     isPlaying = false
                     setPlaybackTime(maxDuration)
+                    playheadPosition = maxDuration
                 }
             } else {
                 setPlaybackTime(maxDuration)
+                playheadPosition = maxDuration
             }
         } else {
             playheadPosition = playbackTime
@@ -81,8 +84,5 @@ class PlayerState(
     fun setPlaybackTime(duration: Duration) {
         val clampedDuration = maxPlaybackDuration?.let { duration.coerceAtMost(it) } ?: duration
         engine.block.setPlaybackTime(page, clampedDuration.toDouble(DurationUnit.SECONDS))
-        // Optimistic mirror so the playhead doesn't visibly jump back for one tick before the
-        // engine refresh catches up.
-        playheadPosition = clampedDuration
     }
 }

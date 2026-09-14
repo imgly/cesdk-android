@@ -35,23 +35,15 @@ fun Engine.isPlaceholder(designBlock: DesignBlock): Boolean {
 }
 
 fun Engine.canBringForward(designBlock: DesignBlock): Boolean {
-    val parent = block.getParent(designBlock) ?: return false
-    if (block.getType(parent) == DesignBlockType.Track.key) {
-        val trackChildren = block.getChildren(parent)
-        if (trackChildren.size > 1) return true
-        return canBringForward(parent)
-    }
+    val parent = block.getParent(designBlock)
+    parent ?: return false
     val children = getReorderableChildren(parent, designBlock)
     return children.last() != designBlock
 }
 
 fun Engine.canSendBackward(designBlock: DesignBlock): Boolean {
-    val parent = block.getParent(designBlock) ?: return false
-    if (block.getType(parent) == DesignBlockType.Track.key) {
-        val trackChildren = block.getChildren(parent)
-        if (trackChildren.size > 1) return true
-        return canSendBackward(parent)
-    }
+    val parent = block.getParent(designBlock)
+    parent ?: return false
     val children = getReorderableChildren(parent, designBlock)
     return children.first() != designBlock
 }
@@ -66,14 +58,17 @@ private fun Engine.getReorderableChildren(
 ): List<DesignBlock> {
     val childIsAlwaysOnTop = block.isAlwaysOnTop(child)
     val childIsAlwaysOnBottom = block.isAlwaysOnBottom(child)
-    val childContainsAudio = block.containsAudio(child)
+    val childType = block.getType(child)
 
     val children = block.getChildren(parent)
 
     return children.filter { childToCompare ->
         val matchingIsAlwaysOnTop = childIsAlwaysOnTop == block.isAlwaysOnTop(childToCompare)
         val matchingIsAlwaysOnBottom = childIsAlwaysOnBottom == block.isAlwaysOnBottom(childToCompare)
-        val matchingType = block.containsAudio(childToCompare) == childContainsAudio
+        val matchingType = when (childType) {
+            DesignBlockType.Audio.key -> block.getType(childToCompare) == DesignBlockType.Audio.key
+            else -> block.getType(childToCompare) != DesignBlockType.Audio.key
+        }
         matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom && matchingType
     }
 }

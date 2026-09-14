@@ -45,7 +45,10 @@ fun CanvasMenu.Button.rememberBringForward(builder: CanvasMenu.ButtonBuilder.() 
         vectorIcon = { IconPack.BringForward }
         contentDescription = { stringResource(R.string.ly_img_editor_canvas_menu_button_bring_forward) }
         enabled = {
-            remember(this) { editorContext.canSelectionBringForward }
+            remember(this) {
+                editorContext.selectionSiblings.isNotEmpty() &&
+                    editorContext.selectionSiblings.last() != editorContext.selection.designBlock
+            }
         }
         onClick = {
             editorContext.eventHandler.send(EditorEvent.Selection.BringForward())
@@ -77,7 +80,10 @@ fun CanvasMenu.Button.rememberSendBackward(builder: CanvasMenu.ButtonBuilder.() 
         vectorIcon = { IconPack.SendBackward }
         contentDescription = { stringResource(R.string.ly_img_editor_canvas_menu_button_send_backward) }
         enabled = {
-            remember(this) { editorContext.canSelectionSendBackward }
+            remember(this) {
+                editorContext.selectionSiblings.isNotEmpty() &&
+                    editorContext.selectionSiblings.first() != editorContext.selection.designBlock
+            }
         }
         onClick = {
             editorContext.eventHandler.send(EditorEvent.Selection.SendBackward())

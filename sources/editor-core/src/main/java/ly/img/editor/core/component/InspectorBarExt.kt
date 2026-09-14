@@ -674,15 +674,10 @@ private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon
             fillType == FillType.ConicalGradient
     }
 
-    val showStroke = block.supportsStroke(designBlock) && block.isAllowedByScope(designBlock, "stroke/change")
-    // Line-origin graphics surface their colour through the stroke section, so the fill
-    // button is hidden — but only when a stroke section is actually available, otherwise
-    // the user would lose every colour control.
-    val hideFillForLine = block.isLineOrigin(designBlock) && showStroke
     val showFill = block.supportsFill(designBlock) &&
         block.hasColorOrGradientFill(designBlock) &&
-        !hideFillForLine &&
         block.isAllowedByScope(designBlock, "fill/change")
+    val showStroke = block.supportsStroke(designBlock) && block.isAllowedByScope(designBlock, "stroke/change")
     return EditorIcon.FillStroke(
         showFill = showFill,
         showStroke = showStroke,
@@ -957,10 +952,7 @@ fun InspectorBar.Button.rememberReplace(builder: InspectorBar.ButtonBuilder.() -
                             editorContext.selection.kind != KIND_VOICEOVER
                     ) ||
                         (
-                            (
-                                editorContext.selection.type == DesignBlockType.Graphic ||
-                                    editorContext.selection.type == DesignBlockType.Page
-                            ) &&
+                            editorContext.selection.type == DesignBlockType.Graphic &&
                                 (editorContext.selection.fillType == FillType.Image || editorContext.selection.fillType == FillType.Video)
                         ) &&
                         editorContext.selection.isNotAnyKindOfSticker() &&
@@ -989,15 +981,6 @@ fun InspectorBar.Button.rememberReplace(builder: InspectorBar.ButtonBuilder.() -
                                 )
                             }
                         }
-                    }
-                }
-                DesignBlockType.Page -> when (editorContext.selection.fillType) {
-                    FillType.Image -> assetLibrary.images
-                    FillType.Video -> assetLibrary.videos
-                    else -> {
-                        error(
-                            "Unsupported fillType ${editorContext.selection.fillType} for replace inspector bar button.",
-                        )
                     }
                 }
                 else -> error("Unsupported type ${editorContext.selection.type} for replace inspector bar button.")
@@ -1187,7 +1170,7 @@ val InspectorBar.Button.Id.shape by unsafeLazy {
 /**
  * A composable helper function that creates and remembers an [Button] that opens shape options sheet via
  * [EditorEvent.Sheet.Open]. The button is applicable for the following shape types:
- * [ShapeType.Star], [ShapeType.Polygon], [ShapeType.Rect].
+ * [ShapeType.Star], [ShapeType.Polygon], [ShapeType.Line], [ShapeType.Rect].
  * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
  * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
  *
@@ -1211,8 +1194,7 @@ fun InspectorBar.Button.rememberShape(builder: InspectorBar.ButtonBuilder.() -> 
                         } else {
                             null
                         }
-                        // Lines are intentionally excluded: their thickness is configured via the stroke section.
-                        shapeType in arrayOf(ShapeType.Star, ShapeType.Polygon, ShapeType.Rect)
+                        shapeType in arrayOf(ShapeType.Star, ShapeType.Polygon, ShapeType.Line, ShapeType.Rect)
                     }
             }
         }

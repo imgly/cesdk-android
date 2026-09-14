@@ -292,11 +292,14 @@ interface SheetType {
      * A sheet that is used to record new voice-over takes in video scenes.
      *
      * @param style the style that should be used to display the sheet.
-     * Default value is a floating sheet whose height is determined by its content.
+     * Default value is a floating sheet with a fixed compact height.
      */
     class Voiceover(
         override val style: SheetStyle = SheetStyle(
             isFloating = true,
+            minHeight = Height.Exactly(100.dp),
+            maxHeight = Height.Exactly(100.dp),
+            isHalfExpandingEnabled = false,
         ),
     ) : SheetType
 

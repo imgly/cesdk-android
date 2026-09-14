@@ -83,21 +83,6 @@ sealed class Destination(
         title = "Force Trim",
     )
 
-    data object AutomateWorkflows : Destination(
-        route = "guide-automate-workflows",
-        title = "Automate Workflows",
-    )
-
-    data object GuideEditorState : Destination(
-        route = "guide-editor-state",
-        title = "Editor State",
-    )
-
-    data object GuideTemplating : Destination(
-        route = "guide-templating",
-        title = "Templating",
-    )
-
     data object GuideDesignUnits : Destination(
         route = "guide-design-units",
         title = "Design Units",
@@ -132,9 +117,6 @@ sealed class Destination(
             GuideTheming,
             GuideOverlay,
             GuideForceTrim,
-            AutomateWorkflows,
-            GuideEditorState,
-            GuideTemplating,
             GuideDesignUnits,
             GuideScenes,
             GuideAutomationActions,

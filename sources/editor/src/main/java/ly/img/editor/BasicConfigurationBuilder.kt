@@ -61,7 +61,7 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
      * Whether the in-app system gallery integration is active.
      */
     var systemGalleryConfiguration: SystemGalleryConfiguration by editorContext.mutableStateOf(
-        key = KEY_STATE_SYSTEM_GALLERY_CONFIGURATION,
+        key = "ly.img.editor.state.systemGalleryConfiguration",
         initial = SystemGalleryConfiguration.Disabled,
     )
 
@@ -69,7 +69,7 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
      * Whether [Loading] composable should be visible in the overlay.
      */
     var showLoading: Boolean by editorContext.mutableStateOf(
-        key = KEY_STATE_SHOW_LOADING,
+        key = "ly.img.editor.state.showLoading",
         initial = false,
     )
 
@@ -77,7 +77,7 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
      * Whether [CloseConfirmationDialog] composable should be visible in the overlay.
      */
     var showCloseConfirmationDialog: Boolean by editorContext.mutableStateOf(
-        key = KEY_STATE_SHOW_CONFIRMATION_DIALOG,
+        key = "ly.img.editor.state.showCloseConfirmationDialog",
         initial = false,
     )
 
@@ -86,7 +86,7 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
      * composable is visible in the overlay.
      */
     var error: Throwable? by editorContext.mutableStateOf(
-        key = KEY_STATE_ERROR,
+        key = "ly.img.editor.state.error",
         initial = null,
     )
 
@@ -250,7 +250,7 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
         backHandler: @Composable () -> Unit = {
             val isBackHandlerEnabled by remember {
                 combine(
-                    editorContext.engine.editor.onHistoryUpdatedWithKind().map {
+                    editorContext.engine.editor.onHistoryUpdated().map {
                         editorContext.engine.editor.canUndo()
                     },
                     editorContext.state.map { it.isBackHandlerEnabled },
@@ -474,27 +474,5 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
             onDismissRequest = onDismissRequest,
             properties = properties,
         )
-    }
-
-    companion object {
-        /**
-         * The key to find the [BasicConfigurationBuilder.systemGalleryConfiguration] state property.
-         */
-        const val KEY_STATE_SYSTEM_GALLERY_CONFIGURATION = "ly.img.editor.state.systemGalleryConfiguration"
-
-        /**
-         * The key to find the [BasicConfigurationBuilder.showLoading] state property.
-         */
-        const val KEY_STATE_SHOW_LOADING = "ly.img.editor.state.showLoading"
-
-        /**
-         * The key to find the [BasicConfigurationBuilder.showCloseConfirmationDialog] state property.
-         */
-        const val KEY_STATE_SHOW_CONFIRMATION_DIALOG = "ly.img.editor.state.showCloseConfirmationDialog"
-
-        /**
-         * The key to find the [BasicConfigurationBuilder.error] state property.
-         */
-        const val KEY_STATE_ERROR = "ly.img.editor.state.error"
     }
 }
