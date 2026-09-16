@@ -100,7 +100,7 @@ class ThumbnailsImageProvider(
     private fun isStillContent(clipType: ClipType): Boolean = when (clipType) {
         ClipType.Image, ClipType.Sticker, ClipType.Shape -> true
         ClipType.Video, ClipType.Group -> false
-        // Audio and Text are handled by different providers
-        ClipType.Audio, ClipType.Text -> false
+        // Audio, Text and Caption are handled by different providers
+        ClipType.Audio, ClipType.Text, ClipType.Caption -> false
     }
 }

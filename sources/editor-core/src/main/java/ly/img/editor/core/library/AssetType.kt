@@ -17,4 +17,6 @@ enum class AssetType {
     Effect,
     Blur,
     Animation,
+    Transition,
+    TextStylePreset,
 }

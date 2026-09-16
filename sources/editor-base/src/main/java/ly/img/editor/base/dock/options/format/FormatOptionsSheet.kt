@@ -47,10 +47,16 @@ import ly.img.editor.core.ui.iconpack.Listbullet
 import ly.img.editor.core.ui.iconpack.Listnumber
 import ly.img.editor.core.ui.sheetScrollableContentModifier
 import ly.img.engine.FontStyle
+import ly.img.engine.FontUnit
 import ly.img.engine.FontWeight
 import ly.img.engine.HorizontalAlignment
 import ly.img.engine.ListStyle
 import ly.img.engine.TextCase
+
+private object FontSizeRange {
+    val PIXEL = 8f..128f
+    val POINT = 6f..90f
+}
 
 @Composable
 fun FormatOptionsSheet(
@@ -147,7 +153,11 @@ fun FormatOptionsSheet(
                             }
 
                             PropertyLink(
-                                value = getSubFamilyString(uiState.subFamily),
+                                value = if (uiState.isSubFamilyMixed) {
+                                    stringResource(R.string.ly_img_editor_sheet_format_text_font_subfamily_mixed)
+                                } else {
+                                    getSubFamilyString(uiState.subFamily)
+                                },
                             ) {
                                 screenState = ScreenState.SelectFontWeight
                             }
@@ -155,10 +165,19 @@ fun FormatOptionsSheet(
                     }
 
                     Spacer(Modifier.height(16.dp))
+                    val fontSizeLabelRes = when (uiState.fontSizeUnit) {
+                        FontUnit.PIXEL -> R.string.ly_img_editor_sheet_format_text_label_font_size_px
+                        FontUnit.POINT -> R.string.ly_img_editor_sheet_format_text_label_font_size_pt
+                    }
+                    val fontSizeRange = when (uiState.fontSizeUnit) {
+                        FontUnit.PIXEL -> FontSizeRange.PIXEL
+                        FontUnit.POINT -> FontSizeRange.POINT
+                    }
                     PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_sheet_format_text_label_font_size),
+                        title = stringResource(fontSizeLabelRes),
                         value = uiState.fontSize,
-                        valueRange = 6f..90f,
+                        valueRange = fontSizeRange,
+                        step = 0.1F,
                         onValueChange = { onEvent(BlockEvent.OnChangeFontSize(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                     )
@@ -236,69 +255,75 @@ fun FormatOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangeLetterSpacing(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = -0.15f..1.4f,
+                        step = 0.01F,
                     )
 
-                    Spacer(Modifier.height(16.dp))
-                    Card(
-                        colors = UiDefaults.cardColors,
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
+                    if (!uiState.isCaption) {
+                        Spacer(Modifier.height(16.dp))
+                        Card(
+                            colors = UiDefaults.cardColors,
                         ) {
-                            Text(
-                                text = stringResource(R.string.ly_img_editor_sheet_format_text_label_list_style),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                            Row {
-                                ToggleIconButton(
-                                    checked = uiState.listStyle == ListStyle.NONE,
-                                    onCheckedChange = {
-                                        if (uiState.listStyle != ListStyle.NONE) {
-                                            onEvent(OnChangeListStyle(ListStyle.NONE))
-                                        }
-                                    },
-                                ) {
-                                    Icon(
-                                        IconPack.DefaultNone,
-                                        contentDescription = stringResource(
-                                            R.string.ly_img_editor_sheet_format_text_list_style_option_none,
-                                        ),
-                                    )
-                                }
-                                ToggleIconButton(
-                                    checked = uiState.listStyle == ListStyle.UNORDERED,
-                                    onCheckedChange = {
-                                        if (uiState.listStyle != ListStyle.UNORDERED) {
-                                            onEvent(OnChangeListStyle(ListStyle.UNORDERED))
-                                        }
-                                    },
-                                ) {
-                                    Icon(
-                                        IconPack.Listbullet,
-                                        contentDescription = stringResource(
-                                            R.string.ly_img_editor_sheet_format_text_list_style_option_unordered,
-                                        ),
-                                    )
-                                }
-                                ToggleIconButton(
-                                    checked = uiState.listStyle == ListStyle.ORDERED,
-                                    onCheckedChange = {
-                                        if (uiState.listStyle != ListStyle.ORDERED) {
-                                            onEvent(OnChangeListStyle(ListStyle.ORDERED))
-                                        }
-                                    },
-                                ) {
-                                    Icon(
-                                        IconPack.Listnumber,
-                                        contentDescription = stringResource(
-                                            R.string.ly_img_editor_sheet_format_text_list_style_option_ordered,
-                                        ),
-                                    )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.ly_img_editor_sheet_format_text_label_list_style),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                                Row {
+                                    ToggleIconButton(
+                                        checked = uiState.listStyle == ListStyle.NONE,
+                                        onCheckedChange = {
+                                            if (uiState.listStyle != ListStyle.NONE) {
+                                                onEvent(OnChangeListStyle(ListStyle.NONE))
+                                            }
+                                        },
+                                        enabled = !uiState.isTextOnPath,
+                                    ) {
+                                        Icon(
+                                            IconPack.DefaultNone,
+                                            contentDescription = stringResource(
+                                                R.string.ly_img_editor_sheet_format_text_list_style_option_none,
+                                            ),
+                                        )
+                                    }
+                                    ToggleIconButton(
+                                        checked = uiState.listStyle == ListStyle.UNORDERED,
+                                        onCheckedChange = {
+                                            if (uiState.listStyle != ListStyle.UNORDERED) {
+                                                onEvent(OnChangeListStyle(ListStyle.UNORDERED))
+                                            }
+                                        },
+                                        enabled = !uiState.isTextOnPath,
+                                    ) {
+                                        Icon(
+                                            IconPack.Listbullet,
+                                            contentDescription = stringResource(
+                                                R.string.ly_img_editor_sheet_format_text_list_style_option_unordered,
+                                            ),
+                                        )
+                                    }
+                                    ToggleIconButton(
+                                        checked = uiState.listStyle == ListStyle.ORDERED,
+                                        onCheckedChange = {
+                                            if (uiState.listStyle != ListStyle.ORDERED) {
+                                                onEvent(OnChangeListStyle(ListStyle.ORDERED))
+                                            }
+                                        },
+                                        enabled = !uiState.isTextOnPath,
+                                    ) {
+                                        Icon(
+                                            IconPack.Listnumber,
+                                            contentDescription = stringResource(
+                                                R.string.ly_img_editor_sheet_format_text_list_style_option_ordered,
+                                            ),
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -311,6 +336,8 @@ fun FormatOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangeLineHeight(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = 0.5f..2.5f,
+                        step = 0.01F,
+                        enabled = !uiState.isTextOnPath,
                     )
                     Spacer(Modifier.height(16.dp))
                     PropertySlider(
@@ -319,9 +346,12 @@ fun FormatOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangeParagraphSpacing(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = -0.15f..1.4f,
+                        step = 0.01F,
+                        enabled = !uiState.isTextOnPath,
                     )
 
-                    if (uiState.isArrangeResizeAllowed) {
+                    // UNKNOWN has no option to pick, so the picker is hidden rather than shown with nothing selected.
+                    if (uiState.isArrangeResizeAllowed && !uiState.isCaption && uiState.sizeMode != SizeModeUi.UNKNOWN) {
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Card(
@@ -329,13 +359,16 @@ fun FormatOptionsSheet(
                         ) {
                             PropertyPicker(
                                 title = stringResource(R.string.ly_img_editor_sheet_format_text_label_frame_behaviour),
-                                propertyTextRes = uiState.sizeModeRes,
-                                properties = sizeModeList,
+                                propertyValue = uiState.sizeMode,
+                                enabled = !uiState.isTextOnPath,
+                                properties = sizeModeProperties,
                                 onPropertyPicked = { onEvent(BlockEvent.OnChangeSizeMode(it)) },
                             )
                             if (uiState.hasClippingOption) {
+                                Divider(Modifier.padding(horizontal = 16.dp))
                                 PropertySwitch(
                                     title = stringResource(R.string.ly_img_editor_sheet_format_text_label_frame_clipping),
+                                    enabled = !uiState.isTextOnPath,
                                     isChecked = uiState.isClipped,
                                     onPropertyChange = {
                                         onEvent(BlockEvent.OnChangeClipping(it))
@@ -378,6 +411,7 @@ fun FormatOptionsSheet(
                     selectedFontFamily = uiState.fontFamily,
                     selectedWeight = uiState.fontFamilyWeight,
                     selectedStyle = uiState.fontFamilyStyle,
+                    selectionMixed = uiState.isSubFamilyMixed,
                     labelMap = { getSubFamilyString(it.subFamily) },
                     onSelectFont = { fontData ->
                         onEvent(BlockEvent.OnChangeFont(fontData.uri, fontData.typeface))
@@ -401,6 +435,7 @@ fun DefaultPreview() {
         uiState = FormatUiState(
             fontFamily = "Roboto",
             fontSize = 16f,
+            fontSizeUnit = FontUnit.POINT,
             letterSpacing = 0f,
             lineHeight = 1f,
             isBold = true,
@@ -412,7 +447,7 @@ fun DefaultPreview() {
             horizontalAlignment = HorizontalAlignment.Left,
             effectiveHorizontalAlignment = HorizontalAlignment.Left,
             verticalAlignment = VerticalAlignment.Top,
-            sizeModeRes = R.string.ly_img_editor_sheet_format_text_frame_behavior_option_fixed_size,
+            sizeMode = SizeModeUi.ABSOLUTE,
             isArrangeResizeAllowed = true,
             libraryCategory = LibraryCategory.Text,
             casing = TextCase.UPPER_CASE,
@@ -423,7 +458,10 @@ fun DefaultPreview() {
             fontFamilyStyle = FontStyle.NORMAL,
             hasClippingOption = true,
             isClipped = true,
+            isTextOnPath = false,
             subFamily = "Regular",
+            isSubFamilyMixed = false,
+            isCaption = false,
         ),
         onEvent = {},
     )

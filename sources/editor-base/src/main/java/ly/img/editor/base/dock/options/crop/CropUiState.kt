@@ -13,6 +13,7 @@ import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignUnit
 import ly.img.engine.Engine
+import ly.img.engine.FontUnit
 import kotlin.math.roundToInt
 
 suspend fun createAllPageResizeUiState(
@@ -52,7 +53,8 @@ suspend fun createCropUiState(
     straightenAngle = getStraightenDegrees(engine, designBlock),
     cropScaleRatio = cropScaleRatio ?: engine.block.getCropScaleRatio(designBlock),
     canResetCrop = canResetCrop(engine, designBlock, initCropTranslationX, initCropTranslationY),
-    selectedAssetKey,
+    canRevertToOriginalRatio = runCatching { engine.block.canRevertToOriginalRatio(designBlock) }.getOrDefault(false),
+    selectedAssetKey = selectedAssetKey,
     contentFillMode = engine.block.getContentFillMode(designBlock),
     resizeState = ResizeUiState(
         width = engine.block.getWidth(engine.getPage(0)),
@@ -60,6 +62,7 @@ suspend fun createCropUiState(
         dpi = engine.block.getFloat(engine.getScene(), SCENE_DPI).roundToInt(),
         pixelScaleFactor = engine.block.getFloat(engine.getScene(), SCENE_PIXEL_SCALE_FACTOR),
         unit = engine.scene.getDesignUnit().let { unit -> UNIT_ENTRIES.find { it.native == unit } ?: UNIT_ENTRIES.last() },
+        fontUnit = engine.scene.getFontSizeUnit(),
     ),
     cropMode = cropMode,
     groups = getGroups(
@@ -83,7 +86,8 @@ suspend fun getGroups(
     engine: Engine,
     sourceIds: List<String>,
 ) = sourceIds.flatMap { sourceId ->
-    (engine.asset.getGroups(sourceId) ?: emptyList()).map { groupId ->
+    val groupIds = runCatching { engine.asset.getGroups(sourceId) }.getOrNull().orEmpty()
+    groupIds.map { groupId ->
         CropGroup(
             id = groupId,
             sourceId = sourceId,
@@ -153,6 +157,7 @@ data class CropUiState(
     val resizeState: ResizeUiState,
     val allowContentFillMode: Boolean,
     val allowResizeOption: Boolean,
+    val canRevertToOriginalRatio: Boolean = false,
 ) {
     fun contentFillModeTextRes(mode: ContentFillMode) = when (mode) {
         ContentFillMode.CROP -> R.string.ly_img_editor_sheet_crop_fill_mode_option_crop
@@ -174,6 +179,7 @@ data class ResizeUiState(
     val pixelScaleFactor: Float,
     val unit: DesignUnitEntry,
     val units: List<DesignUnitEntry> = UNIT_ENTRIES,
+    val fontUnit: FontUnit = FontUnit.POINT,
 )
 
 data class DesignUnitEntry(

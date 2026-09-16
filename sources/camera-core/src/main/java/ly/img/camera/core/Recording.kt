@@ -8,8 +8,8 @@ import kotlin.time.Duration.Companion.milliseconds
 /**
  * A camera recording.
  *
- * @param videos contains one or two [Video]s, for single camera output or dual camera output respectively
- * @param duration the duration of the recording
+ * @param videos the list of [Video]s in the recording.
+ * @param duration the duration of the recording.
  */
 data class Recording(
     val videos: List<Video>,

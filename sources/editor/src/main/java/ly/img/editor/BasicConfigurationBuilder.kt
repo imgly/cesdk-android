@@ -17,12 +17,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
@@ -34,18 +36,21 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ly.img.editor.core.R
 import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.component.data.Insets
 import ly.img.editor.core.configuration.EditorConfigurationBuilder
 import ly.img.editor.core.event.EditorEvent
+import ly.img.editor.core.getDisplayMessage
 import ly.img.editor.core.iconpack.CloudAlertOutline
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.iconpack.WifiCancel
 import ly.img.editor.core.library.data.SystemGalleryConfiguration
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
+import ly.img.engine.EngineException
 import ly.img.engine.MimeType
 import java.io.File
 import java.nio.ByteBuffer
@@ -61,7 +66,7 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
      * Whether the in-app system gallery integration is active.
      */
     var systemGalleryConfiguration: SystemGalleryConfiguration by editorContext.mutableStateOf(
-        key = "ly.img.editor.state.systemGalleryConfiguration",
+        key = KEY_STATE_SYSTEM_GALLERY_CONFIGURATION,
         initial = SystemGalleryConfiguration.Disabled,
     )
 
@@ -69,7 +74,7 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
      * Whether [Loading] composable should be visible in the overlay.
      */
     var showLoading: Boolean by editorContext.mutableStateOf(
-        key = "ly.img.editor.state.showLoading",
+        key = KEY_STATE_SHOW_LOADING,
         initial = false,
     )
 
@@ -77,7 +82,7 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
      * Whether [CloseConfirmationDialog] composable should be visible in the overlay.
      */
     var showCloseConfirmationDialog: Boolean by editorContext.mutableStateOf(
-        key = "ly.img.editor.state.showCloseConfirmationDialog",
+        key = KEY_STATE_SHOW_CONFIRMATION_DIALOG,
         initial = false,
     )
 
@@ -86,7 +91,7 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
      * composable is visible in the overlay.
      */
     var error: Throwable? by editorContext.mutableStateOf(
-        key = "ly.img.editor.state.error",
+        key = KEY_STATE_ERROR,
         initial = null,
     )
 
@@ -189,6 +194,8 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
 
     /**
      * A helper function that opens a system dialog to share the [file].
+     * Note that the uri of the [file] is resolved on a background thread, therefore the system dialog is opened
+     * asynchronously. If the uri resolution fails, the [error] state is set instead of throwing.
      *
      * @param authority the authority of [FileProvider] defined in a <provider> element in your app's manifest.
      * @param file the file that should be shared.
@@ -200,8 +207,18 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
         file: File,
         mimeType: MimeType,
     ) {
-        val uri = FileProvider.getUriForFile(editorContext.activity, authority, file)
-        shareUri(uri = uri, mimeType = mimeType)
+        editorContext.coroutineScope.launch {
+            try {
+                val uri = withContext(Dispatchers.IO) {
+                    FileProvider.getUriForFile(editorContext.activity, authority, file)
+                }
+                shareUri(uri = uri, mimeType = mimeType)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                error = exception
+            }
+        }
     }
 
     /**
@@ -250,7 +267,7 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
         backHandler: @Composable () -> Unit = {
             val isBackHandlerEnabled by remember {
                 combine(
-                    editorContext.engine.editor.onHistoryUpdated().map {
+                    editorContext.engine.editor.onHistoryUpdatedWithKind().map {
                         editorContext.engine.editor.canUndo()
                     },
                     editorContext.state.map { it.isBackHandlerEnabled },
@@ -387,7 +404,10 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
             Text(text = stringResource(R.string.ly_img_editor_dialog_error_title))
         },
         text: @Composable (() -> Unit)? = {
-            Text(text = throwable.message ?: "")
+            Text(
+                text = (throwable as? EngineException)?.getDisplayMessage(LocalContext.current)
+                    ?: throwable.message ?: "",
+            )
         },
         confirmButton: @Composable () -> Unit = {
             TextButton(
@@ -474,5 +494,27 @@ open class BasicConfigurationBuilder : EditorConfigurationBuilder() {
             onDismissRequest = onDismissRequest,
             properties = properties,
         )
+    }
+
+    companion object {
+        /**
+         * The key to find the [BasicConfigurationBuilder.systemGalleryConfiguration] state property.
+         */
+        const val KEY_STATE_SYSTEM_GALLERY_CONFIGURATION = "ly.img.editor.state.systemGalleryConfiguration"
+
+        /**
+         * The key to find the [BasicConfigurationBuilder.showLoading] state property.
+         */
+        const val KEY_STATE_SHOW_LOADING = "ly.img.editor.state.showLoading"
+
+        /**
+         * The key to find the [BasicConfigurationBuilder.showCloseConfirmationDialog] state property.
+         */
+        const val KEY_STATE_SHOW_CONFIRMATION_DIALOG = "ly.img.editor.state.showCloseConfirmationDialog"
+
+        /**
+         * The key to find the [BasicConfigurationBuilder.error] state property.
+         */
+        const val KEY_STATE_ERROR = "ly.img.editor.state.error"
     }
 }

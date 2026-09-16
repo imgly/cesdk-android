@@ -7,6 +7,7 @@ import ly.img.editor.core.ui.engine.dpToCanvasUnit
 import ly.img.editor.core.ui.engine.getCamera
 import ly.img.editor.core.ui.engine.getPage
 import ly.img.editor.core.ui.engine.getStackOrNull
+import ly.img.editor.core.ui.engine.isCaptionTrack
 import ly.img.editor.core.ui.engine.overrideAndRestore
 import ly.img.engine.BlockApi
 import ly.img.engine.DesignBlock
@@ -35,15 +36,23 @@ fun Engine.isPlaceholder(designBlock: DesignBlock): Boolean {
 }
 
 fun Engine.canBringForward(designBlock: DesignBlock): Boolean {
-    val parent = block.getParent(designBlock)
-    parent ?: return false
+    val parent = block.getParent(designBlock) ?: return false
+    if (block.getType(parent) == DesignBlockType.Track.key) {
+        val trackChildren = block.getChildren(parent)
+        if (trackChildren.size > 1) return true
+        return canBringForward(parent)
+    }
     val children = getReorderableChildren(parent, designBlock)
     return children.last() != designBlock
 }
 
 fun Engine.canSendBackward(designBlock: DesignBlock): Boolean {
-    val parent = block.getParent(designBlock)
-    parent ?: return false
+    val parent = block.getParent(designBlock) ?: return false
+    if (block.getType(parent) == DesignBlockType.Track.key) {
+        val trackChildren = block.getChildren(parent)
+        if (trackChildren.size > 1) return true
+        return canSendBackward(parent)
+    }
     val children = getReorderableChildren(parent, designBlock)
     return children.first() != designBlock
 }
@@ -51,6 +60,9 @@ fun Engine.canSendBackward(designBlock: DesignBlock): Boolean {
 /**
  * Get all reorderable children for a given parent and contained child.
  * This method filters out children that are not reorderable with the given child.
+ *
+ * The caption track reorders against nothing: captions draw above the whole page whatever the track order is, and
+ * the track itself is not always-on-top, so cutouts still outrank it.
  */
 private fun Engine.getReorderableChildren(
     parent: DesignBlock,
@@ -58,18 +70,17 @@ private fun Engine.getReorderableChildren(
 ): List<DesignBlock> {
     val childIsAlwaysOnTop = block.isAlwaysOnTop(child)
     val childIsAlwaysOnBottom = block.isAlwaysOnBottom(child)
-    val childType = block.getType(child)
+    val childContainsAudio = block.containsAudio(child)
+    val childIsCaptionTrack = block.isCaptionTrack(child)
 
     val children = block.getChildren(parent)
 
     return children.filter { childToCompare ->
         val matchingIsAlwaysOnTop = childIsAlwaysOnTop == block.isAlwaysOnTop(childToCompare)
         val matchingIsAlwaysOnBottom = childIsAlwaysOnBottom == block.isAlwaysOnBottom(childToCompare)
-        val matchingType = when (childType) {
-            DesignBlockType.Audio.key -> block.getType(childToCompare) == DesignBlockType.Audio.key
-            else -> block.getType(childToCompare) != DesignBlockType.Audio.key
-        }
-        matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom && matchingType
+        val matchingType = block.containsAudio(childToCompare) == childContainsAudio
+        val matchingIsCaptionTrack = childIsCaptionTrack == block.isCaptionTrack(childToCompare)
+        matchingIsAlwaysOnTop && matchingIsAlwaysOnBottom && matchingType && matchingIsCaptionTrack
     }
 }
 

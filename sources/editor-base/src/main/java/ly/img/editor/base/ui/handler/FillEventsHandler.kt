@@ -2,6 +2,8 @@ package ly.img.editor.base.ui.handler
 
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.base.engine.changeLightnessBy
+import ly.img.editor.base.engine.effectiveTextRange
+import ly.img.editor.base.engine.isCaption
 import ly.img.editor.base.engine.setConicalGradientFill
 import ly.img.editor.base.engine.setFillType
 import ly.img.editor.base.engine.setLinearGradientFill
@@ -55,12 +57,11 @@ fun EventsHandler.blockFillEvents(
         )
     }
 
-    fun onChangeFillStyle(style: String) {
+    fun onChangeFillStyle(type: FillType) {
         engine.block.setFillEnabled(block, true)
 
-        val fillStyleEnum = FillType.get(style)
         val currentFillType = engine.block.getFillType(block)
-        if (currentFillType == fillStyleEnum) return
+        if (currentFillType == type) return
 
         val colorStops = when (currentFillType) {
             FillType.Color -> {
@@ -89,7 +90,7 @@ fun EventsHandler.blockFillEvents(
             }
         }
 
-        when (fillStyleEnum) {
+        when (type) {
             FillType.Color -> {
                 engine.block.setFillType(block, FillType.Color)
                 engine.block.setFillSolidColor(
@@ -133,8 +134,9 @@ fun EventsHandler.blockFillEvents(
     register<OnChangeFillColor> {
         engine.block.setFillEnabled(block, true)
         engine.block.setFillType(block, FillType.Color)
-        if (DesignBlockType.getOrNull(engine.block.getType(block)) == DesignBlockType.Text) {
-            engine.block.setTextColor(block, it.color.toEngineColor())
+        if (engine.block.isCaption(block) || DesignBlockType.getOrNull(engine.block.getType(block)) == DesignBlockType.Text) {
+            val range = engine.block.effectiveTextRange(block)
+            engine.block.setTextColor(block, it.color.toEngineColor(), range.first, range.last)
         } else {
             engine.block.setFillSolidColor(block, it.color.toEngineColor())
         }
@@ -210,6 +212,6 @@ fun EventsHandler.blockFillEvents(
         }
     }
     register<OnChangeFillStyle> {
-        onChangeFillStyle(it.style)
+        onChangeFillStyle(it.type)
     }
 }

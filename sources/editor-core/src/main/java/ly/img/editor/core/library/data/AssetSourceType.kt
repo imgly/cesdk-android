@@ -15,7 +15,7 @@ open class AssetSourceType(
          * The default source type for shapes.
          */
         val Shapes by lazy {
-            AssetSourceType(sourceId = "ly.img.vectorpath")
+            AssetSourceType(sourceId = "ly.img.vector.shape")
         }
 
         /**
@@ -47,8 +47,15 @@ open class AssetSourceType(
         }
 
         /**
-         * The default source type for text.
+         * The legacy source type for plain text, served by [TextAssetSource]. The default text library
+         * now uses the split text preset sources ([TextPlain], [TextStyles], [TextCurves]) and no
+         * longer references this source type.
          */
+        @Deprecated(
+            message = "The default text library now uses the split text preset sources: " +
+                "TextPlain (ly.img.text), TextStyles (ly.img.text.styles), " +
+                "TextCurves (ly.img.text.curves), TextComponents (ly.img.text.components).",
+        )
         val Text by lazy {
             AssetSourceType(sourceId = "ly.img.asset.source.text")
         }
@@ -57,7 +64,37 @@ open class AssetSourceType(
          * The default source type for text components.
          */
         val TextComponents by lazy {
-            AssetSourceType(sourceId = "ly.img.textComponents")
+            AssetSourceType(sourceId = "ly.img.text.components")
+        }
+
+        /**
+         * Plain text presets. Assets carry an opaque `payload.stylePreset` that the engine applies;
+         * the section drills into the source's groups (default / elegant / modernTech).
+         */
+        val TextPlain by lazy {
+            AssetSourceType(sourceId = "ly.img.text")
+        }
+
+        /**
+         * Decorative text style presets.
+         */
+        val TextStyles by lazy {
+            AssetSourceType(sourceId = "ly.img.text.styles")
+        }
+
+        /**
+         * Curved text presets, used by the text-on-path picker.
+         */
+        val TextCurves by lazy {
+            AssetSourceType(sourceId = "ly.img.text.curves")
+        }
+
+        /**
+         * Caption style presets. Assets carry an opaque `payload.stylePreset` that the engine applies to one
+         * caption and syncs across its track.
+         */
+        val CaptionPresets by lazy {
+            AssetSourceType(sourceId = "ly.img.caption.presets")
         }
 
         /**

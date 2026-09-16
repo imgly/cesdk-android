@@ -5,4 +5,9 @@ package ly.img.camera.util
  */
 internal sealed interface SingleEvent {
     data object ErrorLoadingVideo : SingleEvent
+
+    /**
+     * The camera session is complete and should return its result.
+     */
+    data object FinishCapturing : SingleEvent
 }

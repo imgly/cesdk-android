@@ -27,6 +27,7 @@ internal fun Toolbar(
     duration: Duration,
     maxDuration: Duration,
     recordingColor: Color,
+    showTimecode: Boolean,
     onCloseClick: () -> Unit,
 ) {
     Box(
@@ -47,12 +48,14 @@ internal fun Toolbar(
             )
         }
 
-        TimecodeView(
-            modifier = Modifier.align(Alignment.Center),
-            duration = duration,
-            maxDuration = maxDuration,
-            isRecording = isRecording,
-            recordingColor = recordingColor,
-        )
+        if (showTimecode) {
+            TimecodeView(
+                modifier = Modifier.align(Alignment.Center),
+                duration = duration,
+                maxDuration = maxDuration,
+                isRecording = isRecording,
+                recordingColor = recordingColor,
+            )
+        }
     }
 }

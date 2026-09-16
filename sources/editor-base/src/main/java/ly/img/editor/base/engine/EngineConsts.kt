@@ -15,3 +15,4 @@ const val DOUBLE_CLICK_SELECTION_MODE_DIRECT = "Direct"
 const val CAMERA_OVERSHOOT_MODE_CENTER = "Center"
 
 const val FEATURE_PAGE_CAROUSEL_ENABLED = "features/pageCarouselEnabled"
+const val SOFTWARE_KEYBOARD_SUSPENDED_SETTING = "softwareKeyboardSuspended"

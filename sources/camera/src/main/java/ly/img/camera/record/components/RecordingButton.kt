@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +57,7 @@ internal fun RecordingButton(
     hasStartedRecording: Boolean,
     isRecording: Boolean,
     isTimerRunning: Boolean,
+    behavesAsPhoto: Boolean,
     recordedDurations: List<Duration>,
     backgroundColor: Color = LocalExtendedColorScheme.current.black,
     strokeColor: Color = MaterialTheme.colorScheme.onBackground,
@@ -69,6 +71,12 @@ internal fun RecordingButton(
     onLongPress: () -> Unit,
     onLongPressRelease: () -> Unit,
 ) {
+    // White dot for photo, red for video — at-a-glance shutter-type cue in the Ready state.
+    val readySymbolColor = if (behavesAsPhoto) {
+        LocalExtendedColorScheme.current.white
+    } else {
+        recordingColor
+    }
     val state = when {
         !enabled -> RecordingButtonState.Disabled
         isTimerRunning -> RecordingButtonState.TimerRunning
@@ -117,7 +125,9 @@ internal fun RecordingButton(
         transitionSpec = { spring(stiffness = Spring.StiffnessLow) },
     ) { targetState ->
         when (targetState) {
-            RecordingButtonState.Ready -> 20.dp
+            // Photo: 4 dp padding from the 72 dp outer ring. Video shrinks the inner shape by an
+            // extra 16 dp so the mode switch reads as a state hint without resizing the outer ring.
+            RecordingButtonState.Ready -> if (behavesAsPhoto) 64.dp else 48.dp
             RecordingButtonState.Recording, RecordingButtonState.TimerRunning -> 32.dp
             RecordingButtonState.Disabled -> 0.dp
         }
@@ -128,7 +138,8 @@ internal fun RecordingButton(
         transitionSpec = { spring(stiffness = Spring.StiffnessLow) },
     ) { targetState ->
         when (targetState) {
-            RecordingButtonState.Ready -> 10.dp
+            // size / 2 — perfect circle in Ready.
+            RecordingButtonState.Ready -> 32.dp
             RecordingButtonState.Recording, RecordingButtonState.TimerRunning -> 4.dp
             RecordingButtonState.Disabled -> 0.dp
         }
@@ -146,7 +157,7 @@ internal fun RecordingButton(
 
     val symbolColorAnimation by transition.animateColor(label = "SymbolColorAnimation") { targetState ->
         when (targetState) {
-            RecordingButtonState.Ready, RecordingButtonState.Disabled -> recordingColor
+            RecordingButtonState.Ready, RecordingButtonState.Disabled -> readySymbolColor
             else -> strokeColor
         }
     }
@@ -234,19 +245,40 @@ internal fun RecordingButton(
 
     val localView = LocalView.current
 
+    // `pointerInput(enabled)` only re-runs when `enabled` flips, so the gesture-detector closure
+    // would otherwise capture the *initial* callback identities — fine for pure-Photo and pure-Video
+    // sessions (where shutter behavior is constant), but broken for Mixed mode: toggling
+    // photo↔video while the camera is Ready leaves the gesture detector calling the stale lambda
+    // and the shutter keeps taking photos no matter what the toggle reads. Wrap each callback so
+    // the detector always invokes the latest snapshot.
+    val currentOnShortPress by rememberUpdatedState(onShortPress)
+    val currentOnLongPress by rememberUpdatedState(onLongPress)
+    val currentOnLongPressRelease by rememberUpdatedState(onLongPressRelease)
+
     Box(modifier.size(longPressToRecordCircleSize)) {
         Canvas(
             modifier = Modifier
                 .align(Alignment.Center)
                 .size(canvasSize)
                 .padding(paddingAnimation)
-                .pointerInput(enabled) {
+                .pointerInput(enabled, behavesAsPhoto) {
                     if (!enabled) return@pointerInput
 
-                    var isLongPress: Boolean
                     detectTapGestures(
                         onPress = {
-                            isLongPress = false
+                            if (behavesAsPhoto) {
+                                // No long-press path — the growing-circle visual implies "hold to record".
+                                try {
+                                    awaitRelease()
+                                } finally {
+                                    localView.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+                                    currentOnShortPress()
+                                }
+                                return@detectTapGestures
+                            }
+
+                            // Video / Mixed-video: hold-to-record with growing-circle visual.
+                            var isLongPress = false
                             isPressed = true
                             val job = scope.launch {
                                 delay(longPressTimeout.toLong()) // Delay for long press
@@ -254,7 +286,7 @@ internal fun RecordingButton(
                                     isLongPress = true
                                     isPressed = false
                                     localView.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-                                    onLongPress()
+                                    currentOnLongPress()
                                 }
                             }
 
@@ -265,9 +297,9 @@ internal fun RecordingButton(
                                 isPressed = false
                                 localView.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
                                 if (isLongPress) {
-                                    onLongPressRelease()
+                                    currentOnLongPressRelease()
                                 } else {
-                                    onShortPress()
+                                    currentOnShortPress()
                                 }
                             }
                         },

@@ -234,18 +234,18 @@ internal class VersionUpdateViewModel : ViewModel() {
             runCatching {
                 // We place it in runCatching block as older releases will not be able to be parsed
                 val release = releases.getJSONObject(it)
-                val displayVersion = release.getString(JSON_KEY_DISPLAY_VERSION)
+                val releaseNotes = release.getJSONObject(JSON_KEY_RELEASE_NOTES).getString(JSON_KEY_RELEASE_NOTES_TEXT)
                 val date = sourceDateFormat.parse(release.getString(JSON_KEY_CREATE_TIME))
                 val createTime = resultDateFormat.format(requireNotNull(date))
                 val downloadUrl = release.getString(JSON_KEY_DOWNLOAD_URL)
-                val (branchName, commitId) = displayVersion.lastIndexOf('-').let {
+                val (branchName, commitId) = releaseNotes.lastIndexOf('-').let {
                     require(it != -1)
-                    displayVersion.substring(0, it).trim() to displayVersion.substring(it + 1).trim()
+                    releaseNotes.substring(0, it).trim() to releaseNotes.substring(it + 1).trim()
                 }
                 require(branchName.isNotEmpty())
                 require(commitId.isNotEmpty())
                 Release(
-                    key = displayVersion,
+                    key = "$branchName - $commitId",
                     createTime = createTime,
                     downloadUrl = downloadUrl,
                     branchName = branchName,
@@ -267,7 +267,8 @@ internal class VersionUpdateViewModel : ViewModel() {
 
         private const val HEADER_KEY_AUTHORIZATION = "Authorization"
         private const val JSON_KEY_RELEASES = "releases"
-        private const val JSON_KEY_DISPLAY_VERSION = "displayVersion"
+        private const val JSON_KEY_RELEASE_NOTES = "releaseNotes"
+        private const val JSON_KEY_RELEASE_NOTES_TEXT = "text"
         private const val JSON_KEY_CREATE_TIME = "createTime"
         private const val JSON_KEY_DOWNLOAD_URL = "binaryDownloadUri"
     }

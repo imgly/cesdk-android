@@ -74,7 +74,7 @@ fun AddAudioButton(
                     when (option) {
                         AddAudioOption.Library -> {
                             ClipMenuItem(
-                                textResourceId = R.string.ly_img_editor_dock_button_audio,
+                                textResourceId = R.string.ly_img_editor_timeline_add_audio_option_music,
                                 icon = IconPack.AddAudio,
                             ) {
                                 showAudioMenu = false

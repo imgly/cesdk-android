@@ -37,6 +37,7 @@ fun AnimationType.getAvailableProperties() = when (this) {
         duration,
         easing,
         directionPerpendicular(),
+        scaleFactor(),
         writingStyle,
     )
     AnimationType.Zoom -> listOf(
@@ -149,168 +150,273 @@ fun AnimationType.getAvailableProperties() = when (this) {
 }
 
 private val duration = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_duration,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_duration),
     key = "playback/duration",
     valueType = PropertyValueType.Double(),
 )
 
 private val easing = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_easing,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_easing),
     key = "animationEasing",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_linear, AnimationEasingType.LINEAR.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_smooth_accelerate, AnimationEasingType.EASE_IN_QUINT.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_smooth_decelerate, AnimationEasingType.EASE_OUT_QUINT.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_smooth_natural, AnimationEasingType.EASE_IN_OUT_QUINT.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_bounce_away, AnimationEasingType.EASE_IN_BACK.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_bounce_in, AnimationEasingType.EASE_OUT_BACK.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_bounce_double, AnimationEasingType.EASE_IN_OUT_BACK.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_away, AnimationEasingType.EASE_IN_SPRING.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_in, AnimationEasingType.EASE_OUT_SPRING.key),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_double, AnimationEasingType.EASE_IN_OUT_SPRING.key),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_linear),
+                value = AnimationEasingType.LINEAR.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_smooth_accelerate),
+                value = AnimationEasingType.EASE_IN_QUINT.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_smooth_decelerate),
+                value = AnimationEasingType.EASE_OUT_QUINT.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_smooth_natural),
+                value = AnimationEasingType.EASE_IN_OUT_QUINT.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_bounce_away),
+                value = AnimationEasingType.EASE_IN_BACK.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_bounce_in),
+                value = AnimationEasingType.EASE_OUT_BACK.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_bounce_double),
+                value = AnimationEasingType.EASE_IN_OUT_BACK.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_away),
+                value = AnimationEasingType.EASE_IN_SPRING.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_in),
+                value = AnimationEasingType.EASE_OUT_SPRING.key,
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_easing_option_wiggle_double),
+                value = AnimationEasingType.EASE_IN_OUT_SPRING.key,
+            ),
         ),
     ),
 )
 
 private fun AnimationType.intensity() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_intensity,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_intensity),
     key = "$key/intensity",
     valueType = PropertyValueType.Int(),
 )
 
 private fun AnimationType.directionEnum() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_direction,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction),
     key = "$key/direction",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_up, "Up"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_right, "Right"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_down, "Down"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_left, "Left"),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_up),
+                value = "Up",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_right),
+                value = "Right",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_down),
+                value = "Down",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_left),
+                value = "Left",
+            ),
         ),
     ),
 )
 
 private fun AnimationType.directionClock() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_direction,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction),
     key = "$key/direction",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_clockwise, "Clockwise"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_counter_clockwise, "CounterClockwise"),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_clockwise),
+                value = "Clockwise",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_counter_clockwise),
+                value = "CounterClockwise",
+            ),
         ),
     ),
 )
 
 private fun AnimationType.directionPerpendicular() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_direction,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction),
     key = "$key/direction",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_horizontal, "Horizontal"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_vertical, "Vertical"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_all, "All"),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_horizontal),
+                value = "Horizontal",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_vertical),
+                value = "Vertical",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_all),
+                value = "All",
+            ),
         ),
     ),
 )
 
 private fun AnimationType.distance() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_distance,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_distance),
     key = "$key/distance",
     valueType = PropertyValueType.Float(),
 )
 
 private fun AnimationType.fade() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_fade,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_fade),
     key = "$key/fade",
     valueType = PropertyValueType.Boolean,
 )
 
 private fun AnimationType.scale() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_scale,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_scale),
     key = "$key/scale",
     valueType = PropertyValueType.Float(),
 )
 
+private fun AnimationType.scaleFactor() = Property(
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_scale_factor),
+    key = "$key/scaleFactor",
+    valueType = PropertyValueType.Float(
+        range = 0f..1f,
+        step = 0.01f,
+    ),
+)
+
 private val writingStyle = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_writing_style,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_writing_style),
     key = "textWritingStyle",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
-            PropertyOption(R.string.ly_img_editor_sheet_animations_writing_style_option_block, "Block"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_writing_style_option_line, "Line"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_writing_style_option_character, "Character"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_writing_style_option_word, "Word"),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_writing_style_option_block),
+                value = "Block",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_writing_style_option_line),
+                value = "Line",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_writing_style_option_character),
+                value = "Character",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_writing_style_option_word),
+                value = "Word",
+            ),
         ),
     ),
 )
 
 private fun AnimationType.writingStyleShort() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_writing_style,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_writing_style),
     key = "$key/writingStyle",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
-            PropertyOption(R.string.ly_img_editor_sheet_animations_writing_style_option_character, "Character"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_writing_style_option_word, "Word"),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_writing_style_option_character),
+                value = "Character",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_writing_style_option_word),
+                value = "Word",
+            ),
         ),
     ),
 )
 
 private fun AnimationType.travelDistance() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_distance,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_distance),
     key = "$key/travelDistanceRatio",
     valueType = PropertyValueType.Float(),
 )
 
 private fun AnimationType.zoomIntensity() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_zoom_intensity,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_zoom_intensity),
     key = "$key/zoomIntensity",
     valueType = PropertyValueType.Float(),
 )
 
 private fun AnimationType.directionScaleLoop() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_direction,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction),
     key = "$key/direction",
     valueType = PropertyValueType.StringEnum(
         options = listOf(
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_all, "All"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_horizontal, "Horizontal"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_vertical, "Vertical"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_top_left, "TopLeft"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_top_right, "TopRight"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_bottom_left, "BottomLeft"),
-            PropertyOption(R.string.ly_img_editor_sheet_animations_label_direction_bottom_right, "BottomRight"),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_all),
+                value = "All",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_horizontal),
+                value = "Horizontal",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_vertical),
+                value = "Vertical",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_top_left),
+                value = "TopLeft",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_top_right),
+                value = "TopRight",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_bottom_left),
+                value = "BottomLeft",
+            ),
+            PropertyOption(
+                text = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_direction_bottom_right),
+                value = "BottomRight",
+            ),
         ),
     ),
 )
 
 private fun AnimationType.startScale() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_start_scale,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_start_scale),
     key = "$key/startScale",
     valueType = PropertyValueType.Float(),
 )
 
 private fun AnimationType.endScale() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_end_scale,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_end_scale),
     key = "$key/endScale",
     valueType = PropertyValueType.Float(),
 )
 
 private fun AnimationType.startDelay() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_start_delay,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_start_delay),
     key = "$key/startDelay",
     valueType = PropertyValueType.Double(),
 )
 
 private fun AnimationType.holdDuration() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_hold_duration,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_hold_duration),
     key = "$key/holdDuration",
     valueType = PropertyValueType.Double(),
 )
 
 private fun AnimationType.easingDuration() = Property(
-    titleRes = R.string.ly_img_editor_sheet_animations_label_easing_duration,
+    title = PropertyText.Resource(R.string.ly_img_editor_sheet_animations_label_easing_duration),
     key = "$key/easingDuration",
     valueType = PropertyValueType.Double(),
 )

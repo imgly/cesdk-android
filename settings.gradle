@@ -10,6 +10,11 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }
 
+def remoteBuildCache = file("$settingsDir/../../config/gradle/remote-build-cache.settings.gradle")
+if (remoteBuildCache.exists()) {
+    apply from: remoteBuildCache
+}
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -34,7 +39,7 @@ if (file("examples-app").exists()) {
     include ':examples-app'
 }
 new File(rootDir, "sources").listFiles().each {
-    if (it.isDirectory() && it.name.startsWith("editor") || it.name.startsWith("camera")) {
+    if (it.isDirectory() && it.name.startsWith("editor") || it.name.startsWith("camera") || it.name.startsWith("plugin")) {
         include ":${it.name}"
         project(":${it.name}").projectDir = it
     }

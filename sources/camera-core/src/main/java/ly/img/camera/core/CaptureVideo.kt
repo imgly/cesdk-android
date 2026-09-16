@@ -1,74 +1,71 @@
 package ly.img.camera.core
 
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
 import android.os.Parcel
-import android.os.Parcelable
-import androidx.activity.result.contract.ActivityResultContract
-import androidx.annotation.CallSuper
 import androidx.core.os.ParcelCompat
-import ly.img.camera.core.CaptureVideo.Input
 
 /**
- * An [ActivityResultContract] to start the IMG.LY Camera with the [Input].
- * The output is a [CameraResult].
+ * Legacy entry point for the IMG.LY Camera. Renamed to [CaptureMedia], which supports photo,
+ * video, and mixed capture sessions and delivers the modern [CameraResult.Captures] result.
+ *
+ * The symbol is preserved so existing call sites surface a precise compile error pointing at
+ * [CaptureMedia] instead of an opaque "unresolved reference"; the class itself is unusable at
+ * compile time.
  */
-open class CaptureVideo : ActivityResultContract<Input, CameraResult?>() {
-    @CallSuper
-    override fun createIntent(
-        context: Context,
-        input: Input,
-    ): Intent = Intent(context, Class.forName(ACTIVITY_CLASS_NAME)).apply {
-        putExtra(INTENT_KEY_CAMERA_INPUT, input)
-    }
-
-    final override fun getSynchronousResult(
-        context: Context,
-        input: Input,
-    ): SynchronousResult<CameraResult?>? = null
-
-    override fun parseResult(
-        resultCode: Int,
-        intent: Intent?,
-    ): CameraResult? = intent.takeIf { resultCode == Activity.RESULT_OK }?.getParcelableExtra(INTENT_KEY_CAMERA_RESULT)
-
+@Deprecated(
+    message = "Renamed to CaptureMedia, which supports photo / video / mixed capture sessions and " +
+        "returns the modern CameraResult.Captures shape.",
+    replaceWith = ReplaceWith("CaptureMedia", "ly.img.camera.core.CaptureMedia"),
+    level = DeprecationLevel.ERROR,
+)
+open class CaptureVideo : CaptureMedia() {
     companion object {
-        private const val ACTIVITY_CLASS_NAME = "ly.img.camera.CameraActivity"
-        const val INTENT_KEY_CAMERA_INPUT = "imgly_camera_input"
-        const val INTENT_KEY_CAMERA_RESULT = "imgly_camera_result"
+        @Deprecated(
+            message = "Use CaptureMedia.INTENT_KEY_CAMERA_INPUT.",
+            replaceWith = ReplaceWith("CaptureMedia.INTENT_KEY_CAMERA_INPUT", "ly.img.camera.core.CaptureMedia"),
+            level = DeprecationLevel.ERROR,
+        )
+        const val INTENT_KEY_CAMERA_INPUT = CaptureMedia.INTENT_KEY_CAMERA_INPUT
+
+        @Deprecated(
+            message = "Use CaptureMedia.INTENT_KEY_CAMERA_RESULT.",
+            replaceWith = ReplaceWith("CaptureMedia.INTENT_KEY_CAMERA_RESULT", "ly.img.camera.core.CaptureMedia"),
+            level = DeprecationLevel.ERROR,
+        )
+        const val INTENT_KEY_CAMERA_RESULT = CaptureMedia.INTENT_KEY_CAMERA_RESULT
     }
 
     /**
-     * Basic configuration settings to initialize the camera.
-     * @param engineConfiguration configuration to initialize the underlying engine.
-     * @param cameraConfiguration optional configuration to customise the camera experience and behaviour.
-     * @param cameraMode the mode to start the camera in. By default, it is [CameraMode.Standard].
+     * Renamed to [CaptureMedia.Input]. See [CaptureVideo] for migration details.
      */
+    @Deprecated(
+        message = "Use CaptureMedia.Input.",
+        replaceWith = ReplaceWith("CaptureMedia.Input", "ly.img.camera.core.CaptureMedia"),
+        level = DeprecationLevel.ERROR,
+    )
     class Input(
-        val engineConfiguration: EngineConfiguration,
-        val cameraConfiguration: CameraConfiguration = CameraConfiguration(),
-        val cameraMode: CameraMode = CameraMode.Standard(),
-    ) : Parcelable {
-        constructor(parcel: Parcel) : this(
-            ParcelCompat.readParcelable(parcel, EngineConfiguration::class.java.classLoader, EngineConfiguration::class.java)!!,
-            ParcelCompat.readParcelable(parcel, CameraConfiguration::class.java.classLoader, CameraConfiguration::class.java)!!,
-            ParcelCompat.readParcelable(parcel, CameraConfiguration::class.java.classLoader, CameraMode::class.java)!!,
-        )
-
-        override fun writeToParcel(
-            parcel: Parcel,
-            flags: Int,
-        ) {
-            parcel.writeParcelable(engineConfiguration, flags)
-            parcel.writeParcelable(cameraConfiguration, flags)
-            parcel.writeParcelable(cameraMode, flags)
-        }
-
-        override fun describeContents(): Int = 0
-
-        companion object CREATOR : Parcelable.Creator<Input> {
-            override fun createFromParcel(parcel: Parcel): Input = Input(parcel)
+        engineConfiguration: EngineConfiguration,
+        cameraConfiguration: CameraConfiguration = CameraConfiguration(),
+        cameraMode: CameraMode = CameraMode.Standard(),
+    ) : CaptureMedia.Input(engineConfiguration, cameraConfiguration, cameraMode) {
+        @Suppress("DEPRECATION_ERROR")
+        companion object CREATOR : android.os.Parcelable.Creator<Input> {
+            override fun createFromParcel(parcel: Parcel): Input = Input(
+                engineConfiguration = ParcelCompat.readParcelable(
+                    parcel,
+                    EngineConfiguration::class.java.classLoader,
+                    EngineConfiguration::class.java,
+                )!!,
+                cameraConfiguration = ParcelCompat.readParcelable(
+                    parcel,
+                    CameraConfiguration::class.java.classLoader,
+                    CameraConfiguration::class.java,
+                )!!,
+                cameraMode = ParcelCompat.readParcelable(
+                    parcel,
+                    CameraConfiguration::class.java.classLoader,
+                    CameraMode::class.java,
+                )!!,
+            )
 
             override fun newArray(size: Int): Array<Input?> = arrayOfNulls(size)
         }

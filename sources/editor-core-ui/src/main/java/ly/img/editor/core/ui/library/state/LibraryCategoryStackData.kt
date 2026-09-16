@@ -8,6 +8,7 @@ import java.util.Stack
 internal data class LibraryCategoryStackData(
     val dataStack: Stack<LibraryContent>,
     val uiStateFlow: MutableStateFlow<AssetLibraryUiState>,
+    var isActive: Boolean = false,
     var dirty: Boolean = false,
     var fetchJob: Job? = null,
     var searchJob: Job? = null,

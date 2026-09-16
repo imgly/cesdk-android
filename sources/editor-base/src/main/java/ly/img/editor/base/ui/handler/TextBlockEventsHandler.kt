@@ -3,6 +3,9 @@ package ly.img.editor.base.ui.handler
 import android.net.Uri
 import ly.img.editor.base.dock.options.format.SizeModeUi
 import ly.img.editor.base.dock.options.format.VerticalAlignment
+import ly.img.editor.base.dock.options.textonpath.TextOnPathUiState
+import ly.img.editor.base.engine.effectiveTextRange
+import ly.img.editor.base.engine.textProperty
 import ly.img.editor.base.ui.BlockEvent.OnBoldToggle
 import ly.img.editor.base.ui.BlockEvent.OnChangeClipping
 import ly.img.editor.base.ui.BlockEvent.OnChangeFont
@@ -11,13 +14,15 @@ import ly.img.editor.base.ui.BlockEvent.OnChangeHorizontalAlignment
 import ly.img.editor.base.ui.BlockEvent.OnChangeLetterCasing
 import ly.img.editor.base.ui.BlockEvent.OnChangeLetterSpacing
 import ly.img.editor.base.ui.BlockEvent.OnChangeLineHeight
-import ly.img.editor.base.ui.BlockEvent.OnChangeLineWidth
 import ly.img.editor.base.ui.BlockEvent.OnChangeListStyle
 import ly.img.editor.base.ui.BlockEvent.OnChangeParagraphSpacing
 import ly.img.editor.base.ui.BlockEvent.OnChangeSizeMode
+import ly.img.editor.base.ui.BlockEvent.OnChangeTextOnPathFlipped
+import ly.img.editor.base.ui.BlockEvent.OnChangeTextOnPathOffset
 import ly.img.editor.base.ui.BlockEvent.OnChangeTypeface
 import ly.img.editor.base.ui.BlockEvent.OnChangeVerticalAlignment
 import ly.img.editor.base.ui.BlockEvent.OnItalicToggle
+import ly.img.editor.base.ui.BlockEvent.OnSelectTextOnPath
 import ly.img.editor.base.ui.BlockEvent.OnStrikethroughToggle
 import ly.img.editor.base.ui.BlockEvent.OnUnderlineToggle
 import ly.img.editor.core.ui.EventsHandler
@@ -84,16 +89,6 @@ fun EventsHandler.textBlockEvents(
         engine.editor.addUndoStep()
     }
 
-    register<OnChangeLineWidth> {
-        engine.block.setWidth(block, engine.block.getFrameWidth(block))
-        engine.block.setHeight(block, it.width)
-    }
-
-    register<OnChangeLineWidth> {
-        engine.block.setWidth(block, engine.block.getFrameWidth(block))
-        engine.block.setHeight(block, it.width)
-    }
-
     register<OnBoldToggle> {
         onBoldToggle()
     }
@@ -115,7 +110,7 @@ fun EventsHandler.textBlockEvents(
     }
 
     register<OnChangeFontSize> {
-        engine.block.setFloat(block, "text/fontSize", it.fontSize)
+        engine.block.setTextFontSize(block, it.fontSize)
     }
 
     register<OnChangeTypeface> {
@@ -123,33 +118,35 @@ fun EventsHandler.textBlockEvents(
     }
 
     register<OnChangeHorizontalAlignment> {
-        if (HorizontalAlignment.valueOf(engine.block.getEnum(block, "text/horizontalAlignment")) != it.alignment) {
-            engine.block.setEnum(block, "text/horizontalAlignment", it.alignment.name)
+        val property = engine.block.textProperty(block, "horizontalAlignment")
+        if (HorizontalAlignment.valueOf(engine.block.getEnum(block, property)) != it.alignment) {
+            engine.block.setEnum(block, property, it.alignment.name)
             engine.editor.addUndoStep()
         }
     }
 
     register<OnChangeVerticalAlignment> {
-        if (VerticalAlignment.valueOf(engine.block.getEnum(block, "text/verticalAlignment")) != it.alignment) {
-            engine.block.setEnum(block, "text/verticalAlignment", it.alignment.name)
+        val property = engine.block.textProperty(block, "verticalAlignment")
+        if (VerticalAlignment.valueOf(engine.block.getEnum(block, property)) != it.alignment) {
+            engine.block.setEnum(block, property, it.alignment.name)
             engine.editor.addUndoStep()
         }
     }
 
     register<OnChangeLetterSpacing> {
-        engine.block.setFloat(block, "text/letterSpacing", it.spacing)
+        engine.block.setFloat(block, engine.block.textProperty(block, "letterSpacing"), it.spacing)
     }
 
     register<OnChangeParagraphSpacing> {
-        engine.block.setFloat(block, "text/paragraphSpacing", it.spacing)
+        engine.block.setFloat(block, engine.block.textProperty(block, "paragraphSpacing"), it.spacing)
     }
 
     register<OnChangeLineHeight> {
-        engine.block.setFloat(block, "text/lineHeight", it.height)
+        engine.block.setFloat(block, engine.block.textProperty(block, "lineHeight"), it.height)
     }
 
     register<OnChangeSizeMode> {
-        val changedSizeMode = SizeModeUi.valueOf(it.sizeMode)
+        val changedSizeMode = it.sizeMode
 
         val (newHeightMode, newWidthMode) = when (changedSizeMode) {
             SizeModeUi.ABSOLUTE ->
@@ -179,15 +176,47 @@ fun EventsHandler.textBlockEvents(
     }
 
     register<OnChangeClipping> {
-        engine.block.setBoolean(block, "text/clipLinesOutsideOfFrame", it.enabled)
+        engine.block.setBoolean(block, engine.block.textProperty(block, "clipLinesOutsideOfFrame"), it.enabled)
         engine.editor.addUndoStep()
     }
 
     register<OnChangeLetterCasing> {
-        if (engine.block.getTextCases(block).firstOrNull() != it.casing) {
-            engine.block.setTextCase(block, it.casing)
+        val casing = it.casing
+        val range = engine.block.effectiveTextRange(block)
+        val cases = engine.block.getTextCases(block, range.first, range.last)
+        if (cases.any { case -> case != casing }) {
+            engine.block.setTextCase(block, casing, range.first, range.last)
             engine.editor.addUndoStep()
         }
+    }
+
+    register<OnSelectTextOnPath> {
+        val asset = it.asset
+        if (asset == null) {
+            engine.block.setTextOnPath(block, svgPath = null)
+        } else {
+            // The engine writes the preset text only when the preset makes a new block.
+            // This block already exists, so the engine keeps its text.
+            engine.asset.applyAssetSourceAsset(
+                sourceId = TextOnPathUiState.SOURCE_ID,
+                asset = asset,
+                block = block,
+            )
+            // `setTextOnPath` (inside `applyAssetSourceAsset`) clears the external-ref hint; re-stamp it for the picker.
+            engine.block.setString(block, "text/pathExternalRef", "${TextOnPathUiState.SOURCE_ID}|${asset.id}")
+        }
+        engine.editor.addUndoStep()
+    }
+
+    register<OnChangeTextOnPathFlipped> {
+        if (engine.block.getTextOnPathFlipped(block) != it.flipped) {
+            engine.block.setTextOnPathFlipped(block, flipped = it.flipped)
+            engine.editor.addUndoStep()
+        }
+    }
+
+    register<OnChangeTextOnPathOffset> {
+        engine.block.setTextOnPathOffset(block, offset = it.offset)
     }
 
     register<OnChangeListStyle> {
@@ -198,8 +227,7 @@ fun EventsHandler.textBlockEvents(
             null
         }
         val currentStyle = runCatching {
-            val referenceIndex = paragraphIndices?.firstOrNull() ?: 0
-            engine.block.getTextListStyle(block, referenceIndex)
+            engine.block.getTextListStyle(block, paragraphIndices?.firstOrNull() ?: 0)
         }.getOrDefault(ListStyle.NONE)
         val newStyle = if (currentStyle == it.listStyle) ListStyle.NONE else it.listStyle
         if (paragraphIndices != null) {

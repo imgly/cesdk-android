@@ -164,7 +164,8 @@ fun Engine.getFill(designBlock: DesignBlock): Fill? = if (!block.supportsFill(de
 } else {
     when (block.getFillType(designBlock)) {
         FillType.Color -> {
-            val rgbaColor = if (DesignBlockType.getOrNull(block.getType(designBlock)) == DesignBlockType.Text) {
+            val type = DesignBlockType.getOrNull(block.getType(designBlock))
+            val rgbaColor = if (type == DesignBlockType.Text || type == DesignBlockType.Caption) {
                 block.getTextColors(designBlock).first().toRGBColor(this)
             } else {
                 block.getColor(designBlock, "fill/solid/color").toRGBColor(this)
@@ -234,6 +235,16 @@ fun BlockApi.isBackgroundTrack(designBlock: DesignBlock): Boolean {
     }
     return isPageDurationSource(designBlock)
 }
+
+/**
+ * An extension function that tells whether the [designBlock] is a caption track.
+ *
+ * @param designBlock the design block that is being queried.
+ * @return true if the design block is a caption track, false otherwise.
+ */
+fun BlockApi.isCaptionTrack(designBlock: DesignBlock): Boolean = runCatching {
+    DesignBlockType.get(getType(designBlock)) == DesignBlockType.CaptionTrack
+}.getOrDefault(false)
 
 /**
  * An extension function for getting the background track from the scene.

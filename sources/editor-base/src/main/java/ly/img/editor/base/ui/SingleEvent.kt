@@ -23,4 +23,14 @@ sealed interface SingleEvent {
         @StringRes val text: Int,
         val duration: SnackbarDuration = SnackbarDuration.Short,
     ) : SingleEvent
+
+    /**
+     * A non-fatal notice carrying a [Throwable] whose customer-facing copy is resolved at the UI
+     * layer via `EngineException.getDisplayMessage`. Used for recoverable failures (e.g. an asset that
+     * can't be applied) that should not surface in the terminal error dialog.
+     */
+    data class SnackbarError(
+        val throwable: Throwable,
+        val duration: SnackbarDuration = SnackbarDuration.Short,
+    ) : SingleEvent
 }

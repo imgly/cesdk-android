@@ -3,6 +3,7 @@ package ly.img.editor.base.dock.options.format
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import ly.img.editor.base.components.PropertyOption
+import ly.img.editor.base.engine.PropertyText
 import ly.img.editor.core.R
 import ly.img.editor.core.ui.iconpack.AutoSize
 import ly.img.editor.core.ui.iconpack.IconPack
@@ -16,30 +17,23 @@ enum class SizeModeUi {
     UNKNOWN,
 }
 
-private val sizeModes = linkedMapOf(
-    SizeModeUi.AUTO_SIZE to
-        PropertyOption(
-            R.string.ly_img_editor_sheet_format_text_frame_behavior_option_auto_size,
-            SizeModeUi.AUTO_SIZE.name,
-            IconPack.AutoSize,
-        ),
-    SizeModeUi.AUTO_HEIGHT to
-        PropertyOption(
-            R.string.ly_img_editor_sheet_format_text_frame_behavior_option_auto_height,
-            SizeModeUi.AUTO_HEIGHT.name,
-            IconPack.Textautoheight,
-        ),
-    SizeModeUi.ABSOLUTE to
-        PropertyOption(
-            R.string.ly_img_editor_sheet_format_text_frame_behavior_option_fixed_size,
-            SizeModeUi.ABSOLUTE.name,
-            IconPack.Textfixedsize,
-        ),
+val sizeModeProperties = listOf(
+    PropertyOption(
+        text = PropertyText.Resource(R.string.ly_img_editor_sheet_format_text_frame_behavior_option_auto_size),
+        value = SizeModeUi.AUTO_SIZE,
+        icon = IconPack.AutoSize,
+    ),
+    PropertyOption(
+        text = PropertyText.Resource(R.string.ly_img_editor_sheet_format_text_frame_behavior_option_auto_height),
+        value = SizeModeUi.AUTO_HEIGHT,
+        icon = IconPack.Textautoheight,
+    ),
+    PropertyOption(
+        text = PropertyText.Resource(R.string.ly_img_editor_sheet_format_text_frame_behavior_option_fixed_size),
+        value = SizeModeUi.ABSOLUTE,
+        icon = IconPack.Textfixedsize,
+    ),
 )
-
-val sizeModeList = sizeModes.map { it.value }
-
-fun SizeModeUi.getText() = requireNotNull(sizeModes[this]).textRes
 
 fun getSubFamilyStringResource(subFamily: String): Int = when (subFamily) {
     "Thin" -> R.string.ly_img_editor_sheet_format_text_font_subfamily_thin

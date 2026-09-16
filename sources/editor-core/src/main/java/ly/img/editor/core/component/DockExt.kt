@@ -27,8 +27,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ly.img.camera.core.CameraConfiguration
 import ly.img.camera.core.CameraResult
-import ly.img.camera.core.CaptureVideo
+import ly.img.camera.core.CaptureCount
+import ly.img.camera.core.CaptureMedia
+import ly.img.camera.core.CaptureType
 import ly.img.camera.core.EngineConfiguration
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.R
@@ -47,6 +50,7 @@ import ly.img.editor.core.iconpack.AddSticker
 import ly.img.editor.core.iconpack.AddText
 import ly.img.editor.core.iconpack.Adjustments
 import ly.img.editor.core.iconpack.Blur
+import ly.img.editor.core.iconpack.Captions
 import ly.img.editor.core.iconpack.CropRotate
 import ly.img.editor.core.iconpack.Effect
 import ly.img.editor.core.iconpack.Elements
@@ -543,39 +547,52 @@ val Dock.Button.Id.imglyCamera by unsafeLazy {
  * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
  * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
  *
+ * @param acceptsVideoCapture whether the host editor accepts video. When `true`, the camera opens in
+ * heterogeneous Mixed/Multi mode and the captures are appended to the background track; when `false`
+ * (the default) it opens in Photo/Single and the capture is placed on the current page.
  * @param builder the builder lambda to override the default builder.
  * @return a button that will be displayed in the dock.
  */
 @Composable
-fun Dock.Button.rememberImglyCamera(builder: Dock.ButtonBuilder.() -> Unit = {}): Button<Dock.ItemScope> = Dock.Button.remember {
+fun Dock.Button.rememberImglyCamera(
+    acceptsVideoCapture: Dock.ItemScope.() -> Boolean = { false },
+    builder: Dock.ButtonBuilder.() -> Unit = {},
+): Button<Dock.ItemScope> = Dock.Button.remember {
     id = { Dock.Button.Id.imglyCamera }
     vectorIcon = { IconPack.AddCameraBackground }
     textString = {
         stringResource(R.string.ly_img_editor_dock_button_camera)
     }
     onClick = {
+        val acceptsVideo = acceptsVideoCapture()
+        val cameraConfiguration = if (acceptsVideo) {
+            CameraConfiguration(captureType = CaptureType.Mixed, captureCount = CaptureCount.Multi)
+        } else {
+            CameraConfiguration(captureType = CaptureType.Photo, captureCount = CaptureCount.Single)
+        }
         EditorEvent.LaunchContract(
-            contract = CaptureVideo(),
-            input = CaptureVideo.Input(
+            contract = CaptureMedia(),
+            input = CaptureMedia.Input(
                 engineConfiguration = EngineConfiguration(
                     license = editorContext.engine.editor.getActiveLicense(),
                     userId = editorContext.userId,
                 ),
+                cameraConfiguration = cameraConfiguration,
             ),
-            onOutput = {
-                (it as? CameraResult.Record)
-                    ?.recordings
-                    ?.map { recording ->
-                        Pair(recording.videos.first().uri, recording.duration)
-                    }?.let { recordings ->
-                        // For camera recordings, still upload into timeline via existing flow to keep behavior; optional: route via gallery if needed
+            onOutput = { result ->
+                when (result) {
+                    is CameraResult.Captures -> {
                         editorContext.eventHandler.send(
-                            EditorEvent.AddCameraRecordingsToScene(
-                                uploadAssetSourceType = AssetSourceType.VideoUploads,
-                                recordings = recordings,
+                            EditorEvent.AddCameraCapturesToScene(
+                                photoUploadAssetSourceType = AssetSourceType.ImageUploads,
+                                videoUploadAssetSourceType = AssetSourceType.VideoUploads,
+                                captures = result.captures,
+                                appendToBackgroundTrack = acceptsVideo,
                             ),
                         )
                     }
+                    else -> Unit
+                }
             },
         ).let { editorContext.eventHandler.send(it) }
     }
@@ -843,6 +860,36 @@ fun Dock.Button.rememberResizeAll(builder: Dock.ButtonBuilder.() -> Unit = {}): 
     textString = { stringResource(R.string.ly_img_editor_dock_button_resize) }
     onClick = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.ResizeAll()))
+    }
+    builder()
+}
+
+/**
+ * The id of the dock button returned by [Dock.Button.rememberCaptions].
+ */
+val Dock.Button.Id.captions by unsafeLazy {
+    EditorComponentId("ly.img.component.dock.button.captions")
+}
+
+/**
+ * A composable helper function that creates and remembers a [Dock.Button] that
+ * opens the captions sheet via [EditorEvent.Sheet.Open].
+ *
+ * The video starter kit's dock carries this button. It has no visibility condition of its own, and it is the
+ * only entry point that works before a caption exists — [InspectorBar.Button.rememberEditCaptions] opens the
+ * same sheet, but needs a caption selected. A dock built without this button leaves an empty scene with no way
+ * to add captions.
+ *
+ * @param builder the builder lambda to override the default builder.
+ * @return a button that will be displayed in the dock.
+ */
+@Composable
+fun Dock.Button.rememberCaptions(builder: Dock.ButtonBuilder.() -> Unit = {}): Button<Dock.ItemScope> = Dock.Button.remember {
+    id = { Dock.Button.Id.captions }
+    vectorIcon = { IconPack.Captions }
+    textString = { stringResource(R.string.ly_img_editor_dock_button_captions) }
+    onClick = {
+        editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Captions()))
     }
     builder()
 }

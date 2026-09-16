@@ -3,12 +3,16 @@ package ly.img.editor.core.ui.utils
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.floor
+import kotlin.math.roundToLong
 import kotlin.math.sign
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
 fun Duration.almostEquals(other: Duration): Boolean = this - other <= EPS_DURATION
+
+fun Duration.roundedToMilliseconds(): Duration = toDouble(DurationUnit.MILLISECONDS).roundToLong().milliseconds
 
 fun Duration.formatForPlayer(): String = toComponents { minutes, seconds, _ ->
     String.format(locale = Locale.getDefault(), "%d:%02d", minutes, seconds)

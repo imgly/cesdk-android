@@ -10,6 +10,12 @@ suspend fun LazyListState.centerSelectedItem(
     animate: Boolean = true,
     isInitialPositionSettled: MutableState<Boolean>,
 ) {
+    if (index < 0) {
+        // No item is selected, so there is nothing to center on. Returning here avoids passing a
+        // negative index to scrollToItem, which would throw.
+        isInitialPositionSettled.value = true
+        return
+    }
     val center = layoutInfo.viewportEndOffset / 2
     val target = layoutInfo.visibleItemsInfo.firstOrNull {
         it.index == index

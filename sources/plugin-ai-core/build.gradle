@@ -1,0 +1,14 @@
+apply from: "$projectDir/../editor-library.gradle"
+apply from: "$projectDir/../dokka.gradle"
+
+android {
+    namespace = 'ly.img.editor.plugin.ai.core'
+}
+
+dependencies {
+    api libs.okhttp
+    api libs.kotlin.coroutines
+
+    implementation platform(libs.compose.bom)
+    implementation libs.compose.runtime
+}

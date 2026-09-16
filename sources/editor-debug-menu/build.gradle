@@ -6,6 +6,12 @@ android {
 
 dependencies {
     implementation platform(libs.compose.bom)
+    // Temporary until the Compose BOM is updated: the BOM pins compose-ui to
+    // 1.4.3, but the apps consuming this module resolve 1.6.1+ transitively,
+    // where LocalSoftwareKeyboardController is no longer a class. Compiling
+    // against the BOM version emits a reference that is absent at runtime and
+    // crashes the version sheet. 1.6.1 is the lowest the apps actually run.
+    implementation "androidx.compose.ui:ui:1.6.1"
     implementation libs.compose.material3
     implementation libs.compose.viewmodel
     implementation libs.compose.preview

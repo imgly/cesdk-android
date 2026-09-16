@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.Dialog
@@ -32,16 +33,18 @@ import ly.img.editor.core.configuration.EditorConfiguration
 import ly.img.editor.core.configuration.remember
 import ly.img.editor.core.engine.EngineRenderTarget
 import ly.img.editor.core.event.EditorEvent
+import ly.img.editor.core.getDisplayMessage
 import ly.img.editor.core.library.AssetLibrary
 import ly.img.editor.core.theme.EditorTheme
 import ly.img.editor.core.theme.fillAndStrokeColors
 import ly.img.engine.DesignBlockType
+import ly.img.engine.EngineException
 
 /**
  * The default baseUri value used in [Editor] composable.
  */
 val defaultBaseUri: Uri by lazy {
-    "https://cdn.img.ly/packages/imgly/cesdk-android/1.75.2/assets".toUri()
+    "https://cdn.img.ly/packages/imgly/cesdk-android/1.82.1-rc.0/assets".toUri()
 }
 
 /**
@@ -78,6 +81,7 @@ fun Editor(
     license: String? = null,
     userId: String? = null,
     baseUri: Uri = defaultBaseUri,
+    host: String = "",
     engineRenderTarget: EngineRenderTarget = EngineRenderTarget.SURFACE_VIEW,
     uiMode: EditorUiMode = EditorUiMode.SYSTEM,
     configuration: ScopedProperty<EditorScope, EditorConfiguration> = { EditorConfiguration.remember() },
@@ -90,6 +94,7 @@ fun Editor(
             license = license,
             userId = userId,
             baseUri = baseUri,
+            host = host,
             onClose = onClose,
         ) { uiState ->
             EngineInitializer(
@@ -112,11 +117,19 @@ fun Editor(
                     )
                 },
                 error = { error ->
+                    val context = LocalContext.current
                     AlertDialog(
                         onDismissRequest = {},
                         properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
                         title = { Text(text = stringResource(R.string.ly_img_editor_dialog_error_title)) },
-                        text = { Text(text = error.message ?: "") },
+                        // Resolve the structured engine error code to authored/localized copy,
+                        // falling back to the engine's English message (see EngineErrorMessage.kt).
+                        text = {
+                            Text(
+                                text = (error as? EngineException)?.getDisplayMessage(context)
+                                    ?: error.message ?: "",
+                            )
+                        },
                         confirmButton = {
                             TextButton(onClick = { onClose(error) }) {
                                 Text(stringResource(R.string.ly_img_editor_dialog_error_confirm_text))
@@ -150,6 +163,7 @@ private inline fun EditorScope.EngineInitializer(
                     license = editorContext.license,
                     userId = editorContext.userId,
                     savedStateRegistryOwner = savedStateRegistryOwner,
+                    buildHost = editorContext.host,
                 )
                 loadingJob.cancelAndJoin()
                 Log.d("CESDK", "Engine initialization took ${System.currentTimeMillis() - start} ms")

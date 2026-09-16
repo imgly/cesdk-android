@@ -2,6 +2,7 @@ package ly.img.editor.base.timeline.thumbnail
 
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.CoroutineScope
+import ly.img.editor.base.dock.options.captions.CAPTION_TEXT_PROPERTY
 import ly.img.editor.base.timeline.clip.Clip
 import ly.img.editor.base.timeline.clip.ClipType
 import ly.img.engine.DesignBlock
@@ -11,7 +12,7 @@ import ly.img.engine.Engine
  * Manages thumbnail providers for timeline clips.
  * Creates the appropriate provider type based on clip type:
  * - ThumbnailsImageProvider: For video, image, sticker, shape, group clips
- * - ThumbnailsTextProvider: For text clips
+ * - ThumbnailsTextProvider: For text and caption clips (captions read `caption/text`)
  * - ThumbnailsAudioProvider: For audio clips (real waveform visualization)
  */
 class ThumbnailsManager(
@@ -54,6 +55,7 @@ class ThumbnailsManager(
      */
     private fun createProvider(clipType: ClipType): ThumbnailsProvider = when (clipType) {
         ClipType.Text -> ThumbnailsTextProvider(engine)
+        ClipType.Caption -> ThumbnailsTextProvider(engine, property = CAPTION_TEXT_PROPERTY)
         ClipType.Audio -> ThumbnailsAudioProvider(engine, scope)
         else -> ThumbnailsImageProvider(engine, scope)
     }

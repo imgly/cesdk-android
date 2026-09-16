@@ -4,9 +4,12 @@ import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import ly.img.editor.base.dock.options.format.SizeModeUi
 import ly.img.editor.base.dock.options.format.VerticalAlignment
 import ly.img.editor.base.engine.Property
 import ly.img.editor.base.engine.PropertyValue
+import ly.img.editor.base.timeline.clip.Clip
+import ly.img.editor.base.timeline.dragdrop.DropTarget
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.UnstableEditorApi
 import ly.img.editor.core.event.EditorEvent
@@ -19,8 +22,13 @@ import ly.img.engine.BlendMode
 import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignUnit
+import ly.img.engine.FillType
+import ly.img.engine.FontUnit
 import ly.img.engine.HorizontalAlignment
 import ly.img.engine.ListStyle
+import ly.img.engine.StrokeCornerGeometry
+import ly.img.engine.StrokePosition
+import ly.img.engine.StrokeStyle
 import ly.img.engine.TextCase
 import ly.img.engine.Typeface
 import kotlin.time.Duration
@@ -246,27 +254,23 @@ interface BlockEvent : Event {
     ) : BlockEvent
 
     data class OnChangeStrokeStyle(
-        val style: String,
+        val style: StrokeStyle,
     ) : BlockEvent
 
     data class OnChangeFillStyle(
-        val style: String,
+        val type: FillType,
     ) : BlockEvent
 
     data class OnChangeStrokePosition(
-        val position: String,
+        val position: StrokePosition,
     ) : BlockEvent
 
-    data class OnChangeStrokeJoin(
-        val join: String,
+    data class OnChangeStrokeCornerGeometry(
+        val join: StrokeCornerGeometry,
     ) : BlockEvent
     // endregion
 
     // region Shape Events
-    data class OnChangeLineWidth(
-        val width: Float,
-    ) : BlockEvent
-
     data class OnChangePolygonSides(
         val sides: Float,
     ) : BlockEvent
@@ -305,7 +309,7 @@ interface BlockEvent : Event {
     ) : BlockEvent
 
     data class OnChangeSizeMode(
-        val sizeMode: String,
+        val sizeMode: SizeModeUi,
     ) : BlockEvent
 
     data class OnChangeClipping(
@@ -350,6 +354,21 @@ interface BlockEvent : Event {
     ) : BlockEvent
     // endregion
 
+    // region Text on Path Events
+    data class OnSelectTextOnPath(
+        /** The curve style-preset asset to apply, or `null` to clear the path. */
+        val asset: Asset?,
+    ) : BlockEvent
+
+    data class OnChangeTextOnPathFlipped(
+        val flipped: Boolean,
+    ) : BlockEvent
+
+    data class OnChangeTextOnPathOffset(
+        val offset: Float,
+    ) : BlockEvent
+    // endregion
+
     // region Adjustments Events
     data class OnReplaceEffect(
         val wrappedAsset: WrappedAsset?,
@@ -359,6 +378,39 @@ interface BlockEvent : Event {
 
     // region Animations Events
     data class OnReplaceAnimation(
+        val designBlock: DesignBlock,
+        val sourceId: String,
+        val asset: Asset,
+    ) : BlockEvent
+
+    data class OnReplaceTransition(
+        val sourceId: String,
+        val outgoingBlock: DesignBlock,
+        val asset: Asset,
+    ) : BlockEvent
+
+    data class OnPreviewAnimation(
+        val designBlock: DesignBlock,
+        val mode: String,
+    ) : BlockEvent
+
+    data class OnPreviewTransition(
+        val outgoingBlock: DesignBlock,
+    ) : BlockEvent
+
+    data class OnApplyTransitionToTrack(
+        val outgoingBlock: DesignBlock,
+    ) : BlockEvent
+
+    data class OnRemoveTransitionsFromTrack(
+        val outgoingBlock: DesignBlock,
+    ) : BlockEvent
+    // endregion
+
+    // region Captions Events
+
+    /** Styles the selected caption with a preset; the engine syncs the style across the whole caption track. */
+    data class OnApplyCaptionPreset(
         val sourceId: String,
         val asset: Asset,
     ) : BlockEvent
@@ -392,6 +444,8 @@ interface BlockEvent : Event {
         val unit: DesignUnit,
         val unitValue: Float,
         val applyOnAllPages: Boolean = false,
+        // When non-null, also updates the scene's font-size unit alongside the design unit.
+        val fontUnit: FontUnit? = null,
     ) : BlockEvent
 
     data class OnCropRotate(
@@ -425,14 +479,14 @@ interface BlockEvent : Event {
         val block: DesignBlock,
     ) : BlockEvent
 
+    data class OnSelectBlock(
+        val block: DesignBlock,
+    ) : BlockEvent
+
     data class OnUpdateTrim(
         val trimOffset: Duration,
         val timeOffset: Duration,
         val duration: Duration,
-    ) : BlockEvent
-
-    data class OnUpdateTimeOffset(
-        val timeOffset: Duration,
     ) : BlockEvent
 
     data class OnUpdateDuration(
@@ -446,6 +500,22 @@ interface BlockEvent : Event {
     data class OnReorder(
         val block: DesignBlock,
         val newIndex: Int,
+    ) : BlockEvent
+
+    /**
+     * Commit a drag-drop interaction. Dispatched once on release with a valid target.
+     *
+     * @property clip The dragged clip with its **pre-drag** field values (id, type,
+     * timeOffset, duration, etc.).
+     * @property target Where the clip should land
+     * @property siblingOffsets Final preview offsets resolved by the cascade for any
+     * sibling clip that needs to move to make room for the drop. Already includes the
+     * dragged clip's snapped position via [target]. Empty when no siblings shift.
+     */
+    data class OnApplyDrop(
+        val clip: Clip,
+        val target: DropTarget,
+        val siblingOffsets: Map<DesignBlock, Duration>,
     ) : BlockEvent
     // endregion
 }

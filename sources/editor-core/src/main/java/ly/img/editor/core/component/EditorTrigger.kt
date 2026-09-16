@@ -39,7 +39,7 @@ class EditorTrigger internal constructor(
  *     engine.scene.onActiveChanged()
  * }
  * val historyTrigger by EditorTrigger.remember(activeSceneTrigger) {
- *     engine.editor.onHistoryUpdated()
+ *     engine.editor.onHistoryUpdatedWithKind()
  * }
  * val otherTrigger = EditorTrigger.remember()
  * LaunchedEffect(historyTrigger) {
@@ -77,7 +77,7 @@ fun EditorTrigger.Companion.remember(vararg keys: Any?): EditorTrigger {
  *     engine.scene.onActiveChanged()
  * }
  * val historyTrigger by EditorTrigger.remember(activeSceneTrigger) {
- *     engine.editor.onHistoryUpdated()
+ *     engine.editor.onHistoryUpdatedWithKind()
  * }
  * val otherTrigger = EditorTrigger.remember()
  * LaunchedEffect(historyTrigger) {

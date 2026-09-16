@@ -278,7 +278,8 @@ abstract class AbstractInspectorBarBuilder<Scope : InspectorBar.Scope> : EditorC
 
     /**
      * Whether the component should be visible.
-     * Default value is true if a block is selected, the edit mode is not "Crop" and the active sheet is not [SheetType.Voiceover].
+     * Default value is true if a block with a type in [Selection.supportedDesignBlockTypes] is selected,
+     * the edit mode is not "Crop" and the active sheet is not [SheetType.Voiceover].
      * The inspector bar is also visible when the voiceover sheet is closing.
      */
     @OptIn(UnstableEditorApi::class)
@@ -290,6 +291,7 @@ abstract class AbstractInspectorBarBuilder<Scope : InspectorBar.Scope> : EditorC
             val selection = editorContext.safeSelection
             selection != null &&
                 editorContext.engine.block.isValid(selection.designBlock) &&
+                selection.isTypeSupportedByEditorUi &&
                 editorContext.editMode != "Crop" &&
                 (state.activeSheet !is SheetType.Voiceover || isVoiceoverSheetClosing)
         }

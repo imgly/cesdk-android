@@ -20,6 +20,7 @@ fun ClipSelectionView(
     handleWidth: Dp,
     cornerRadius: Dp = 8.dp,
     color: Color = MaterialTheme.colorScheme.primary,
+    showHandles: Boolean = true,
 ) {
     Canvas(
         modifier = modifier,
@@ -27,17 +28,25 @@ fun ClipSelectionView(
         val markerWidthPx = 4.dp.roundToPx().toFloat()
         val markerHeightPx = 1.dp.roundToPx().toFloat()
         val verticalInsetPx = 2.dp.roundToPx().toFloat()
-        val handleWidthPx = handleWidth.roundToPx()
+        val handleWidthPx = handleWidth.roundToPx().toFloat()
 
-        val outerRect = Rect(
-            topLeft = Offset.Zero,
-            bottomRight = Offset(x = size.width, y = size.height),
-        )
+        // When handles are hidden, inset the outline by handleWidth on L/R so it hugs the clip area
+        // instead of the handle-padded Canvas bounds.
+        val outerRect = if (showHandles) {
+            Rect(topLeft = Offset.Zero, bottomRight = Offset(x = size.width, y = size.height))
+        } else {
+            Rect(
+                topLeft = Offset(x = handleWidthPx, y = 0f),
+                bottomRight = Offset(x = size.width - handleWidthPx, y = size.height),
+            )
+        }
+
+        val frameThicknessPx = if (showHandles) handleWidthPx else verticalInsetPx
 
         val innerRect = Rect(
-            left = outerRect.left + handleWidthPx,
+            left = outerRect.left + frameThicknessPx,
             top = outerRect.top + verticalInsetPx,
-            right = outerRect.right - handleWidthPx,
+            right = outerRect.right - frameThicknessPx,
             bottom = outerRect.bottom - verticalInsetPx,
         )
 
@@ -72,29 +81,31 @@ fun ClipSelectionView(
 
         val path = Path().apply {
             op(outerPath, innerPath, PathOperation.Difference)
-            op(
-                this,
-                getTrianglePath(Offset(x = handleWidthPx - markerWidthPx / 2, y = 0f), pointingUp = false),
-                PathOperation.Difference,
-            )
-            op(
-                this,
-                getTrianglePath(Offset(x = size.width - handleWidthPx - markerWidthPx / 2, y = 0f), pointingUp = false),
-                PathOperation.Difference,
-            )
-            op(
-                this,
-                getTrianglePath(Offset(x = handleWidthPx - markerWidthPx / 2, y = size.height), pointingUp = true),
-                PathOperation.Difference,
-            )
-            op(
-                this,
-                getTrianglePath(
-                    Offset(x = size.width - handleWidthPx - markerWidthPx / 2, y = size.height),
-                    pointingUp = true,
-                ),
-                PathOperation.Difference,
-            )
+            if (showHandles) {
+                op(
+                    this,
+                    getTrianglePath(Offset(x = handleWidthPx - markerWidthPx / 2, y = 0f), pointingUp = false),
+                    PathOperation.Difference,
+                )
+                op(
+                    this,
+                    getTrianglePath(Offset(x = size.width - handleWidthPx - markerWidthPx / 2, y = 0f), pointingUp = false),
+                    PathOperation.Difference,
+                )
+                op(
+                    this,
+                    getTrianglePath(Offset(x = handleWidthPx - markerWidthPx / 2, y = size.height), pointingUp = true),
+                    PathOperation.Difference,
+                )
+                op(
+                    this,
+                    getTrianglePath(
+                        Offset(x = size.width - handleWidthPx - markerWidthPx / 2, y = size.height),
+                        pointingUp = true,
+                    ),
+                    PathOperation.Difference,
+                )
+            }
         }
 
         drawPath(path = path, color = color)

@@ -249,6 +249,16 @@ interface SheetType {
     ) : SheetType
 
     /**
+     * A sheet that is used to control placing text along an SVG baseline path.
+     *
+     * @param style the style that should be used to display the sheet.
+     * Default value is the default [SheetStyle].
+     */
+    class TextOnPath(
+        override val style: SheetStyle = SheetStyle(),
+    ) : SheetType
+
+    /**
      * A sheet that is used to control the shape of various blocks.
      *
      * @param style the style that should be used to display the sheet.
@@ -263,9 +273,11 @@ interface SheetType {
      *
      * @param style the style that should be used to display the sheet.
      * Default value is the default [SheetStyle].
+     * @param fillOnly when true, only the fill section is shown (no stroke). Default is false.
      */
     class FillStroke(
         override val style: SheetStyle = SheetStyle(),
+        val fillOnly: Boolean = false,
     ) : SheetType
 
     /**
@@ -292,15 +304,36 @@ interface SheetType {
      * A sheet that is used to record new voice-over takes in video scenes.
      *
      * @param style the style that should be used to display the sheet.
-     * Default value is a floating sheet with a fixed compact height.
+     * Default value is a floating sheet whose height is determined by its content.
      */
     class Voiceover(
         override val style: SheetStyle = SheetStyle(
             isFloating = true,
-            minHeight = Height.Exactly(100.dp),
-            maxHeight = Height.Exactly(100.dp),
-            isHalfExpandingEnabled = false,
         ),
+    ) : SheetType
+
+    /**
+     * A sheet that is used to add and edit captions in video scenes.
+     *
+     * @param style the style that should be used to display the sheet.
+     * Default value is a sheet sized by its content, free to grow to the full height as captions are added
+     * and while the keyboard is open.
+     */
+    class Captions(
+        override val style: SheetStyle = SheetStyle(
+            maxHeight = Height.Fraction(1F),
+        ),
+    ) : SheetType
+
+    /**
+     * A sheet that lists the caption style presets of the `ly.img.caption.presets` asset source.
+     * Applying one styles every caption on the track.
+     *
+     * @param style the style that should be used to display the sheet.
+     * Default value is the default [SheetStyle].
+     */
+    class CaptionStyle(
+        override val style: SheetStyle = SheetStyle(),
     ) : SheetType
 
     /**
@@ -310,6 +343,12 @@ interface SheetType {
      * Default value is the default [SheetStyle].
      */
     class Animation(
+        override val style: SheetStyle = SheetStyle(),
+    ) : SheetType
+
+    /** A sheet that configures the transition owned by [outgoingBlock]. */
+    class Transition(
+        val outgoingBlock: DesignBlock,
         override val style: SheetStyle = SheetStyle(),
     ) : SheetType
 

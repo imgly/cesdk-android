@@ -15,11 +15,15 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ly.img.camera.core.Capture
 import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
 import ly.img.editor.core.currentLanguageCode
@@ -53,6 +57,7 @@ import ly.img.editor.core.ui.library.state.WrappedAsset
 import ly.img.editor.core.ui.library.util.AssetLibraryUiConfig
 import ly.img.editor.core.ui.library.util.LibraryEvent
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddAsset
+import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddCameraCaptures
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddCameraRecordings
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAddUri
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnAssetLongClick
@@ -65,6 +70,7 @@ import ly.img.editor.core.ui.library.util.LibraryEvent.OnReplaceAsset
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnReplaceUri
 import ly.img.editor.core.ui.library.util.LibraryEvent.OnSearchTextChange
 import ly.img.editor.core.ui.library.util.LibraryUiEvent
+import ly.img.editor.core.ui.library.util.resolveGroupTitle
 import ly.img.editor.core.ui.register
 import ly.img.engine.Asset
 import ly.img.engine.AssetDefinition
@@ -101,6 +107,13 @@ class LibraryViewModel(
     private val _uiEvent = Channel<LibraryUiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
 
+    // Durable, editor-scoped surface for asset-apply failures. Unlike [uiEvent] (a rendezvous
+    // channel consumed only while the library sheet is composed), this is collected at the
+    // editor level so the error still reaches the user after the sheet dismisses. Buffered so
+    // emission never suspends the apply coroutine.
+    private val _assetApplyError = MutableSharedFlow<Throwable>(extraBufferCapacity = 1)
+    val assetApplyError: SharedFlow<Throwable> = _assetApplyError
+
     val assetLibrary
         get() = editor.configuration.value?.assetLibrary
 
@@ -109,6 +122,13 @@ class LibraryViewModel(
 
     private val libraryStackDataMapping by lazy {
         hashMapOf<LibraryCategory, LibraryCategoryStackData>()
+    }
+
+    init {
+        viewModelScope.launch {
+            engine.awaitStart()
+            engine.asset.onAssetSourceUpdated().collect(::onAssetSourceUpdated)
+        }
     }
 
     private val eventHandler = EventsHandler(coroutineScope = viewModelScope) {
@@ -122,6 +142,7 @@ class LibraryViewModel(
             onEnterSearchMode(it.enter, it.libraryCategory)
         }
         register<OnFetch> {
+            getLibraryCategoryData(it.libraryCategory).isActive = true
             onFetch(it.libraryCategory, it.reset)
         }
         register<OnPopStack> {
@@ -144,6 +165,9 @@ class LibraryViewModel(
         }
         register<OnAddCameraRecordings> {
             onAddCameraRecordings(it.assetSource, it.recordings)
+        }
+        register<OnAddCameraCaptures> {
+            onAddCameraCaptures(it.photoAssetSource, it.videoAssetSource, it.captures, it.appendToBackgroundTrack)
         }
         register<OnAssetLongClick> {
             onAssetLongClick(it.wrappedAsset)
@@ -207,7 +231,7 @@ class LibraryViewModel(
 
             var resolvedAssetSourceType = assetSourceType
             var resolvedAsset = asset
-            var designBlock = runCatching {
+            val applyResult = runCatching {
                 engine.asset.applyAssetSourceAsset(resolvedAssetSourceType.sourceId, resolvedAsset)
             }.onFailure {
                 Log.w(
@@ -215,7 +239,8 @@ class LibraryViewModel(
                     "applyAssetSourceAsset failed for source=${resolvedAssetSourceType.sourceId} assetId=${resolvedAsset.id}",
                     it,
                 )
-            }.getOrNull()
+            }
+            var designBlock = applyResult.getOrNull()
 
             if (designBlock == null && isSystemGallerySelection) {
                 Log.w(
@@ -232,7 +257,10 @@ class LibraryViewModel(
                 }
             }
 
-            val finalDesignBlock = designBlock ?: return@launch
+            val finalDesignBlock = designBlock ?: run {
+                applyResult.exceptionOrNull()?.let { _assetApplyError.tryEmit(it) }
+                return@launch
+            }
 
             runCatching { engine.asset.assetSourceContentsChanged(resolvedAssetSourceType.sourceId) }
             if (isSystemGallerySelection) {
@@ -255,7 +283,7 @@ class LibraryViewModel(
         viewModelScope.launch {
             engine.awaitEngineAndSceneLoad()
             Log.d(TAG, "onAddUri source=${assetSourceType.sourceId} uri=$uri")
-            val asset = uploadToAssetSource(assetSourceType, uri)
+            val asset = uploadToAssetSource(assetSourceType, uri) ?: return@launch
             onAddAsset(assetSourceType, asset, addToBackgroundTrack)
             runCatching { SystemGalleryPermission.addSelected(uri, editor.activity) }
             // Also trigger refresh for gallery source if relevant
@@ -280,7 +308,7 @@ class LibraryViewModel(
             engine.block.setPlaybackTime(page, engine.block.getDuration(backgroundTrack))
 
             recordings.forEach { (uri, duration) ->
-                uploadToAssetSource(assetSource, uri, duration)
+                if (uploadToAssetSource(assetSource, uri, duration) == null) return@forEach
                 // We cannot use engine.asset.applyAssetSourceAsset() here as it adds an undo step at the end.
                 // We only want to add one undo step at the end after adding all the recordings.
                 addCameraRecording(uri, duration)
@@ -314,6 +342,77 @@ class LibraryViewModel(
             resolvedClipDuration = durationInDouble,
             inBackgroundTrack = true,
         )
+    }
+
+    private fun onAddCameraCaptures(
+        photoAssetSource: UploadAssetSourceType,
+        videoAssetSource: UploadAssetSourceType,
+        captures: List<Capture>,
+        appendToBackgroundTrack: Boolean,
+    ) {
+        viewModelScope.launch {
+            engine.awaitEngineAndSceneLoad()
+
+            if (appendToBackgroundTrack) {
+                val page = engine.getCurrentPage()
+                val backgroundTrack = engine.getSafeBackgroundTrack()
+
+                // set playhead position to end of background track
+                engine.block.setPlaybackTime(page, engine.block.getDuration(backgroundTrack))
+
+                captures.forEach { capture ->
+                    when (capture) {
+                        is Capture.Photo -> {
+                            uploadToAssetSource(photoAssetSource, capture.uri)
+                            addCameraPhoto(capture.uri, capture.clipDuration)
+                        }
+                        is Capture.Video -> {
+                            val videoUri = capture.recording.videos.first().uri
+                            val videoDuration = capture.recording.duration
+                            uploadToAssetSource(videoAssetSource, videoUri, videoDuration)
+                            addCameraRecording(videoUri, videoDuration)
+                        }
+                    }
+                }
+
+                engine.editor.addUndoStep()
+            } else {
+                // Non-timeline scenes (design / photo / apparel / postcard): place each capture on the current
+                // page centered, just like the gallery picker does for added images.
+                captures.forEach { capture ->
+                    when (capture) {
+                        is Capture.Photo -> {
+                            val asset = uploadToAssetSource(photoAssetSource, capture.uri) ?: return@forEach
+                            onAddAsset(photoAssetSource, asset, addToBackgroundTrack = false)
+                        }
+                        is Capture.Video -> {
+                            val videoUri = capture.recording.videos.first().uri
+                            val videoDuration = capture.recording.duration
+                            val asset = uploadToAssetSource(videoAssetSource, videoUri, videoDuration) ?: return@forEach
+                            onAddAsset(videoAssetSource, asset, addToBackgroundTrack = false)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun addCameraPhoto(
+        uri: Uri,
+        duration: Duration,
+    ) {
+        val backgroundTrack = engine.getSafeBackgroundTrack()
+        val id = engine.block.create(DesignBlockType.Graphic)
+        val rectShape = engine.block.createShape(ShapeType.Rect)
+        engine.block.setShape(id, rectShape)
+        engine.block.appendChild(parent = backgroundTrack, child = id)
+        engine.block.fillParent(id)
+
+        val durationInDouble = duration.toDouble(DurationUnit.SECONDS)
+        engine.block.setDuration(id, durationInDouble)
+        val fill = engine.block.createFill(FillType.Image)
+        engine.block.setString(fill, "fill/image/imageFileURI", uri.toString())
+        engine.block.setFill(id, fill)
     }
 
     private fun onReplaceAsset(
@@ -383,7 +482,7 @@ class LibraryViewModel(
     ) {
         viewModelScope.launch {
             engine.awaitEngineAndSceneLoad()
-            val asset = uploadToAssetSource(assetSource, uri)
+            val asset = uploadToAssetSource(assetSource, uri) ?: return@launch
             onReplaceAsset(assetSource, asset, designBlock)
         }
     }
@@ -505,6 +604,7 @@ class LibraryViewModel(
 
     private fun onDispose(libraryCategories: List<LibraryCategory>) {
         libraryCategories.forEach {
+            getLibraryCategoryData(it).isActive = false
             // clear search
             onSearchTextChange("", it, debounce = false, force = true)
             // get out of search mode
@@ -557,6 +657,7 @@ class LibraryViewModel(
                 it.copy(
                     isRoot = if (force) true else it.isRoot,
                     titleRes = if (force) libraryCategory.tabTitleRes else it.titleRes,
+                    title = if (force) null else it.title,
                     assetsData = AssetsData(),
                     sectionItems = if (force) listOf() else it.sectionItems,
                 )
@@ -602,7 +703,16 @@ class LibraryViewModel(
 
         if (content is LibraryContent.Sections && AssetLibraryUiConfig.autoExpandSingleSection) {
             val singleSection = content.sections.singleOrNull()
-            val expandedContent = singleSection?.expandContent
+            // Do not auto-expand sections that produce per-group sub-sections via
+            // addGroupedSubSections or groupTitleKeyPrefix: those sections must render as grouped
+            // sheets, not as a flat grid.
+            val expandedContent = if (singleSection?.addGroupedSubSections != true &&
+                singleSection?.groupTitleKeyPrefix == null
+            ) {
+                singleSection?.expandContent
+            } else {
+                null
+            }
             if (expandedContent != null) {
                 modifyDataStack(libraryCategory) { stack ->
                     stack.pop()
@@ -625,6 +735,7 @@ class LibraryViewModel(
                 isInSearchMode = if (searchEnabled) it.isInSearchMode else false,
                 isRoot = true,
                 titleRes = libraryCategory.tabTitleRes,
+                title = null,
                 isSearchEnabled = searchEnabled,
             )
         }
@@ -632,6 +743,39 @@ class LibraryViewModel(
         categoryData.fetchJob = when (content) {
             is LibraryContent.Sections -> loadContent(categoryData, content)
             is LibraryContent.Grid -> loadContent(categoryData, content)
+        }
+    }
+
+    private fun onAssetSourceUpdated(sourceId: String) {
+        libraryStackDataMapping.forEach { (category, data) ->
+            if (data.isActive && data.dataStack.last().referencesAssetSource(sourceId)) {
+                refreshVisibleContent(category)
+            }
+        }
+    }
+
+    private fun refreshVisibleContent(libraryCategory: LibraryCategory) {
+        val categoryData = libraryStackDataMapping[libraryCategory] ?: return
+        val content = categoryData.dataStack.last()
+
+        categoryData.fetchJob?.cancel()
+        categoryData.dirty = true
+        categoryData.uiStateFlow.update { state ->
+            when (content) {
+                is LibraryContent.Grid -> state.copy(
+                    loadState = CategoryLoadState.Idle,
+                    assetsData = AssetsData(),
+                )
+                is LibraryContent.Sections -> state.copy(
+                    loadState = CategoryLoadState.Idle,
+                    sectionItems = emptyList(),
+                )
+            }
+        }
+
+        categoryData.fetchJob = when (content) {
+            is LibraryContent.Grid -> loadContent(categoryData, content)
+            is LibraryContent.Sections -> loadContent(categoryData, content)
         }
     }
 
@@ -653,6 +797,7 @@ class LibraryViewModel(
             val searchEnabled = supportsSearch(content)
             var state = it.copy(
                 titleRes = content.titleRes,
+                title = content.title,
                 isRoot = categoryData.dataStack.size == 1,
                 assetsData = it.assetsData.copy(
                     assetType = content.assetType,
@@ -730,6 +875,7 @@ class LibraryViewModel(
             val searchEnabled = supportsSearch(content)
             var state = it.copy(
                 titleRes = content.titleRes,
+                title = null,
                 isRoot = categoryData.dataStack.size == 1,
                 loadState = CategoryLoadState.Loading,
                 sectionItems = listOf(LibrarySectionItem.Loading(stackIndex = stackIndex)),
@@ -742,8 +888,31 @@ class LibraryViewModel(
         }
         val context = editor.activity
         content.sections.forEachIndexed { sectionIndex, section ->
+            // Sections that expand into per-group sub-sections render nothing when their asset
+            // source is not registered, instead of falling back to a dead umbrella section.
+            if (section.groupTitleKeyPrefix != null) {
+                val registeredSourceIds = engine.asset.findAllSources()
+                if (section.sourceTypes.none { it.sourceId in registeredSourceIds }) {
+                    return@forEachIndexed
+                }
+            }
             val sectionTitleRes = section.titleRes
-            if (sectionTitleRes != null) {
+            // Resolve sub-sections first so we can decide whether to emit the umbrella header.
+            val subSections: List<LibraryContent.Section> = if (section.addGroupedSubSections) {
+                // A source that reports no groups (or is not registered, making getGroups fail)
+                // falls back to a single flat section.
+                runCatching { engine.asset.getGroups(section.sourceTypes[0].sourceId) }
+                    .getOrNull()
+                    .orEmpty()
+                    .map { group -> section.copy(groups = listOf(group), addGroupedSubSections = false) }
+                    .ifEmpty { listOf(section) }
+            } else {
+                listOf(section)
+            }
+            // Per-group headers replace the umbrella header when the group expansion succeeded.
+            val hasPerGroupHeaders = section.groupTitleKeyPrefix != null &&
+                subSections.any { it.groups?.singleOrNull() != null }
+            if (sectionTitleRes != null && !hasPerGroupHeaders) {
                 val uploadSource = if (section.showUpload) {
                     section.sourceTypes.singleOrNull() as? UploadAssetSourceType
                 } else {
@@ -769,25 +938,39 @@ class LibraryViewModel(
                     expandContent = section.expandContent,
                 ).let(loadingSectionItemsList::add)
             }
-            if (section.addGroupedSubSections) {
-                val groups = engine.asset.getGroups(section.sourceTypes[0].sourceId)
-                groups?.mapIndexed { groupIndex, group ->
-                    LibrarySectionItem.ContentLoading(
+            subSections.forEachIndexed { subSectionIndex, subSection ->
+                // When a groupTitleKeyPrefix is set, each sub-section gets its own header and
+                // expanded grid, both carrying the same resolved group title (raw group id when the
+                // group has no translation), so the expanded sheet is titled after the group as well.
+                val groupTitleKeyPrefix = section.groupTitleKeyPrefix
+                val subSectionGroup = subSection.groups?.singleOrNull()
+                var contentSection = subSection
+                if (groupTitleKeyPrefix != null && subSectionGroup != null) {
+                    val groupTitle = resolveGroupTitle(context, groupTitleKeyPrefix, subSectionGroup)
+                    val groupExpandContent = LibraryContent.Grid(
+                        titleRes = sectionTitleRes ?: 0,
+                        sourceType = section.sourceTypes[0],
+                        groups = listOf(subSectionGroup),
+                        assetType = section.assetType,
+                        title = groupTitle,
+                    )
+                    contentSection = subSection.copy(expandContent = groupExpandContent)
+                    LibrarySectionItem.Header(
                         stackIndex = stackIndex,
                         sectionIndex = sectionIndex,
-                        subSectionIndex = groupIndex,
-                        section = section.copy(
-                            groups = listOf(group),
-                            addGroupedSubSections = false,
-                        ),
+                        titleRes = sectionTitleRes ?: 0,
+                        title = groupTitle,
+                        uploadAssetSourceType = null,
+                        systemGalleryAssetSourceType = null,
+                        expandContent = groupExpandContent,
+                        subSectionIndex = subSectionIndex,
                     ).let(loadingSectionItemsList::add)
                 }
-            } else {
                 LibrarySectionItem.ContentLoading(
                     stackIndex = stackIndex,
                     sectionIndex = sectionIndex,
-                    subSectionIndex = 0,
-                    section = section,
+                    subSectionIndex = subSectionIndex,
+                    section = contentSection,
                 ).let(loadingSectionItemsList::add)
             }
         }
@@ -819,11 +1002,20 @@ class LibraryViewModel(
                         }.awaitAll()
                             .mapNotNull { it.getOrNull() }
                             .takeIf { it.isNotEmpty() }
-                            ?.flatMap { (source, findResult) ->
+                            ?.onEach { (_, findResult) ->
                                 total = runCatching {
                                     Math.addExact(total, findResult.total)
                                 }.getOrNull() ?: Int.MAX_VALUE
-                                findResult.assets.map { asset -> source to asset }
+                            }
+                            // Round-robin across the sources so a multi-source preview shows a mix of
+                            // every source instead of exhausting the first one. Identical to plain
+                            // concatenation when the section has a single source.
+                            ?.let { results ->
+                                interleaveBySource(
+                                    results.map { (source, findResult) ->
+                                        findResult.assets.map { asset -> source to asset }
+                                    },
+                                )
                             }
                             ?.filterNot { (source, _) ->
                                 section.excludedPreviewSourceTypes?.contains(source) == true
@@ -835,6 +1027,7 @@ class LibraryViewModel(
                                 LibrarySectionItem.Content(
                                     stackIndex = stackIndex,
                                     sectionIndex = content.sectionIndex,
+                                    subSectionIndex = content.subSectionIndex,
                                     wrappedAssets = wrappedAssets,
                                     assetType = section.assetType,
                                     sourceTypes = section.sourceTypes,
@@ -843,6 +1036,7 @@ class LibraryViewModel(
                             } ?: LibrarySectionItem.Error(
                             stackIndex = stackIndex,
                             sectionIndex = content.sectionIndex,
+                            subSectionIndex = content.subSectionIndex,
                             assetType = section.assetType,
                         )
 
@@ -850,8 +1044,15 @@ class LibraryViewModel(
                             it.copy(
                                 sectionItems = it.sectionItems.map { item ->
                                     when {
-                                        item is LibrarySectionItem.Header && item.sectionIndex == content.sectionIndex -> {
-                                            item.copy(count = total)
+                                        item is LibrarySectionItem.Header &&
+                                            item.sectionIndex == content.sectionIndex &&
+                                            (item.subSectionIndex == null || item.subSectionIndex == content.subSectionIndex) -> {
+                                            // Umbrella headers span all sub-sections; sum their totals.
+                                            item.copy(
+                                                count = runCatching {
+                                                    Math.addExact(item.count ?: 0, total)
+                                                }.getOrNull() ?: Int.MAX_VALUE,
+                                            )
                                         }
 
                                         item is LibrarySectionItem.ContentLoading &&
@@ -872,6 +1073,22 @@ class LibraryViewModel(
         uiStateFlow.update {
             it.copy(loadState = CategoryLoadState.Success)
         }
+    }
+
+    /**
+     * Interleaves per-source asset lists in round-robin order (first of each source, then second of
+     * each, …). Empty sources are skipped. For a single source the result equals the input list.
+     */
+    private fun <T> interleaveBySource(lists: List<List<T>>): List<T> {
+        if (lists.size <= 1) return lists.flatten()
+        val result = ArrayList<T>(lists.sumOf { it.size })
+        val maxSize = lists.maxOfOrNull { it.size } ?: 0
+        for (index in 0 until maxSize) {
+            for (list in lists) {
+                list.getOrNull(index)?.let(result::add)
+            }
+        }
+        return result
     }
 
     private suspend fun createWrappedAsset(
@@ -956,8 +1173,12 @@ class LibraryViewModel(
         assetSourceType: UploadAssetSourceType,
         uri: Uri,
         duration: Duration? = null,
-    ): Asset {
+    ): Asset? {
         Log.d(TAG, "uploadToAssetSource start source=${assetSourceType.sourceId} uri=$uri duration=$duration")
+        if (assetSourceType.sourceId !in engine.asset.findAllSources()) {
+            Log.d(TAG, "uploadToAssetSource skipped: source not registered: ${assetSourceType.sourceId}")
+            return null
+        }
         val uuid = UUID.randomUUID().toString()
         val uriString = uri.toString()
         val meta = mutableMapOf(
@@ -1064,7 +1285,7 @@ class LibraryViewModel(
         }
         Log.d(TAG, "fallbackApplyGalleryAsset uploadSource=${uploadSource.sourceId} uri=$uri kind=$kind")
 
-        val uploadedAsset = uploadToAssetSource(uploadSource, uri)
+        val uploadedAsset = uploadToAssetSource(uploadSource, uri) ?: return null
         val designBlock = runCatching {
             engine.asset.applyAssetSourceAsset(uploadSource.sourceId, uploadedAsset)
         }.onFailure {

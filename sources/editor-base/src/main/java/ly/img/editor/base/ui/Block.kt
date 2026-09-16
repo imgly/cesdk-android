@@ -1,5 +1,6 @@
 package ly.img.editor.base.ui
 
+import ly.img.editor.core.component.data.Selection
 import ly.img.editor.core.ui.engine.BlockKind
 import ly.img.editor.core.ui.engine.BlockType
 import ly.img.editor.core.ui.engine.getFillType
@@ -14,16 +15,21 @@ data class Block(
     val type: BlockType,
 )
 
+/**
+ * Returns null for design block types the editor UI does not support yet.
+ */
 internal fun createBlock(
     designBlock: DesignBlock,
     engine: Engine,
-): Block {
+): Block? {
     val type = DesignBlockType.getOrNull(engine.block.getType(designBlock))
+        ?.takeIf { it in Selection.supportedDesignBlockTypes } ?: return null
     val blockType = when (type) {
         DesignBlockType.Text -> BlockType.Text
         DesignBlockType.Group -> BlockType.Group
         DesignBlockType.Page -> BlockType.Page
         DesignBlockType.Audio -> BlockType.Audio
+        DesignBlockType.Caption -> BlockType.Caption
         DesignBlockType.Graphic -> {
             when (engine.block.getFillType(designBlock)) {
                 FillType.Image -> {
@@ -34,7 +40,7 @@ internal fun createBlock(
                 else -> BlockType.Shape
             }
         }
-        else -> throw UnsupportedOperationException()
+        else -> return null
     }
     return Block(
         designBlock = designBlock,

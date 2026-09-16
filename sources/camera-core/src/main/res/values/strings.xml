@@ -4,10 +4,14 @@
     <string name="ly_img_camera_button_continue">Continue</string>
     <string name="ly_img_camera_button_delete_last_recording">Delete</string>
     <string name="ly_img_camera_button_flip_camera">Flip Camera</string>
+    <string name="ly_img_camera_button_photo_mode">Photo</string>
+    <string name="ly_img_camera_button_photo_preview_back">Back</string>
+    <string name="ly_img_camera_button_photo_preview_done">Done</string>
     <string name="ly_img_camera_button_reaction">Reaction</string>
     <string name="ly_img_camera_button_swap_positions">Swap Positions</string>
     <string name="ly_img_camera_button_timer">Timer</string>
     <string name="ly_img_camera_button_toggle_flash">Toggle Flash</string>
+    <string name="ly_img_camera_button_video_mode">Video</string>
     <string name="ly_img_camera_dialog_delete_last_recording_button_confirm">Delete</string>
     <string name="ly_img_camera_dialog_delete_last_recording_button_dismiss">Cancel</string>
     <string name="ly_img_camera_dialog_delete_last_recording_text">Deleting the last recording cannot be undone.</string>

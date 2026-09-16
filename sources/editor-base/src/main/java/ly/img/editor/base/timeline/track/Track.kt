@@ -2,9 +2,48 @@ package ly.img.editor.base.timeline.track
 
 import androidx.compose.runtime.mutableStateListOf
 import ly.img.editor.base.timeline.clip.Clip
-import java.util.UUID
+import ly.img.engine.DesignBlock
 
-data class Track(
-    val id: String = UUID.randomUUID().toString(),
+/**
+ * A timeline row of [clips]. Construct via [background], [engine], or [standalone] so [id] stays
+ * stable across rebuilds.
+ *
+ * [engineTrackId] is the backing engine foreground [ly.img.engine.DesignBlockType.Track] or
+ * [ly.img.engine.DesignBlockType.CaptionTrack] block.
+ */
+data class Track private constructor(
+    val id: String,
     val clips: MutableList<Clip> = mutableStateListOf(),
+    val transitionSeams: MutableList<TransitionSeam> = mutableStateListOf(),
+    val engineTrackId: DesignBlock? = null,
+    /** Carried on the track, not derived from its clips, so an empty lane still answers. */
+    val isCaptionTrack: Boolean = false,
+) {
+    companion object {
+        /** The singleton background track row at the bottom of the timeline. */
+        fun background(): Track = Track(id = "background")
+
+        /** A foreground track backed by an engine [ly.img.engine.DesignBlockType.Track] block. */
+        fun engine(engineTrackId: DesignBlock): Track = Track(id = "engine-$engineTrackId", engineTrackId = engineTrackId)
+
+        /** The caption lane, backed by an engine [ly.img.engine.DesignBlockType.CaptionTrack] block. */
+        fun caption(engineTrackId: DesignBlock): Track = Track(
+            id = "caption-$engineTrackId",
+            engineTrackId = engineTrackId,
+            isCaptionTrack = true,
+        )
+
+        /** A virtual foreground track hosting a single direct page child standalone clip. */
+        fun standalone(clipBlock: DesignBlock): Track = Track(id = "standalone-$clipBlock")
+    }
+}
+
+/** [clips] sorted by [Clip.timeOffset] ascending. */
+internal fun Track.sortedClips(): List<Clip> = clips.sortedBy { it.timeOffset }
+
+data class TransitionSeam(
+    val outgoingClip: Clip,
+    val incomingClip: Clip,
+    val hasTransition: Boolean,
+    val isCompact: Boolean,
 )

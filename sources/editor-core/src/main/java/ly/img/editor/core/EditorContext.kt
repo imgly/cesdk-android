@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import kotlinx.coroutines.CoroutineScope
@@ -42,6 +43,12 @@ interface EditorContext {
      * The baseUri provided via param when launching the editor.
      */
     val baseUri: Uri
+
+    /**
+     * The integration context embedding the engine, used for license
+     * matching.
+     */
+    val host: String
 
     /**
      * The configuration of the current editor.
@@ -85,6 +92,11 @@ interface EditorContext {
         key: String,
         initial: T,
     ): MutableState<T>
+
+    /**
+     * [State] provider to access the state, previously declared via [mutableStateOf].
+     */
+    fun <T> stateOf(key: String): State<T>
 }
 
 interface MutableEditorContext : EditorContext {
@@ -95,6 +107,7 @@ interface MutableEditorContext : EditorContext {
         license: String?,
         userId: String?,
         baseUri: Uri,
+        host: String,
         activity: Activity,
         eventHandler: EditorEventHandler,
         coroutineScope: CoroutineScope,
@@ -121,6 +134,8 @@ internal class EditorContextImpl :
     override var license: String? = null
 
     override var userId: String? = null
+
+    override var host: String = ""
 
     private var _baseUri: Uri? = null
     override val baseUri: Uri
@@ -152,6 +167,7 @@ internal class EditorContextImpl :
         license: String?,
         userId: String?,
         baseUri: Uri,
+        host: String,
         activity: Activity,
         eventHandler: EditorEventHandler,
         coroutineScope: CoroutineScope,
@@ -160,6 +176,7 @@ internal class EditorContextImpl :
         this.isValid = true
         this.license = license
         this.userId = userId
+        this.host = host
         _baseUri = baseUri
         _activity = activity
         _eventHandler = eventHandler
@@ -177,6 +194,14 @@ internal class EditorContextImpl :
         initial: T,
     ): MutableState<T> = editorStateStore.getOrPut(key) { mutableStateOf(initial) } as MutableState<T>
 
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> stateOf(key: String): State<T> {
+        val result = requireNotNull(editorStateStore[key]) {
+            "Editor state $key is not declared. Make sure you call mutableStateOf with the key before accessing it via stateOf."
+        }
+        return result as State<T>
+    }
+
     @Composable
     override fun TimelineContent() {
         remember { requireNotNull(timelineOwnerProvider)() }.TimelineContent()
@@ -185,6 +210,7 @@ internal class EditorContextImpl :
     override fun clear() {
         license = null
         userId = null
+        host = ""
         configuration.value = null
         _baseUri = null
         _activity = null

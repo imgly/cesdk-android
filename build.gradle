@@ -13,6 +13,17 @@ plugins {
     id 'org.jetbrains.dokka' version libs.versions.dokka
 }
 
+def pinnedNdk = file("$rootDir/../../config/gradle/pinned-ndk.gradle")
+if (pinnedNdk.exists()) {
+    apply from: pinnedNdk
+}
+
+allprojects {
+    tasks.matching { it.name ==~ /compress.*Assets/ }.configureEach {
+        outputs.doNotCacheIf("asset compression is cheaper to rerun than to transfer") { true }
+    }
+}
+
 subprojects {
     // To enable Compose compiler metrics and report (used for debugging Composable parameters stability),
     // set `debugComposeCompilerStability=true` in gradle.properties
@@ -38,4 +49,18 @@ subprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+tasks.register("dokkaCustom", Copy) {
+    group = "documentation"
+    dependsOn {
+        subprojects
+            .findAll { it.plugins.hasPlugin("org.jetbrains.dokka") }
+            .collect { it.tasks.named("dokkaCustom") }
+    }
+    // HTML and GFM both emit `<module>/ly.img[58]<module>/package-list`; keep HTML's copy.
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(layout.buildDirectory.dir("dokka/htmlCustom"))
+    from(layout.buildDirectory.dir("dokka/gfmCustom"))
+    into(layout.buildDirectory.dir("dokka/custom"))
 }

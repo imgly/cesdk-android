@@ -36,7 +36,7 @@ fun ShapeOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangePolygonSides(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = 3f..12f,
-                        steps = 8,
+                        step = 1f,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     PropertySlider(
@@ -48,16 +48,6 @@ fun ShapeOptionsSheet(
                     )
                 }
 
-                is LineShapeOptionsUiState -> {
-                    PropertySlider(
-                        title = stringResource(R.string.ly_img_editor_sheet_shape_label_line_width),
-                        value = uiState.width,
-                        onValueChange = { onEvent(BlockEvent.OnChangeLineWidth(it)) },
-                        onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
-                        valueRange = 0.1f..30f,
-                    )
-                }
-
                 is StarShapeOptionsUiState -> {
                     PropertySlider(
                         title = stringResource(R.string.ly_img_editor_sheet_shape_label_points),
@@ -65,7 +55,7 @@ fun ShapeOptionsSheet(
                         onValueChange = { onEvent(BlockEvent.OnChangeStarPoints(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                         valueRange = 3f..12f,
-                        steps = 8,
+                        step = 1f,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     PropertySlider(
