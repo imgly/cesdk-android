@@ -51,8 +51,6 @@ import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.timeline.track.TrackView
 import ly.img.editor.core.LocalEditorScope
-import ly.img.editor.core.component.EditorComponent
-import ly.img.editor.core.component.data.TimelineHeight
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.theme.surface3
 import ly.img.editor.core.ui.utils.roundToPx
@@ -69,15 +67,10 @@ fun TimelineContentView(
     timelineState: TimelineState,
     verticalScrollState: LazyListState,
     onEvent: (EditorEvent) -> Unit,
-    addClipButton: EditorComponent<*>?,
-    addAudioButton: EditorComponent<*>?,
-    height: TimelineHeight,
 ) {
     TimelineBaseView(
         timelineState = timelineState,
         onEvent = onEvent,
-        height = height,
-        addAudioButton = addAudioButton,
     ) { horizontalScrollState ->
         val editorScope = LocalEditorScope.current
         val editorContext = editorScope.run { editorContext }
@@ -243,10 +236,7 @@ fun TimelineContentView(
                             top = TimelineConfiguration.clipPadding,
                             bottom = TimelineConfiguration.clipPadding,
                         ),
-                        verticalArrangement = Arrangement.spacedBy(
-                            space = TimelineConfiguration.clipPadding,
-                            alignment = if (height is TimelineHeight.Fixed) Alignment.Bottom else Alignment.Top,
-                        ),
+                        verticalArrangement = Arrangement.spacedBy(TimelineConfiguration.clipPadding),
                     ) {
                         val tracks = timelineState.dataSource.tracks
 
@@ -266,18 +256,13 @@ fun TimelineContentView(
                                 }
                             }
 
-                            addAudioButton?.let { component ->
-                                TimelineButtonComponent(
-                                    component = component,
-                                    // zIndex of -1 ensures that the trim handles are drawn on top
-                                    modifier = Modifier
-                                        .offset {
-                                            IntOffset(x = audioButtonOffset, y = 0)
-                                        }
-                                        .padding(start = 1.dp)
-                                        .zIndex(-1f),
-                                )
-                            }
+                            AddAudioButton(
+                                modifier = Modifier
+                                    .offset {
+                                        IntOffset(x = audioButtonOffset, y = 0)
+                                    }
+                                    .padding(start = 1.dp),
+                            )
                         }
                     }
                     Box(
@@ -310,16 +295,11 @@ fun TimelineContentView(
                                     .zIndex(if (selectionInBackgroundTrack) 0f else 1f),
                             )
                         }
-                        addClipButton?.let { component ->
-                            TimelineButtonComponent(
-                                component = component,
-                                // 1.dp aligns the button with the Add Audio button when the background track is empty.
-                                // zIndex of -1 ensures that the trim handles are drawn on top
-                                modifier = Modifier
-                                    .offset(x = addClipButtonOffset.coerceAtLeast(1.dp))
-                                    .zIndex(-1f),
-                            )
-                        }
+                        AddClipButton(
+                            // 1.dp aligns the button with the Add Audio button when the background track is empty
+                            modifier = Modifier.offset(x = addClipButtonOffset.coerceAtLeast(1.dp)),
+                            onEvent = onEvent,
+                        )
                     }
                 }
                 TimelineDurationConstraintsView(
@@ -421,22 +401,4 @@ private fun computeAutoScrollSpeed(
         }
         else -> 0f
     }
-}
-
-/**
- * Renders a configured timeline button component.
- *
- * Declared at file level so that the non-scoped [EditorComponent] overload is resolved: at the call
- * sites an outer [androidx.compose.foundation.layout.ColumnScope] is in scope, which would otherwise
- * select the [androidx.compose.foundation.layout.ColumnScope] overload.
- */
-@Composable
-private fun TimelineButtonComponent(
-    component: EditorComponent<*>,
-    modifier: Modifier = Modifier,
-) {
-    EditorComponent(
-        component = component,
-        modifier = modifier,
-    )
 }

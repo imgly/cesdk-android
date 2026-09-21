@@ -457,7 +457,6 @@
     <string name="ly_img_editor_sheet_font_title">Schriftart</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_auto">Richtung an Sprache anpassen</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_center">Horizontal zentriert ausrichten</string>
-    <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_justify">Blocksatz</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_left">Nach links ausrichten</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_right">Nach rechts ausrichten</string>
     <string name="ly_img_editor_sheet_format_text_alignment_vertical_option_bottom">Nach unten ausrichten</string>

@@ -1,10 +1,8 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id 'com.android.application'
-    id 'org.jetbrains.kotlin.plugin.compose'
+    id 'kotlin-android'
     id 'com.github.gmazzo.buildconfig'
 }
 
@@ -82,9 +80,17 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
     buildFeatures {
         compose = true
         buildConfig = false
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.kotlinCompilerExtension.get()
     }
 
     sourceSets {
@@ -96,21 +102,13 @@ android {
                     file.name.startsWith(pattern)
                 }
             }.each { dir ->
-                kotlin.srcDirs += dir
+                java.srcDirs += dir
                 def assetsDir = file("$dir/assets")
                 if (assetsDir.exists()) {
                     assets.srcDirs += assetsDir
                 }
             }
         }
-    }
-}
-
-kotlin {
-    compilerOptions {
-        jvmTarget = JvmTarget.JVM_1_8
-        languageVersion = KotlinVersion.KOTLIN_1_9
-        apiVersion = KotlinVersion.KOTLIN_1_9
     }
 }
 
