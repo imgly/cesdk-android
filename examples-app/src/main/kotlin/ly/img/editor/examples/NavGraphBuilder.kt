@@ -36,8 +36,10 @@ import RearrangeButtonsEditorSolution
 import RecordVoiceoverSolution
 import TemplatingEditorSolution
 import ThemingEditorSolution
+import TimelineCustomizationSolution
 import UiEventsEditorSolution
 import UserInterfaceAssetLibraryEditorSolution
+import UserUploadEditorSolution
 import VariableFontsEditorSolution
 import android.net.Uri
 import androidx.compose.animation.AnimatedContentScope
@@ -145,6 +147,12 @@ fun NavGraphBuilder.build(navController: NavHostController) {
     }
     composable(destination = Destination.GuideDock) {
         NewListBuilderDockSolution(
+            license = Secrets.license,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideTimeline) {
+        TimelineCustomizationSolution(
             license = Secrets.license,
             onClose = { navController.popBackStack() },
         )
@@ -334,6 +342,12 @@ fun NavGraphBuilder.build(navController: NavHostController) {
         PhotoRollEditorSolution(
             license = Secrets.license,
             enableFullGalleryAccess = true,
+            onClose = { navController.popBackStack() },
+        )
+    }
+    composable(destination = Destination.GuideUserUpload) {
+        UserUploadEditorSolution(
+            license = Secrets.license,
             onClose = { navController.popBackStack() },
         )
     }

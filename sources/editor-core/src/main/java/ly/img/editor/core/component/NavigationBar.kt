@@ -208,7 +208,7 @@ abstract class AbstractNavigationBarBuilder<Scope : NavigationBar.Scope> : Edito
      * Also note that items will be rebuilt when [scope] is updated.
      * By default listBuilder does not add anything to the navigation bar.
      */
-    var listBuilder: ScopedProperty<Scope, HorizontalListBuilder<EditorComponent<*>>> = {
+    open var listBuilder: ScopedProperty<Scope, HorizontalListBuilder<EditorComponent<*>>> = {
         NavigationBar.ListBuilder.remember { }
     }
 

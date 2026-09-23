@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.gmazzo.buildconfig'
 
@@ -9,7 +9,13 @@ android {
     defaultConfig {
         minSdk = libs.versions.androidMinSdk.get().toInteger()
         targetSdk = libs.versions.androidTargetSdk.get().toInteger()
-        consumerProguardFiles "consumer-rules.pro"
+        aarMetadata {
+            // AGP 9 defaults this to compileSdk; declare the consumer requirement separately.
+            minCompileSdk = libs.versions.androidMinCompileSdk.get().toInteger()
+        }
+        if (file("consumer-rules.pro").exists()) {
+            consumerProguardFiles "consumer-rules.pro"
+        }
     }
 
     compileOptions {
@@ -17,23 +23,25 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
-
     buildFeatures {
         compose = true
         buildConfig = false
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.kotlinCompilerExtension.get()
     }
 
     publishing {
         singleVariant("release") {
             withSourcesJar()
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        // Applied scripts are compiled before the Kotlin Gradle plugin contributes its DSL types;
+        // Groovy converts these stable enum names when configuring compilerOptions.
+        jvmTarget = "JVM_1_8"
+        languageVersion = "KOTLIN_1_9"
+        apiVersion = "KOTLIN_1_9"
     }
 }
 
@@ -52,6 +60,11 @@ afterEvaluate {
 
                 // Artifacts
                 from components.release
+                versionMapping {
+                    allVariants {
+                        fromResolutionOf('releaseRuntimeClasspath')
+                    }
+                }
                 artifact(file("$projectDir/../release/LICENSE.md")) {
                     classifier = "LICENSE"
                     extension = "md"

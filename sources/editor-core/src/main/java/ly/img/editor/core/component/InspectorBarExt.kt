@@ -649,7 +649,8 @@ val InspectorBar.Button.Id.split by unsafeLazy {
 
 /**
  * A composable helper function that creates and remembers an [Button] that splits currently selected
- * design block via [EditorEvent.Selection.Split] in a video scene.
+ * design block via [EditorEvent.Selection.Split].
+ * The button is visible when the "lifecycle/duplicate" scope of the selected design block is allowed.
  * A caption is only enabled while the playhead sits inside it, since a caption divides where the playhead is.
  * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
  * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
@@ -1012,7 +1013,7 @@ fun InspectorBar.Button.rememberMoveAsOverlay(builder: InspectorBar.ButtonBuilde
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.rememberVoiceover].
  */
-val Button.Id.Companion.voiceover by unsafeLazy {
+val InspectorBar.Button.Id.voiceover by unsafeLazy {
     EditorComponentId("ly.img.component.inspectorBar.button.voiceover")
 }
 
@@ -1026,7 +1027,7 @@ val Button.Id.Companion.voiceover by unsafeLazy {
 @Composable
 fun InspectorBar.Button.rememberVoiceover(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
     InspectorBar.Button.remember {
-        id = { InspectorBar.Button.Id.moveAsClip }
+        id = { InspectorBar.Button.Id.voiceover }
         visible = {
             val selection = editorContext.selection
 

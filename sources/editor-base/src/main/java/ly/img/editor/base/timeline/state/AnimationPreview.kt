@@ -1,8 +1,11 @@
 package ly.img.editor.base.timeline.state
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import ly.img.editor.core.ui.engine.getCurrentPage
 import ly.img.engine.DesignBlock
@@ -90,11 +93,25 @@ class AnimationPreview(
             if (id != previewId) return@launch
             engine.block.setPlaying(page, true)
             isPreviewPlaying = true
-            delay(previewDuration.inWholeMilliseconds)
-            if (id == previewId && isPreviewPlaying) {
-                engine.block.setPlaying(page, false)
-                isPreviewPlaying = false
-                job = null
+            val previewJob = coroutineContext.job
+            val playbackObserver = launch(start = CoroutineStart.UNDISPATCHED) {
+                engine.event.subscribe(listOf(page)).first {
+                    !engine.block.isValid(page) || !engine.block.isPlaying(page)
+                }
+                previewJob.cancel()
+            }
+            try {
+                delay(previewDuration.inWholeMilliseconds)
+                playbackObserver.cancel()
+                if (engine.block.isValid(page) && engine.block.isPlaying(page) && id == previewId && isPreviewPlaying) {
+                    engine.block.setPlaying(page, false)
+                }
+            } finally {
+                playbackObserver.cancel()
+                if (id == previewId) {
+                    isPreviewPlaying = false
+                    job = null
+                }
             }
         }
     }
