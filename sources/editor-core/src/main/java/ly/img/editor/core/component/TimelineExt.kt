@@ -154,7 +154,20 @@ fun Timeline.Button.rememberPlayPause(builder: Timeline.ButtonBuilder.() -> Unit
         onClick = {
             editorContext.engine.run {
                 val page = scene.getCurrentPage() ?: return@run
-                block.setPlaying(page, !block.isPlaying(page))
+                val isPlaying = block.isPlaying(page)
+                if (!isPlaying) {
+                    val state = editorContext.state.value
+                    val minDuration = state.minVideoDuration?.takeIf { it > Duration.ZERO }
+                    val maxDuration = state.maxVideoDuration
+                        ?.takeIf { it > Duration.ZERO }
+                        ?.takeIf { minDuration == null || it >= minDuration }
+                    val pageDuration = block.getDuration(page).seconds
+                    val playbackDuration = maxDuration?.coerceAtMost(pageDuration) ?: pageDuration
+                    if (block.getPlaybackTime(page).seconds >= playbackDuration) {
+                        block.setPlaybackTime(page, 0.0)
+                    }
+                }
+                block.setPlaying(page, !isPlaying)
             }
         }
         builder()

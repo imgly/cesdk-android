@@ -1526,6 +1526,7 @@ open class TextBackgroundButtonBuilder : AbstractButtonBuilder<TextBackgroundIte
 /**
  * A composable helper function that creates and remembers an [Button] that opens text background options sheet via
  * [EditorEvent.Sheet.Open].
+ * The button is disabled for a text on a path, because the engine draws no background for it.
  * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
  * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
  *
@@ -1548,6 +1549,21 @@ fun InspectorBar.Button.rememberTextBackground(
         EditorIcon(icon = editorIcon)
     }
     textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_text_background) }
+    enabled = {
+        val engine = editorContext.engine
+        val designBlock = editorContext.selection.designBlock
+
+        fun isTextOnPath() = runCatching { engine.block.getTextOnPath(designBlock) }.getOrNull() != null
+        val initial = remember(designBlock) { isTextOnPath() }
+        // The engine draws no block background for text on a path, so the sheet would edit nothing.
+        val textOnPath by remember(designBlock) {
+            engine.event.subscribe(listOf(designBlock))
+                .map { isTextOnPath() }
+                .distinctUntilChanged()
+                .onStart { emit(initial) }
+        }.collectAsState(initial = initial)
+        !textOnPath
+    }
     onClick = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.TextBackground()))
     }
