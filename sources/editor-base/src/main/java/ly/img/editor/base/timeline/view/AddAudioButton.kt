@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,55 +11,87 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import ly.img.editor.core.UnstableEditorApi
-import ly.img.editor.core.component.EditorComponent
-import ly.img.editor.core.component.Timeline
+import androidx.compose.ui.zIndex
+import ly.img.editor.base.timeline.state.AddAudioOption
+import ly.img.editor.base.timeline.state.TimelineConfiguration
+import ly.img.editor.core.LocalEditorScope
+import ly.img.editor.core.R
+import ly.img.editor.core.event.EditorEvent
+import ly.img.editor.core.iconpack.AddAudio
+import ly.img.editor.core.iconpack.IconPack
+import ly.img.editor.core.iconpack.Plus
+import ly.img.editor.core.iconpack.VoiceoverAdd
+import ly.img.editor.core.sheet.SheetType
+import ly.img.editor.core.ui.library.components.ClipMenuItem
 
-@OptIn(UnstableEditorApi::class)
 @Composable
 fun AddAudioButton(
-    button: Timeline.AddAudioButton,
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
+    options: List<AddAudioOption> = TimelineConfiguration.addAudioOptions,
 ) {
-    val scope = button.scope
-    val options = requireNotNull(button.optionsBuilder.build(scope)[null]?.items) {
-        "optionsBuilder should call add { ... } without any VerticalArrangement parameter."
-    }
     if (options.isEmpty()) return
 
     var showAudioMenu by remember { mutableStateOf(false) }
-    // A lone entry has no menu to open, so clicking the button triggers it directly.
-    val singleOption = options.singleOrNull()
+    val editorScope = LocalEditorScope.current
+    val editorContext = with(editorScope) { editorContext }
 
-    Box(modifier = modifier) {
+    fun handleClickOf(option: AddAudioOption) = when (option) {
+        AddAudioOption.Library -> {
+            val assetLibrary = requireNotNull(editorContext.configuration.value?.assetLibrary)
+            editorContext.eventHandler.send(
+                EditorEvent.Sheet.Open(
+                    SheetType.LibraryAdd(libraryCategory = assetLibrary.audios()),
+                ),
+            )
+        }
+
+        AddAudioOption.Voiceover -> {
+            editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.Voiceover()))
+        }
+    }
+
+    Box(
+        // zIndex of -1 ensures that the trim handles are drawn on top
+        modifier = modifier.zIndex(-1f),
+    ) {
         TimelineButton(
-            text = { button.text?.invoke(scope) },
-            icon = button.icon?.let { { it(scope) } },
-            containerColor = button.containerColor,
-            tint = button.tint,
-            contentPadding = button.contentPadding,
-            enabled = button.enabled && (singleOption?.enabled ?: true),
+            id = R.string.ly_img_editor_timeline_button_add_audio,
+            icon = IconPack.Plus,
         ) {
-            if (singleOption != null) {
-                singleOption.onClick(scope)
+            if (options.size == 1) {
+                handleClickOf(options.first())
             } else {
                 showAudioMenu = true
             }
         }
+
         if (options.size > 1) {
             DropdownMenu(
                 expanded = showAudioMenu,
                 onDismissRequest = { showAudioMenu = false },
             ) {
                 options.forEachIndexed { index, option ->
-                    DropdownMenuItem(
-                        text = { EditorComponent(component = option) },
-                        enabled = option.enabled,
-                        onClick = {
-                            showAudioMenu = false
-                            option.onClick(scope)
-                        },
-                    )
+                    when (option) {
+                        AddAudioOption.Library -> {
+                            ClipMenuItem(
+                                textResourceId = R.string.ly_img_editor_timeline_add_audio_option_music,
+                                icon = IconPack.AddAudio,
+                            ) {
+                                showAudioMenu = false
+                                handleClickOf(option)
+                            }
+                        }
+
+                        AddAudioOption.Voiceover -> {
+                            ClipMenuItem(
+                                textResourceId = R.string.ly_img_editor_timeline_add_audio_option_voiceover,
+                                icon = IconPack.VoiceoverAdd,
+                            ) {
+                                showAudioMenu = false
+                                handleClickOf(option)
+                            }
+                        }
+                    }
                     if (index < options.lastIndex) {
                         Spacer(modifier = Modifier.height(8.dp))
                     }

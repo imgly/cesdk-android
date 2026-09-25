@@ -343,7 +343,7 @@ abstract class AbstractInspectorBarBuilder<Scope : InspectorBar.Scope> : EditorC
      * Also note that items will be rebuilt when [scope] is updated.
      * By default listBuilder does not add anything to the inspector bar.
      */
-    open var listBuilder: ScopedProperty<Scope, HorizontalListBuilder<EditorComponent<*>>> = {
+    var listBuilder: ScopedProperty<Scope, HorizontalListBuilder<EditorComponent<*>>> = {
         InspectorBar.ListBuilder.remember { }
     }
 

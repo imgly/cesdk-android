@@ -649,8 +649,7 @@ val InspectorBar.Button.Id.split by unsafeLazy {
 
 /**
  * A composable helper function that creates and remembers an [Button] that splits currently selected
- * design block via [EditorEvent.Selection.Split].
- * The button is visible when the "lifecycle/duplicate" scope of the selected design block is allowed.
+ * design block via [EditorEvent.Selection.Split] in a video scene.
  * A caption is only enabled while the playhead sits inside it, since a caption divides where the playhead is.
  * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
  * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
@@ -1013,7 +1012,7 @@ fun InspectorBar.Button.rememberMoveAsOverlay(builder: InspectorBar.ButtonBuilde
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.rememberVoiceover].
  */
-val InspectorBar.Button.Id.voiceover by unsafeLazy {
+val Button.Id.Companion.voiceover by unsafeLazy {
     EditorComponentId("ly.img.component.inspectorBar.button.voiceover")
 }
 
@@ -1027,7 +1026,7 @@ val InspectorBar.Button.Id.voiceover by unsafeLazy {
 @Composable
 fun InspectorBar.Button.rememberVoiceover(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
     InspectorBar.Button.remember {
-        id = { InspectorBar.Button.Id.voiceover }
+        id = { InspectorBar.Button.Id.moveAsClip }
         visible = {
             val selection = editorContext.selection
 
@@ -1526,7 +1525,6 @@ open class TextBackgroundButtonBuilder : AbstractButtonBuilder<TextBackgroundIte
 /**
  * A composable helper function that creates and remembers an [Button] that opens text background options sheet via
  * [EditorEvent.Sheet.Open].
- * The button is disabled for a text on a path, because the engine draws no background for it.
  * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
  * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
  *
@@ -1549,21 +1547,6 @@ fun InspectorBar.Button.rememberTextBackground(
         EditorIcon(icon = editorIcon)
     }
     textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_text_background) }
-    enabled = {
-        val engine = editorContext.engine
-        val designBlock = editorContext.selection.designBlock
-
-        fun isTextOnPath() = runCatching { engine.block.getTextOnPath(designBlock) }.getOrNull() != null
-        val initial = remember(designBlock) { isTextOnPath() }
-        // The engine draws no block background for text on a path, so the sheet would edit nothing.
-        val textOnPath by remember(designBlock) {
-            engine.event.subscribe(listOf(designBlock))
-                .map { isTextOnPath() }
-                .distinctUntilChanged()
-                .onStart { emit(initial) }
-        }.collectAsState(initial = initial)
-        !textOnPath
-    }
     onClick = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.TextBackground()))
     }

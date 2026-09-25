@@ -233,7 +233,7 @@ abstract class AbstractDockBuilder<Scope : Dock.Scope> : EditorComponentBuilder<
      * Also note that items will be rebuilt when [scope] is updated.
      * By default listBuilder does not add anything to the dock.
      */
-    open var listBuilder: ScopedProperty<Scope, HorizontalListBuilder<EditorComponent<*>>> = {
+    var listBuilder: ScopedProperty<Scope, HorizontalListBuilder<EditorComponent<*>>> = {
         Dock.ListBuilder.remember { }
     }
 

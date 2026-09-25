@@ -17,7 +17,6 @@ import ly.img.engine.AudioFromVideoOptions
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
-import ly.img.engine.FillType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
@@ -252,7 +251,8 @@ internal object AutoCaptionsGenerator {
 
     /**
      * Every block on the current page that could carry audible content, tagged with the source it counts as. Audio
-     * is found by type because its kind varies (the editor stamps voiceovers `voiceover`); video by fill type.
+     * is found by type because its kind varies (the editor stamps voiceovers `voiceover`); video only by kind,
+     * since it shares the `graphic` type with images.
      *
      * Both queries search the whole scene, so other pages' blocks are filtered out: the SRT is imported into the
      * current page, and their cues would land there at another page's local time offsets.
@@ -261,26 +261,9 @@ internal object AutoCaptionsGenerator {
         val page = runCatching { engine.scene.getCurrentPage() }.getOrNull() ?: return emptyList()
         val audio = runCatching { engine.block.findByType(DesignBlockType.Audio) }.getOrDefault(emptyList())
             .map { it to sourceOf(it, engine) }
-        val video = runCatching { engine.block.findByType(DesignBlockType.Graphic) }.getOrDefault(emptyList())
-            .filter { isVideoFootage(it, engine) }
+        val video = runCatching { engine.block.findByKind("video") }.getOrDefault(emptyList())
             .map { it to Source.Video }
         return (audio + video).filter { (block, _) -> isDescendant(block, page, engine) }
-    }
-
-    /**
-     * A graphic with a video fill, except an animated sticker. GIF and APNG count: [readVideoAudio] drops them for
-     * having no audio track.
-     */
-    private fun isVideoFootage(
-        block: DesignBlock,
-        engine: Engine,
-    ): Boolean {
-        if (!engine.block.supportsFill(block)) return false
-        val fill = engine.block.getFill(block)
-        if (!engine.block.isValid(fill)) return false
-        if (FillType.getOrNull(engine.block.getType(fill)) !is FillType.Video) return false
-        // A block without a kind has nothing to exclude, but getKind throws for it.
-        return runCatching { engine.block.getKind(block) }.getOrNull() != ANIMATED_STICKER_KIND
     }
 
     /** Ranks an audio block: the editor stamps recorded voiceovers, integrators use their own kinds. */
@@ -609,9 +592,6 @@ internal object AutoCaptionsGenerator {
 
     /** A heuristic, not a contract: the kind the editor stamps on a recorded voiceover. Any other kind is still transcribed, it just doesn't get the narration ranking. */
     private const val VOICEOVER_KIND = "voiceover"
-
-    /** The kind the editor stamps on an animated sticker. */
-    private const val ANIMATED_STICKER_KIND = "animatedSticker"
 }
 
 private fun java.nio.ByteBuffer.toByteArray() = ByteArray(remaining()).also(::get)

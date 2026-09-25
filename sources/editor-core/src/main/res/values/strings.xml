@@ -457,7 +457,6 @@
     <string name="ly_img_editor_sheet_font_title">Font</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_auto">Match Language Direction</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_center">Horizontally Align Text to the Center</string>
-    <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_justify">Justify Text</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_left">Align Text to the Left</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_right">Align Text to the Right</string>
     <string name="ly_img_editor_sheet_format_text_alignment_vertical_option_bottom">Align Text to the Bottom</string>

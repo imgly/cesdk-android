@@ -106,11 +106,6 @@ void configureDokkaFiles(File docsDir) {
 def configureDokkaTask = { String taskName, String customFormat, boolean configureHtmlFiles ->
     tasks.named(taskName) {
         moduleName.set("ly.img:${project.name}")
-        dokkaSourceSets.matching { it.name == "release" }.configureEach {
-            // AGP 9's built-in Kotlin leaves Dokka 1.x source roots empty and suppressed.
-            sourceRoots.from("src/main/java", "src/main/kotlin")
-            suppress.set(false)
-        }
 
         def dependencies = transitiveProjectDependencies(project)
             .findAll { it.plugins.hasPlugin("org.jetbrains.dokka") }
@@ -130,8 +125,10 @@ def configureDokkaTask = { String taskName, String customFormat, boolean configu
                 (dependencies.collect { it.name } + engineDependencies).each { name ->
                     def uri = new URI("$apiReferenceBasePath/$name")
                     def packageListUri = new File(docsLocalDir, "$name/ly.img[58]$name/package-list").toURI()
-                    // Dokka's Closure overload uses ConfigureUtil, which Gradle 9 removed.
-                    externalDocumentationLink(uri.toURL(), packageListUri.toURL())
+                    externalDocumentationLink {
+                        url.set(uri.toURL())
+                        packageListUrl.set(packageListUri.toURL())
+                    }
                 }
             }
         }

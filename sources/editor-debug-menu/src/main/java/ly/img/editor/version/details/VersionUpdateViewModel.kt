@@ -12,8 +12,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.Scope
-import com.google.firebase.Firebase
-import com.google.firebase.options
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.ktx.options
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
