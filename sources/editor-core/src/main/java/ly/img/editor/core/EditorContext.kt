@@ -11,7 +11,11 @@ import androidx.compose.runtime.remember
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import ly.img.editor.core.component.EditorComponent
+import ly.img.editor.core.component.HorizontalListBuilder
+import ly.img.editor.core.component.Timeline
 import ly.img.editor.core.component.TimelineOwner
+import ly.img.editor.core.component.data.TimelineHeight
 import ly.img.editor.core.configuration.EditorConfiguration
 import ly.img.editor.core.event.EditorEventHandler
 import ly.img.editor.core.state.EditorState
@@ -203,8 +207,30 @@ internal class EditorContextImpl :
     }
 
     @Composable
-    override fun TimelineContent() {
-        remember { requireNotNull(timelineOwnerProvider)() }.TimelineContent()
+    override fun TimelineContent(
+        addClipButton: EditorComponent<*>?,
+        addAudioButton: EditorComponent<*>?,
+        headerListBuilder: HorizontalListBuilder<EditorComponent<*>>,
+        height: TimelineHeight,
+        expanded: Boolean,
+    ) {
+        remember { requireNotNull(timelineOwnerProvider)() }.TimelineContent(
+            addClipButton = addClipButton,
+            addAudioButton = addAudioButton,
+            headerListBuilder = headerListBuilder,
+            height = height,
+            expanded = expanded,
+        )
+    }
+
+    @Composable
+    override fun AddClipButtonContent(button: Timeline.AddClipButton) {
+        remember { requireNotNull(timelineOwnerProvider)() }.AddClipButtonContent(button)
+    }
+
+    @Composable
+    override fun AddAudioButtonContent(button: Timeline.AddAudioButton) {
+        remember { requireNotNull(timelineOwnerProvider)() }.AddAudioButtonContent(button)
     }
 
     override fun clear() {

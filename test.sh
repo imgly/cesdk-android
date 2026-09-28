@@ -30,14 +30,12 @@ TEST_EXIT=0
 dry_runnable apps/cesdk_android/gradlew -p apps/cesdk_android \
   smoke-tests-app:connectedDebugAndroidTest || TEST_EXIT=$?
 
-# `-x ...connectedDebugAndroidTest` reuses the existing .ec instead of re-running.
-dry_runnable apps/cesdk_android/gradlew -p apps/cesdk_android \
-  smoke-tests-app:createDebugAndroidTestCoverageReport \
-  -x smoke-tests-app:connectedDebugAndroidTest
+# editorCoverageReport reads the app's connected-test output dir by default.
+dry_runnable apps/cesdk_android/gradlew -p apps/cesdk_android editorCoverageReport
 
 # One --source-root per editor module src dir so jacoco_xml_to_lcov.py resolves
 # <package>/<file> to apps/cesdk_android/sources/ paths the --filter matches.
-JACOCO_XML="apps/cesdk_android/smoke-tests-app/build/reports/coverage/androidTest/debug/connected/report.xml"
+JACOCO_XML="apps/cesdk_android/build/reports/coverage/editor/report.xml"
 if [[ -f "${JACOCO_XML}" ]]; then
   SOURCE_ROOT_ARGS=()
   for module in apps/cesdk_android/sources/*/; do

@@ -194,7 +194,7 @@ fun FormatOptionsSheet(
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             Row {
-                                HorizontalAlignment.entries.forEach {
+                                editorHorizontalAlignments.forEach {
                                     AlignmentButton(
                                         alignment = it,
                                         currentAlignment = uiState.horizontalAlignment,

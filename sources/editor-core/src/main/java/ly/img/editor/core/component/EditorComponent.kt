@@ -24,12 +24,25 @@ import ly.img.engine.Engine
 import java.util.LinkedList
 import java.util.UUID
 
+typealias UnalignedListBuilder<Item> = EditorComponent.ListBuilder<Item, Unit, Unit>
+
 typealias HorizontalListBuilder<Item> = EditorComponent.ListBuilder<Item, Alignment.Horizontal, Arrangement.Horizontal>
+
+typealias VerticalListBuilder<Item> = EditorComponent.ListBuilder<Item, Alignment.Vertical, Arrangement.Vertical>
+
+typealias UnalignedListBuilderModify<Item> = EditorComponent.ListBuilder.Modify<Item, Unit, Unit>
 
 typealias HorizontalListBuilderModify<Item> = EditorComponent.ListBuilder.Modify<Item, Alignment.Horizontal, Arrangement.Horizontal>
 
+typealias VerticalListBuilderModify<Item> = EditorComponent.ListBuilder.Modify<Item, Alignment.Vertical, Arrangement.Vertical>
+
+typealias UnalignedListBuilderScope<Item> = EditorComponent.ListBuilder.New<Item, Unit, Unit>
+
 typealias HorizontalListBuilderScope<Item> =
     EditorComponent.ListBuilder.New<Item, Alignment.Horizontal, Arrangement.Horizontal>
+
+typealias VerticalListBuilderScope<Item> =
+    EditorComponent.ListBuilder.New<Item, Alignment.Vertical, Arrangement.Vertical>
 
 /**
  * A class that is used as an identifier for class [EditorComponent].
@@ -93,6 +106,10 @@ abstract class EditorComponent<Scope : EditorScope> {
             val items: List<ScopedProperty<EditorScope, Item>>,
         )
 
+        /**
+         * Returns mapping between [Alignment] and list of items.
+         * Note that null key in that map corresponds to no [Alignment] (items that were added outside aligned { ... }.
+         */
         @Composable
         fun build(scope: EditorScope) = scope.buildLocal()
 

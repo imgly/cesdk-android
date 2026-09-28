@@ -32,6 +32,7 @@ import ly.img.editor.base.components.ToggleIconButton
 import ly.img.editor.base.dock.BottomSheetContent
 import ly.img.editor.base.dock.options.format.AlignmentButton
 import ly.img.editor.base.dock.options.format.VerticalAlignment
+import ly.img.editor.base.dock.options.format.editorHorizontalAlignments
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.core.R
 import ly.img.editor.core.event.EditorEvent
@@ -44,7 +45,6 @@ import ly.img.editor.core.ui.iconpack.Reset
 import ly.img.editor.core.ui.library.SimpleSelectableAssetList
 import ly.img.editor.core.ui.library.localizedLabel
 import ly.img.editor.core.ui.sheetScrollableContentModifier
-import ly.img.engine.HorizontalAlignment
 
 @Composable
 fun TextOnPathSheet(
@@ -138,7 +138,7 @@ private fun TextOnPathAdjustments(
             LabeledButtonRow(
                 label = stringResource(R.string.ly_img_editor_sheet_text_on_path_label_alignment),
             ) {
-                HorizontalAlignment.entries.forEach {
+                editorHorizontalAlignments.forEach {
                     AlignmentButton(
                         alignment = it,
                         currentAlignment = uiState.horizontalAlignment,

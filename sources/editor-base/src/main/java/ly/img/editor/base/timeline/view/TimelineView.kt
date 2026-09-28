@@ -19,6 +19,9 @@ import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.filterNotNull
 import ly.img.editor.base.timeline.dragdrop.FloatingClipOverlay
 import ly.img.editor.base.timeline.state.TimelineState
+import ly.img.editor.core.component.EditorComponent
+import ly.img.editor.core.component.HorizontalListBuilder
+import ly.img.editor.core.component.data.TimelineHeight
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.ui.utils.Easing
 
@@ -26,24 +29,25 @@ import ly.img.editor.core.ui.utils.Easing
 fun TimelineView(
     timelineState: TimelineState,
     onEvent: (EditorEvent) -> Unit,
+    addClipButton: EditorComponent<*>?,
+    addAudioButton: EditorComponent<*>?,
+    headerListBuilder: HorizontalListBuilder<EditorComponent<*>>,
+    height: TimelineHeight,
+    expanded: Boolean,
 ) {
     Box {
         Column {
-            PlayerHeader(
-                timelineState = timelineState,
-                expanded = timelineState.expanded,
-                onToggleExpand = { timelineState.expanded = timelineState.expanded.not() },
-            )
+            PlayerHeader(headerListBuilder = headerListBuilder)
 
             val verticalScrollState = rememberLazyListState()
             var hasAppliedInitialBottomScroll by remember { mutableStateOf(false) }
 
             LaunchedEffect(
-                timelineState.expanded,
+                expanded,
                 timelineState.dataSource.tracks.size,
                 timelineState.dataSource.backgroundTrack.clips.size,
             ) {
-                if (!timelineState.expanded || hasAppliedInitialBottomScroll) return@LaunchedEffect
+                if (!expanded || hasAppliedInitialBottomScroll) return@LaunchedEffect
                 val hasTimelineContent = timelineState.dataSource.tracks.isNotEmpty() ||
                     timelineState.dataSource.backgroundTrack.clips.isNotEmpty()
                 if (!hasTimelineContent) return@LaunchedEffect
@@ -68,7 +72,7 @@ fun TimelineView(
                     }
             }
             AnimatedVisibility(
-                visible = timelineState.expanded,
+                visible = expanded,
                 enter = enterTransition(),
                 exit = exitTransition(),
             ) {
@@ -76,6 +80,9 @@ fun TimelineView(
                     timelineState = timelineState,
                     verticalScrollState = verticalScrollState,
                     onEvent = onEvent,
+                    addClipButton = addClipButton,
+                    addAudioButton = addAudioButton,
+                    height = height,
                 )
             }
         }
