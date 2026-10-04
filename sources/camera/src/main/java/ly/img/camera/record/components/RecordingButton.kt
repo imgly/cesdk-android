@@ -51,6 +51,7 @@ private val canvasSize = 88.dp
 @Composable
 internal fun RecordingButton(
     modifier: Modifier,
+    rotation: () -> Float,
     recordingColor: Color,
     maxDuration: Duration,
     enabled: Boolean,
@@ -344,7 +345,7 @@ internal fun RecordingButton(
                 style = Stroke(width = segmentBackgroundStrokeWidth.toPx()),
                 topLeft = segmentBackgroundTopLeftOffset,
                 size = Size(segmentBackgroundAdjustedSize, segmentBackgroundAdjustedSize),
-                startAngle = segmentsBackgroundStartAngleAnimation,
+                startAngle = segmentsBackgroundStartAngleAnimation + rotation(),
                 sweepAngle = segmentsBackgroundSweepAngleAnimation,
                 useCenter = false,
             )
@@ -361,7 +362,7 @@ internal fun RecordingButton(
                     style = Stroke(width = segmentStrokeWidthPx),
                     topLeft = segmentTopLeftOffset,
                     size = Size(segmentDiameter, segmentDiameter),
-                    startAngle = -90f + (segment.lower * 360).toFloat(),
+                    startAngle = -90f + (segment.lower * 360).toFloat() + rotation(),
                     sweepAngle = (segment.upper - segment.lower).toFloat() * 360,
                     useCenter = false,
                 )

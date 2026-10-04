@@ -7,7 +7,7 @@ kotlin = "1.9.10"
 composePlugin = "2.2.10"
 okhttp = "4.10.0"
 camera = "1.5.0-alpha04" # Using an alpha version as the last stable version (1.3.4) has a bug where the front camera ouptut is inverted
-engine = "1.83.0"
+engine = "1.84.0-rc.0"
 buildConfig = "6.0.10"
 dropshots = "0.6.0"
 gradleAndroid = "9.1.1"
@@ -27,6 +27,12 @@ onnxRuntime = "1.26.0"
 [libraries]
 cesdk-engine = { group = "ly.img", name = "engine", version.ref = "engine" }
 cesdk-engine-camera = { group = "ly.img", name = "engine-camera", version.ref = "engine" }
+cesdk-editor = { group = "ly.img", name = "editor", version.ref = "engine" }
+cesdk-camera = { group = "ly.img", name = "camera", version.ref = "engine" }
+cesdk-plugin-ai-image-generation = { group = "ly.img", name = "plugin-ai-image-generation", version.ref = "engine" }
+cesdk-plugin-auto-captions = { group = "ly.img", name = "plugin-auto-captions", version.ref = "engine" }
+cesdk-plugin-background-removal-imgly = { group = "ly.img", name = "plugin-background-removal-imgly", version.ref = "engine" }
+cesdk-plugin-background-removal-google = { group = "ly.img", name = "plugin-background-removal-google", version.ref = "engine" }
 
 kotlin-coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
 
@@ -75,6 +81,7 @@ concurrent-futures-ktx = "androidx.concurrent:concurrent-futures-ktx:1.2.0"
 guava = "com.google.guava:guava:32.1.3-android"
 
 espresso-core = "androidx.test.espresso:espresso-core:3.4.0"
+espresso-intents = "androidx.test.espresso:espresso-intents:3.4.0"
 junit = "junit:junit:4.13.2"
 # `org.json` is stubbed in android.jar; unit tests that parse JSON need the real implementation.
 json = "org.json:json:20231013"

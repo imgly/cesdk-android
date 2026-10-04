@@ -10,8 +10,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import ly.img.editor.core.EditorContext
@@ -64,6 +67,7 @@ import ly.img.editor.core.ui.EditorIcon
 import ly.img.engine.BlockApi
 import ly.img.engine.ColorSpace
 import ly.img.engine.DesignBlock
+import ly.img.engine.DesignBlockEvent
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
 import ly.img.engine.FillType
@@ -829,6 +833,25 @@ private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon
 }
 
 /**
+ * The events of [designBlock] and of its fill, while [designBlock] is the selected block. A colour and the gradient
+ * stops are properties of the fill block, so a subscription to [designBlock] alone does not report them. The fill can
+ * be replaced, so the subscription restarts for every new fill. Each restart begins with an emission, otherwise the
+ * event that replaced the fill is lost in the switch.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+private fun Engine.subscribeToBlockAndItsFill(designBlock: DesignBlock): Flow<List<DesignBlockEvent>> {
+    // When the design block is unselected/deleted, the lambdas are entered before the parent scope is updated.
+    fun isSelected() = designBlock == block.findAllSelected().firstOrNull()
+    return event.subscribe(listOf(designBlock))
+        .filter { isSelected() }
+        .onStart { emit(emptyList()) }
+        .map { if (block.supportsFill(designBlock)) block.getFill(designBlock) else null }
+        .distinctUntilChanged()
+        .flatMapLatest { fill -> event.subscribe(listOfNotNull(designBlock, fill)).onStart { emit(emptyList()) } }
+        .filter { isSelected() }
+}
+
+/**
  * The id of the inspector bar button returned by [InspectorBar.Button.rememberFillStroke].
  */
 val InspectorBar.Button.Id.fillStroke by unsafeLazy {
@@ -879,12 +902,7 @@ open class FillStrokeButtonBuilder : AbstractButtonBuilder<FillStrokeItemScope>(
             }
             val fillStrokeIcon by remember(parentScope) {
                 val selection = parentScope.editorContext.selection
-                editorContext.engine.event.subscribe(listOf(selection.designBlock))
-                    .filter {
-                        // When the design block is unselected/deleted, this lambda is entered before parent scope is updated.
-                        // We need to make sure that current component does not update if engine selection has changed.
-                        selection.designBlock == editorContext.engine.block.findAllSelected().firstOrNull()
-                    }
+                editorContext.engine.subscribeToBlockAndItsFill(selection.designBlock)
                     .map { editorContext.engine.getFillStrokeButtonIcon(selection.designBlock) }
                     .onStart { emit(initial) }
             }.collectAsState(initial = initial)
@@ -1082,21 +1100,13 @@ fun InspectorBar.Button.rememberReplace(builder: InspectorBar.ButtonBuilder.() -
         id = { InspectorBar.Button.Id.replace }
         visible = {
             remember(this) {
-                (
-                    (
-                        editorContext.selection.type == DesignBlockType.Audio &&
-                            editorContext.selection.kind != KIND_VOICEOVER
-                    ) ||
-                        (
-                            (
-                                editorContext.selection.type == DesignBlockType.Graphic ||
-                                    editorContext.selection.type == DesignBlockType.Page
-                            ) &&
-                                (editorContext.selection.fillType == FillType.Image || editorContext.selection.fillType == FillType.Video)
-                        ) &&
-                        editorContext.selection.isNotAnyKindOfSticker() &&
-                        editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "fill/change")
-                )
+                val selection = editorContext.selection
+                val isReplaceableAudio = selection.type == DesignBlockType.Audio && selection.kind != KIND_VOICEOVER
+                val isReplaceableFill = (selection.type == DesignBlockType.Graphic || selection.type == DesignBlockType.Page) &&
+                    (selection.fillType == FillType.Image || selection.fillType == FillType.Video)
+                (isReplaceableAudio || isReplaceableFill) &&
+                    selection.isNotAnyKindOfSticker() &&
+                    editorContext.engine.block.isAllowedByScope(selection.designBlock, "fill/change")
             }
         }
         vectorIcon = { IconPack.Replace }

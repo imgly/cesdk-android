@@ -1,6 +1,7 @@
 package ly.img.camera
 
 import android.app.Application
+import android.graphics.RectF
 import android.net.Uri
 import android.util.Log
 import android.util.Size
@@ -17,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.geometry.Rect
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -43,13 +45,17 @@ import ly.img.camera.core.Recording
 import ly.img.camera.core.Video
 import ly.img.camera.preview.CameraState
 import ly.img.camera.preview.LayoutState
+import ly.img.camera.preview.toCaptureOrientation
+import ly.img.camera.record.CaptureOrientationState
 import ly.img.camera.record.PhotoCapture
+import ly.img.camera.record.RecordingGeometry
 import ly.img.camera.record.RecordingManager
 import ly.img.camera.record.VideoRecorder
 import ly.img.camera.util.SingleEvent
 import ly.img.editor.core.ui.engine.Scope
 import ly.img.editor.core.ui.library.engine.setFrame
 import ly.img.engine.Color
+import ly.img.engine.ContentFillMode
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
@@ -61,6 +67,7 @@ import ly.img.engine.camera.setCameraPreview
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
+import androidx.compose.ui.geometry.Size as ComposeSize
 import kotlinx.coroutines.GlobalScope as CoroutineGlobalScope
 
 internal class CameraViewModel(
@@ -82,6 +89,19 @@ internal class CameraViewModel(
     private val filesDirDeferred = CompletableDeferred<File>()
 
     private var reactionVideoIsPlaying = false
+    private var reactionVideoIsReady = false
+    private val captureOrientation = CaptureOrientationState()
+
+    fun updateCaptureOrientation(
+        orientation: Int,
+        displayRotation: Int,
+    ) {
+        val previousOrientation = captureOrientation.orientation
+        captureOrientation.update(orientation, displayRotation)
+        if (previousOrientation != captureOrientation.orientation) {
+            updateReactionVideoOrientation()
+        }
+    }
 
     private val previewBuilder = Preview
         .Builder()
@@ -133,6 +153,7 @@ internal class CameraViewModel(
             imageCaptureProvider = { cameraState.imageCaptureUseCase },
             filesDirProvider = { filesDirDeferred.await() },
         ),
+        recordingGeometryProvider = ::recordingGeometry,
     )
 
     var cameraLayoutMode by mutableStateOf(
@@ -202,6 +223,10 @@ internal class CameraViewModel(
                 .filter { status ->
                     status is RecordingManager.Status.Idle || status is RecordingManager.Status.Recording
                 }.collect { status ->
+                    if (status is RecordingManager.Status.Idle && recordingManager.state.captures.isEmpty()) {
+                        captureOrientation.unlock()
+                        updateReactionVideoOrientation()
+                    }
                     playReactionVideo(
                         when (status) {
                             RecordingManager.Status.Idle -> false
@@ -237,7 +262,11 @@ internal class CameraViewModel(
             recordingManager.setTakingPhoto()
             isFlashing = true
             try {
-                val uri = recordingManager.takePhoto(getApplication())
+                val uri = recordingManager.takePhoto(
+                    context = getApplication(),
+                    targetRotation = captureOrientation.targetRotation,
+                    mirrored = cameraState.showFrontCamera,
+                )
                 if (cameraConfiguration.showsPhotoPreview) {
                     // Defer `addPhoto` to `confirmPhotoPreview` so retry is a clean file delete.
                     previewingPhotoUri = uri
@@ -286,6 +315,7 @@ internal class CameraViewModel(
     }
 
     fun loadScene() {
+        reactionVideoIsReady = false
         if (engine.scene.get() != null) {
             page = engine.scene.getPages()[0]
             primaryBlock = engine.block.findByName(RECT1_NAME)[0]
@@ -344,6 +374,7 @@ internal class CameraViewModel(
         engine.block.setVisible(secondaryBlock, false)
 
         engine.block.appendChild(page, secondaryBlock)
+        configureCameraMode()
     }
 
     suspend fun setupLayout(
@@ -353,8 +384,6 @@ internal class CameraViewModel(
         val zoomedHeight = maxWidth * (cameraConfiguration.videoSize.height / cameraConfiguration.videoSize.width)
         val topPadding = (maxHeight - zoomedHeight).coerceAtLeast(0f)
         engine.scene.zoomToBlock(page, paddingTop = topPadding)
-
-        configureCameraMode()
     }
 
     fun setCameraPreview() {
@@ -388,6 +417,10 @@ internal class CameraViewModel(
     fun deletePreviousRecording() {
         recordingManager.deletePreviousRecording()
         if (cameraMode is CameraMode.Reaction) {
+            if (recordingManager.state.captures.isEmpty()) {
+                captureOrientation.unlock()
+                updateReactionVideoOrientation()
+            }
             val fill = engine.block.getFill(secondaryBlock)
             engine.block.setPlaybackTime(fill, recordingManager.state.totalRecordedDuration.toDouble(DurationUnit.SECONDS))
         }
@@ -404,7 +437,7 @@ internal class CameraViewModel(
                 CameraResult.Reaction(
                     video = Video(
                         uri = cameraMode.video,
-                        rect = layoutState.rect1,
+                        rect = outputRect(layoutState.rect1, captureOrientation.outputOrientation),
                     ),
                     reaction = ArrayList(captures.reactionRecordings()),
                 )
@@ -427,6 +460,8 @@ internal class CameraViewModel(
                 val duration = engine.block.getAVResourceTotalDuration(videoFill)
                 engine.block.setDuration(secondaryBlock, duration)
                 recordingManager.overrideMaxDuration(duration.seconds)
+                reactionVideoIsReady = true
+                updateReactionVideoOrientation()
                 onAssetLoaded()
             } catch (_: Exception) {
                 sendSingleEvent(SingleEvent.ErrorLoadingVideo)
@@ -461,8 +496,39 @@ internal class CameraViewModel(
         engine.block.setFrame(primaryBlock, layoutState.cameraRect)
         if (cameraMode is CameraMode.Reaction) {
             engine.block.setFrame(secondaryBlock, layoutState.rect1)
+            updateReactionVideoOrientation()
         }
-        recordingManager.cameraRect = layoutState.cameraRect
+    }
+
+    private fun recordingGeometry(): RecordingGeometry {
+        if (cameraMode is CameraMode.Reaction) {
+            // The result has one source-video pane, so all reaction clips share the first capture's canvas.
+            captureOrientation.lock()
+            updateReactionVideoOrientation()
+        }
+        return RecordingGeometry(
+            targetRotation = captureOrientation.targetRotation,
+            cameraRect = outputRect(layoutState.cameraRect, captureOrientation.outputOrientation),
+        )
+    }
+
+    private fun outputRect(
+        rect: RectF,
+        orientation: Int,
+    ): RectF {
+        val videoSize = cameraConfiguration.videoSize
+        val output = Rect(rect.left, rect.top, rect.right, rect.bottom).toCaptureOrientation(
+            orientation = orientation,
+            canvasSize = ComposeSize(videoSize.width, videoSize.height),
+        )
+        return RectF(output.left, output.top, output.right, output.bottom)
+    }
+
+    private fun updateReactionVideoOrientation() {
+        if (cameraMode !is CameraMode.Reaction || !reactionVideoIsReady || !engine.isEngineRunning()) return
+        // Cover preserves the video's aspect ratio as its content rotates within the fixed pane.
+        engine.block.setCropRotation(secondaryBlock, captureOrientation.orientation * (Math.PI.toFloat() / 180f))
+        engine.block.setContentFillMode(secondaryBlock, ContentFillMode.COVER)
     }
 
     private fun onAssetLoaded() {

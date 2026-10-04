@@ -107,9 +107,11 @@ fun CanvasMenu.Button.rememberDuplicate(builder: CanvasMenu.ButtonBuilder.() -> 
     CanvasMenu.Button.remember {
         id = { CanvasMenu.Button.Id.duplicate }
         visible = {
-            // A duplicate would land outside the caption track, matching the inspector bar's exclusion.
-            editorContext.selection.type != DesignBlockType.Caption &&
-                editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/duplicate")
+            remember(this) {
+                // A duplicate would land outside the caption track, matching the inspector bar's exclusion.
+                editorContext.selection.type != DesignBlockType.Caption &&
+                    editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/duplicate")
+            }
         }
         vectorIcon = { IconPack.Duplicate }
         contentDescription = { stringResource(R.string.ly_img_editor_canvas_menu_button_duplicate) }
@@ -140,7 +142,9 @@ fun CanvasMenu.Button.rememberDelete(builder: CanvasMenu.ButtonBuilder.() -> Uni
     CanvasMenu.Button.remember {
         id = { CanvasMenu.Button.Id.delete }
         visible = {
-            editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/destroy")
+            remember(this) {
+                editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "lifecycle/destroy")
+            }
         }
         vectorIcon = { IconPack.Delete }
         contentDescription = { stringResource(R.string.ly_img_editor_canvas_menu_button_delete) }

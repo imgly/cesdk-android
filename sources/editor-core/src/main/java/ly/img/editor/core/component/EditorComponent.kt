@@ -357,14 +357,14 @@ abstract class EditorComponent<Scope : EditorScope> {
              * is true for them.
              * Also note that [EditorScope] in the [block] builder is the scope of the parent [EditorComponent].
              *
-             * @param block a building block that returns an item that should be added to the list at the back.
+             * @param block a building block that returns an item that should be added to the list at the front.
              */
             fun addFirst(
                 alignment: Alignment,
                 block: ScopedProperty<EditorScope, Item>,
             ) {
                 val items = addFirstProviderMapping.getAlignmentItems(alignment, operation = "addFirst")
-                items.add(block)
+                items.add(0, block)
             }
 
             private fun MutableMap<Alignment?, LinkedList<ScopedProperty<EditorScope, Item>>>.getAlignmentItems(

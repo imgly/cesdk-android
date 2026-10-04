@@ -26,7 +26,7 @@ fun AddClipButton(
     val scope = button.scope
     val options = requireNotNull(button.optionsBuilder.build(scope)[null]?.items) {
         "optionsBuilder should call add { ... } without any VerticalArrangement parameter."
-    }
+    }.filter { it.visible }
     if (options.isEmpty()) return
 
     // The camera launches through a composable contract, so the timeline hands its content back

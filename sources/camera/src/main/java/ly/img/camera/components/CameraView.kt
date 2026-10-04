@@ -20,9 +20,10 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,10 +34,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -61,6 +63,8 @@ internal fun BoxScope.CameraView(
     modifier: Modifier,
     cameraProvider: ProcessCameraProvider,
     viewModel: CameraViewModel,
+    orientation: Int,
+    rotation: () -> Float,
 ) {
     val cameraState = viewModel.cameraState
     val recordingManager = viewModel.recordingManager
@@ -80,7 +84,6 @@ internal fun BoxScope.CameraView(
             chromeAlphaAnimatable.animateTo(1f, tween(durationMillis = 300))
         }
     }
-    val chromeAlpha = chromeAlphaAnimatable.value
 
     Column(modifier = modifier) {
         CameraEnginePreview(
@@ -95,8 +98,9 @@ internal fun BoxScope.CameraView(
         )
 
         // Faded during preview so the bottom band looks empty.
-        Box(modifier = Modifier.alpha(chromeAlpha)) {
+        Box(modifier = Modifier.graphicsLayer { alpha = chromeAlphaAnimatable.value }) {
             CameraControls(
+                rotation = rotation,
                 isCameraReady = cameraState.isReady,
                 isFlashEnabled = cameraState.isFlashEnabled,
                 isFlashOn = cameraState.cameraFlash,
@@ -115,23 +119,17 @@ internal fun BoxScope.CameraView(
         }
     }
 
-    // Match the engine's bottom-aligned 9:16 letterbox (see `setupLayout`) so the preview
-    // sits in the exact rectangle the live camera does. Bottom padding clears the dock band.
+    // Fit the complete photo above the preview actions, independent of the live camera's aspect ratio.
     viewModel.previewingPhotoUri?.let { uri ->
-        Box(
+        PhotoPreview(
+            uri = uri,
+            orientation = orientation,
+            rotation = rotation,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 84.dp),
-            contentAlignment = Alignment.BottomCenter,
-        ) {
-            val videoSize = viewModel.cameraConfiguration.videoSize
-            PhotoPreview(
-                uri = uri,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(videoSize.width / videoSize.height),
-            )
-        }
+                .background(Color.Black)
+                .padding(bottom = CAMERA_CONTROLS_HEIGHT),
+        )
     }
 
     var showCloseDialog by remember { mutableStateOf(false) }
@@ -153,6 +151,8 @@ internal fun BoxScope.CameraView(
 
     if (showCloseDialog) {
         DeleteAllRecordingsDialog(
+            orientation = orientation,
+            rotation = rotation,
             onDismiss = { showCloseDialog = false },
             onConfirm = {
                 showCloseDialog = false
@@ -174,8 +174,8 @@ internal fun BoxScope.CameraView(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = 84.dp)
-            .alpha(chromeAlpha)
+            .padding(bottom = CAMERA_CONTROLS_HEIGHT)
+            .graphicsLayer { alpha = chromeAlphaAnimatable.value }
             .pointerInput(previewing) {
                 if (previewing) {
                     awaitEachGesture {
@@ -184,76 +184,58 @@ internal fun BoxScope.CameraView(
                 }
             },
     ) {
-        Toolbar(
-            isRecording = recordingManager.hasStartedRecording,
-            duration = recordingManager.state.totalRecordedDuration,
-            maxDuration = recordingManager.state.maxDuration,
-            recordingColor = viewModel.cameraConfiguration.recordingColor,
-            // Pure-photo captures have no meaningful recording duration.
-            showTimecode = viewModel.cameraConfiguration.captureType != CaptureType.Photo,
-            onCloseClick = ::close,
-        )
+        Spacer(modifier = Modifier.height(TOOLBAR_HEIGHT))
 
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
         ) {
-            // Stay rendered through the photo capture + preview window so the slide-in transition
-            // doesn't re-fire every time we briefly leave Idle for a photo (relevant for rapid-fire
-            // multi-take with `showsPhotoPreview = false`). Chrome alpha already hides it visually.
-            this@Column.AnimatedVisibility(
-                visible = cameraState.isReady &&
-                    (
-                        recordingManager.state.status is RecordingManager.Status.Idle ||
-                            recordingManager.state.status is RecordingManager.Status.TakingPhoto ||
-                            viewModel.previewingPhotoUri != null
-                    ),
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(vertical = 32.dp, horizontal = 12.dp),
-                enter = fadeIn() + slideInHorizontally(),
-                exit = fadeOut() + slideOutHorizontally(),
-            ) {
-                SideMenu(
-                    timer = recordingManager.state.timer,
-                    setTimer = recordingManager::setTimer,
-                    layoutMode = viewModel.cameraLayoutMode,
-                    setLayoutMode = viewModel::updateLayoutMode,
-                    layoutModeEnabled = recordingManager.hasNotRecordedYet,
-                )
-            }
-
             val state = recordingManager.state
             if (state.timer != Timer.Off) {
                 CountdownTimerView(
-                    modifier = Modifier.align(Alignment.Center),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .graphicsLayer { rotationZ = rotation() },
                     recordingColor = viewModel.cameraConfiguration.recordingColor,
                     recordingStatus = state.status,
                 )
             }
 
-            this@Column.AnimatedVisibility(
-                visible = state.hasReachedMaxDuration,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter),
-                enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
-                exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
+            CameraOrientationLayout(
+                orientation = orientation,
+                rotation = rotation,
+                alignmentForRotation = {
+                    when (it) {
+                        90 -> AbsoluteAlignment.CenterLeft
+                        180 -> Alignment.TopCenter
+                        270 -> AbsoluteAlignment.CenterRight
+                        else -> Alignment.BottomCenter
+                    }
+                },
             ) {
-                Shadowed {
-                    Text(
-                        text = stringResource(
-                            id = R.string.ly_img_camera_label_recording_limit,
-                            recordingManager.state.maxDuration.formatForClip(),
-                        ),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = LocalExtendedColorScheme.current.white,
-                    )
+                this@Column.AnimatedVisibility(
+                    visible = state.hasReachedMaxDuration,
+                    enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+                    exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
+                ) {
+                    Shadowed {
+                        Text(
+                            text = stringResource(
+                                id = R.string.ly_img_camera_label_recording_limit,
+                                recordingManager.state.maxDuration.formatForClip(),
+                            ),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = LocalExtendedColorScheme.current.white,
+                        )
+                    }
                 }
             }
         }
 
         CameraDock(
+            orientation = orientation,
+            rotation = rotation,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
@@ -267,9 +249,83 @@ internal fun BoxScope.CameraView(
         )
     }
 
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer { alpha = chromeAlphaAnimatable.value },
+    ) {
+        // Stay rendered through the photo capture + preview window so the slide-in transition
+        // doesn't re-fire every time we briefly leave Idle for a photo (relevant for rapid-fire
+        // multi-take with `showsPhotoPreview = false`). Chrome alpha already hides it visually.
+        CameraOrientationLayout(
+            orientation = orientation,
+            rotation = rotation,
+            modifier = Modifier.pointerInput(previewing) {
+                if (previewing) {
+                    awaitEachGesture {
+                        awaitFirstDown(requireUnconsumed = false).consume()
+                    }
+                }
+            },
+            alignmentForRotation = { rotation ->
+                when (rotation) {
+                    90, 270 -> Alignment.TopCenter
+                    180 -> AbsoluteAlignment.CenterRight
+                    else -> AbsoluteAlignment.CenterLeft
+                }
+            },
+        ) {
+            AnimatedVisibility(
+                visible = cameraState.isReady &&
+                    (
+                        recordingManager.state.status is RecordingManager.Status.Idle ||
+                            recordingManager.state.status is RecordingManager.Status.TakingPhoto ||
+                            viewModel.previewingPhotoUri != null
+                    ),
+                modifier = Modifier.padding(vertical = 32.dp, horizontal = 12.dp),
+                enter = fadeIn() + slideInHorizontally {
+                    if (orientation == 270) it / 2 else -it / 2
+                },
+                exit = fadeOut() + slideOutHorizontally {
+                    if (orientation == 270) it / 2 else -it / 2
+                },
+            ) {
+                SideMenu(
+                    orientation = orientation,
+                    timer = recordingManager.state.timer,
+                    setTimer = recordingManager::setTimer,
+                    layoutMode = viewModel.cameraLayoutMode,
+                    setLayoutMode = viewModel::updateLayoutMode,
+                    layoutModeEnabled = recordingManager.hasNotRecordedYet,
+                    rotation = rotation,
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .padding(bottom = CAMERA_CONTROLS_HEIGHT),
+        ) {
+            Toolbar(
+                orientation = orientation,
+                rotation = rotation,
+                isRecording = recordingManager.hasStartedRecording,
+                duration = recordingManager.state.totalRecordedDuration,
+                maxDuration = recordingManager.state.maxDuration,
+                recordingColor = viewModel.cameraConfiguration.recordingColor,
+                showTimecode = !behavesAsPhoto,
+                closeEnabled = !previewing,
+                onCloseClick = ::close,
+            )
+        }
+    }
+
     // Replaces the bottom band (dock + controls) while the preview is up.
     if (previewing) {
         PhotoPreviewActions(
+            orientation = orientation,
+            rotation = rotation,
             onBack = viewModel::discardPhotoPreview,
             onDone = viewModel::confirmPhotoPreview,
             modifier = Modifier
