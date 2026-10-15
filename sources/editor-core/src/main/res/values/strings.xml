@@ -617,5 +617,6 @@
     <string name="ly_img_editor_timeline_error_split_short_duration">Can\'t split because one of the clips would become too short.</string>
     <string name="ly_img_editor_timeline_maximum_video_length">Maximum video length</string>
     <string name="ly_img_editor_timeline_minimum_video_length">Minimum video length</string>
+    <string name="ly_img_editor_timeline_transition_removed_on_move">Transitions between clips that no longer meet were removed.</string>
     <string name="ly_img_editor_timeline_video_length_too_short">Video length too short</string>
 </resources>

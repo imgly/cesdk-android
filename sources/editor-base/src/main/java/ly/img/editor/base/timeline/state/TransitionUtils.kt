@@ -1,5 +1,6 @@
 package ly.img.editor.base.timeline.state
 
+import ly.img.editor.base.timeline.clip.Clip
 import ly.img.engine.DesignBlock
 import ly.img.engine.Engine
 import kotlin.time.Duration
@@ -116,6 +117,63 @@ internal fun Engine.transitionOverlap(
         outgoingDuration / 2,
         incomingDuration / 2,
     ).coerceAtLeast(ZERO)
+}
+
+/** Maps each clip on [tracks] that has a transition to the clip that follows it on its track. */
+internal fun Engine.transitionCuts(tracks: Iterable<DesignBlock>): Map<DesignBlock, DesignBlock?> = buildMap {
+    tracks.forEach { track ->
+        val children = block.getChildren(track)
+        children.forEachIndexed { index, clip ->
+            if (hasRealTransition(clip)) put(clip, children.getOrNull(index + 1))
+        }
+    }
+}
+
+/**
+ * Destroys the transition of each cut in [cuts] whose clip is now followed by a different clip. A transition belongs
+ * to its cut, so it does not move to the new neighbour. Destroying it, unlike `removeTransition`, shifts no clip.
+ *
+ * @return The number of destroyed transitions.
+ */
+internal fun Engine.removeChangedTransitionCuts(cuts: Map<DesignBlock, DesignBlock?>): Int {
+    var removed = 0
+    cuts.forEach { (outgoing, incoming) ->
+        if (!block.isValid(outgoing)) return@forEach
+        val transition = block.getTransition(outgoing)
+        if (!block.isValid(transition)) return@forEach
+        val siblings = block.getParent(outgoing)?.let(block::getChildren).orEmpty()
+        if (siblings.getOrNull(siblings.indexOf(outgoing) + 1) == incoming) return@forEach
+        block.destroy(transition)
+        removed++
+    }
+    return removed
+}
+
+/**
+ * Converts the rendered offsets of a drop to raw engine offsets. [clips] are the clips of the target track in track
+ * order, with raw engine timing. A clip without a rendered offset keeps its raw offset. Then each clip moves right
+ * until it overlaps its predecessor by no more than their transition, because a removed transition gives the
+ * outgoing clip back the tail that the timeline trimmed.
+ *
+ * @return The raw offsets that differ from the current ones.
+ */
+internal fun computeDropOffsets(
+    clips: List<Clip>,
+    renderedOffsets: Map<DesignBlock, Duration>,
+    transitionOverlap: (outgoing: Clip, incoming: Clip) -> Duration,
+): Map<DesignBlock, Duration> {
+    val offsets = mutableMapOf<DesignBlock, Duration>()
+    var previous: Clip? = null
+    var previousEnd = ZERO
+    for (clip in clips) {
+        val overlap = previous?.let { transitionOverlap(it, clip) } ?: ZERO
+        var start = renderedOffsets[clip.id]?.let { it - overlap / 2 } ?: clip.timeOffset
+        if (previous != null) start = maxOf(start, previousEnd - overlap)
+        if (start != clip.timeOffset) offsets[clip.id] = start
+        previous = clip
+        previousEnd = start + clip.duration
+    }
+    return offsets
 }
 
 internal data class TransitionTrim(
