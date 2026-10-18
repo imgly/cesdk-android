@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -13,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ly.img.camera.components.CameraIcon
 import ly.img.camera.core.R
 import ly.img.editor.compose.foundation.clickable
 import ly.img.editor.core.theme.LocalExtendedColorScheme
@@ -22,7 +22,6 @@ import ly.img.editor.core.ui.iconpack.IconPack
 
 @Composable
 internal fun NextButton(
-    rotation: () -> Float,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
@@ -30,8 +29,7 @@ internal fun NextButton(
     val shape = CircleShape
 
     CompositionLocalProvider(LocalContentColor provides extendedColorScheme.black) {
-        CameraIcon(
-            rotation = rotation,
+        Icon(
             imageVector = IconPack.Arrowrightbig,
             contentDescription = stringResource(R.string.ly_img_camera_button_continue),
             modifier = modifier

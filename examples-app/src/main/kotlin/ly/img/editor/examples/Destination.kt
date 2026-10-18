@@ -88,11 +88,6 @@ sealed class Destination(
         title = "Dock",
     )
 
-    data object GuideTimeline : Destination(
-        route = "guide-timeline",
-        title = "Timeline",
-    )
-
     data object GuideCropPresets : Destination(
         route = "guide-crop-presets",
         title = "Crop Presets",
@@ -243,11 +238,6 @@ sealed class Destination(
         title = "Photo Roll",
     )
 
-    data object GuideUserUpload : Destination(
-        route = "guide-user-upload",
-        title = "User Upload",
-    )
-
     data object GuideAssetLibraryCustomize : Destination(
         route = "guide-asset-library-customize",
         title = "Asset Library Customize",
@@ -278,7 +268,6 @@ sealed class Destination(
             GuideUiEvents,
             GuideForceCrop,
             GuideDock,
-            GuideTimeline,
             GuideCropPresets,
             GuidePageFormat,
             GuideCustomPanel,
@@ -309,7 +298,6 @@ sealed class Destination(
             GuideAssetLibraryBasics,
             GuideAssetLibrary,
             GuidePhotoRoll,
-            GuideUserUpload,
             GuideAssetLibraryCustomize,
             GuideCameraConfiguration,
         )

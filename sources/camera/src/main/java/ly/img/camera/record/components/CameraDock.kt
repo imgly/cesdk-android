@@ -7,6 +7,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
@@ -16,14 +17,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ly.img.camera.ActiveMixedSubMode
-import ly.img.camera.components.CameraIcon
 import ly.img.camera.components.Shadowed
-import ly.img.camera.components.rememberCameraPositionTransition
 import ly.img.camera.core.CameraConfiguration
 import ly.img.camera.core.Capture
 import ly.img.camera.core.CaptureCount
@@ -37,8 +35,6 @@ import ly.img.editor.core.ui.iconpack.IconPack
 
 @Composable
 internal fun CameraDock(
-    orientation: Int,
-    rotation: () -> Float,
     modifier: Modifier = Modifier,
     cameraState: CameraState,
     recordingManager: RecordingManager,
@@ -48,9 +44,6 @@ internal fun CameraDock(
     capturePhoto: () -> Unit,
     setResult: () -> Unit,
 ) {
-    val positionTransition = rememberCameraPositionTransition(orientation == 180, orientation)
-    val isUpsideDown = positionTransition.position
-    val buttonRotation = { positionTransition.rotationFor(orientation == 180, rotation) }
     val isSingleTake = cameraConfiguration.captureCount == CaptureCount.Single
     // Collapse the (CaptureType, ActiveMixedSubMode) pair into a single Photo/Video routing
     // decision so the shutter callbacks below stay branch-free. Mixed mode reads the toggle
@@ -77,10 +70,9 @@ internal fun CameraDock(
                 state.captures.isNotEmpty(),
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(x = if (isUpsideDown) 80.dp else (-80).dp)
-                .graphicsLayer { alpha = positionTransition.alpha.value },
-            enter = fadeIn() + slideInHorizontally(initialOffsetX = { if (isUpsideDown) it / 2 else -it / 2 }),
-            exit = fadeOut() + slideOutHorizontally(targetOffsetX = { if (isUpsideDown) it / 2 else -it / 2 }),
+                .offset(x = (-80).dp),
+            enter = fadeIn() + slideInHorizontally(),
+            exit = fadeOut() + slideOutHorizontally(),
         ) {
             var showDeleteLastRecordingDialog by remember { mutableStateOf(false) }
 
@@ -93,9 +85,8 @@ internal fun CameraDock(
                 },
             ) {
                 Shadowed {
-                    CameraIcon(
+                    Icon(
                         IconPack.Backspace,
-                        rotation = buttonRotation,
                         contentDescription = stringResource(
                             R.string.ly_img_camera_button_delete_last_recording,
                         ),
@@ -105,8 +96,6 @@ internal fun CameraDock(
 
             if (showDeleteLastRecordingDialog) {
                 DeleteLastRecordingDialog(
-                    orientation = orientation,
-                    rotation = rotation,
                     onDismiss = {
                         showDeleteLastRecordingDialog = false
                     },
@@ -133,7 +122,6 @@ internal fun CameraDock(
         val context = LocalContext.current
 
         RecordingButton(
-            rotation = rotation,
             modifier = Modifier
                 .align(Alignment.Center),
             recordingColor = cameraConfiguration.recordingColor,
@@ -171,13 +159,11 @@ internal fun CameraDock(
                         state.status is RecordingManager.Status.TakingPhoto
                 ) &&
                 state.captures.isNotEmpty(),
-            modifier = Modifier
-                .align(if (isUpsideDown) Alignment.CenterStart else Alignment.CenterEnd)
-                .graphicsLayer { alpha = positionTransition.alpha.value },
-            enter = fadeIn() + slideInHorizontally(initialOffsetX = { if (isUpsideDown) -it / 2 else it / 2 }),
-            exit = fadeOut() + slideOutHorizontally(targetOffsetX = { if (isUpsideDown) -it / 2 else it / 2 }),
+            modifier = Modifier.align(Alignment.CenterEnd),
+            enter = fadeIn() + slideInHorizontally(initialOffsetX = { it / 2 }),
+            exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it / 2 }),
         ) {
-            NextButton(rotation = buttonRotation, onClick = setResult)
+            NextButton(onClick = setResult)
         }
     }
 }

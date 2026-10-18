@@ -1,24 +1,20 @@
 package ly.img.camera.record.components
 
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import ly.img.camera.components.CameraAlertDialog
 import ly.img.camera.core.R
 
 @Composable
 internal fun DeleteAllRecordingsDialog(
-    orientation: Int,
-    rotation: () -> Float,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    CameraAlertDialog(
-        orientation = orientation,
-        rotation = rotation,
+    AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(

@@ -341,21 +341,6 @@ fun NavigationBar.Button.rememberTogglePagesMode(
 }
 
 /**
- * A page change in the page carousel moves only the camera and leaves the scope of the navigation bar as it is, so
- * the page buttons follow [ly.img.engine.EditorApi.onCarouselPageChanged] themselves. The engine logs a warning for a
- * subscription without the carousel, so subscribe only when the setting is on.
- */
-@Composable
-private fun EditorScope.rememberCarouselPageKey(): Any {
-    val carouselEnabled = remember(this) {
-        editorContext.engine.editor.getSettingBoolean("features/pageCarouselEnabled")
-    }
-    if (!carouselEnabled) return Unit
-    val carouselPage by EditorTrigger.remember { editorContext.engine.editor.onCarouselPageChanged() }
-    return carouselPage
-}
-
-/**
  * Builder class for [rememberPreviousPage] and [rememberNextPage] buttons.
  */
 open class NavigationBarPageButtonBuilder : NoContentEditorComponentBuilder<NavigationBar.ItemScope>() {
@@ -366,12 +351,10 @@ open class NavigationBarPageButtonBuilder : NoContentEditorComponentBuilder<Navi
      * recompositions over updating the scope, since scope change triggers full recomposition of the component.
      * Ideally, scope should be updated when the parent scope (scope of the parent component) is updated and when you want to
      * observe changes from the [Engine].
-     * By default it is updated when the parent scope (accessed via `this`) is updated and when the page carousel
-     * shows another page.
+     * By default it is updated only when the parent scope (accessed via `this`) is updated.
      */
     override var scope: ScopedProperty<EditorScope, NavigationBar.ItemScope> = {
-        val carouselPage = rememberCarouselPageKey()
-        remember(this, carouselPage) { NavigationBar.ItemScope(this) }
+        remember(this) { NavigationBar.ItemScope(this) }
     }
 
     /**
@@ -412,7 +395,8 @@ fun NavigationBar.Button.rememberPreviousPage(
         val state by editorContext.state.collectAsState()
         state.viewMode is EditorViewMode.Edit &&
             remember(this) {
-                editorContext.engine.scene.run { getPages().firstOrNull() != getCurrentPage() }
+                editorContext.engine.editor.getSettingBoolean("features/pageCarouselEnabled") ||
+                    editorContext.engine.scene.run { getPages().firstOrNull() != getCurrentPage() }
             }
     }
     textString = { stringResource(R.string.ly_img_editor_navigation_bar_button_previous) }
@@ -474,7 +458,8 @@ fun NavigationBar.Button.rememberNextPage(
         val state by editorContext.state.collectAsState()
         state.viewMode is EditorViewMode.Edit &&
             remember(this) {
-                editorContext.engine.scene.run { getPages().lastOrNull() != getCurrentPage() }
+                editorContext.engine.editor.getSettingBoolean("features/pageCarouselEnabled") ||
+                    editorContext.engine.scene.run { getPages().lastOrNull() != getCurrentPage() }
             }
     }
     textString = { stringResource(R.string.ly_img_editor_navigation_bar_button_next) }

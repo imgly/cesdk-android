@@ -3,6 +3,7 @@ package ly.img.camera.components.sidemenu.timer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,7 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import ly.img.camera.components.sidemenu.CameraDropdownMenu
 import ly.img.camera.components.sidemenu.SideMenuItem
 import ly.img.camera.core.R
 import ly.img.camera.record.Timer
@@ -22,8 +22,6 @@ internal fun TimerMenuItem(
     onClick: () -> Unit,
     onDropdownMenuDismiss: () -> Unit,
     setTimer: (Timer) -> Unit,
-    orientation: Int,
-    rotation: () -> Float,
 ) {
     Box {
         var isTimerSelected by remember { mutableStateOf(false) }
@@ -34,7 +32,6 @@ internal fun TimerMenuItem(
             label = if (timer != Timer.Off) timer.label else R.string.ly_img_camera_button_timer,
             checked = isTimerSelected || timer != Timer.Off,
             expanded = expanded,
-            alignToEnd = orientation == 270,
             onClick = {
                 isTimerSelected = true
                 onClick()
@@ -47,9 +44,7 @@ internal fun TimerMenuItem(
             onDropdownMenuDismiss()
         }
 
-        CameraDropdownMenu(
-            orientation = orientation,
-            rotation = rotation,
+        DropdownMenu(
             expanded = isTimerSelected,
             onDismissRequest = {
                 isTimerSelected = false

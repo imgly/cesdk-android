@@ -8,10 +8,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -45,7 +43,6 @@ internal fun SideMenuItem(
     checked: Boolean,
     expanded: Boolean,
     enabled: Boolean = true,
-    alignToEnd: Boolean = false,
     onClick: () -> Unit,
 ) {
     // The usual Button has a min width which cannot be overriden so we need this custom button
@@ -72,35 +69,30 @@ internal fun SideMenuItem(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = if (alignToEnd) Arrangement.End else Arrangement.Start,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 4.dp, vertical = 4.dp),
         ) {
-            val labelContent: @Composable RowScope.() -> Unit = {
-                AnimatedVisibility(
-                    visible = expanded,
-                    enter = fadeIn(tween(durationMillis = 500, easing = Easing.EmphasizedDecelerate)),
-                    exit = fadeOut(tween(durationMillis = 500, easing = Easing.EmphasizedDecelerate)),
-                ) {
-                    Shadowed {
-                        Text(
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            text = stringResource(id = label),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = LocalExtendedColorScheme.current.white,
-                        )
-                    }
-                }
-            }
-
-            if (alignToEnd) labelContent()
             CheckedIcon(
                 imageVector = imageVector,
                 contentDescription = contentDescription,
                 checked = checked,
             )
-            if (!alignToEnd) labelContent()
+
+            AnimatedVisibility(
+                visible = expanded,
+                enter = fadeIn(tween(durationMillis = 500, easing = Easing.EmphasizedDecelerate)),
+                exit = fadeOut(tween(durationMillis = 500, easing = Easing.EmphasizedDecelerate)),
+            ) {
+                Shadowed {
+                    Text(
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        text = stringResource(id = label),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = LocalExtendedColorScheme.current.white,
+                    )
+                }
+            }
         }
     }
 }

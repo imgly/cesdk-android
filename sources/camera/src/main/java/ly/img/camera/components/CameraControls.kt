@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -26,11 +27,8 @@ import ly.img.editor.core.ui.iconpack.FlipCamera
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.SwapHoriz
 
-internal val CAMERA_CONTROLS_HEIGHT = 84.dp
-
 @Composable
 internal fun CameraControls(
-    rotation: () -> Float,
     isCameraReady: Boolean,
     isFlashEnabled: Boolean,
     isFlashOn: Boolean,
@@ -46,7 +44,7 @@ internal fun CameraControls(
     Box(
         Modifier
             .fillMaxWidth()
-            .height(CAMERA_CONTROLS_HEIGHT)
+            .height(84.dp)
             .background(LocalExtendedColorScheme.current.black)
             .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 28.dp),
     ) {
@@ -64,9 +62,8 @@ internal fun CameraControls(
                         modifier = Modifier.align(Alignment.CenterStart),
                         onClick = toggleFlash,
                     ) {
-                        CameraIcon(
+                        Icon(
                             if (isFlashOn) onIcon else offIcon,
-                            rotation = rotation,
                             contentDescription = stringResource(R.string.ly_img_camera_button_toggle_flash),
                         )
                     }
@@ -80,15 +77,13 @@ internal fun CameraControls(
                         modifier = Modifier.align(Alignment.Center),
                         onClick = swapLayoutPositions,
                     ) {
-                        CameraIcon(
+                        Icon(
                             IconPack.SwapHoriz,
-                            rotation = rotation,
                             contentDescription = stringResource(R.string.ly_img_camera_button_swap_positions),
                         )
                     }
                 } else if (showPhotoVideoToggle) {
                     PhotoVideoToggle(
-                        rotation = rotation,
                         activeMixedSubMode = activeMixedSubMode,
                         onSubModeChange = onSubModeChange,
                         modifier = Modifier.align(Alignment.Center),
@@ -99,9 +94,8 @@ internal fun CameraControls(
                     modifier = Modifier.align(Alignment.CenterEnd),
                     onClick = toggleCamera,
                 ) {
-                    CameraIcon(
+                    Icon(
                         IconPack.FlipCamera,
-                        rotation = rotation,
                         contentDescription = stringResource(R.string.ly_img_camera_button_flip_camera),
                     )
                 }

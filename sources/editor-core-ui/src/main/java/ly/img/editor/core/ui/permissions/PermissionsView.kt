@@ -30,7 +30,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.Lifecycle
 import ly.img.editor.core.R
 import ly.img.editor.core.theme.LocalExtendedColorScheme
@@ -48,23 +47,6 @@ fun PermissionsView(
     requestOnlyCameraPermission: Boolean = false,
     onAllPermissionsGranted: () -> Unit,
     onClose: () -> Unit,
-) {
-    PermissionsView(
-        requestOnlyCameraPermission = requestOnlyCameraPermission,
-        onAllPermissionsGranted = onAllPermissionsGranted,
-        onClose = onClose,
-        settingsDialogModifier = Modifier,
-        settingsDialogProperties = DialogProperties(),
-    )
-}
-
-@Composable
-fun PermissionsView(
-    requestOnlyCameraPermission: Boolean = false,
-    onAllPermissionsGranted: () -> Unit,
-    onClose: () -> Unit,
-    settingsDialogModifier: Modifier,
-    settingsDialogProperties: DialogProperties,
 ) {
     CompositionLocalProvider(
         LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
@@ -103,8 +85,6 @@ fun PermissionsView(
         }
         currentRequestedPermission?.let {
             SettingsDialog(
-                modifier = settingsDialogModifier,
-                properties = settingsDialogProperties,
                 permission = it,
                 onDismissRequest = ::dismissDialog,
                 onConfirmClick = permissionManager::openAppSettings,
@@ -200,15 +180,11 @@ private fun PermissionButton(
 
 @Composable
 private fun SettingsDialog(
-    modifier: Modifier,
-    properties: DialogProperties,
     permission: String,
     onDismissRequest: () -> Unit,
     onConfirmClick: () -> Unit,
 ) {
     AlertDialog(
-        modifier = modifier,
-        properties = properties,
         onDismissRequest = onDismissRequest,
         title = {
             Text(

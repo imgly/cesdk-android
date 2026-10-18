@@ -1,9 +1,11 @@
 package ly.img.editor.base.timeline.state
 
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import ly.img.editor.core.ui.engine.getCurrentPage
+import ly.img.editor.core.ui.utils.formatForPlayer
 import ly.img.engine.Engine
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.ZERO
@@ -23,6 +25,10 @@ class PlayerState(
     var isLooping: Boolean by mutableStateOf(false)
 
     var maxPlaybackDuration: Duration? by mutableStateOf(null)
+
+    val formattedPlayheadPosition by derivedStateOf {
+        playheadPosition.formatForPlayer()
+    }
 
     private val page = engine.getCurrentPage()
 
@@ -67,6 +73,19 @@ class PlayerState(
         // which lags `play()` until the next `refresh()`.
         if (!engine.block.isPlaying(page)) return
         engine.block.setPlaying(page, false)
+    }
+
+    fun togglePlayback() {
+        if (isPlaying) {
+            pause()
+        } else {
+            play()
+        }
+    }
+
+    fun toggleLooping() {
+        stopAnimationPreview()
+        engine.block.setLooping(page, !isLooping)
     }
 
     fun setPlaybackTime(duration: Duration) {

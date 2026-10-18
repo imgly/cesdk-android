@@ -102,7 +102,6 @@ fun LayerOptionsSheet(
                         value = uiState.opacity,
                         onValueChange = { onEvent(BlockEvent.OnChangeOpacity(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
-                        step = 0.05f,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }

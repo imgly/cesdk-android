@@ -1,34 +1,15 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id 'com.android.application'
-    id 'org.jetbrains.kotlin.plugin.compose'
+    id 'kotlin-android'
     id 'com.github.gmazzo.buildconfig'
 }
 
-// The public export places the guide directories at the project root, while the monorepo keeps
-// them next to the Android project. The export also copies every starter kit's optional dependency
-// script next to this app so those merged sources keep compiling as starter kits evolve.
-// The standalone mode is declared by the public settings.gradle rather than inferred from
-// directory names; in the monorepo (and in composite-included builds) the flag is absent.
-def isStandaloneExamplesProject = gradle.ext.has('ubqStandaloneExamplesProject')
-if (isStandaloneExamplesProject) {
-    (file("$projectDir/starter-kit-dependencies").listFiles() ?: [])
-        .findAll { dependencyFile -> dependencyFile.file && dependencyFile.name.endsWith('.gradle') }
-        .sort { dependencyFile -> dependencyFile.name }
-        .each { dependencyFile -> apply from: dependencyFile }
-} else {
-    def starterKitsGradleFilePath = "$rootDir/../cesdk_android_showcases/starter-kits/starter-kits-local.gradle"
-    if (file(starterKitsGradleFilePath).exists()) {
-        apply from: starterKitsGradleFilePath
-    }
+def starterKitsGradleFilePath = "$rootDir/../cesdk_android_showcases/starter-kits/starter-kits-local.gradle"
+if (file(starterKitsGradleFilePath).exists()) {
+    apply from: starterKitsGradleFilePath
 }
-
-def guideAssetsVersion = isStandaloneExamplesProject
-    ? libs.versions.engine.get()
-    : file("$rootDir/../../.ubq-version").text.trim()
 
 String getLocalProperty(String property) {
     def propertiesFile = new File(rootDir, "local.properties")
@@ -36,6 +17,11 @@ String getLocalProperty(String property) {
     def properties = new Properties()
     properties.load(propertiesFile.newDataInputStream())
     return properties.getProperty(property)
+}
+
+String getUbqVersion() {
+    def versionFile = new File(rootDir, "../../.ubq-version")
+    return versionFile.text.trim()
 }
 
 android {
@@ -94,22 +80,29 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
     buildFeatures {
         compose = true
         buildConfig = false
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.kotlinCompilerExtension.get()
     }
 
     sourceSets {
         main {
             def guidePatterns = ['engine-guides-', 'editor-guides-', 'camera-guides-']
             def blacklist = ['editor-guides-quickstart']
-            def examplesDir = isStandaloneExamplesProject ? "$projectDir/.." : "$projectDir/../../cesdk_android_examples"
-            file(examplesDir).listFiles().findAll { file ->
+            file("$projectDir/../../cesdk_android_examples").listFiles().findAll { file ->
                 file.directory && !blacklist.contains(file.name) && guidePatterns.any { pattern ->
                     file.name.startsWith(pattern)
                 }
             }.each { dir ->
-                kotlin.srcDirs += dir
+                java.srcDirs += dir
                 def assetsDir = file("$dir/assets")
                 if (assetsDir.exists()) {
                     assets.srcDirs += assetsDir
@@ -119,39 +112,21 @@ android {
     }
 }
 
-kotlin {
-    compilerOptions {
-        jvmTarget = JvmTarget.JVM_1_8
-        languageVersion = KotlinVersion.KOTLIN_1_9
-        apiVersion = KotlinVersion.KOTLIN_1_9
-    }
-}
-
 buildConfig {
     className "ExamplesBuildConfig"
     packageName "ly.img.editor.examples"
     buildConfigField String, "LICENSE", System.env.CESDK_APP_STORE_LICENSE ?: getLocalProperty("license") ?: ""
     buildConfigField String, "AI_GATEWAY_API_KEY", System.env.CESDK_AI_GATEWAY_API_KEY ?: getLocalProperty("ai_gateway_api_key") ?: ""
-    buildConfigField String, "GUIDE_ADD_BUTTON_BASE_URI", "https://cdn.img.ly/packages/imgly/cesdk-android/$guideAssetsVersion/assets"
+    buildConfigField String, "GUIDE_ADD_BUTTON_BASE_URI", "https://cdn.img.ly/packages/imgly/cesdk-android/${getUbqVersion()}/assets"
 }
 
 dependencies {
-    // Use local SDK modules in the monorepo and their Maven equivalents in the public export.
-    if (!isStandaloneExamplesProject) {
-        implementation project(':editor')
-        implementation project(':camera')
-        implementation project(':plugin-ai-image-generation')
-        implementation project(':plugin-auto-captions')
-        implementation project(':plugin-background-removal-imgly')
-        implementation project(':plugin-background-removal-google')
-    } else {
-        implementation libs.cesdk.editor
-        implementation libs.cesdk.camera
-        implementation libs.cesdk.plugin.ai.image.generation
-        implementation libs.cesdk.plugin.auto.captions
-        implementation libs.cesdk.plugin.background.removal.imgly
-        implementation libs.cesdk.plugin.background.removal.google
-    }
+    implementation project(':editor')
+    implementation project(':camera')
+    implementation project(':plugin-ai-image-generation')
+    implementation project(':plugin-auto-captions')
+    implementation project(':plugin-background-removal-imgly')
+    implementation project(':plugin-background-removal-google')
     implementation libs.cesdk.engine
     implementation libs.cesdk.engine.camera
 

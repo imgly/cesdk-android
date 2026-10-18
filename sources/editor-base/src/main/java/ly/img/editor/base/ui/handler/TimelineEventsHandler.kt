@@ -9,10 +9,7 @@ import ly.img.editor.base.timeline.dragdrop.resolveAnchorPageIndex
 import ly.img.editor.base.timeline.state.LiveTrimState
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
-import ly.img.editor.base.timeline.state.computeDropOffsets
 import ly.img.editor.base.timeline.state.computeLiveTrimOverrides
-import ly.img.editor.base.timeline.state.removeChangedTransitionCuts
-import ly.img.editor.base.timeline.state.transitionCuts
 import ly.img.editor.base.timeline.state.transitionOverlap
 import ly.img.editor.base.timeline.state.transitionTiming
 import ly.img.editor.base.ui.BlockEvent
@@ -168,30 +165,6 @@ fun EventsHandler.timelineEvents(
         }
     }
 
-    /**
-     * Writes the offsets of a drop into a multi-clip track. The drop gives rendered offsets, and the clips that the
-     * drop did not move keep their engine offsets.
-     */
-    fun commitDropOffsets(
-        engineTrackId: DesignBlock,
-        clips: List<Clip>,
-        renderedOffsets: Map<DesignBlock, Duration>,
-    ) {
-        val clipsById = clips.associateBy { it.id }
-        val rawClips = engine.block.getChildren(engineTrackId).mapNotNull { id ->
-            clipsById[id]?.copy(
-                timeOffset = engine.block.getTimeOffset(id).seconds,
-                duration = engine.block.getDuration(id).seconds,
-            )
-        }
-        val movedOffsets = renderedOffsets.filter { (id, offset) -> clipsById[id]?.timeOffset != offset }
-        computeDropOffsets(rawClips, movedOffsets) { outgoing, incoming ->
-            engine.transitionOverlap(outgoing.id, incoming.id)
-        }.forEach { (id, offset) ->
-            engine.block.setTimeOffset(id, offset.toDouble(DurationUnit.SECONDS))
-        }
-    }
-
     register<BlockEvent.OnUpdateTrim> {
         val selectedClip = checkNotNull(timelineState.selectedClip)
         val selectedBlock = selectedClip.id
@@ -245,9 +218,7 @@ fun EventsHandler.timelineEvents(
             return@register
         }
 
-        // The timeline hides the head of a clip under an incoming transition, so the engine counts from the raw start.
-        val rawStartTime = engine.block.getTimeOffset(selectedClip.id).seconds
-        val splitTime = (playheadPosition - rawStartTime).toDouble(DurationUnit.SECONDS)
+        val splitTime = (playheadPosition - absoluteStartTime).toDouble(DurationUnit.SECONDS)
         engine.block.split(
             block = selectedClip.id,
             atTime = splitTime,
@@ -273,29 +244,9 @@ fun EventsHandler.timelineEvents(
         engine.editor.addUndoStep()
     }
 
-    fun removeChangedTransitionCutsAndNotify(cuts: Map<DesignBlock, DesignBlock?>) {
-        if (engine.removeChangedTransitionCuts(cuts) > 0) {
-            showError(R.string.ly_img_editor_timeline_transition_removed_on_move)
-        }
-    }
-
     register<BlockEvent.OnApplyDrop> { event ->
-        val backgroundTrack = timelineState.dataSource.backgroundTrack
-        val target = event.target
-        val targetEngineTrackId = when (target) {
-            is DropTarget.NewTrack -> null
-            is DropTarget.ExistingTrack -> if (target.trackId == backgroundTrack.id) {
-                engine.getSafeBackgroundTrack()
-            } else {
-                timelineState.dataSource.tracks.firstOrNull { it.id == target.trackId }?.engineTrackId
-            }
-        }
-        // A drop gives the moved clip and its old and new neighbours new cuts, so record the cuts first.
-        val transitionCuts = engine.transitionCuts(
-            listOfNotNull(engine.block.getParent(event.clip.id), targetEngineTrackId).distinct(),
-        )
-
         if (event.target is DropTarget.ExistingTrack) {
+            val backgroundTrack = timelineState.dataSource.backgroundTrack
             if (event.target.trackId == backgroundTrack.id) {
                 // Bg-as-target (any source): engine auto-packs offsets on insert, so the
                 // commit is `insertChild` only — `setTimeOffset` would fight the auto-pack.
@@ -318,7 +269,6 @@ fun EventsHandler.timelineEvents(
                     engine.block.resetCrop(event.clip.id)
                     engine.block.fillParent(event.clip.id)
                 }
-                removeChangedTransitionCutsAndNotify(transitionCuts)
                 engine.editor.addUndoStep()
                 if (sourceTrack !== backgroundTrack) {
                     timelineState.forceRefresh()
@@ -331,6 +281,7 @@ fun EventsHandler.timelineEvents(
 
         // Trim-to-fit before the insertChild below so the engine doesn't see an
         // oversized clip overlap a locked sibling and bump it.
+        val target = event.target
         if (target is DropTarget.ExistingTrack && target.effectiveDuration != null) {
             setDuration(event.clip, target.effectiveDuration)
         }
@@ -351,17 +302,16 @@ fun EventsHandler.timelineEvents(
                 val targetTrack = timelineState.dataSource.tracks
                     .firstOrNull { it.id == target.trackId } ?: return@register
                 val isCrossTrack = sourceTrack.id != targetTrack.id
+                val targetEngineTrackId = targetTrack.engineTrackId
 
                 when {
                     targetEngineTrackId != null -> {
                         // Within-track reorder or cross-track into a multi-clip target:
                         engine.block.insertChild(targetEngineTrackId, event.clip.id, target.insertIndex)
-                        removeChangedTransitionCutsAndNotify(transitionCuts)
-                        commitDropOffsets(
-                            engineTrackId = targetEngineTrackId,
-                            clips = targetTrack.clips + event.clip,
-                            renderedOffsets = event.siblingOffsets + (event.clip.id to target.timeOffset),
-                        )
+                        event.siblingOffsets.forEach { (id, offset) ->
+                            engine.block.setTimeOffset(id, offset.toDouble(DurationUnit.SECONDS))
+                        }
+                        engine.block.setTimeOffset(event.clip.id, target.timeOffset.toDouble(DurationUnit.SECONDS))
                     }
                     isCrossTrack -> {
                         // Cross-track into a standalone target:
@@ -376,7 +326,6 @@ fun EventsHandler.timelineEvents(
                         engine.block.insertChild(pageId, newTrack, pageIndex)
                         engine.block.appendChild(newTrack, targetSolo.id)
                         engine.block.insertChild(newTrack, event.clip.id, target.insertIndex)
-                        removeChangedTransitionCutsAndNotify(transitionCuts)
 
                         val targetSoloOffset = event.siblingOffsets[targetSolo.id] ?: targetSolo.timeOffset
                         engine.block.setTimeOffset(targetSolo.id, targetSoloOffset.toDouble(DurationUnit.SECONDS))
@@ -409,7 +358,6 @@ fun EventsHandler.timelineEvents(
                 engine.block.setBoolean(newTrack, TRACK_AUTO_OFFSET_KEY, false)
                 engine.block.insertChild(pageId, newTrack, anchorPageIndex)
                 engine.block.insertChild(newTrack, event.clip.id, 0)
-                removeChangedTransitionCutsAndNotify(transitionCuts)
                 engine.block.setTimeOffset(event.clip.id, target.timeOffset.toDouble(DurationUnit.SECONDS))
                 true
             }

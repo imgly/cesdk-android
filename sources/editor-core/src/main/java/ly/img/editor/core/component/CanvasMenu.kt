@@ -440,8 +440,6 @@ abstract class AbstractCanvasMenuBuilder<Scope : CanvasMenu.Scope> : EditorCompo
      * A builder that builds the list of [EditorComponent]s that should be part of the canvas menu.
      * Note that adding items to the list does not mean displaying. The items will be displayed if [EditorComponent.visible] is true for them.
      * Also note that items will be rebuilt when [scope] is updated.
-     * With an enter or exit transition, the lambda receives the last scope that had a selection once the selection is gone.
-     * Its design block may already be destroyed, so read the engine for it only inside `remember(this)`.
      * By default listBuilder does not add anything to the canvas menu.
      */
     open var listBuilder: ScopedProperty<Scope, HorizontalListBuilder<EditorComponent<*>>> = {
@@ -466,13 +464,7 @@ abstract class AbstractCanvasMenuBuilder<Scope : CanvasMenu.Scope> : EditorCompo
         exitTransition: ExitTransition,
         decoration: ScopedDecoration<Scope>,
     ): CanvasMenu<Scope> {
-        // A transition composes the items after the selection is gone, so the list keeps the last scope that had one.
-        // Otherwise an item added only for that selection drops out, and a button after it composes again and throws.
-        val hasTransition = enterTransition != EnterTransition.None || exitTransition != ExitTransition.None
-        val listScope = rememberLastValue(scope) {
-            if (hasTransition && scope.run { editorContext.safeSelection } == null && isValueSet) lastValue else scope
-        }
-        val listBuilder = listBuilder(listScope)
+        val listBuilder = listBuilder(scope)
         return remember(
             scope,
             id,
@@ -503,8 +495,6 @@ abstract class AbstractCanvasMenuBuilder<Scope : CanvasMenu.Scope> : EditorCompo
  * 1. Parent scope is updated.
  * 2. Selection is updated.
  * 3. Scene playing status is updated (applicable in video scenes only).
- * 4. The children of the parent of the selected design block change. When that parent is a track, the children of the
- * track's parent count as well.
  *
  * @param parentScope the current scope that should be used to construct the new scope.
  * @param selectedDesignBlock the currently selected design block that should be used in the canvas menu.
@@ -605,23 +595,8 @@ fun CanvasMenu.Companion.rememberDefaultScope(
             .distinctUntilChanged()
     }
 
-    // A sibling added or removed above the selected block leaves `selection` equal, so the scope follows the parent's children too.
-    // The only clip of a track reorders with its track, so the scope follows the children of the track's parent as well.
-    val siblingsTrigger by EditorTrigger.remember(selection?.parentDesignBlock) {
-        val parent = selection?.parentDesignBlock?.takeIf(editorContext.engine.block::isValid)
-            ?: return@remember emptyFlow<List<List<DesignBlock>>>()
-        val parents = generateSequence(parent) {
-            if (editorContext.engine.block.getType(it) == DesignBlockType.Track.key) editorContext.engine.block.getParent(it) else null
-        }.toList()
-        editorContext.engine.event
-            .subscribe(parents)
-            .filter { parents.all(editorContext.engine.block::isValid) }
-            .map { parents.map(editorContext.engine.block::getChildren) }
-            .distinctUntilChanged()
-    }
-
-    remember(this, selection, isScenePlayingTrigger, siblingsTrigger) {
-        // The triggers (driven by page and parent events) can change before the selection Flow
+    remember(this, selection, isScenePlayingTrigger) {
+        // isScenePlayingTrigger (driven by page events) can change before the selection Flow
         // emits null after a block deletion, causing a new Scope with a stale selection.
         val validSelection = selection?.takeIf {
             editorContext.engine.block.isValid(it.designBlock)
@@ -657,14 +632,9 @@ fun CanvasMenu.Companion.DefaultDecoration(
     content: @Composable () -> Unit,
 ) = scope.run {
     val editorState by editorContext.state.collectAsState()
-    // An enter or exit transition composes the menu after the selection is gone, so the last selection keeps placing it.
-    val blockSelection = rememberLastValue(this) { editorContext.safeSelection ?: if (isValueSet) lastValue else null }
-    val selectedBlockRect = blockSelection?.screenSpaceBoundingBoxRect
-    if (
-        blockSelection != null &&
-        selectedBlockRect != null &&
-        (selectedBlockRect.width().isNaN().not() && selectedBlockRect.height().isNaN().not())
-    ) {
+    val blockSelection = editorContext.selection
+    val selectedBlockRect = blockSelection.screenSpaceBoundingBoxRect
+    if (selectedBlockRect != null && (selectedBlockRect.width().isNaN().not() && selectedBlockRect.height().isNaN().not())) {
         val rotateHandleSizePx = rotateHandleSize.toPx()
         val dy = remember(blockSelection, rotateHandleSize) {
             val isGizmoPresent = editorContext.engine.editor.getSettingBoolean("controlGizmo/showRotateHandles") ||

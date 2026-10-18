@@ -3,9 +3,6 @@ apply from: "$projectDir/../dokka.gradle"
 
 android {
     namespace = 'ly.img.camera'
-    defaultConfig {
-        testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
-    }
 }
 
 dependencies {
@@ -33,9 +30,4 @@ dependencies {
     implementation platform(libs.compose.bom)
     debugImplementation libs.compose.tooling
     implementation libs.compose.preview
-    testImplementation libs.junit
-    androidTestImplementation platform(libs.compose.bom)
-    androidTestImplementation libs.test.androidx.runner
-    androidTestImplementation libs.compose.test.junit4
-    debugImplementation libs.compose.test.manifest
 }

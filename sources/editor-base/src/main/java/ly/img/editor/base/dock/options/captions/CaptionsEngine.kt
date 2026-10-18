@@ -2,7 +2,6 @@ package ly.img.editor.base.dock.options.captions
 
 import ly.img.editor.core.ui.engine.BlockKind
 import ly.img.editor.core.ui.engine.getCurrentPage
-import ly.img.editor.core.ui.library.engine.isVideoBlock
 import ly.img.engine.Asset
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
@@ -50,25 +49,17 @@ internal class CaptionsEngine(
 
     /**
      * Whether the current page holds anything transcribable, so Generate can be offered only when it could do
-     * something. Audio is matched by type because a voiceover's kind is `voiceover`, not `audio`; video by fill
-     * type.
+     * something. Audio is matched by type because a voiceover's kind is `voiceover`, not `audio` — the same rule
+     * the auto-captions plugin uses to pick its sources.
      *
-     * Scoped to the page: otherwise the action offers to transcribe a page the user is not on, and generation
-     * then finds nothing.
+     * Scoped to the page for the same reason the plugin scopes its candidates: otherwise the action offers to
+     * transcribe a page the user is not on, and generation then finds nothing.
      */
     fun hasAudioVisualContent(): Boolean = runCatching {
         val page = currentPage() ?: return false
-        val audio = engine.block.findByType(DesignBlockType.Audio)
-        val video = engine.block.findByType(DesignBlockType.Graphic).filter { isVideoFootage(it) }
-        (audio + video).any { isDescendant(it, page) }
+        val candidates = engine.block.findByType(DesignBlockType.Audio) + engine.block.findByKind(BlockKind.Video.key)
+        candidates.any { isDescendant(it, page) }
     }.getOrDefault(false)
-
-    /** A graphic with a video fill, except an animated sticker. GIF and APNG count too; they have no audio track. */
-    private fun isVideoFootage(block: DesignBlock): Boolean {
-        if (!engine.block.isVideoBlock(block)) return false
-        // A block without a kind has nothing to exclude, but getKind throws for it.
-        return runCatching { engine.block.getKind(block) }.getOrNull() != BlockKind.AnimatedSticker.key
-    }
 
     /** Whether a block sits anywhere below [page] — directly, or nested in one of its tracks. */
     private fun isDescendant(

@@ -28,8 +28,6 @@ import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.base.ui.Event
-import ly.img.editor.core.component.EditorComponent
-import ly.img.editor.core.component.data.TimelineHeight
 import ly.img.editor.core.ui.utils.detectZoomGestures
 import ly.img.editor.core.ui.utils.toDp
 import ly.img.editor.core.ui.utils.toPx
@@ -38,32 +36,15 @@ import ly.img.editor.core.ui.utils.toPx
 internal fun TimelineBaseView(
     timelineState: TimelineState,
     onEvent: (Event) -> Unit,
-    height: TimelineHeight,
-    addAudioButton: EditorComponent<*>?,
     content: @Composable BoxWithConstraintsScope.(ScrollState) -> Unit,
 ) {
     val zoomState = timelineState.zoomState
-    // Coerced, otherwise a negative track count subtracts from the height below.
-    val visibleTracksCount = when (height) {
-        is TimelineHeight.Dynamic ->
-            timelineState.dataSource.tracks.size.toFloat().coerceAtMost(height.maximumTracks.toFloat())
-        is TimelineHeight.Fixed -> height.tracks.toFloat()
-    }.coerceAtLeast(0f)
-    // Mirrors the condition under which TimelineContentView renders the button, so that a removed or
-    // hidden "Add Audio" button does not leave an empty row at the bottom of the timeline.
-    val hasAddAudioButton = addAudioButton?.visible == true
-    val timelineViewHeight = with(TimelineConfiguration) {
-        val backgroundTrackHeight = clipHeight + clipPadding * 2
-        val addAudioButtonHeight = if (hasAddAudioButton) backgroundTrackHeight else 0.dp
-        backgroundTrackDividerHeight + rulerHeight + backgroundTrackHeight + addAudioButtonHeight +
-            visibleTracksCount * clipHeight + visibleTracksCount.toInt() * clipPadding
-    }
 
     BoxWithConstraints(
         Modifier
             .fillMaxWidth()
             .padding(top = TimelineConfiguration.clipPadding)
-            .height(timelineViewHeight)
+            .height(timelineState.timelineViewHeight)
             // Publish the viewport's window space frame so drag auto-scroll can
             // compute pointer distance from the leading/trailing edges.
             .onGloballyPositioned { coordinates ->

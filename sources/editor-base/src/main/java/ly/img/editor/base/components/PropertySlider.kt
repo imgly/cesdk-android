@@ -133,7 +133,7 @@ fun PropertySlider(
                 )
                 val formattedText = remember(showPercentage, sliderValue, min, max, effectiveStep) {
                     if (showPercentage) {
-                        "${PercentageSliderHelper.valueToPercentage(sliderValue, min, max).roundToInt()}"
+                        "${PercentageSliderHelper.valueToPercentage(sliderValue, min, max).toInt()}"
                     } else {
                         PercentageSliderHelper.formatValue(sliderValue, effectiveStep)
                     }

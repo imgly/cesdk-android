@@ -9,7 +9,7 @@ import ly.img.engine.FillType
 
 fun BlockApi.isVideoBlock(designBlock: DesignBlock): Boolean {
     val fill = if (hasFill(designBlock)) getFill(designBlock) else null
-    return fill != null && isValid(fill) && FillType.get(getType(fill)) is FillType.Video
+    return fill != null && FillType.get(getType(fill)) is FillType.Video
 }
 
 fun BlockApi.setFrame(

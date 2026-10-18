@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id 'com.android.application' version libs.versions.gradleAndroid apply false
     id 'com.android.library' version libs.versions.gradleAndroid apply false
-    id 'org.jetbrains.kotlin.plugin.compose' version libs.versions.composePlugin apply false
+    id 'org.jetbrains.kotlin.android' version libs.versions.kotlin apply false
     id 'com.google.gms.google-services' version libs.versions.googleServices apply false
     id 'com.dropbox.dropshots' version libs.versions.dropshots apply false
     id 'com.github.gmazzo.buildconfig' version libs.versions.buildConfig apply false
@@ -25,14 +25,6 @@ allprojects {
 }
 
 subprojects {
-    configurations.all {
-        resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.name.contains('stdlib')) {
-                details.useVersion libs.versions.kotlin.get()
-            }
-        }
-    }
-
     // To enable Compose compiler metrics and report (used for debugging Composable parameters stability),
     // set `debugComposeCompilerStability=true` in gradle.properties
     if ("$debugComposeCompilerStability" == "true") {
@@ -57,37 +49,6 @@ subprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
-}
-
-apply plugin: 'jacoco'
-jacoco {
-    toolVersion = libs.versions.jacoco.get()
-}
-
-// AGP's createDebugAndroidTestCoverageReport analyses only the classes of the
-// project that ran the tests. The *-dummy modules duplicate the real classes,
-// and the icon packs are generated.
-tasks.register("editorCoverageReport", JacocoReport) {
-    def modules = subprojects.findAll {
-        it.projectDir.parentFile == file("sources") && !it.name.endsWith("-dummy")
-    }
-    dependsOn modules.collect { "${it.path}:compileDebugJavaWithJavac" }
-    def execDir = providers.gradleProperty("coverageExecDir")
-        .orElse("smoke-tests-app/build/outputs/code_coverage/debugAndroidTest/connected")
-    executionData.from(fileTree(execDir.get()) { include "**/*.ec" })
-    def generated = ["**/iconpack/**", "**/iconPack/**"]
-    classDirectories.from(modules.collect {
-        [
-            it.fileTree(it.layout.buildDirectory.dir("intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes")) { exclude generated },
-            it.fileTree(it.layout.buildDirectory.dir("intermediates/javac/debug/compileDebugJavaWithJavac/classes")) { exclude generated },
-        ]
-    }.flatten())
-    sourceDirectories.from(modules.collect { [it.file("src/main/java"), it.file("src/main/kotlin")] }.flatten())
-    reports {
-        xml.required = true
-        xml.outputLocation = layout.buildDirectory.file("reports/coverage/editor/report.xml")
-        html.required = false
-    }
 }
 
 tasks.register("dokkaCustom", Copy) {

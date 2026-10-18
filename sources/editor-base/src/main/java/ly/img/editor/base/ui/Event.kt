@@ -2,6 +2,7 @@ package ly.img.editor.base.ui
 
 import android.net.Uri
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.base.dock.options.format.SizeModeUi
 import ly.img.editor.base.dock.options.format.VerticalAlignment
@@ -52,6 +53,10 @@ interface Event : EditorEvent {
     object OnCloseInspectorBar : Event
 
     object OnHideScrimSheet : Event
+
+    data class OnVideoCameraClick(
+        val callback: (@Composable () -> Unit) -> Unit, // todo get rid of this in the future with mobile configuration extension
+    ) : Event
 
     data class OnLaunchContractResult(
         val onResult: EditorScope.(Any?) -> Unit,

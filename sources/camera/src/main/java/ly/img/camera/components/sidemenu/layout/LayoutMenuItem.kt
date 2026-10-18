@@ -1,12 +1,12 @@
 package ly.img.camera.components.sidemenu.layout
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import ly.img.camera.components.sidemenu.CameraDropdownMenu
 import ly.img.camera.components.sidemenu.SideMenuItem
 import ly.img.camera.core.R
 
@@ -18,8 +18,6 @@ internal fun LayoutMenuItem(
     onClick: () -> Unit,
     onDropdownMenuDismiss: () -> Unit,
     setLayoutMode: (LayoutMode) -> Unit,
-    orientation: Int,
-    rotation: () -> Float,
 ) {
     Box {
         var isLayoutMenuItemSelected by remember { mutableStateOf(false) }
@@ -30,7 +28,6 @@ internal fun LayoutMenuItem(
             label = R.string.ly_img_camera_button_reaction,
             checked = true,
             expanded = expanded,
-            alignToEnd = orientation == 270,
             enabled = enabled,
             onClick = {
                 isLayoutMenuItemSelected = true
@@ -44,9 +41,7 @@ internal fun LayoutMenuItem(
             onDropdownMenuDismiss()
         }
 
-        CameraDropdownMenu(
-            orientation = orientation,
-            rotation = rotation,
+        DropdownMenu(
             expanded = isLayoutMenuItemSelected,
             onDismissRequest = {
                 isLayoutMenuItemSelected = false

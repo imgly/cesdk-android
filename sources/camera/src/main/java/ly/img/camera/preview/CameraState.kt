@@ -1,7 +1,6 @@
 package ly.img.camera.preview
 
 import android.util.Log
-import android.view.Surface
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -47,16 +46,7 @@ internal class CameraState(
     private var cameraProvider: ProcessCameraProvider? = null
     private var lifecycleOwner: LifecycleOwner? = null
 
-    private var previewRotation = Surface.ROTATION_0
-
     lateinit var previewUseCase: Preview
-
-    fun updatePreviewRotation(rotation: Int) {
-        previewRotation = rotation
-        if (::previewUseCase.isInitialized) {
-            previewUseCase.targetRotation = rotation
-        }
-    }
 
     /**
      * Built only when [captureType] != [CaptureType.Photo]. Null in photo-only sessions where the
@@ -171,10 +161,7 @@ internal class CameraState(
         val isPreviewStabilisationSupported =
             frontPreviewCapabilities.isStabilizationSupported && backPreviewCapabilities.isStabilizationSupported
 
-        previewUseCase = previewBuilder
-            .setTargetRotation(previewRotation)
-            .setPreviewStabilizationEnabled(isPreviewStabilisationSupported)
-            .build()
+        previewUseCase = previewBuilder.setPreviewStabilizationEnabled(isPreviewStabilisationSupported).build()
         videoCaptureUseCase = if (captureType == CaptureType.Photo) {
             null
         } else {

@@ -1,7 +1,16 @@
 package ly.img.camera.components.sidemenu.layout
 
+import androidx.compose.foundation.background
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import ly.img.camera.components.sidemenu.CameraDropdownMenuItem
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import ly.img.editor.core.ui.iconpack.Check
+import ly.img.editor.core.ui.iconpack.IconPack
+import ly.img.editor.core.ui.utils.ifTrue
 
 @Composable
 internal fun LayoutModeDropdownMenuItem(
@@ -9,10 +18,20 @@ internal fun LayoutModeDropdownMenuItem(
     currentLayoutMode: LayoutMode,
     onClick: (LayoutMode) -> Unit,
 ) {
-    CameraDropdownMenuItem(
-        checked = layoutMode == currentLayoutMode,
-        label = layoutMode.label,
-        icon = layoutMode.icon,
-        onClick = { onClick(layoutMode) },
+    val checked = layoutMode == currentLayoutMode
+    DropdownMenuItem(
+        modifier = Modifier.ifTrue(checked) {
+            background(MaterialTheme.colorScheme.surfaceVariant)
+        },
+        text = { Text(stringResource(id = layoutMode.label)) },
+        onClick = {
+            onClick(layoutMode)
+        },
+        leadingIcon = {
+            if (checked) {
+                Icon(IconPack.Check, contentDescription = null)
+            }
+        },
+        trailingIcon = { Icon(layoutMode.icon, contentDescription = null) },
     )
 }

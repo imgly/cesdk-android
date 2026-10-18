@@ -19,6 +19,6 @@ dependencies {
 afterEvaluate {
     // workaround of AGP issue failing to pick generated build config as part of the sources
     tasks.named("sourceReleaseJar").configure {
-        mustRunAfter("generateReleaseBuildConfigClasses")
+        mustRunAfter("generateNonAndroidBuildConfig")
     }
 }

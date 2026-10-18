@@ -1,10 +1,10 @@
 package ly.img.editor.base.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -14,9 +14,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import ly.img.editor.core.ui.iconpack.Check
 import ly.img.editor.core.ui.iconpack.IconPack
@@ -35,14 +32,9 @@ fun CheckedTextRow(
     Row(
         Modifier
             .ifTrue(isChecked) { background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)) }
-            // Selectable, not clickable, so accessibility services announce which row is the checked one.
-            .then(
-                if (onClick != null) {
-                    Modifier.selectable(selected = isChecked, role = Role.RadioButton, onClick = onClick)
-                } else {
-                    Modifier.semantics { selected = isChecked }
-                },
-            )
+            .ifTrue(onClick != null) {
+                clickable { onClick?.invoke() }
+            }
             .heightIn(min = 56.dp) // to ensure the UI doesn't jump around when the check is toggled
             .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
