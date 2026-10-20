@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,7 +41,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
-import ly.img.camera.core.CaptureMedia
 import ly.img.editor.base.applyForceCrop
 import ly.img.editor.base.components.createEditingTextCardUiState
 import ly.img.editor.base.dock.AdjustmentSheetContent
@@ -102,13 +100,13 @@ import ly.img.editor.base.engine.effectiveTextRange
 import ly.img.editor.base.engine.isCaption
 import ly.img.editor.base.engine.isPlaceholder
 import ly.img.editor.base.engine.resetHistory
+import ly.img.editor.base.engine.separateAudio
 import ly.img.editor.base.engine.setFillType
 import ly.img.editor.base.engine.showPage
 import ly.img.editor.base.engine.toEngineColor
 import ly.img.editor.base.engine.zoomToPage
 import ly.img.editor.base.engine.zoomToSelectedText
 import ly.img.editor.base.migration.EditorMigrationHelper
-import ly.img.editor.base.sheet.LibraryAddToBackgroundTrackSheetType
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.timeline.state.transitionIncomingClip
 import ly.img.editor.base.ui.handler.animationEvents
@@ -125,12 +123,10 @@ import ly.img.editor.base.ui.handler.timelineEvents
 import ly.img.editor.base.ui.handler.volumeEvents
 import ly.img.editor.core.EditorContext
 import ly.img.editor.core.EditorScope
+import ly.img.editor.core.R
 import ly.img.editor.core.UnstableEditorApi
-import ly.img.editor.core.component.Dock
 import ly.img.editor.core.component.TimelineOwner
 import ly.img.editor.core.component.data.Size
-import ly.img.editor.core.component.rememberImglyCamera
-import ly.img.editor.core.component.rememberSystemCamera
 import ly.img.editor.core.configuration.EditorConfiguration
 import ly.img.editor.core.currentLanguageCode
 import ly.img.editor.core.event.EditorEvent
@@ -159,7 +155,6 @@ import ly.img.editor.core.ui.library.CropAssetSourceType
 import ly.img.editor.core.ui.library.LibraryViewModel
 import ly.img.editor.core.ui.library.util.LibraryEvent
 import ly.img.editor.core.ui.register
-import ly.img.editor.featureFlag.flags.IMGLYCameraFeature
 import ly.img.engine.AssetTransformPreset
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
@@ -384,7 +379,6 @@ class EditorUiViewModel(
         register<Event.OnLaunchGetContent> {
             onLaunchGetContent(it.mimeType, it.uploadAssetSourceType, it.designBlock, it.addToBackgroundTrack)
         }
-        register<Event.OnVideoCameraClick> { onVideoCameraClick(it.callback) }
         register<Event.OnLaunchContractResult> { onLaunchContractResult(it.onResult, it.editorScope, it.result) }
         register<Event.OnTypefaceChange> {
             onTypefaceChange(it.designBlock, it.typeface)
@@ -492,6 +486,23 @@ class EditorUiViewModel(
             timelineState?.playerState?.pause()
             send(BlockEvent.OnToggleBackgroundTrackAttach)
         }
+        register<EditorEvent.Selection.SeparateAudio> {
+            timelineState?.playerState?.pause()
+            val designBlock = getBlockForEvents()?.designBlock ?: return@register
+            try {
+                val audioBlocks = engine.separateAudio(
+                    clip = designBlock,
+                    fallbackName = editor.activity.getString(R.string.ly_img_editor_timeline_clip_audio_title),
+                ) ?: return@register
+                if (audioBlocks.isEmpty()) {
+                    sendSingleEvent(SingleEvent.Snackbar(R.string.ly_img_editor_notification_separate_audio_no_audio))
+                }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                sendSingleEvent(SingleEvent.SnackbarError(exception))
+            }
+        }
         register<EditorEvent.Selection.EnterGroup> {
             timelineState?.playerState?.pause()
             getBlockForEvents()?.designBlock?.let(engine.block::enterGroup)
@@ -540,7 +551,21 @@ class EditorUiViewModel(
         }
     }
 
+    internal var animatePageOverview: ((Boolean?, () -> Unit) -> Unit)? = null
+
     private fun setEditorViewMode(viewMode: EditorViewMode) {
+        val animate = animatePageOverview
+        val crossesPageOverview =
+            (this.viewMode is EditorViewMode.Edit && viewMode is EditorViewMode.Pages) ||
+                (this.viewMode is EditorViewMode.Pages && viewMode is EditorViewMode.Edit)
+        if (animate != null) {
+            animate(if (crossesPageOverview) viewMode is EditorViewMode.Pages else null) { applyEditorViewMode(viewMode) }
+        } else {
+            applyEditorViewMode(viewMode)
+        }
+    }
+
+    private fun applyEditorViewMode(viewMode: EditorViewMode) {
         when (viewMode) {
             is EditorViewMode.Preview -> setPreviewMode(viewMode)
             is EditorViewMode.Pages -> setPagesMode(viewMode)
@@ -564,14 +589,6 @@ class EditorUiViewModel(
         timelineState?.playerState?.pause()
         setBottomSheetContent {
             when (type) {
-                // Cannot be invoked by customers
-                is LibraryAddToBackgroundTrackSheetType -> {
-                    LibraryAddBottomSheetContent(
-                        type = type,
-                        libraryCategory = type.libraryCategory,
-                        addToBackgroundTrack = true,
-                    )
-                }
                 // This sheet is triggered from the dock and certain timeline entry points.
                 is SheetType.LibraryAdd -> type.libraryCategory?.let {
                     LibraryAddBottomSheetContent(
@@ -1413,21 +1430,6 @@ class EditorUiViewModel(
                 editorContext.eventHandler.send(EditorEvent.Sheet.Close(animate = true))
             }
         }.let(::send)
-    }
-
-    private fun onVideoCameraClick(callback: (@Composable () -> Unit) -> Unit) = callback {
-        val isImglyCameraAvailable = androidx.compose.runtime.remember {
-            runCatching { CaptureMedia() }.isSuccess
-        } &&
-            IMGLYCameraFeature.enabled
-
-        if (isImglyCameraAvailable) {
-            // Reached only from the video timeline's add-clip button (Event.OnVideoCameraClick),
-            // so the editor always accepts video → open the camera in Mixed/Multi.
-            Dock.Button.rememberImglyCamera(acceptsVideoCapture = { true })
-        } else {
-            Dock.Button.rememberSystemCamera()
-        }.onClick(Dock.ItemScope(editorScope))
     }
 
     private fun onLaunchContractResult(
@@ -2354,6 +2356,8 @@ class EditorUiViewModel(
     }
 
     override fun onCleared() {
+        animatePageOverview?.invoke(null) {}
+        animatePageOverview = null
         thumbnailCache.clear()
         engine.stop()
     }

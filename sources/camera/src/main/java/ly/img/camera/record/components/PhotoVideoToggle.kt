@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -37,6 +36,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import ly.img.camera.ActiveMixedSubMode
+import ly.img.camera.components.CameraIcon
 import ly.img.camera.core.R
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Photocamera
@@ -51,6 +51,7 @@ import kotlin.math.roundToInt
  */
 @Composable
 internal fun PhotoVideoToggle(
+    rotation: () -> Float,
     activeMixedSubMode: ActiveMixedSubMode,
     onSubModeChange: (ActiveMixedSubMode) -> Unit,
     modifier: Modifier = Modifier,
@@ -132,6 +133,7 @@ internal fun PhotoVideoToggle(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SegmentIcon(
+                rotation = rotation,
                 isActive = photoActive,
                 activeIcon = IconPack.Photocamera,
                 inactiveIcon = IconPack.Photocameraoutline,
@@ -139,6 +141,7 @@ internal fun PhotoVideoToggle(
                 onClick = { onSubModeChange(ActiveMixedSubMode.Photo) },
             )
             SegmentIcon(
+                rotation = rotation,
                 isActive = !photoActive,
                 activeIcon = IconPack.Videocam,
                 inactiveIcon = IconPack.Videocamoutline,
@@ -151,6 +154,7 @@ internal fun PhotoVideoToggle(
 
 @Composable
 private fun SegmentIcon(
+    rotation: () -> Float,
     isActive: Boolean,
     activeIcon: ImageVector,
     inactiveIcon: ImageVector,
@@ -180,7 +184,8 @@ private fun SegmentIcon(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
+        CameraIcon(
+            rotation = rotation,
             imageVector = if (isActive) activeIcon else inactiveIcon,
             contentDescription = contentDescription,
             tint = iconColor,

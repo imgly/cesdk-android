@@ -23,11 +23,21 @@ internal class PhotoCapture(
     private val imageCaptureProvider: () -> ImageCapture?,
     private val filesDirProvider: suspend () -> File,
 ) {
-    suspend fun capture(context: Context): Uri {
+    suspend fun capture(
+        context: Context,
+        targetRotation: Int,
+        mirrored: Boolean,
+    ): Uri {
         val imageCapture = imageCaptureProvider()
             ?: throw IllegalStateException("ImageCapture is not bound — check captureType / device capability.")
         val photoFile = createFile()
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+        val metadata = ImageCapture.Metadata().apply {
+            isReversedHorizontal = mirrored
+        }
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile)
+            .setMetadata(metadata)
+            .build()
+        imageCapture.targetRotation = targetRotation
         return suspendCancellableCoroutine { continuation ->
             imageCapture.takePicture(
                 outputOptions,

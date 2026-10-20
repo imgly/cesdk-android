@@ -101,12 +101,13 @@ data class AnimationUiState(
             locale: String,
         ): AnimationUiState {
             val type = engine.block.getType(designBlock)
-            val isTextBlock = type == DesignBlockType.Text.key
+            // Captions render as text, so they use the text animation thumbnails.
+            val usesTextThumbnails = type == DesignBlockType.Text.key || type == DesignBlockType.Caption.key
             // Resolve from the editor's configured base path (the single source of truth, set via
             // EditorUiSettings). engine.defaultAssetSourcesBaseUri is null once an app registers
             // sources via Engine.asset.addLocalSourceFromJSON instead of addDefaultAssetSources.
             val basePath = engine.editor.getSettingString("basePath")
-            val thumbnailsBaseUri = if (isTextBlock) {
+            val thumbnailsBaseUri = if (usesTextThumbnails) {
                 "$basePath/ly.img.animation.text/thumbnails"
             } else {
                 "$basePath/ly.img.animation/thumbnails"

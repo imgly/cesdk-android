@@ -57,8 +57,14 @@ fun EventsHandler.blockFillEvents(
         )
     }
 
+    fun enableFillIfDisabled() {
+        if (!engine.block.isFillEnabled(block)) {
+            engine.block.setFillEnabled(block, true)
+        }
+    }
+
     fun onChangeFillStyle(type: FillType) {
-        engine.block.setFillEnabled(block, true)
+        enableFillIfDisabled()
 
         val currentFillType = engine.block.getFillType(block)
         if (currentFillType == type) return
@@ -132,7 +138,7 @@ fun EventsHandler.blockFillEvents(
     }
 
     register<OnChangeFillColor> {
-        engine.block.setFillEnabled(block, true)
+        enableFillIfDisabled()
         engine.block.setFillType(block, FillType.Color)
         if (engine.block.isCaption(block) || DesignBlockType.getOrNull(engine.block.getType(block)) == DesignBlockType.Text) {
             val range = engine.block.effectiveTextRange(block)
@@ -143,7 +149,7 @@ fun EventsHandler.blockFillEvents(
     }
 
     register<OnChangeGradientFillColors> {
-        engine.block.setFillEnabled(block, true)
+        enableFillIfDisabled()
         val fillType = engine.block.getFillType(block)
         if (fillType == FillType.ConicalGradient ||
             fillType == FillType.LinearGradient ||

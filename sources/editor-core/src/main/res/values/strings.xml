@@ -238,6 +238,7 @@
     <string name="ly_img_editor_inspector_bar_button_reorder">Reorder</string>
     <string name="ly_img_editor_inspector_bar_button_replace">Replace</string>
     <string name="ly_img_editor_inspector_bar_button_select_group">Select Group</string>
+    <string name="ly_img_editor_inspector_bar_button_separate_audio">Separate Audio</string>
     <string name="ly_img_editor_inspector_bar_button_shape">Shape</string>
     <string name="ly_img_editor_inspector_bar_button_split">Split</string>
     <string name="ly_img_editor_inspector_bar_button_stroke">Stroke</string>
@@ -256,6 +257,7 @@
     <string name="ly_img_editor_navigation_bar_button_toggle_preview_mode">Toggle Preview</string>
     <string name="ly_img_editor_navigation_bar_button_undo">Undo</string>
     <string name="ly_img_editor_navigation_bar_button_write">Write</string>
+    <string name="ly_img_editor_notification_separate_audio_no_audio">No audio in this video</string>
     <string name="ly_img_editor_notification_speed_clamped_duration">Speed limited. Duration adjusted to achievable value.</string>
     <string name="ly_img_editor_notification_speed_no_audio_at_speed">No audio at this speed</string>
     <string name="ly_img_editor_pages_view_mode_dock_button_add_page">Add Page</string>
@@ -457,6 +459,7 @@
     <string name="ly_img_editor_sheet_font_title">Font</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_auto">Match Language Direction</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_center">Horizontally Align Text to the Center</string>
+    <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_justify">Justify Text</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_left">Align Text to the Left</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_right">Align Text to the Right</string>
     <string name="ly_img_editor_sheet_format_text_alignment_vertical_option_bottom">Align Text to the Bottom</string>
@@ -611,10 +614,12 @@
     <string name="ly_img_editor_timeline_button_play">Play</string>
     <string name="ly_img_editor_timeline_button_show_timeline">Timeline</string>
     <string name="ly_img_editor_timeline_button_view_transition">View Transition</string>
+    <string name="ly_img_editor_timeline_clip_audio_title">Audio</string>
     <string name="ly_img_editor_timeline_clip_voiceover_title">Voiceover</string>
     <string name="ly_img_editor_timeline_error_split_out_of_range">Please move the selected clip under the playhead.</string>
     <string name="ly_img_editor_timeline_error_split_short_duration">Can\'t split because one of the clips would become too short.</string>
     <string name="ly_img_editor_timeline_maximum_video_length">Maximum video length</string>
     <string name="ly_img_editor_timeline_minimum_video_length">Minimum video length</string>
+    <string name="ly_img_editor_timeline_transition_removed_on_move">Transitions between clips that no longer meet were removed.</string>
     <string name="ly_img_editor_timeline_video_length_too_short">Video length too short</string>
 </resources>

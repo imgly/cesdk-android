@@ -1,5 +1,6 @@
 package ly.img.editor.base.ui
 
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,23 +16,32 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import kotlinx.coroutines.delay
 import ly.img.editor.compose.animation.AnimatedVisibility
 import ly.img.editor.compose.animation_core.fadeIn
@@ -45,9 +55,9 @@ import ly.img.editor.core.iconpack.Plus
 import ly.img.editor.core.state.EditorViewMode
 import ly.img.editor.core.theme.surface1
 import ly.img.editor.core.theme.surface3
+import ly.img.engine.DesignBlock
 import ly.img.editor.core.ui.utils.animateItemPlacement as animateGridItem
 
-private const val DOUBLE_CLICK_DELAY = 200L
 private const val FADE_ANIMATION_DURATION = 200
 private const val LOADING_APPEAR_DELAY = 300L
 
@@ -56,6 +66,8 @@ fun EditorPagesUi(
     modifier: Modifier,
     state: EditorPagesState?,
     onEvent: (EditorEvent) -> Unit,
+    transitionPage: DesignBlock? = null,
+    onPageBounds: (DesignBlock, Rect?) -> Unit = { _, _ -> },
 ) {
     var cachedState: EditorPagesState? by remember {
         mutableStateOf(state)
@@ -67,18 +79,23 @@ fun EditorPagesUi(
     }
     AnimatedVisibility(
         modifier = modifier,
-        enter = fadeIn(),
-        exit = fadeOut(),
+        enter = fadeIn(animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing)),
         visible = state != null,
     ) {
-        cachedState?.let { cachedState ->
+        // Use the current session immediately; keep the cache only for the exit animation.
+        (state ?: cachedState)?.let { cachedState ->
             Box(
                 modifier = Modifier
                     .background(color = MaterialTheme.colorScheme.surface1),
             ) {
                 val shape = remember { RoundedCornerShape(12.dp) }
                 val borderShape = remember { RoundedCornerShape(18.dp) }
+                val gridState = key(cachedState.sessionId) {
+                    rememberLazyGridState(initialFirstVisibleItemIndex = cachedState.selectedPageIndex.coerceAtLeast(0))
+                }
                 LazyVerticalGrid(
+                    state = gridState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 24.dp),
                     columns = GridCells.Fixed(count = 2),
@@ -94,6 +111,9 @@ fun EditorPagesUi(
                     ) { index ->
                         if (index < cachedState.pages.size) {
                             val page = cachedState.pages[index]
+                            DisposableEffect(page.block) {
+                                onDispose { onPageBounds(page.block, null) }
+                            }
                             var loadingDelayPassed by remember {
                                 mutableStateOf(false)
                             }
@@ -123,30 +143,30 @@ fun EditorPagesUi(
                                         .fillMaxWidth()
                                         .border(color = borderColor, shape = borderShape, width = 3.dp),
                                 ) {
-                                    var clickData by remember { mutableStateOf(0 to 0L) }
                                     Card(
                                         modifier = Modifier
                                             .padding(6.dp)
                                             .fillMaxWidth()
-                                            .aspectRatio(cachedState.pageAspectRatio),
+                                            .aspectRatio(cachedState.pageAspectRatio)
+                                            .onGloballyPositioned {
+                                                val bounds = if (it.boundsInWindow().isEmpty) {
+                                                    null
+                                                } else {
+                                                    Rect(
+                                                        it.positionInWindow(),
+                                                        it.size.toSize(),
+                                                    )
+                                                }
+                                                onPageBounds(page.block, bounds)
+                                            }
+                                            .graphicsLayer { alpha = if (transitionPage == page.block) 0f else 1f },
                                         onClick = {
-                                            val (clickCounter, lastClickTime) = clickData
-                                            val newClickTime = System.currentTimeMillis()
-                                            var newClickCounter = clickCounter
-                                            val diff = newClickTime - lastClickTime
-                                            when {
-                                                diff < DOUBLE_CLICK_DELAY && clickCounter == 1 -> {
-                                                    onEvent(EditorEvent.SetViewMode(EditorViewMode.Edit()))
-                                                }
-                                                diff >= DOUBLE_CLICK_DELAY -> {
-                                                    newClickCounter = 0
-                                                }
+                                            if (page.block == cachedState.selectedPage.block) {
+                                                onEvent(EditorEvent.SetViewMode(EditorViewMode.Edit()))
+                                                return@Card
                                             }
-                                            if (++newClickCounter == 1) {
-                                                onEvent(Event.OnPagesModePageSelectionChange(page = page))
-                                                onEvent(Event.OnPage(page = index))
-                                            }
-                                            clickData = newClickCounter to newClickTime
+                                            onEvent(Event.OnPagesModePageSelectionChange(page = page))
+                                            onEvent(Event.OnPage(page = index))
                                         },
                                         shape = shape,
                                         elevation = CardDefaults.cardElevation(

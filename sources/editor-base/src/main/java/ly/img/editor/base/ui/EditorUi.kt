@@ -36,12 +36,14 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -200,10 +202,6 @@ fun EditorScope.EditorUi(
         }
     }
 
-    LifecycleEventEffect(event = Lifecycle.Event.ON_PAUSE) {
-        viewModel.send(Event.OnPause)
-    }
-
     var anyComposable: AnyComposable? by remember {
         mutableStateOf(null)
     }
@@ -225,6 +223,30 @@ fun EditorScope.EditorUi(
         "Unable to find the activity. This is an internal error. Please report this issue."
     }
     val oneDpInPx = 1.dp.toPx()
+    val currentPagesState by rememberUpdatedState(uiState.pagesState)
+    val pageTransition = remember(viewModel, activity) {
+        PageOverviewTransition(viewModel.engine, uiScope, onError = { viewModel.send(Event.OnError(it)) }) {
+            activity.findViewById(ly.img.editor.base.R.id.editor_render_view)
+        }
+    }
+    LifecycleEventEffect(event = Lifecycle.Event.ON_PAUSE) {
+        pageTransition.cancel()
+        viewModel.send(Event.OnPause)
+    }
+    DisposableEffect(viewModel, pageTransition) {
+        viewModel.animatePageOverview = { entering, changeMode ->
+            if (entering == null) {
+                pageTransition.cancel()
+                changeMode()
+            } else {
+                pageTransition.start(entering, currentPagesState, changeMode)
+            }
+        }
+        onDispose {
+            viewModel.animatePageOverview = null
+            pageTransition.cancel()
+        }
+    }
     LaunchedEffect(bottomSheetState) {
         val swipeableState = bottomSheetState.swipeableState
         launch {
@@ -640,6 +662,9 @@ fun EditorScope.EditorUi(
                                 )
                             },
                         )
+                        if (pageTransition.image != null) {
+                            Box(Modifier.fillMaxSize().background(canvasColor))
+                        }
                         if (uiState.isSceneLoaded) {
                             Column(
                                 Modifier
@@ -745,8 +770,10 @@ fun EditorScope.EditorUi(
                                 .statusBarsPadding()
                                 .padding(top = it.calculateTopPadding(), bottom = it.calculateBottomPadding() + 84.dp)
                                 .fillMaxSize(),
-                            state = uiState.pagesState,
+                            state = pageTransition.heldPagesState ?: uiState.pagesState,
                             onEvent = onEvent,
+                            transitionPage = pageTransition.page,
+                            onPageBounds = pageTransition::onPageBounds,
                         )
                         EditorPagesDock(
                             modifier = Modifier
@@ -760,6 +787,7 @@ fun EditorScope.EditorUi(
                 }
             }
         }
+        PageOverviewTransitionOverlay(pageTransition)
         SystemNavBar(navigationBarColor)
         Surface(
             color = navigationBarColor,

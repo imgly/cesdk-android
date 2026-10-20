@@ -7,16 +7,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 object TimelineConfiguration {
-    var addClipOptions: List<AddClipOption> = listOf(
-        AddClipOption.Camera,
-        AddClipOption.Library,
-    )
-
-    var addAudioOptions: List<AddAudioOption> = listOf(
-        AddAudioOption.Library,
-        AddAudioOption.Voiceover,
-    )
-
     val minClipDuration = 1.seconds
 
     /**

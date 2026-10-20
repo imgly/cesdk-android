@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -16,6 +17,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import ly.img.camera.components.rememberCameraDisplayRotation
 import ly.img.editor.core.ui.utils.detectZoomGestures
 import ly.img.engine.Engine
 
@@ -32,6 +34,9 @@ internal fun CameraEnginePreview(
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val displayRotation by rememberCameraDisplayRotation()
+
+    LaunchedEffect(displayRotation) { cameraState.updatePreviewRotation(displayRotation) }
 
     val previewView = remember { SurfaceView(context) }
 
@@ -50,8 +55,11 @@ internal fun CameraEnginePreview(
             factory = { previewView },
         )
 
-        LaunchedEffect(Unit) {
+        LaunchedEffect(maxWidth, maxHeight) {
             setupLayout(maxWidth.value, maxHeight.value)
+        }
+
+        LaunchedEffect(cameraProvider, lifecycleOwner) {
             bind()
             cameraState.bind(cameraProvider, lifecycleOwner, scope)
             setCameraPreview()

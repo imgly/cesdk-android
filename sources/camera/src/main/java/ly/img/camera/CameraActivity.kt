@@ -7,32 +7,27 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ly.img.camera.components.CameraView
-import ly.img.camera.components.TOOLBAR_HEIGHT
+import ly.img.camera.components.VideoErrorDialog
+import ly.img.camera.components.rememberCameraDisplayRotation
+import ly.img.camera.components.rememberCameraIconRotation
 import ly.img.camera.core.CaptureMedia
 import ly.img.camera.core.CaptureType
-import ly.img.camera.core.R
 import ly.img.camera.setup.CameraEngineInitializer
 import ly.img.camera.setup.SetupView
 import ly.img.camera.util.SingleEvent
@@ -48,8 +43,19 @@ open class CameraActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Engine.init(application)
         setContent {
+            val displayRotation by rememberCameraDisplayRotation()
+            val targetRotation by rememberCameraIconRotation(displayRotation)
+            val orientation = remember(targetRotation) { targetRotation.mod(360f).toInt() }
+            val rotation = animateFloatAsState(
+                targetValue = targetRotation,
+                animationSpec = tween(durationMillis = 200),
+                label = "Camera rotation",
+            )
             EditorTheme(useDarkTheme = true) {
                 val viewModel = viewModel<CameraViewModel>()
+                LaunchedEffect(orientation, displayRotation) {
+                    viewModel.updateCaptureOrientation(orientation, displayRotation)
+                }
 
                 // fail early
                 val engineConfig = viewModel.engineConfiguration ?: run {
@@ -83,16 +89,17 @@ open class CameraActivity : ComponentActivity() {
 
                     if (hasRequiredPermissions && cameraProvider != null) {
                         CameraView(
+                            orientation = orientation,
+                            rotation = { rotation.value },
                             modifier = Modifier.fillMaxSize(),
                             cameraProvider = cameraProvider,
                             viewModel = viewModel,
                         )
                     } else {
                         SetupView(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .align(Alignment.TopCenter)
-                                .padding(top = TOOLBAR_HEIGHT, bottom = 196.dp),
+                            orientation = orientation,
+                            rotation = { rotation.value },
+                            modifier = Modifier.fillMaxSize(),
                             hasRequiredPermissions = hasRequiredPermissions,
                             isLoading = initResult == null,
                             error = initResult?.exceptionOrNull(),
@@ -135,25 +142,13 @@ open class CameraActivity : ComponentActivity() {
                 }
 
                 if (showVideoErrorDialog) {
-                    AlertDialog(
-                        onDismissRequest = { },
-                        title = {
-                            Text(text = stringResource(R.string.ly_img_camera_dialog_video_error_title))
+                    VideoErrorDialog(
+                        orientation = orientation,
+                        rotation = { rotation.value },
+                        onClose = {
+                            showVideoErrorDialog = false
+                            finish()
                         },
-                        text = {
-                            Text(text = stringResource(R.string.ly_img_camera_dialog_video_error_text))
-                        },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showVideoErrorDialog = false
-                                    finish()
-                                },
-                            ) {
-                                Text(stringResource(R.string.ly_img_camera_dialog_video_error_button_dismiss))
-                            }
-                        },
-                        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
                     )
                 }
             }

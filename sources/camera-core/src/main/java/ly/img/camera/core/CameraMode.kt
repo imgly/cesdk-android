@@ -22,6 +22,7 @@ sealed interface CameraMode : Parcelable {
 
     /**
      * Records with one camera while playing the [video].
+     * The first recording locks the capture orientation for the session until all recordings are deleted.
      *
      * @param video Uri of the video to react to.
      * @param cameraLayoutMode The layout mode. By default, the video and the camera are placed vertically.

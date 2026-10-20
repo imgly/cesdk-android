@@ -238,6 +238,7 @@
     <string name="ly_img_editor_inspector_bar_button_reorder">Neu anordnen</string>
     <string name="ly_img_editor_inspector_bar_button_replace">Ersetzen</string>
     <string name="ly_img_editor_inspector_bar_button_select_group">Gruppe auswählen</string>
+    <string name="ly_img_editor_inspector_bar_button_separate_audio">Audio trennen</string>
     <string name="ly_img_editor_inspector_bar_button_shape">Form</string>
     <string name="ly_img_editor_inspector_bar_button_split">Teilen</string>
     <string name="ly_img_editor_inspector_bar_button_stroke">Kontur</string>
@@ -256,6 +257,7 @@
     <string name="ly_img_editor_navigation_bar_button_toggle_preview_mode">Vorschau umschalten</string>
     <string name="ly_img_editor_navigation_bar_button_undo">Rückgängig</string>
     <string name="ly_img_editor_navigation_bar_button_write">Schreiben</string>
+    <string name="ly_img_editor_notification_separate_audio_no_audio">Kein Ton in diesem Video</string>
     <string name="ly_img_editor_notification_speed_clamped_duration">Geschwindigkeit begrenzt. Dauer auf erreichbaren Wert angepasst.</string>
     <string name="ly_img_editor_notification_speed_no_audio_at_speed">Kein Ton bei dieser Geschwindigkeit</string>
     <string name="ly_img_editor_pages_view_mode_dock_button_add_page">Seite hinzufügen</string>
@@ -457,6 +459,7 @@
     <string name="ly_img_editor_sheet_font_title">Schriftart</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_auto">Richtung an Sprache anpassen</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_center">Horizontal zentriert ausrichten</string>
+    <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_justify">Blocksatz</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_left">Nach links ausrichten</string>
     <string name="ly_img_editor_sheet_format_text_alignment_horizontal_option_right">Nach rechts ausrichten</string>
     <string name="ly_img_editor_sheet_format_text_alignment_vertical_option_bottom">Nach unten ausrichten</string>
@@ -611,10 +614,12 @@
     <string name="ly_img_editor_timeline_button_play">Abspielen</string>
     <string name="ly_img_editor_timeline_button_show_timeline">Zeitleiste</string>
     <string name="ly_img_editor_timeline_button_view_transition">Übergang anzeigen</string>
+    <string name="ly_img_editor_timeline_clip_audio_title">Audio</string>
     <string name="ly_img_editor_timeline_clip_voiceover_title">Voiceover</string>
     <string name="ly_img_editor_timeline_error_split_out_of_range">Bitte bewegen Sie den ausgewählten Clip unter den Abspielkopf.</string>
     <string name="ly_img_editor_timeline_error_split_short_duration">Teilung nicht möglich, da einer der Clips zu kurz werden würde.</string>
     <string name="ly_img_editor_timeline_maximum_video_length">Maximale Videolänge</string>
     <string name="ly_img_editor_timeline_minimum_video_length">Minimale Videolänge</string>
+    <string name="ly_img_editor_timeline_transition_removed_on_move">Übergänge zwischen Clips, die nicht mehr aneinandergrenzen, wurden entfernt.</string>
     <string name="ly_img_editor_timeline_video_length_too_short">Videolänge zu kurz</string>
 </resources>

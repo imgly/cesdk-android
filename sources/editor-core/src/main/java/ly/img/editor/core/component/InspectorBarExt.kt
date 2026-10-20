@@ -10,8 +10,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import ly.img.editor.core.EditorContext
@@ -44,6 +47,7 @@ import ly.img.editor.core.iconpack.GroupEnter
 import ly.img.editor.core.iconpack.IconPack
 import ly.img.editor.core.iconpack.Keyboard
 import ly.img.editor.core.iconpack.LayersOutline
+import ly.img.editor.core.iconpack.Music
 import ly.img.editor.core.iconpack.Rabbit
 import ly.img.editor.core.iconpack.ReorderHorizontally
 import ly.img.editor.core.iconpack.Replace
@@ -64,11 +68,13 @@ import ly.img.editor.core.ui.EditorIcon
 import ly.img.engine.BlockApi
 import ly.img.engine.ColorSpace
 import ly.img.engine.DesignBlock
+import ly.img.engine.DesignBlockEvent
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
 import ly.img.engine.FillType
 import ly.img.engine.RGBAColor
 import ly.img.engine.ShapeType
+import ly.img.engine.UnstableEngineApi
 import java.text.BreakIterator
 import kotlin.time.Duration.Companion.seconds
 
@@ -226,11 +232,9 @@ fun InspectorBar.Button.rememberAnimations(builder: InspectorBar.ButtonBuilder.(
         visible = {
             remember(this) {
                 val selection = editorContext.selection
-                // The engine animates a caption but does not sync animations across a caption track, so one
-                // caption would animate while the rest of the subtitles stayed still.
                 selection.type != DesignBlockType.Page &&
                     selection.type != DesignBlockType.Audio &&
-                    selection.type != DesignBlockType.Caption
+                    editorContext.engine.block.isAllowedByScope(selection.designBlock, "appearance/animation")
             }
         }
         vectorIcon = { IconPack.Animation }
@@ -519,6 +523,70 @@ fun InspectorBar.Button.rememberClipSpeed(builder: InspectorBar.ButtonBuilder.()
     }
 
 /**
+ * Whether the audio of [designBlock] can be separated. A video that has not loaded yet counts, because its audio
+ * tracks are known only after loading.
+ */
+@OptIn(UnstableEngineApi::class)
+private fun Engine.canSeparateAudio(designBlock: DesignBlock): Boolean = runCatching {
+    if (DesignBlockType.get(block.getType(designBlock)) != DesignBlockType.Graphic ||
+        block.getKind(designBlock) == KIND_ANIMATED_STICKER ||
+        !block.isAllowedByScope(designBlock, "fill/change") ||
+        block.getFillType(designBlock) != FillType.Video
+    ) {
+        return@runCatching false
+    }
+    val fill = block.getFill(designBlock)
+    // Above 3x the video plays no audio, so it has no audio to separate.
+    if (block.isForceMuted(fill)) return@runCatching false
+    if (!block.isAVResourceLoaded(fill)) return@runCatching true
+    block.getAudioTrackCountFromVideo(fill) > 0
+}.getOrDefault(false)
+
+/**
+ * The id of the inspector bar button returned by [InspectorBar.Button.rememberSeparateAudio].
+ */
+val InspectorBar.Button.Id.separateAudio by unsafeLazy {
+    EditorComponentId("ly.img.component.inspectorBar.button.separateAudio")
+}
+
+/**
+ * A composable helper function that creates and remembers an [Button] that moves the audio of currently selected video
+ * clip into new audio clips, one per audio track, and mutes the video clip via [EditorEvent.Selection.SeparateAudio].
+ * The button is visible when the selected design block is a [DesignBlockType.Graphic] with a [FillType.Video] fill that
+ * is not an animated sticker, its "fill/change" scope is allowed, and its video has audio, muted or not, and plays at 3x
+ * or slower. A video that has not loaded yet counts as a video with audio, because its audio tracks are known only after
+ * it loads.
+ * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
+ * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
+ *
+ * @param builder the builder lambda to override the default builder.
+ * @return a button that will be displayed in the inspector bar.
+ */
+@Composable
+fun InspectorBar.Button.rememberSeparateAudio(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
+    InspectorBar.Button.remember {
+        id = { InspectorBar.Button.Id.separateAudio }
+        visible = {
+            val engine = editorContext.engine
+            val designBlock = editorContext.selection.designBlock
+            val initial = remember(designBlock) { engine.canSeparateAudio(designBlock) }
+            // The speed belongs to the fill, so its events update the button too.
+            val canSeparate by remember(designBlock) {
+                engine.subscribeToBlockAndItsFill(designBlock)
+                    .map { engine.canSeparateAudio(designBlock) }
+                    .distinctUntilChanged()
+            }.collectAsState(initial = initial)
+            canSeparate
+        }
+        vectorIcon = { IconPack.Music }
+        textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_separate_audio) }
+        onClick = {
+            editorContext.eventHandler.send(EditorEvent.Selection.SeparateAudio())
+        }
+        builder()
+    }
+
+/**
  * The id of the inspector bar button returned by [InspectorBar.Button.rememberCrop].
  */
 val InspectorBar.Button.Id.crop by unsafeLazy {
@@ -649,7 +717,8 @@ val InspectorBar.Button.Id.split by unsafeLazy {
 
 /**
  * A composable helper function that creates and remembers an [Button] that splits currently selected
- * design block via [EditorEvent.Selection.Split] in a video scene.
+ * design block via [EditorEvent.Selection.Split].
+ * The button is visible when the "lifecycle/duplicate" scope of the selected design block is allowed.
  * A caption is only enabled while the playhead sits inside it, since a caption divides where the playhead is.
  * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
  * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
@@ -828,6 +897,25 @@ private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon
 }
 
 /**
+ * The events of [designBlock] and of its fill, while [designBlock] is the selected block. A colour and the gradient
+ * stops are properties of the fill block, so a subscription to [designBlock] alone does not report them. The fill can
+ * be replaced, so the subscription restarts for every new fill. Each restart begins with an emission, otherwise the
+ * event that replaced the fill is lost in the switch.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+private fun Engine.subscribeToBlockAndItsFill(designBlock: DesignBlock): Flow<List<DesignBlockEvent>> {
+    // When the design block is unselected/deleted, the lambdas are entered before the parent scope is updated.
+    fun isSelected() = designBlock == block.findAllSelected().firstOrNull()
+    return event.subscribe(listOf(designBlock))
+        .filter { isSelected() }
+        .onStart { emit(emptyList()) }
+        .map { if (block.supportsFill(designBlock)) block.getFill(designBlock) else null }
+        .distinctUntilChanged()
+        .flatMapLatest { fill -> event.subscribe(listOfNotNull(designBlock, fill)).onStart { emit(emptyList()) } }
+        .filter { isSelected() }
+}
+
+/**
  * The id of the inspector bar button returned by [InspectorBar.Button.rememberFillStroke].
  */
 val InspectorBar.Button.Id.fillStroke by unsafeLazy {
@@ -878,12 +966,7 @@ open class FillStrokeButtonBuilder : AbstractButtonBuilder<FillStrokeItemScope>(
             }
             val fillStrokeIcon by remember(parentScope) {
                 val selection = parentScope.editorContext.selection
-                editorContext.engine.event.subscribe(listOf(selection.designBlock))
-                    .filter {
-                        // When the design block is unselected/deleted, this lambda is entered before parent scope is updated.
-                        // We need to make sure that current component does not update if engine selection has changed.
-                        selection.designBlock == editorContext.engine.block.findAllSelected().firstOrNull()
-                    }
+                editorContext.engine.subscribeToBlockAndItsFill(selection.designBlock)
                     .map { editorContext.engine.getFillStrokeButtonIcon(selection.designBlock) }
                     .onStart { emit(initial) }
             }.collectAsState(initial = initial)
@@ -1012,7 +1095,7 @@ fun InspectorBar.Button.rememberMoveAsOverlay(builder: InspectorBar.ButtonBuilde
 /**
  * The id of the inspector bar button returned by [InspectorBar.Button.rememberVoiceover].
  */
-val Button.Id.Companion.voiceover by unsafeLazy {
+val InspectorBar.Button.Id.voiceover by unsafeLazy {
     EditorComponentId("ly.img.component.inspectorBar.button.voiceover")
 }
 
@@ -1026,7 +1109,7 @@ val Button.Id.Companion.voiceover by unsafeLazy {
 @Composable
 fun InspectorBar.Button.rememberVoiceover(builder: InspectorBar.ButtonBuilder.() -> Unit = {}): Button<InspectorBar.ItemScope> =
     InspectorBar.Button.remember {
-        id = { InspectorBar.Button.Id.moveAsClip }
+        id = { InspectorBar.Button.Id.voiceover }
         visible = {
             val selection = editorContext.selection
 
@@ -1081,21 +1164,13 @@ fun InspectorBar.Button.rememberReplace(builder: InspectorBar.ButtonBuilder.() -
         id = { InspectorBar.Button.Id.replace }
         visible = {
             remember(this) {
-                (
-                    (
-                        editorContext.selection.type == DesignBlockType.Audio &&
-                            editorContext.selection.kind != KIND_VOICEOVER
-                    ) ||
-                        (
-                            (
-                                editorContext.selection.type == DesignBlockType.Graphic ||
-                                    editorContext.selection.type == DesignBlockType.Page
-                            ) &&
-                                (editorContext.selection.fillType == FillType.Image || editorContext.selection.fillType == FillType.Video)
-                        ) &&
-                        editorContext.selection.isNotAnyKindOfSticker() &&
-                        editorContext.engine.block.isAllowedByScope(editorContext.selection.designBlock, "fill/change")
-                )
+                val selection = editorContext.selection
+                val isReplaceableAudio = selection.type == DesignBlockType.Audio && selection.kind != KIND_VOICEOVER
+                val isReplaceableFill = (selection.type == DesignBlockType.Graphic || selection.type == DesignBlockType.Page) &&
+                    (selection.fillType == FillType.Image || selection.fillType == FillType.Video)
+                (isReplaceableAudio || isReplaceableFill) &&
+                    selection.isNotAnyKindOfSticker() &&
+                    editorContext.engine.block.isAllowedByScope(selection.designBlock, "fill/change")
             }
         }
         vectorIcon = { IconPack.Replace }
@@ -1525,6 +1600,7 @@ open class TextBackgroundButtonBuilder : AbstractButtonBuilder<TextBackgroundIte
 /**
  * A composable helper function that creates and remembers an [Button] that opens text background options sheet via
  * [EditorEvent.Sheet.Open].
+ * The button is disabled for a text on a path, because the engine draws no background for it.
  * Note that [builder] lambda runs only once, therefore you should not have builder property reassignments based on conditions.
  * Check [ly.img.editor.core.configuration.EditorConfiguration.Companion.remember] for more details on this pattern.
  *
@@ -1547,6 +1623,21 @@ fun InspectorBar.Button.rememberTextBackground(
         EditorIcon(icon = editorIcon)
     }
     textString = { stringResource(R.string.ly_img_editor_inspector_bar_button_text_background) }
+    enabled = {
+        val engine = editorContext.engine
+        val designBlock = editorContext.selection.designBlock
+
+        fun isTextOnPath() = runCatching { engine.block.getTextOnPath(designBlock) }.getOrNull() != null
+        val initial = remember(designBlock) { isTextOnPath() }
+        // The engine draws no block background for text on a path, so the sheet would edit nothing.
+        val textOnPath by remember(designBlock) {
+            engine.event.subscribe(listOf(designBlock))
+                .map { isTextOnPath() }
+                .distinctUntilChanged()
+                .onStart { emit(initial) }
+        }.collectAsState(initial = initial)
+        !textOnPath
+    }
     onClick = {
         editorContext.eventHandler.send(EditorEvent.Sheet.Open(SheetType.TextBackground()))
     }

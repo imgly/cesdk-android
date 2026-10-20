@@ -33,3 +33,26 @@ fun ClipMenuItem(
         onClick = onClick,
     )
 }
+
+@Composable
+fun ClipMenuItem(
+    text: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+) {
+    DropdownMenuItem(
+        text = {
+            Text(
+                text = text,
+                modifier = Modifier.widthIn(min = 72.dp),
+            )
+        },
+        trailingIcon = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+            )
+        },
+        onClick = onClick,
+    )
+}

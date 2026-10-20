@@ -105,6 +105,12 @@ interface EditorEvent {
         class MoveAsOverlay : EditorEvent
 
         /**
+         * An event for moving the audio of currently selected design block into new audio blocks in a video scene.
+         * Each audio track of the video gets its own audio block, and the video is muted.
+         */
+        class SeparateAudio : EditorEvent
+
+        /**
          * An event for changing selection from a selected group to the first block within that group.
          */
         class EnterGroup : EditorEvent

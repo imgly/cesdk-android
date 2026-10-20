@@ -30,8 +30,13 @@ internal class RecordingManager(
     private val coroutineScope: CoroutineScope,
     private val videoRecorder: VideoRecorder,
     private val photoCapture: PhotoCapture,
+    private val recordingGeometryProvider: () -> RecordingGeometry,
 ) {
-    suspend fun takePhoto(context: Context): Uri = photoCapture.capture(context)
+    suspend fun takePhoto(
+        context: Context,
+        targetRotation: Int,
+        mirrored: Boolean,
+    ): Uri = photoCapture.capture(context, targetRotation, mirrored)
 
     var state by mutableStateOf(State(maxDuration = maxDuration))
         private set
@@ -44,8 +49,6 @@ internal class RecordingManager(
         get() = state.status is Status.Recording || state.status is Status.StartRecording
 
     private var overridenMaxDuration: Duration? = null
-
-    lateinit var cameraRect: RectF
 
     fun toggleRecording(context: Context) {
         when {
@@ -134,9 +137,11 @@ internal class RecordingManager(
     }
 
     internal suspend fun startRecording(context: Context) {
+        // Snapshot orientation and geometry together, after the countdown and before file preparation suspends.
+        val geometry = recordingGeometryProvider()
         state = state.copy(status = Status.StartRecording)
         var reachedMaxDuration = false
-        videoRecorder.startRecording(context) { status ->
+        videoRecorder.startRecording(context, geometry.targetRotation) { status ->
             when (status) {
                 is VideoRecorder.RecordingStatus.Error -> {
                     state = state.copy(status = Status.Idle, totalRecordedDuration = calculateUpdatedDuration())
@@ -153,7 +158,7 @@ internal class RecordingManager(
                     // double-count.
                     val updatedDuration = calculateUpdatedDuration()
                     val recording = Recording(
-                        videos = listOf(Video(uri = status.outputUri, rect = cameraRect)),
+                        videos = listOf(Video(uri = status.outputUri, rect = geometry.cameraRect)),
                         duration = status.duration,
                     )
                     state = state.copy(
@@ -286,3 +291,8 @@ internal class RecordingManager(
         val maxDuration: Duration,
     )
 }
+
+internal data class RecordingGeometry(
+    val targetRotation: Int,
+    val cameraRect: RectF,
+)

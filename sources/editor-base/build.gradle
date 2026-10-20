@@ -2,6 +2,9 @@ apply from: "$projectDir/../editor-library.gradle"
 
 android {
     namespace = 'ly.img.editor.base'
+    defaultConfig {
+        testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
+    }
 }
 
 dependencies {
@@ -16,4 +19,6 @@ dependencies {
     implementation project(":editor-debug-menu-dummy")
 
     testImplementation libs.junit
+    androidTestImplementation libs.junit
+    androidTestImplementation libs.test.androidx.runner
 }

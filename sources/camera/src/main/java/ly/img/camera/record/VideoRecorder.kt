@@ -27,12 +27,16 @@ internal class VideoRecorder(
     @SuppressLint("MissingPermission")
     suspend fun startRecording(
         context: Context,
+        targetRotation: Int,
         onRecordStatusUpdate: (RecordingStatus) -> Unit,
     ) {
         val videoFile = createFile()
         val fileOutputOptions = FileOutputOptions.Builder(videoFile).build()
 
-        recording = videoCaptureProvider().output
+        val videoCapture = videoCaptureProvider()
+        // Keep this target for the whole recording, including pauses and camera switches.
+        videoCapture.targetRotation = targetRotation
+        recording = videoCapture.output
             .prepareRecording(context, fileOutputOptions)
             .asPersistentRecording()
             .withAudioEnabled()

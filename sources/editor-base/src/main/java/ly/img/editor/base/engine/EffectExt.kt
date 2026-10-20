@@ -39,6 +39,21 @@ fun EffectType.getGroup() = when (this) {
     EffectType.Vignette,
     EffectType.Recolor,
     EffectType.GreenScreen,
+    EffectType.Tint,
+    EffectType.Fill,
+    EffectType.Tritone,
+    EffectType.Levels,
+    EffectType.Invert,
+    EffectType.Threshold,
+    EffectType.ShiftChannels,
+    EffectType.LinearWipe,
+    EffectType.RadialWipe,
+    EffectType.VenetianBlinds,
+    EffectType.Stroke,
+    EffectType.CornerPin,
+    EffectType.Bulge,
+    EffectType.WaveWarp,
+    EffectType.DisplacementMap,
     ->
         EffectGroup.FxEffect
 
@@ -531,4 +546,21 @@ fun EffectType.getProperties() = when (this) {
         ),
     )
     EffectType.Sharpie -> emptyList()
+    // The editor has no controls for the Lottie color, wipe, stroke and distortion effects yet.
+    EffectType.Tint,
+    EffectType.Fill,
+    EffectType.Tritone,
+    EffectType.Levels,
+    EffectType.Invert,
+    EffectType.Threshold,
+    EffectType.ShiftChannels,
+    EffectType.LinearWipe,
+    EffectType.RadialWipe,
+    EffectType.VenetianBlinds,
+    EffectType.Stroke,
+    EffectType.CornerPin,
+    EffectType.Bulge,
+    EffectType.WaveWarp,
+    EffectType.DisplacementMap,
+    -> emptyList()
 }

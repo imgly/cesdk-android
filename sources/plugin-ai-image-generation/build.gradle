@@ -4,12 +4,12 @@ apply from: "$projectDir/../dokka.gradle"
 def UBQ_ROOT_DIR = "${project.projectDir}/../../../.."
 def updateLocalizationTask = tasks.register("updateLocalizationFiles", Exec) {
     workingDir = UBQ_ROOT_DIR
-    executable "bash"
+    executable "python3"
     args = [
-        "scripts/localization/android/generate_localization.sh",
-        "scripts/localization/mobile-plugin-ai-image-generation.tsv",
-        "apps/cesdk_android/sources/plugin-ai-image-generation/src/main/res",
-        "ly_img_plugin_ai_image_generation_"
+        "scripts/localization/generate.py",
+        "--platform",
+        "android",
+        "scripts/localization/mobile-plugin-ai-image-generation.tsv"
     ]
 }
 tasks.named("preBuild").configure { dependsOn(updateLocalizationTask) }

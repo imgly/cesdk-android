@@ -2,11 +2,9 @@ package ly.img.editor.base.timeline.state
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.times
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import ly.img.editor.base.engine.getPlaybackControlBlock
@@ -19,9 +17,15 @@ import ly.img.editor.base.timeline.thumbnail.ThumbnailsManager
 import ly.img.editor.base.timeline.track.Track
 import ly.img.editor.base.timeline.track.TransitionSeam
 import ly.img.editor.base.timeline.track.sortedClips
+import ly.img.editor.base.timeline.view.AddAudioButton
+import ly.img.editor.base.timeline.view.AddClipButton
 import ly.img.editor.base.timeline.view.TimelineView
 import ly.img.editor.core.UnstableEditorApi
+import ly.img.editor.core.component.EditorComponent
+import ly.img.editor.core.component.HorizontalListBuilder
+import ly.img.editor.core.component.Timeline
 import ly.img.editor.core.component.TimelineOwner
+import ly.img.editor.core.component.data.TimelineHeight
 import ly.img.editor.core.event.EditorEvent
 import ly.img.editor.core.ui.engine.BlockKind
 import ly.img.editor.core.ui.engine.Scope
@@ -30,7 +34,6 @@ import ly.img.editor.core.ui.engine.getFillType
 import ly.img.editor.core.ui.engine.getKindEnum
 import ly.img.editor.core.ui.engine.isFillLooping
 import ly.img.editor.core.ui.utils.EPS_DURATION
-import ly.img.editor.core.ui.utils.formatForPlayer
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockEvent
 import ly.img.engine.DesignBlockType
@@ -54,22 +57,6 @@ class TimelineState(
 
     var totalDuration: Duration by mutableStateOf(0.seconds)
         private set
-
-    val formattedTotalDuration by derivedStateOf {
-        totalDuration.formatForPlayer()
-    }
-
-    var expanded by mutableStateOf(true)
-
-    val timelineViewHeight by derivedStateOf {
-        val visibleTracksCount = dataSource.tracks.size.toFloat().coerceAtMost(2.5f)
-        with(TimelineConfiguration) {
-            val backgroundTrackHeight = clipHeight + clipPadding * 2
-            val addAudioButtonHeight = backgroundTrackHeight
-            backgroundTrackDividerHeight + rulerHeight + backgroundTrackHeight + addAudioButtonHeight +
-                visibleTracksCount * clipHeight + visibleTracksCount.toInt() * clipPadding
-        }
-    }
 
     val animationPreview = AnimationPreview(engine, coroutineScope)
     val playerState = PlayerState(engine, animationPreview::stop)
@@ -559,7 +546,10 @@ class TimelineState(
         } else {
             ""
         }
-        val isLiveBufferAudio = audioFileUri.startsWith("buffer://")
+        val isVoiceOver = clipType == ClipType.Audio &&
+            runCatching { engine.block.getKind(designBlock) == VOICEOVER_KIND }.getOrDefault(false)
+        val isBufferAudio = audioFileUri.startsWith("buffer://")
+        val isLiveBufferRecording = isVoiceOver && isBufferAudio
 
         val allowsTrimming = engine.block.hasTrim(trimmableId)
         val playbackSpeed =
@@ -567,7 +557,7 @@ class TimelineState(
                 ?.let(engine.block::getPlaybackSpeed)
                 ?: 1f
 
-        val trimOffset = if (allowsTrimming && !isLiveBufferAudio) {
+        val trimOffset = if (allowsTrimming && !isLiveBufferRecording) {
             // The trimOffset isn't known until the resource has loaded
             try {
                 engine.block.getTrimOffset(trimmableId).seconds
@@ -592,8 +582,9 @@ class TimelineState(
                 hasLoaded = true
             }.onFailure {
                 footageDuration = duration
-                hasLoaded = isLiveBufferAudio
-                if (isLiveBufferAudio) {
+                // The engine loads nothing for a buffer, so a forced load and refresh would retry forever.
+                hasLoaded = isBufferAudio
+                if (isBufferAudio) {
                     return@onFailure
                 }
                 // Currently, engine doesn't trigger an event when the resource is loaded. So, we force load and refresh explicitly
@@ -613,8 +604,6 @@ class TimelineState(
         }
 
         val allowsSelecting = engine.block.isAllowedByScope(designBlock, Scope.EditorSelect)
-        val isVoiceOver = clipType == ClipType.Audio &&
-            runCatching { engine.block.getKind(designBlock) == VOICEOVER_KIND }.getOrDefault(false)
         val hasAudioResource = clipType == ClipType.Audio && audioFileUri.isNotBlank()
         val anyAnimationBlock = engine.block.getInAnimation(designBlock).takeIf { engine.block.isValid(it) }
             ?: engine.block.getOutAnimation(designBlock).takeIf { engine.block.isValid(it) }
@@ -645,7 +634,7 @@ class TimelineState(
             hasLoaded = hasLoaded,
             isLooping = isLooping,
             hasAnimation = anyAnimationBlock != null,
-            isLiveBufferRecording = isLiveBufferAudio,
+            isLiveBufferRecording = isLiveBufferRecording,
             transitionTrimLead = transitionTrim.lead,
             transitionTrimTail = transitionTrim.tail,
         )
@@ -765,7 +754,13 @@ class TimelineState(
     }
 
     @Composable
-    override fun TimelineContent() {
+    override fun TimelineContent(
+        addClipButton: EditorComponent<*>?,
+        addAudioButton: EditorComponent<*>?,
+        headerListBuilder: HorizontalListBuilder<EditorComponent<*>>,
+        height: TimelineHeight,
+        expanded: Boolean,
+    ) {
         LaunchedEffect(Unit) {
             refresh(events = emptyList())
             if (thumbnailsManager.hasProviders().not()) {
@@ -775,6 +770,32 @@ class TimelineState(
         TimelineView(
             timelineState = this,
             onEvent = onEvent,
+            addClipButton = addClipButton,
+            addAudioButton = addAudioButton,
+            headerListBuilder = headerListBuilder,
+            height = height,
+            expanded = expanded,
         )
+    }
+
+    /**
+     * The camera launches through a composable contract, so [onVideoCameraClick] hands its content
+     * back here for the "Add Clip" button to render.
+     */
+    private var cameraContent: (@Composable () -> Unit)? by mutableStateOf(null)
+
+    @Composable
+    override fun AddClipButtonContent(button: Timeline.AddClipButton) {
+        val content = cameraContent
+        AddClipButton(button = button, cameraContent = content)
+        // Rendered once: the contract launches on composition, so it must not run again.
+        if (content != null) {
+            cameraContent = null
+        }
+    }
+
+    @Composable
+    override fun AddAudioButtonContent(button: Timeline.AddAudioButton) {
+        AddAudioButton(button = button)
     }
 }

@@ -40,6 +40,11 @@ data class Clip(
     val isInBackgroundTrack: Boolean = false,
     val hasLoaded: Boolean = false,
     val hasAnimation: Boolean = false,
+    /**
+     * Whether the clip is a voiceover that is still recording. A recording plays from a `buffer://` resource until it
+     * is written to a file, so its duration follows the buffer and it cannot be trimmed. Audio separated from a video
+     * also plays from a `buffer://` resource, but it is complete and can be trimmed.
+     */
     val isLiveBufferRecording: Boolean = false,
     val leadingTransitionSeamSize: Dp? = null,
     val transitionTrimLead: Duration = ZERO,
