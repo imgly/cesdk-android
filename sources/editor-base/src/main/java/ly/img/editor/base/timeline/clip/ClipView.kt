@@ -227,9 +227,10 @@ fun ClipView(
                     )
                 }.first().measure(constraints)
 
-                // Right-edge translucent overlay for non-bg clips that extend past the page's max playback duration.
-                val overlayWidthPx = (width + offset - overlayDurationWidth).coerceAtMost(width)
-                val overlayPlaceable = if (overlayWidthPx > 0f) {
+                // Dims the part of the clip past the page end. Anchored to the page end because the track can clamp the clip width.
+                val overlayStartPx = (overlayDurationWidth - offset).coerceAtLeast(0f).roundToInt()
+                val overlayWidthPx = constraints.maxWidth - overlayStartPx
+                val overlayPlaceable = if (overlayWidthPx > 0) {
                     subcompose(ClipContentSlot.Overlay) {
                         val overlayShape = if (offset > overlayDurationWidth) {
                             MaterialTheme.shapes.small
@@ -242,11 +243,10 @@ fun ClipView(
                         ClipOverlay(
                             modifier = Modifier
                                 .clip(overlayShape)
-                                .width(overlayWidthPx.toDp())
                                 .fillMaxHeight(),
                         )
                     }.firstOrNull()?.measure(
-                        Constraints(maxWidth = constraints.maxWidth, maxHeight = constraints.maxHeight),
+                        Constraints.fixedWidth(overlayWidthPx).copy(maxHeight = constraints.maxHeight),
                     )
                 } else {
                     null
@@ -255,7 +255,7 @@ fun ClipView(
                 layout(constraints.maxWidth, constraints.maxHeight) {
                     // Z-order: background under, overlay above background, label on top.
                     backgroundPlaceable.place(0, 0)
-                    overlayPlaceable?.place(constraints.maxWidth - overlayPlaceable.width, 0)
+                    overlayPlaceable?.place(overlayStartPx, 0)
                     labelPlaceable.place(
                         x = pinOffsetPx.roundToInt(),
                         y = (constraints.maxHeight - labelPlaceable.height) / 2,
