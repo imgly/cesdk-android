@@ -5,10 +5,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -128,7 +130,8 @@ internal fun VoiceoverOptionsSheet(
                     bottom = 16.dp,
                 )
                 .fillMaxWidth()
-                .height(voiceOverRecordSheetControlsHeight)
+                .heightIn(min = voiceOverRecordSheetControlsHeight)
+                .height(IntrinsicSize.Min)
                 .padding(
                     start = horizontalPadding,
                     top = voiceOverRecordSheetTopInset,
@@ -156,8 +159,10 @@ internal fun VoiceoverOptionsSheet(
             )
 
             VoiceOverRecordActionButton(
+                // Fixed and top-aligned, so a wrapped side label grows the row but not Record.
                 modifier = Modifier
-                    .fillMaxHeight(),
+                    .align(Alignment.Top)
+                    .height(voiceOverRecordSheetControlsHeight - voiceOverRecordSheetTopInset),
                 isRecording = controller.isRecording,
                 isSaving = controller.isSaving,
                 recordedDurationMs = controller.elapsedRecordingMs,

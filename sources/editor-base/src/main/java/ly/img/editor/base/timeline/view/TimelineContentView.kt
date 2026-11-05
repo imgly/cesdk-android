@@ -196,15 +196,21 @@ fun TimelineContentView(
                             val originalEnd = dragged.timeOffset + dragged.duration
                             trim.end - originalEnd
                         } ?: ZERO
-                        // FG → BG drop preview: dragged clip's duration extends bg's
-                        // trailing edge before commit. Zero for bg reorders and idle.
+                        // Drop preview into bg: FG → BG adds the dragged clip's full duration to bg's
+                        // trailing edge before commit, and a bg reorder adds what the drag draws longer
+                        // than the packed clips. Zero for other targets and idle.
                         val dropDelta = (timelineState.dragDrop.phase as? DragDropState.Dragging)
                             ?.context?.let { ctx ->
                                 val target = ctx.dropTarget as? DropTarget.ExistingTrack
                                 if (target?.trackId != backgroundTrack.id) return@let null
                                 val dragged = timelineState.dragDrop.draggedClip ?: return@let null
-                                if (dragged.isInBackgroundTrack) return@let null
-                                dragged.duration
+                                if (dragged.isInBackgroundTrack) {
+                                    backgroundTrack.clips.fold(dragged.rawDuration - dragged.duration) { acc, clip ->
+                                        acc + timelineState.dragDrop.shown(clip).duration - clip.duration
+                                    }
+                                } else {
+                                    dragged.rawDuration
+                                }
                             } ?: ZERO
                         timelineState.zoomState.toDp((packedLength + trimDelta + dropDelta).coerceAtLeast(ZERO))
                     }
