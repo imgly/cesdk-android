@@ -6,7 +6,6 @@
     <string name="ly_img_editor_asset_label_blur_loop">Weichzeichnen</string>
     <string name="ly_img_editor_asset_label_breathing_loop">Atmen</string>
     <string name="ly_img_editor_asset_label_chop">Zerhacken</string>
-    <string name="ly_img_editor_asset_label_clock_wipe">Uhr-Wischen</string>
     <string name="ly_img_editor_asset_label_color_fade">Farbübergang</string>
     <string name="ly_img_editor_asset_label_color_wipe">Farb-Wischen</string>
     <string name="ly_img_editor_asset_label_crop_zoom">Zuschnitts-Zoom</string>

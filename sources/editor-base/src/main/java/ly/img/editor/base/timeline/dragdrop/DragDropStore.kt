@@ -9,8 +9,6 @@ import androidx.compose.ui.geometry.Rect
 import ly.img.editor.base.timeline.clip.Clip
 import ly.img.editor.base.timeline.state.TimelineDataSource
 import ly.img.editor.base.timeline.state.TimelineState
-import ly.img.editor.base.timeline.state.TransitionTrim
-import ly.img.editor.base.timeline.state.withReleasedTrim
 import ly.img.editor.base.timeline.track.Track
 import ly.img.engine.DesignBlock
 import kotlin.time.Duration
@@ -95,22 +93,6 @@ class DragDropStore(
      * once `dataSource` reflects committed engine state.
      */
     val overrides: MutableMap<DesignBlock, Duration> = mutableStateMapOf()
-
-    /**
-     * The clips that share a transition with the dragged clip, with the trim of the end that the drag draws at full
-     * length. Set at drag start, and kept with [overrides] until the timeline draws the committed engine state. The
-     * dragged clip itself is drawn at its [Clip.rawDuration].
-     */
-    internal val transitionPartners: MutableMap<DesignBlock, TransitionTrim> = mutableStateMapOf()
-
-    /** [clip] as the active drag draws it, see [transitionPartners]. */
-    internal fun shown(clip: Clip): Clip = transitionPartners[clip.id]?.let(clip::withReleasedTrim) ?: clip
-
-    /** Clears [overrides] and [transitionPartners]. */
-    internal fun clearPreview() {
-        overrides.clear()
-        transitionPartners.clear()
-    }
 
     /**
      * Provider for the live horizontal scroll offset (px) of the timeline content.

@@ -201,7 +201,7 @@ class TimelineState(
      */
     private fun clearOverridesIfIdle() {
         if (dragDrop.phase !is DragDropState.Dragging) {
-            dragDrop.clearPreview()
+            dragDrop.overrides.clear()
         }
     }
 

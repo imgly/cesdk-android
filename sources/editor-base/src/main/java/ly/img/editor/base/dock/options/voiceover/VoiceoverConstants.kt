@@ -33,6 +33,7 @@ internal val voiceOverRecordButtonInnerIdleWidth = 96.dp
 internal val voiceOverRecordButtonInnerRecordingWidth = 118.dp
 internal val voiceOverRecordButtonInnerHeight = 56.dp
 internal val voiceOverActionTileOffset = 4.dp
+internal val voiceOverActionTileHeight = 56.dp
 internal val voiceOverActionIconFrameWidth = 40.dp
 internal val voiceOverActionLabelHeight = 20.dp
 internal val voiceOverRecordActionContentSpacing = 2.dp

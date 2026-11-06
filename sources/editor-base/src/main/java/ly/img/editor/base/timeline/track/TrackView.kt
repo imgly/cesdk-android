@@ -203,14 +203,13 @@ fun TrackView(
             return projectedDragTarget(clip)?.timeOffset
                 ?: timelineState.dragDrop.overrides[clip.id]
                 ?: trimOverrides.value[clip.id]
-                ?: timelineState.dragDrop.shown(clip).timeOffset
+                ?: clip.timeOffset
         }
 
         fun projectedDuration(clip: Clip): Duration {
             val trim = liveTrim
             if (trim != null && trim.clipId == clip.id) return trim.end - trim.start
-            return projectedDragTarget(clip)?.let { it.effectiveDuration ?: clip.rawDuration }
-                ?: timelineState.dragDrop.shown(clip).duration
+            return projectedDragTarget(clip)?.effectiveDuration ?: clip.duration
         }
 
         track.transitionSeams.forEach { seam ->
@@ -266,7 +265,7 @@ fun TrackView(
                     }
                 }
                 ClipView(
-                    clip = timelineState.dragDrop.shown(clip),
+                    clip = clip,
                     timelineState = timelineState,
                     scrollContentOffset = scrollContentOffset,
                     liveOffsetOverride = overrideState,

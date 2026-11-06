@@ -167,7 +167,6 @@ import java.io.File
 import java.io.FileOutputStream
 import kotlin.math.abs
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.time.Duration.Companion.ZERO
 
 @OptIn(UnstableEditorApi::class)
@@ -350,24 +349,8 @@ class EditorUiViewModel(
         register<Event.OnCanvasMove> { onCanvasMove(it.move) }
         register<Event.OnCanvasTouch> { updateZoomState() }
         register<Event.OnResetZoom> {
-            if (!isSceneLoaded.value) {
-                return@register
-            }
-            val camera = engine.getCamera()
-            val canvasSize = engine.block.getFloat(camera, "camera/resolution/width") to
-                engine.block.getFloat(camera, "camera/resolution/height")
-            // A return from the background recreates the surface at the same size.
-            val isResize = canvasSize != lastCanvasSize
-            lastCanvasSize = canvasSize
-            when (viewMode) {
-                is EditorViewMode.Edit, is EditorViewMode.Pages -> if (engine.editor.getEditMode() == TRANSFORM_EDIT_MODE) {
-                    val keepsUserZoom = keepsUserZoomOnResize()
-                    zoom(forceZoomToPage = !keepsUserZoom, clampOnly = keepsUserZoom)
-                }
-                // The starter kit zooms in preview mode. A new instance tells it to zoom again for the new canvas.
-                is EditorViewMode.Preview -> if (isResize) {
-                    viewMode = EditorViewMode.Preview()
-                }
+            if (isSceneLoaded.value && engine.editor.getEditMode() == TRANSFORM_EDIT_MODE) {
+                zoom(forceZoomToPage = true)
             }
         }
         register<Event.OnKeyboardClose> { onKeyboardClose() }
@@ -1502,8 +1485,7 @@ class EditorUiViewModel(
         updateDimension(
             update = { it.copy(editor = Size(widthInDp.dp, heightInDp.dp)) },
         ) {
-            val keepsUserZoom = keepsUserZoomOnResize()
-            updateInsets(zoomToPage = !keepsUserZoom, clampOnly = keepsUserZoom)
+            updateInsets(zoomToPage = true)
         }
     }
 
@@ -1514,10 +1496,6 @@ class EditorUiViewModel(
         updateDimension(
             update = { it.copy(navigationBar = Size(widthInDp.dp, heightInDp.dp)) },
         ) {
-            // A width-only change is a window resize, which the canvas resize handles.
-            if (heightInDp == imgLyInsets.value.top) {
-                return@updateDimension
-            }
             updateInsets(
                 topInset = heightInDp,
                 zoomToPage = engine.scene.getZoomLevel() == fitToPageZoomLevel,
@@ -1579,13 +1557,8 @@ class EditorUiViewModel(
             this.closingSheetContent == null -> heightInDp.also { this.bottomStaticContentFullHeight = it }
             else -> bottomStaticContentFullHeight
         }
-        val bottomInset = max(bottomSheetHeight, heightInDp)
-        // As in onNavigationBarSizeChange.
-        if (bottomInset == imgLyInsets.value.bottom) {
-            return
-        }
         updateInsets(
-            bottomInset = bottomInset,
+            bottomInset = max(bottomSheetHeight, heightInDp),
             zoomToPage = engine.scene.getZoomLevel() == fitToPageZoomLevel,
         )
     }
@@ -1798,7 +1771,6 @@ class EditorUiViewModel(
         leftInset: Float = imgLyInsets.value.left,
         rightInset: Float = imgLyInsets.value.right,
         zoomToPage: Boolean = false,
-        clampOnly: Boolean = false,
     ) {
         imgLyInsets.value = Rect(
             top = topInset,
@@ -1822,63 +1794,24 @@ class EditorUiViewModel(
         // zooms to backdrop instead, there will be a jump. This way we leave entire control of preview
         // and pages modes fully on starter kit side.
         if (isSceneLoaded.value && publicState.value.viewMode is EditorViewMode.Edit) {
-            zoom(forceZoomToPage = zoomToPage, clampOnly = clampOnly)
+            zoom(forceZoomToPage = zoomToPage)
         }
     }
 
     private var zoomJob: Job? = null
     private var fitToPageZoomLevel = 0f
-    private var lastCanvasSize: Pair<Float, Float>? = null
 
-    /**
-     * Whether a window resize keeps the zoom that a gesture or the API set. A page at its last fit re-fits. So does a zoom
-     * at or below the new fit: the engine's minimum-zoom clamp raises an unzoomed page to it when the canvas grows.
-     */
-    private fun keepsUserZoomOnResize(): Boolean {
-        if (!isSceneLoaded.value || viewMode !is EditorViewMode.Edit || fitToPageZoomLevel <= 0F) {
-            return false
-        }
-        val zoomLevel = engine.scene.getZoomLevel()
-        if (abs(zoomLevel - fitToPageZoomLevel) <= 0.001F) {
-            return false
-        }
-        val fitZoomLevel = canvasFitZoomLevel() ?: return false
-        return zoomLevel > fitZoomLevel * 1.001F
-    }
-
-    /** The zoom level that fits the page into the current canvas, or null before the page has a size. */
-    private fun canvasFitZoomLevel(): Float? {
-        val page = engine.scene.getPages().getOrNull(pageIndex.value) ?: return null
-        val pageFrame = engine.block.getScreenSpaceBoundingBoxRect(listOf(page))
-        if (pageFrame.width() <= 0F || pageFrame.height() <= 0F) {
-            return null
-        }
-        val camera = engine.getCamera()
-        val pixelRatio = engine.block.getFloat(camera, "camera/pixelRatio")
-        val insets = publicState.value.insets
-        val width = engine.block.getFloat(camera, "camera/resolution/width") / pixelRatio - insets.left.value - insets.right.value
-        val height = engine.block.getFloat(camera, "camera/resolution/height") / pixelRatio - insets.top.value - insets.bottom.value
-        // The insets can fill the canvas, such as a keyboard in landscape, or the camera is not bound yet.
-        if (width <= 0F || height <= 0F) {
-            return null
-        }
-        return engine.scene.getZoomLevel() * min(width / pageFrame.width(), height / pageFrame.height())
-    }
-
-    /** @param clampOnly keeps the zoom level, also when nothing is selected. */
     @OptIn(UnstableEngineApi::class)
-    private fun zoom(
-        forceZoomToPage: Boolean = false,
-        clampOnly: Boolean = false,
-    ): Job {
+    private fun zoom(forceZoomToPage: Boolean = false): Job {
         zoomJob?.cancel()
         return viewModelScope
             .launch {
                 val page = engine.scene.getPages().getOrNull(pageIndex.value) ?: return@launch
                 val currentInsets = publicState.value.insets
                 val selectedBlock = getBlockForEvents()
-                val shouldZoomToPage = !clampOnly &&
-                    (forceZoomToPage || selectedBlock == null || engine.scene.getZoomLevel() == fitToPageZoomLevel)
+                val shouldZoomToPage = forceZoomToPage ||
+                    selectedBlock == null ||
+                    engine.scene.getZoomLevel() == fitToPageZoomLevel
                 val blocks = buildList {
                     add(page)
                     if (engine.editor.getEditMode() == TEXT_EDIT_MODE && selectedBlock?.type == BlockType.Text) {
@@ -1910,8 +1843,6 @@ class EditorUiViewModel(
                     )
                     engine.zoomToPage(pageIndex.value, currentInsets)
                     fitToPageZoomLevel = engine.scene.getZoomLevel()
-                } else if (clampOnly) {
-                    fitToPageZoomLevel = canvasFitZoomLevel() ?: fitToPageZoomLevel
                 }
 
                 val selectedDesignBlock = selectedBlock?.designBlock

@@ -64,8 +64,7 @@ sealed interface DropTarget {
  * @property dropTarget The current resolved drop target, or `null` if the pointer is over an incompatible / no-op zone.
  * @property targetSortedSiblings Per-target-track cache of sibling clips with the dragged clip excluded,
  * sorted by [Clip.timeOffset] ascending, keyed by [Track.id]. Captured eagerly for the source track at
- * drag start, with the [DragDropStore.transitionPartners] as drawn, and lazily for each foreground track
- * on first entry, then reused as the input
+ * drag start and lazily for each foreground track on first entry, then reused as the input
  * to [computeDropSlot] / [computeBackgroundDropSlot] / [computeDropOverrides] for the
  * rest of the drag. Safe to reuse because sibling [Clip.timeOffset] values can't change
  * during a drag — preview offsets live in [DragDropStore.overrides], not on [Clip].
