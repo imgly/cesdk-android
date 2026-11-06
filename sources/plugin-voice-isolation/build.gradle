@@ -1,0 +1,27 @@
+apply from: "$projectDir/../editor-library.gradle"
+apply from: "$projectDir/../dokka.gradle"
+
+def UBQ_ROOT_DIR = "${project.projectDir}/../../../.."
+def updateLocalizationTask = tasks.register("updateLocalizationFiles", Exec) {
+    workingDir = UBQ_ROOT_DIR
+    executable "python3"
+    args = [
+        "scripts/localization/generate.py",
+        "--platform",
+        "android",
+        "scripts/localization/mobile-plugin-voice-isolation.tsv"
+    ]
+}
+tasks.named("preBuild").configure { dependsOn(updateLocalizationTask) }
+tasks.named("build").configure { dependsOn(updateLocalizationTask) }
+
+android {
+    namespace = 'ly.img.editor.plugin.voiceIsolation'
+}
+
+dependencies {
+    api project(":editor")
+    api(libs.okhttp)
+
+    testImplementation libs.junit
+}

@@ -72,6 +72,7 @@ internal fun ClipTrimHandlesView(
     }
     val handleWidth = 20.dp
     val verticalInset = 2.dp
+    val isLoading = !clip.hasLoaded || clip.isPending
 
     var width by widthState
     var offset by offsetState
@@ -131,7 +132,7 @@ internal fun ClipTrimHandlesView(
         )
 
         fun determineLeadingTrimIconStyle(hasReachedMaxWidth: Boolean? = null): IconStyle {
-            if (!clip.hasLoaded || clip.isLooping) return IconStyle.Neutral
+            if (isLoading || clip.isLooping) return IconStyle.Neutral
             if (!clip.allowsTrimming) return IconStyle.Left
             if (hasReachedMaxWidth != null) {
                 return if (hasReachedMaxWidth) IconStyle.Neutral else IconStyle.Left
@@ -140,7 +141,7 @@ internal fun ClipTrimHandlesView(
         }
 
         fun determineTrailingTrimIconStyle(hasReachedMaxWidth: Boolean? = null): IconStyle {
-            if (!clip.hasLoaded) return IconStyle.Neutral
+            if (isLoading) return IconStyle.Neutral
             if (clip.isLooping || !clip.allowsTrimming) return IconStyle.Right
             if (hasReachedMaxWidth != null) {
                 return if (hasReachedMaxWidth) IconStyle.Neutral else IconStyle.Right
@@ -183,7 +184,7 @@ internal fun ClipTrimHandlesView(
                 .width(handleWidth)
                 .align(Alignment.CenterStart)
                 .pointerInput(clip, zoomState.zoomLevel) {
-                    if (!clip.hasLoaded) return@pointerInput
+                    if (isLoading) return@pointerInput
                     val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minDuration(clip.clipType)))
                         .coerceAtLeast(zoomState.toPx(trimBounds.leadingMin))
                     val footageMaxWidth = if (clip.footageDuration != null) {
@@ -274,7 +275,7 @@ internal fun ClipTrimHandlesView(
                 .width(handleWidth)
                 .align(Alignment.CenterEnd)
                 .pointerInput(clip, zoomState.zoomLevel) {
-                    if (!clip.hasLoaded) return@pointerInput
+                    if (isLoading) return@pointerInput
                     val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minDuration(clip.clipType)))
                         .coerceAtLeast(zoomState.toPx(trimBounds.trailingMin))
                     val effectiveFootageDuration = clip.effectiveFootageDuration

@@ -6,6 +6,7 @@
     <string name="ly_img_editor_asset_label_blur_loop">Blur</string>
     <string name="ly_img_editor_asset_label_breathing_loop">Breathing</string>
     <string name="ly_img_editor_asset_label_chop">Chop</string>
+    <string name="ly_img_editor_asset_label_clock_wipe">Clock Wipe</string>
     <string name="ly_img_editor_asset_label_color_fade">Color Fade</string>
     <string name="ly_img_editor_asset_label_color_wipe">Color Wipe</string>
     <string name="ly_img_editor_asset_label_crop_zoom">Crop Zoom</string>

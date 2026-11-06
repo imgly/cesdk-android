@@ -21,6 +21,8 @@ import ly.img.editor.base.timeline.dragdrop.DragDropState
 import ly.img.editor.base.timeline.dragdrop.context
 import ly.img.editor.base.timeline.dragdrop.recomputeDragPreview
 import ly.img.editor.base.timeline.state.TimelineState
+import ly.img.editor.base.timeline.state.releaseTransitionTrim
+import ly.img.editor.base.timeline.track.sortedClips
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.base.ui.Event
 
@@ -93,6 +95,11 @@ internal fun BoxScope.ClipMoveDragGesture(
 
                         onStartMoveDrag()
 
+                        val sourceClips = sourceTrack.sortedClips()
+                        timelineState.dragDrop.transitionPartners.apply {
+                            clear()
+                            putAll(releaseTransitionTrim(sourceClips, clip.id))
+                        }
                         timelineState.dragDrop.phase = DragDropState.Dragging(
                             DragContext(
                                 clipId = clip.id,
@@ -107,8 +114,9 @@ internal fun BoxScope.ClipMoveDragGesture(
                                 grabOffsetY = pointerInWindow.y - moveBodyOriginInWindow.y,
                                 dropTarget = null,
                                 targetSortedSiblings = mapOf(
-                                    sourceTrack.id to sourceTrack.clips
+                                    sourceTrack.id to sourceClips
                                         .filter { it.id != clip.id }
+                                        .map(timelineState.dragDrop::shown)
                                         .sortedBy { it.timeOffset },
                                 ),
                             ),

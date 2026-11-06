@@ -34,6 +34,7 @@ import ly.img.editor.core.ui.engine.getFillType
 import ly.img.editor.core.ui.engine.getKindEnum
 import ly.img.editor.core.ui.engine.isFillLooping
 import ly.img.editor.core.ui.utils.EPS_DURATION
+import ly.img.engine.BlockState
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockEvent
 import ly.img.engine.DesignBlockType
@@ -71,6 +72,13 @@ class TimelineState(
     private val page = engine.getCurrentPage()
 
     private var pageChildren: List<DesignBlock> = emptyList()
+
+    init {
+        // A block state change emits no block event, so refresh(events) never sees it.
+        coroutineScope.launch {
+            engine.block.onStateChanged(emptyList()).collect(::refreshPendingStates)
+        }
+    }
 
     fun getThumbnailProvider(designBlock: DesignBlock) = thumbnailsManager.getProvider(designBlock)
 
@@ -195,13 +203,47 @@ class TimelineState(
         }
     }
 
+    private fun refreshPendingStates(designBlocks: List<DesignBlock>) {
+        designBlocks.forEach { designBlock ->
+            val clip = dataSource.findClip(designBlock) ?: return@forEach
+            if (!engine.block.isValid(clip.id)) return@forEach
+            val isPending = isPending(clip.id, clip.clipType, wasPending = clip.isPending)
+            if (clip.isPending == isPending) return@forEach
+            val updatedClip = clip.copy(isPending = isPending)
+            updateClip(dataSource.findTrack(clip), updatedClip, clip)
+            if (selectedClip?.id == updatedClip.id) {
+                selectedClip = updatedClip
+            }
+        }
+    }
+
+    /**
+     * Only audio and video clips read the state of their block. A text or caption block is pending while its font
+     * loads, and a caption track can hold hundreds of clips. The state of a video clip's block includes its fill, which
+     * is pending while the engine decodes a frame after a seek, so the clip would flicker during playback. While the
+     * fill is pending, a video clip therefore keeps [wasPending].
+     */
+    private fun isPending(
+        designBlock: DesignBlock,
+        clipType: ClipType,
+        wasPending: Boolean,
+    ): Boolean = when (clipType) {
+        ClipType.Audio -> engine.block.getState(designBlock) is BlockState.Pending
+        ClipType.Video -> if (engine.block.getState(engine.block.getFill(designBlock)) is BlockState.Pending) {
+            wasPending
+        } else {
+            engine.block.getState(designBlock) is BlockState.Pending
+        }
+        else -> false
+    }
+
     /**
      * Clears drag-drop preview overrides. Stale once [dataSource] reflects committed engine state.
      * Skipped while dragging — a mid-drag refresh would otherwise wipe in-flight preview.
      */
     private fun clearOverridesIfIdle() {
         if (dragDrop.phase !is DragDropState.Dragging) {
-            dragDrop.overrides.clear()
+            dragDrop.clearPreview()
         }
     }
 
@@ -635,6 +677,7 @@ class TimelineState(
             isLooping = isLooping,
             hasAnimation = anyAnimationBlock != null,
             isLiveBufferRecording = isLiveBufferRecording,
+            isPending = isPending(designBlock, clipType, wasPending = existingClip?.isPending == true),
             transitionTrimLead = transitionTrim.lead,
             transitionTrimTail = transitionTrim.tail,
         )

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ly.img.editor.core.R
 import ly.img.editor.core.theme.LocalExtendedColorScheme
 import ly.img.editor.core.ui.iconpack.Mic
@@ -67,8 +67,8 @@ internal fun VoiceOverSheetBarButton(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(voiceOverActionTileHeight)
-                    .offset(y = voiceOverActionTileOffset),
+                    // Padding, not offset, so the row height counts this inset and a second line fits.
+                    .padding(top = voiceOverActionTileOffset),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(
                     space = voiceOverRecordActionContentSpacing,
@@ -87,17 +87,16 @@ internal fun VoiceOverSheetBarButton(
                         modifier = Modifier.size(iconSize),
                     )
                 }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(voiceOverActionLabelHeight),
-                    contentAlignment = Alignment.TopCenter,
-                ) {
-                    VoiceOverSheetActionLabel(
-                        text = label,
-                        maxLines = 1,
-                    )
-                }
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        platformStyle = PlatformTextStyle(includeFontPadding = false),
+                    ),
+                    lineHeight = 13.sp,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
     }

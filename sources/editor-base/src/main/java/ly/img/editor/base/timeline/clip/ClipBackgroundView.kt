@@ -69,7 +69,7 @@ fun ClipBackgroundView(
     }
 
     val provider = timelineState.getThumbnailProvider(clip.id)
-    val isLoading = provider?.isLoading ?: false
+    val isLoading = clip.isPending || provider?.isLoading == true
 
     Box(
         modifier

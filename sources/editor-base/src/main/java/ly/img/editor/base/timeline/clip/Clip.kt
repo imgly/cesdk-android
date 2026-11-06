@@ -46,6 +46,11 @@ data class Clip(
      * also plays from a `buffer://` resource, but it is complete and can be trimmed.
      */
     val isLiveBufferRecording: Boolean = false,
+    /**
+     * Whether the block of an audio or video clip is pending, for example while a plugin processes its audio. A pending
+     * clip shows the loading state and cannot be trimmed.
+     */
+    val isPending: Boolean = false,
     val leadingTransitionSeamSize: Dp? = null,
     val transitionTrimLead: Duration = ZERO,
     val transitionTrimTail: Duration = ZERO,
