@@ -44,7 +44,7 @@ fun canIsolateVoice(
 
 /**
  * Removes music and background noise from the audio of [block] and keeps the voice. The cleaned audio is a WAV file in
- * the app's files directory.
+ * the app's cache directory.
  *
  * - An audio clip gets the cleaned file.
  * - A video clip moves the audio track that the engine plays, its first one, into a new audio clip, as the editor's
@@ -58,9 +58,8 @@ fun canIsolateVoice(
  * Call it on the engine's thread, wherever the app has the engine, for example in the editor's `onCreate` after the
  * scene exists. It suspends while the audio is decoded and cleaned.
  *
- * Note that the cleaned files stay in the app's files directory. To keep a scene that refers to them, for example on
- * another device, upload each file when the editor exports or closes, and point the scene to the upload with
- * `engine.editor.relocateResource`.
+ * Note that Android can clear the app's cache directory. To keep the cleaned files, upload the `file://` URIs that
+ * `engine.editor.findAllMediaURIs()` returns, and point the scene to the uploads with `engine.editor.relocateResource`.
  *
  * @param block the video or audio clip to clean.
  * @param engine the engine of the scene that holds [block].
@@ -241,9 +240,9 @@ private suspend fun clean(
 ): File {
     // A separated audio track is complete only after its load, because the engine can still extract it into its buffer.
     engine.block.forceLoadAVResource(clip.videoFill ?: clip.block)
-    val workFolder = File(context.cacheDir, RESULT_FOLDER)
-    // The scene keeps referring to the result, so it goes where the system does not delete files to free space.
-    val resultFolder = File(context.filesDir, RESULT_FOLDER)
+    val workFolder = File(context.cacheDir, WORK_FOLDER)
+    // The result goes to the cache directory, so Android can free its space.
+    val resultFolder = File(context.cacheDir, RESULT_FOLDER)
     withContext(Dispatchers.IO) {
         workFolder.mkdirs()
         resultFolder.mkdirs()
@@ -468,7 +467,8 @@ private fun copyBuffer(
 
 private const val PROCESSING_BLOCKS_KEY = "ly.img.editor.plugin.voiceIsolation.processingBlocks"
 private const val QUEUE_KEY = "ly.img.editor.plugin.voiceIsolation.queue"
-private const val RESULT_FOLDER = "ly.img.plugin.voiceIsolation"
+private const val WORK_FOLDER = "ly.img.plugin.voiceIsolation"
+private const val RESULT_FOLDER = "ly.img.plugin.voiceIsolation/results"
 private const val AUDIO_FILE_URI = "audio/fileURI"
 private const val VIDEO_FILE_URI = "fill/video/fileURI"
 private const val KIND_VOICEOVER = "voiceover"

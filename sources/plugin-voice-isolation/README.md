@@ -77,10 +77,10 @@ changes or is deleted during the run, `ModelDownloadFailed` or `ProcessingFailed
 
 ## Keep the cleaned audio
 
-The cleaned audio is a WAV file (16-bit, 48 kHz, the channels of the clip) in the app's files directory, under
-`ly.img.plugin.voiceIsolation`. The plugin never deletes them. A scene that you save refers to these files, so its
-cleaned audio plays only on this device. To keep the audio elsewhere, upload each file when the editor exports or
-closes, point the scene to the upload, and delete the local file:
+The cleaned audio is a WAV file (16-bit, 48 kHz, the channels of the clip) in the app's cache directory, under
+`ly.img.plugin.voiceIsolation/results`. Android can clear that directory. The plugin uploads nothing. To keep the
+cleaned audio of a scene that you save, upload each `file://` URI that `engine.editor.findAllMediaURIs()` returns, for
+example when the editor exports, and point the scene to the upload:
 
 ```kotlin
 engine.editor.relocateResource(currentUri = localUri, relocatedUri = uploadedUri)

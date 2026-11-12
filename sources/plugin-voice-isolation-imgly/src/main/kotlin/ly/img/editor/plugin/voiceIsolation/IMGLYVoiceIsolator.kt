@@ -118,7 +118,7 @@ open class IMGLYVoiceIsolator(
     private companion object {
         const val TAG = "IMGLYVoiceIsolator"
 
-        // Apart from the results in ly.img.plugin.voiceIsolation, which an app may move or delete.
+        // Apart from the results in ly.img.plugin.voiceIsolation/results, which an app may move or delete.
         const val MODEL_FOLDER = "ly.img.editor/model/DeepFilterNet3"
         val MODEL_FILES = listOf("enc.onnx", "erb_dec.onnx", "df_dec.onnx", "config.ini")
         val modelLock = Mutex()
