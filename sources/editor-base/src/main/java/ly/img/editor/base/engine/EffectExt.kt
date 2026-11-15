@@ -68,84 +68,108 @@ fun EffectType.getProperties() = when (this) {
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_adjustments_label_brightness),
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
+                step = 0.01F,
             ),
+            controlKind = PropertyControlKind.Slider(detents = listOf(0F)),
         ),
         Property(
             key = "$key/saturation",
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_adjustments_label_saturation),
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
+                step = 0.01F,
             ),
+            controlKind = PropertyControlKind.Slider(detents = listOf(0F)),
         ),
         Property(
             key = "$key/contrast",
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_adjustments_label_contrast),
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
+                step = 0.01F,
             ),
+            controlKind = PropertyControlKind.Slider(detents = listOf(0F)),
         ),
         Property(
             key = "$key/gamma",
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_adjustments_label_gamma),
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
+                step = 0.01F,
             ),
+            controlKind = PropertyControlKind.Slider(detents = listOf(0F)),
         ),
         Property(
             key = "$key/clarity",
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_adjustments_label_clarity),
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
+                step = 0.01F,
             ),
+            controlKind = PropertyControlKind.Slider(detents = listOf(0F)),
         ),
         Property(
             key = "$key/exposure",
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_adjustments_label_exposure),
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
+                step = 0.01F,
             ),
+            controlKind = PropertyControlKind.Slider(detents = listOf(0F)),
         ),
         Property(
             key = "$key/shadows",
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_adjustments_label_shadows),
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
+                step = 0.01F,
             ),
+            controlKind = PropertyControlKind.Slider(detents = listOf(0F)),
         ),
         Property(
             key = "$key/highlights",
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_adjustments_label_highlights),
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
+                step = 0.01F,
             ),
+            controlKind = PropertyControlKind.Slider(detents = listOf(0F)),
         ),
         Property(
             key = "$key/blacks",
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_adjustments_label_blacks),
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
+                step = 0.01F,
             ),
+            controlKind = PropertyControlKind.Slider(detents = listOf(0F)),
         ),
         Property(
             key = "$key/whites",
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_adjustments_label_whites),
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
+                step = 0.01F,
             ),
+            controlKind = PropertyControlKind.Slider(detents = listOf(0F)),
         ),
         Property(
             key = "$key/temperature",
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_adjustments_label_temperature),
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
+                step = 0.01F,
             ),
+            controlKind = PropertyControlKind.Slider(detents = listOf(0F)),
         ),
         Property(
             key = "$key/sharpness",
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_adjustments_label_sharpness),
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
+                step = 0.01F,
             ),
+            controlKind = PropertyControlKind.Slider(detents = listOf(0F)),
         ),
     )
     EffectType.LutFilter -> listOf(
@@ -154,6 +178,7 @@ fun EffectType.getProperties() = when (this) {
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_filter_label_intensity),
             valueType = PropertyValueType.Float(
                 range = 0F..1F,
+                step = 0.01F,
             ),
         ),
     )
@@ -163,6 +188,7 @@ fun EffectType.getProperties() = when (this) {
             title = PropertyText.Resource(R.string.ly_img_editor_sheet_filter_label_intensity),
             valueType = PropertyValueType.Float(
                 range = -1F..1F,
+                step = 0.01F,
             ),
         ),
     )
@@ -209,6 +235,7 @@ fun EffectType.getProperties() = when (this) {
                 range = 1F..10F,
                 step = 1F,
             ),
+            controlKind = PropertyControlKind.Stepper(),
         ),
         Property(
             key = "$key/offset",
@@ -314,6 +341,7 @@ fun EffectType.getProperties() = when (this) {
                 range = 1F..15F,
                 step = 1F,
             ),
+            controlKind = PropertyControlKind.Stepper(),
         ),
     )
     EffectType.TvGlitch -> listOf(

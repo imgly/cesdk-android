@@ -82,6 +82,9 @@ class TimelineState(
 
     fun getThumbnailProvider(designBlock: DesignBlock) = thumbnailsManager.getProvider(designBlock)
 
+    internal fun transitionTrimCaps(clip: Clip): TransitionTrimCaps =
+        if (clip.transitionTrimLead == ZERO && clip.transitionTrimTail == ZERO) TransitionTrimCaps() else engine.transitionTrimCaps(clip.id)
+
     fun setZoom(zoom: Float) {
         zoomState.setZoom(zoom)
         updateTransitionSeams()
@@ -307,15 +310,18 @@ class TimelineState(
 
                     val transition = engine.block.getTransition(outgoing)
                     val hasTransition = engine.block.isValid(transition)
+                    val duration = if (hasTransition && engine.block.getType(transition) != "//ly.img.ubq/transition/none") {
+                        minOf(engine.block.getDuration(transition).seconds, outgoingClip.rawDuration / 2, incomingClip.rawDuration / 2)
+                            .coerceAtLeast(ZERO)
+                    } else {
+                        ZERO
+                    }
                     TransitionPairGeometry(
                         canShow = true,
                         hasTransition = hasTransition,
-                        overlap = if (hasTransition) {
-                            minOf(
-                                engine.block.getDuration(transition).seconds,
-                                outgoingClip.rawDuration / 2,
-                                incomingClip.rawDuration / 2,
-                            ).coerceAtLeast(ZERO)
+                        joined = duration > ZERO,
+                        overlap = if (duration > ZERO && engine.transitionOverlapApplies(outgoing, incoming)) {
+                            duration
                         } else {
                             ZERO
                         },
@@ -327,8 +333,13 @@ class TimelineState(
                 ?.let(engine.block::getParent)
                 ?.let(engine.block::getChildren)
                 .orEmpty()
+            val joinedPredecessors = mutableMapOf<DesignBlock, DesignBlock>()
             engineSiblings.zipWithNext().forEach pairLoop@{ (outgoing, incoming) ->
-                val overlap = transitionPair(outgoing, incoming).overlap
+                val pair = transitionPair(outgoing, incoming)
+                if (pair.joined) {
+                    joinedPredecessors[incoming] = outgoing
+                }
+                val overlap = pair.overlap
                 if (overlap == ZERO) return@pairLoop
                 trims[outgoing] = trims.getValue(outgoing).copy(tail = overlap / 2)
                 trims[incoming] = trims.getValue(incoming).copy(lead = overlap / 2)
@@ -347,13 +358,15 @@ class TimelineState(
                 if (clip.duration != duration ||
                     clip.timeOffset != timeOffset ||
                     clip.transitionTrimLead != transitionTrim.lead ||
-                    clip.transitionTrimTail != transitionTrim.tail
+                    clip.transitionTrimTail != transitionTrim.tail ||
+                    clip.joinedPredecessor != joinedPredecessors[clip.id]
                 ) {
                     val updatedClip = clip.copy(
                         duration = duration,
                         timeOffset = timeOffset,
                         transitionTrimLead = transitionTrim.lead,
                         transitionTrimTail = transitionTrim.tail,
+                        joinedPredecessor = joinedPredecessors[clip.id],
                     )
                     track.clips[index] = updatedClip
                     if (selectedClip?.id == updatedClip.id) {
@@ -437,6 +450,7 @@ class TimelineState(
     private data class TransitionPairGeometry(
         val canShow: Boolean = false,
         val hasTransition: Boolean = false,
+        val joined: Boolean = false,
         val overlap: Duration = ZERO,
     )
 
@@ -551,26 +565,26 @@ class TimelineState(
             }
         }
 
-        val fillId = if (engine.block.hasFill(designBlock)) {
+        val fillId = if (engine.block.supportsFill(designBlock)) {
             engine.block.getFill(designBlock)
         } else {
             null
         }
         val trimmableId = fillId ?: designBlock
 
-        val shapeId = if (engine.block.hasShape(designBlock)) {
+        val shapeId = if (engine.block.supportsShape(designBlock)) {
             engine.block.getShape(designBlock)
         } else {
             null
         }
 
-        val blurId = if (engine.block.hasBlur(designBlock)) {
+        val blurId = if (engine.block.supportsBlur(designBlock)) {
             engine.block.getBlur(designBlock)
         } else {
             null
         }
 
-        val effectIds = if (engine.block.hasEffects(designBlock)) {
+        val effectIds = if (engine.block.supportsEffects(designBlock)) {
             engine.block.getEffects(designBlock)
         } else {
             null
@@ -593,7 +607,7 @@ class TimelineState(
         val isBufferAudio = audioFileUri.startsWith("buffer://")
         val isLiveBufferRecording = isVoiceOver && isBufferAudio
 
-        val allowsTrimming = engine.block.hasTrim(trimmableId)
+        val allowsTrimming = engine.block.supportsTrim(trimmableId)
         val playbackSpeed =
             engine.block.getPlaybackControlBlock(designBlock)
                 ?.let(engine.block::getPlaybackSpeed)

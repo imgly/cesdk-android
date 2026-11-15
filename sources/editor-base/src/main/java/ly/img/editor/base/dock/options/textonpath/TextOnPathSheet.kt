@@ -199,6 +199,7 @@ private fun TextOnPathAdjustments(
             title = stringResource(R.string.ly_img_editor_sheet_text_on_path_label_offset),
             value = uiState.offset,
             valueRange = -1f..1f,
+            detents = listOf(0f),
             onValueChange = { onEvent(BlockEvent.OnChangeTextOnPathOffset(it)) },
             onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
         )

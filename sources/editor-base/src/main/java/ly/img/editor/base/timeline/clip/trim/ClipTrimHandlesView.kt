@@ -36,6 +36,7 @@ import ly.img.editor.base.timeline.clip.Clip
 import ly.img.editor.base.timeline.state.LiveTrimState
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
+import ly.img.editor.base.timeline.state.TransitionTrimCaps
 import ly.img.editor.base.timeline.state.trimBounds
 import ly.img.editor.base.ui.BlockEvent
 import ly.img.editor.base.ui.Event
@@ -44,6 +45,8 @@ import ly.img.editor.core.ui.utils.almostEquals
 import ly.img.editor.core.ui.utils.formatForClip
 import ly.img.editor.core.ui.utils.toDp
 import kotlin.math.absoluteValue
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -187,17 +190,20 @@ internal fun ClipTrimHandlesView(
                     if (isLoading) return@pointerInput
                     val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minDuration(clip.clipType)))
                         .coerceAtLeast(zoomState.toPx(trimBounds.leadingMin))
-                    val footageMaxWidth = if (clip.footageDuration != null) {
-                        zoomState.toPx(clip.duration + clip.trimOffset)
-                    } else if (clip.isInBackgroundTrack || clip.isLooping) {
-                        Float.POSITIVE_INFINITY
-                    } else {
-                        zoomState.toPx(clip.duration + clip.timeOffset)
-                    }
-                    val trackCap = zoomState.toPx(trimBounds.leadingMax)
-                    val maxWidth = minOf(footageMaxWidth, trackCap)
+                    var trimCaps = TransitionTrimCaps()
+                    var footageMaxWidth = 0f
+                    var maxWidth = 0f
                     detectHorizontalDragGestures(
                         onDragStart = {
+                            trimCaps = timelineState.transitionTrimCaps(clip)
+                            footageMaxWidth = if (clip.footageDuration != null) {
+                                zoomState.toPx(trimCaps.renderedDuration(clip.rawDuration + clip.trimOffset))
+                            } else if (clip.isInBackgroundTrack || clip.isLooping) {
+                                Float.POSITIVE_INFINITY
+                            } else {
+                                zoomState.toPx(clip.duration + clip.timeOffset)
+                            }
+                            maxWidth = minOf(footageMaxWidth, zoomState.toPx(trimBounds.leadingMax)).coerceAtLeast(minWidth)
                             onDragStart(type = ClipDragType.Leading)
                         },
                         onHorizontalDrag = { _, drag ->
@@ -233,26 +239,7 @@ internal fun ClipTrimHandlesView(
                         onDragEnd = {
                             onDragEnd()
                             leadingTrimHandleOvershoot.value = 0f
-
-                            var trimOffset = clip.trimOffset
-                            var timeOffset = clip.timeOffset
-                            var duration = clip.duration
-
-                            val delta = duration - zoomState.toSeconds(width)
-
-                            if (!clip.isInBackgroundTrack) {
-                                timeOffset = (timeOffset + delta).coerceAtLeast(0.seconds)
-                            }
-                            trimOffset = (trimOffset + delta).coerceAtLeast(0.seconds)
-                            duration -= delta
-
-                            onEvent(
-                                BlockEvent.OnUpdateTrim(
-                                    trimOffset = trimOffset,
-                                    timeOffset = (timeOffset - clip.transitionTrimLead).coerceAtLeast(0.seconds),
-                                    duration = duration + clip.transitionTrimLead + clip.transitionTrimTail,
-                                ),
-                            )
+                            onEvent(leadingTrim(clip, zoomState.toSeconds(width), trimCaps))
                             // Note: `liveTrim` is cleared by TrackView once the engine refresh lands. Clearing it here would
                             // flicker because `track.clips` hasn't yet reflected the committed shift.
                         },
@@ -278,20 +265,15 @@ internal fun ClipTrimHandlesView(
                     if (isLoading) return@pointerInput
                     val minWidth = zoomState.toPx(minOf(clip.duration, TimelineConfiguration.minDuration(clip.clipType)))
                         .coerceAtLeast(zoomState.toPx(trimBounds.trailingMin))
-                    val effectiveFootageDuration = clip.effectiveFootageDuration
-                    val footageMaxWidth = if (effectiveFootageDuration != null) {
-                        zoomState.toPx(
-                            effectiveFootageDuration - clip.trimOffset -
-                                clip.transitionTrimLead - clip.transitionTrimTail,
-                        ).coerceAtLeast(minWidth)
-                    } else {
-                        Float.POSITIVE_INFINITY
-                    }
-                    val trackCap = zoomState.toPx(trimBounds.trailingMax)
-                    val maxWidth = minOf(footageMaxWidth, trackCap)
-                        .coerceAtLeast(minWidth)
+                    var footageMaxWidth = 0f
+                    var maxWidth = 0f
                     detectHorizontalDragGestures(
                         onDragStart = {
+                            footageMaxWidth = clip.effectiveFootageDuration?.let { footage ->
+                                val caps = timelineState.transitionTrimCaps(clip)
+                                zoomState.toPx(caps.renderedDuration((footage - clip.trimOffset).coerceAtLeast(ZERO)))
+                            } ?: Float.POSITIVE_INFINITY
+                            maxWidth = minOf(footageMaxWidth, zoomState.toPx(trimBounds.trailingMax)).coerceAtLeast(minWidth)
                             onDragStart(ClipDragType.Trailing)
                         },
                         onHorizontalDrag = { _, drag ->
@@ -326,12 +308,7 @@ internal fun ClipTrimHandlesView(
                         onDragEnd = {
                             trailingTrimHandleOvershoot.value = 0f
                             onDragEnd()
-                            val newDuration = zoomState.toSeconds(width)
-                            onEvent(
-                                BlockEvent.OnUpdateDuration(
-                                    newDuration + clip.transitionTrimLead + clip.transitionTrimTail,
-                                ),
-                            )
+                            onEvent(BlockEvent.OnUpdateDuration(zoomState.toSeconds(width)))
                             // `liveTrim` is cleared by TrackView on engine refresh; see
                             // comment in the leading trim onDragEnd above.
                         },
@@ -347,6 +324,22 @@ internal fun ClipTrimHandlesView(
             }
         }
     }
+}
+
+/** The trim that a drag of the leading handle commits when it leaves [clip] [duration] long on the timeline. */
+internal fun leadingTrim(
+    clip: Clip,
+    duration: Duration,
+    trimCaps: TransitionTrimCaps,
+): BlockEvent.OnUpdateTrim {
+    val delta = clip.duration - duration
+    // Moving only the leading handle keeps the last frame of the source, even when an overlap inset changes.
+    val sourceEnd = clip.trimOffset + clip.rawDuration
+    return BlockEvent.OnUpdateTrim(
+        trimOffset = (sourceEnd - trimCaps.timing(duration).rawDuration).coerceAtLeast(ZERO),
+        timeOffset = if (clip.isInBackgroundTrack) clip.timeOffset else (clip.timeOffset + delta).coerceAtLeast(ZERO),
+        duration = duration,
+    )
 }
 
 // Adds a bouncy animation when trim handles are released after being overshot

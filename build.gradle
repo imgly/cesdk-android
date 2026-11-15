@@ -74,7 +74,7 @@ tasks.register("editorCoverageReport", JacocoReport) {
     dependsOn modules.collect { "${it.path}:compileDebugJavaWithJavac" }
     def execDir = providers.gradleProperty("coverageExecDir")
         .orElse("smoke-tests-app/build/outputs/code_coverage/debugAndroidTest/connected")
-    executionData.from(fileTree(execDir.get()) { include "**/*.ec" })
+    executionData.from(fileTree(execDir.get()) { include "**/*.ec", "**/*.exec" })
     def generated = ["**/iconpack/**", "**/iconPack/**"]
     classDirectories.from(modules.collect {
         [

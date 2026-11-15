@@ -150,6 +150,7 @@
     <string name="ly_img_editor_dialog_no_internet_button_confirm">Dismiss</string>
     <string name="ly_img_editor_dialog_no_internet_text">An internet connection is needed to download design assets.</string>
     <string name="ly_img_editor_dialog_no_internet_title">No internet connection</string>
+    <string name="ly_img_editor_dialog_paste_error_unsupported_type">This file type is not supported.</string>
     <string name="ly_img_editor_dialog_permission_camera_button_confirm">Settings</string>
     <string name="ly_img_editor_dialog_permission_camera_button_dismiss">Cancel</string>
     <string name="ly_img_editor_dialog_permission_camera_text">To use the camera, please enable camera access for this app in your Settings under \'Permissions\'.</string>
@@ -207,6 +208,7 @@
     <string name="ly_img_editor_edit_text_button_underline">Underline</string>
     <string name="ly_img_editor_edit_text_label_letter_case">Letter Case</string>
     <string name="ly_img_editor_edit_text_label_list_style">List Style</string>
+    <string name="ly_img_editor_edit_text_label_script_style">Script</string>
     <string name="ly_img_editor_edit_text_letter_case_option_lowercase">lower case</string>
     <string name="ly_img_editor_edit_text_letter_case_option_none">As typed</string>
     <string name="ly_img_editor_edit_text_letter_case_option_title_case">Capitalized Case</string>
@@ -214,6 +216,9 @@
     <string name="ly_img_editor_edit_text_list_style_option_bulleted">Bulleted List</string>
     <string name="ly_img_editor_edit_text_list_style_option_none">None</string>
     <string name="ly_img_editor_edit_text_list_style_option_numbered">Numbered List</string>
+    <string name="ly_img_editor_edit_text_script_style_option_normal">Normal</string>
+    <string name="ly_img_editor_edit_text_script_style_option_subscript">Subscript</string>
+    <string name="ly_img_editor_edit_text_script_style_option_superscript">Superscript</string>
     <string name="ly_img_editor_edit_text_title">Edit Text</string>
     <string name="ly_img_editor_error_activity_not_found">No app available to complete this action.</string>
     <string name="ly_img_editor_inspector_bar_button_adjustments">Adjustments</string>
@@ -425,6 +430,7 @@
     <string name="ly_img_editor_sheet_effect_label_vignette_color">Color</string>
     <string name="ly_img_editor_sheet_effect_label_vignette_size">Size</string>
     <string name="ly_img_editor_sheet_effect_title">Effect</string>
+    <string name="ly_img_editor_sheet_fill_stroke_accessibility_label_gradient_angle">Gradient Angle</string>
     <string name="ly_img_editor_sheet_fill_stroke_color_picker_title_fill">Fill Color</string>
     <string name="ly_img_editor_sheet_fill_stroke_color_picker_title_stroke">Stroke Color</string>
     <string name="ly_img_editor_sheet_fill_stroke_join_option_bevel">Bevel</string>
@@ -436,6 +442,7 @@
     <string name="ly_img_editor_sheet_fill_stroke_label_stroke">Stroke</string>
     <string name="ly_img_editor_sheet_fill_stroke_label_style">Style</string>
     <string name="ly_img_editor_sheet_fill_stroke_label_type">Type</string>
+    <string name="ly_img_editor_sheet_fill_stroke_label_width">Width</string>
     <string name="ly_img_editor_sheet_fill_stroke_position_option_center">Center</string>
     <string name="ly_img_editor_sheet_fill_stroke_position_option_inside">Inside</string>
     <string name="ly_img_editor_sheet_fill_stroke_position_option_outside">Outside</string>
@@ -495,8 +502,6 @@
     <string name="ly_img_editor_sheet_format_text_label_alignment">Alignment</string>
     <string name="ly_img_editor_sheet_format_text_label_font">Font</string>
     <string name="ly_img_editor_sheet_format_text_label_font_size">Font Size</string>
-    <string name="ly_img_editor_sheet_format_text_label_font_size_pt">Font Size (pt)</string>
-    <string name="ly_img_editor_sheet_format_text_label_font_size_px">Font Size (px)</string>
     <string name="ly_img_editor_sheet_format_text_label_frame_behaviour">Frame Behavior</string>
     <string name="ly_img_editor_sheet_format_text_label_frame_clipping">Clipping</string>
     <string name="ly_img_editor_sheet_format_text_label_letter_case">Letter Case</string>
@@ -504,6 +509,7 @@
     <string name="ly_img_editor_sheet_format_text_label_line_height">Line Height</string>
     <string name="ly_img_editor_sheet_format_text_label_list_style">List Style</string>
     <string name="ly_img_editor_sheet_format_text_label_paragraph_spacing">Paragraph Spacing</string>
+    <string name="ly_img_editor_sheet_format_text_label_script_style">Script</string>
     <string name="ly_img_editor_sheet_format_text_letter_case_option_lowercase">lower case</string>
     <string name="ly_img_editor_sheet_format_text_letter_case_option_none">As typed</string>
     <string name="ly_img_editor_sheet_format_text_letter_case_option_title_case">Capitalized Case</string>
@@ -511,6 +517,9 @@
     <string name="ly_img_editor_sheet_format_text_list_style_option_none">None</string>
     <string name="ly_img_editor_sheet_format_text_list_style_option_ordered">Ordered</string>
     <string name="ly_img_editor_sheet_format_text_list_style_option_unordered">Unordered</string>
+    <string name="ly_img_editor_sheet_format_text_script_style_option_normal">Normal</string>
+    <string name="ly_img_editor_sheet_format_text_script_style_option_subscript">Subscript</string>
+    <string name="ly_img_editor_sheet_format_text_script_style_option_superscript">Superscript</string>
     <string name="ly_img_editor_sheet_format_text_title">Format</string>
     <string name="ly_img_editor_sheet_layer_blend_mode_option_color">Color</string>
     <string name="ly_img_editor_sheet_layer_blend_mode_option_color_burn">Color Burn</string>
@@ -594,13 +603,19 @@
     <string name="ly_img_editor_sheet_transition_label_easing">Easing</string>
     <string name="ly_img_editor_sheet_transition_label_intensity">Intensity</string>
     <string name="ly_img_editor_sheet_transition_label_morph">Morph</string>
+    <string name="ly_img_editor_sheet_transition_label_overlap">Overlap clips</string>
     <string name="ly_img_editor_sheet_transition_label_zoom">Zoom</string>
     <string name="ly_img_editor_sheet_transition_title">Transition</string>
     <string name="ly_img_editor_sheet_voiceover_button_add_recording">Add recording</string>
     <string name="ly_img_editor_sheet_voiceover_button_mute">Mute other Audio</string>
     <string name="ly_img_editor_sheet_voiceover_button_record">Record</string>
     <string name="ly_img_editor_sheet_voiceover_button_unmute">Unmute other Audio</string>
+    <string name="ly_img_editor_sheet_volume_button_mute">Mute</string>
+    <string name="ly_img_editor_sheet_volume_button_unmute">Unmute</string>
     <string name="ly_img_editor_sheet_volume_title">Volume</string>
+    <string name="ly_img_editor_stepper_accessibility_action_type_value">Type a value</string>
+    <string name="ly_img_editor_stepper_button_decrease">Decrease %s</string>
+    <string name="ly_img_editor_stepper_button_increase">Increase %s</string>
     <string name="ly_img_editor_timeline_add_audio_option_music">Audio</string>
     <string name="ly_img_editor_timeline_add_audio_option_voiceover">Voiceover</string>
     <string name="ly_img_editor_timeline_add_clip_option_camera">Camera</string>

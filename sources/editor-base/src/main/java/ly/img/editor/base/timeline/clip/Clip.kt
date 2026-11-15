@@ -52,6 +52,7 @@ data class Clip(
      */
     val isPending: Boolean = false,
     val leadingTransitionSeamSize: Dp? = null,
+    val joinedPredecessor: DesignBlock? = null,
     val transitionTrimLead: Duration = ZERO,
     val transitionTrimTail: Duration = ZERO,
 ) {

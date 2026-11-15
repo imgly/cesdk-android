@@ -12,6 +12,7 @@ import ly.img.engine.Engine
 import ly.img.engine.FontStyle
 import ly.img.engine.FontWeight
 import ly.img.engine.ListStyle
+import ly.img.engine.ScriptStyle
 import ly.img.engine.TextCase
 import ly.img.engine.TextDecorationLine
 
@@ -35,6 +36,8 @@ sealed interface EditingTextCardUiState {
         // The first case in the queried range. The row marks it active and
         // re-applying it is a no-op, so a mixed range can always be normalised in one tap.
         val casing: TextCase,
+        // The first script style in the queried range, for the same reason as [casing].
+        val scriptStyle: ScriptStyle,
         val textColors: List<Color>,
     ) : EditingTextCardUiState
 }
@@ -71,6 +74,9 @@ internal fun createEditingTextCardUiState(
     val cases = runCatching {
         engine.block.getTextCases(designBlock, from, to)
     }.getOrDefault(emptyList())
+    val scriptStyles = runCatching {
+        engine.block.getTextScriptStyles(designBlock, from, to)
+    }.getOrDefault(emptyList())
 
     return EditingTextCardUiState.Formatting(
         isBold = typeface != null && weights.isNotEmpty() && weights.all { it == FontWeight.BOLD },
@@ -90,6 +96,7 @@ internal fun createEditingTextCardUiState(
         listStyle = engine.block.resolveTextListStyle(designBlock),
         isTextOnPath = runCatching { engine.block.getTextOnPath(designBlock) }.getOrNull() != null,
         casing = cases.firstOrNull() ?: TextCase.NORMAL,
+        scriptStyle = scriptStyles.firstOrNull() ?: ScriptStyle.NORMAL,
         textColors = textColors,
     )
 }

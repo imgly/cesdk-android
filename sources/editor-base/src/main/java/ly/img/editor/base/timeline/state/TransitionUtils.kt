@@ -3,6 +3,7 @@ package ly.img.editor.base.timeline.state
 import kotlinx.coroutines.flow.firstOrNull
 import ly.img.editor.base.timeline.clip.Clip
 import ly.img.engine.DesignBlock
+import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
 import ly.img.engine.HistoryUpdate
 import kotlin.time.Duration
@@ -61,18 +62,11 @@ internal fun Engine.transitionTrim(clip: DesignBlock): TransitionTrim {
     return TransitionTrim(lead = lead, tail = tail)
 }
 
-/**
- * Converts a rendered timeline duration to raw engine timing using the transition inset that
- * will apply after the duration changes. A transition edge is either capped or contributes one
- * quarter of the raw clip duration, yielding three linear regions.
- */
-internal fun Engine.transitionTiming(
-    clip: DesignBlock,
-    renderedDuration: Duration,
-): TransitionTiming {
+/** Maximum transition insets at either end, before the clip's own duration limits them. */
+internal fun Engine.transitionTrimCaps(clip: DesignBlock): TransitionTrimCaps {
     val siblings = block.getParent(clip)?.let(block::getChildren).orEmpty()
     val index = siblings.indexOf(clip)
-    if (index < 0) return TransitionTiming(rawDuration = renderedDuration)
+    if (index < 0) return TransitionTrimCaps()
 
     fun trimCap(
         outgoing: DesignBlock,
@@ -92,21 +86,31 @@ internal fun Engine.transitionTiming(
     val trailingCap = siblings.getOrNull(index + 1)
         ?.let { incoming -> trimCap(clip, incoming, incoming) }
         ?: ZERO
-    val smallerCap = minOf(leadingCap, trailingCap)
-    val largerCap = maxOf(leadingCap, trailingCap)
+    return TransitionTrimCaps(leadingCap, trailingCap)
+}
 
-    val rawDuration = when {
-        renderedDuration <= smallerCap * 2 -> renderedDuration * 2
-        renderedDuration <= largerCap * 3 - smallerCap -> (renderedDuration + smallerCap) * 4 / 3
-        else -> renderedDuration + smallerCap + largerCap
+internal data class TransitionTrimCaps(
+    val lead: Duration = ZERO,
+    val tail: Duration = ZERO,
+) {
+    private fun trim(rawDuration: Duration) = TransitionTrim(minOf(lead, rawDuration / 4), minOf(tail, rawDuration / 4))
+
+    fun renderedDuration(rawDuration: Duration): Duration {
+        val inset = trim(rawDuration)
+        return rawDuration - inset.lead - inset.tail
     }
-    return TransitionTiming(
-        rawDuration = rawDuration,
-        trim = TransitionTrim(
-            lead = minOf(leadingCap, rawDuration / 4),
-            tail = minOf(trailingCap, rawDuration / 4),
-        ),
-    )
+
+    /** Inverts the displayed width. Each edge either reaches its cap or hides a quarter of the raw duration. */
+    fun timing(renderedDuration: Duration): TransitionTiming {
+        val smallerCap = minOf(lead, tail)
+        val largerCap = maxOf(lead, tail)
+        val rawDuration = when {
+            renderedDuration <= smallerCap * 2 -> renderedDuration * 2
+            renderedDuration <= largerCap * 3 - smallerCap -> (renderedDuration + smallerCap) * 4 / 3
+            else -> renderedDuration + smallerCap + largerCap
+        }
+        return TransitionTiming(rawDuration, trim(rawDuration))
+    }
 }
 
 internal fun Engine.transitionOverlap(
@@ -114,16 +118,41 @@ internal fun Engine.transitionOverlap(
     incoming: DesignBlock,
 ): Duration {
     val outgoingDuration = block.getDuration(outgoing).seconds
-    val incomingDuration = block.getDuration(incoming).seconds
     val outgoingEnd = block.getTimeOffset(outgoing).seconds + outgoingDuration
     val incomingStart = block.getTimeOffset(incoming).seconds
-    if (!canShowTransition(outgoing, incoming, outgoingEnd, incomingStart) || !hasRealTransition(outgoing)) {
+    if (!clipsMeet(start = incomingStart, end = outgoingEnd)) {
+        return ZERO
+    }
+    return transitionOverlapForDrop(outgoing, incoming)
+}
+
+/**
+ * The saved overlap of the transition after [outgoing]. The engine ignores it next to a group clip, so a group cut
+ * never overlaps.
+ */
+internal fun Engine.transitionOverlapApplies(
+    outgoing: DesignBlock,
+    incoming: DesignBlock,
+): Boolean = block.getType(outgoing) != DesignBlockType.Group.key &&
+    block.getType(incoming) != DesignBlockType.Group.key &&
+    block.getBoolean(block.getTransition(outgoing), "transition/overlap")
+
+/** A drop resolves adjacency from its proposed layout, before the clips' engine offsets have moved. */
+internal fun Engine.transitionOverlapForDrop(
+    outgoing: DesignBlock,
+    incoming: DesignBlock,
+): Duration {
+    if (!block.supportsTransition(outgoing) ||
+        !block.supportsTransition(incoming) ||
+        !hasRealTransition(outgoing) ||
+        !transitionOverlapApplies(outgoing, incoming)
+    ) {
         return ZERO
     }
     return minOf(
         block.getDuration(block.getTransition(outgoing)).seconds,
-        outgoingDuration / 2,
-        incomingDuration / 2,
+        block.getDuration(outgoing).seconds / 2,
+        block.getDuration(incoming).seconds / 2,
     ).coerceAtLeast(ZERO)
 }
 
@@ -146,21 +175,6 @@ internal suspend fun Engine.awaitTransitionRemoved(clips: Collection<DesignBlock
     if (clips.isEmpty()) return false
     editor.onHistoryUpdatedWithKind().firstOrNull { it == HistoryUpdate.UPDATED } ?: return false
     return clips.any { block.isValid(it) && !hasRealTransition(it) }
-}
-
-/**
- * Destroys the transition of each cut in [cuts] whose clip is now followed by a different clip. A transition belongs
- * to its cut, so it does not move to the new neighbour. Destroying it, unlike `removeTransition`, shifts no clip.
- */
-internal fun Engine.removeChangedTransitionCuts(cuts: Map<DesignBlock, DesignBlock?>) {
-    cuts.forEach { (outgoing, incoming) ->
-        if (!block.isValid(outgoing)) return@forEach
-        val transition = block.getTransition(outgoing)
-        if (!block.isValid(transition)) return@forEach
-        val siblings = block.getParent(outgoing)?.let(block::getChildren).orEmpty()
-        if (siblings.getOrNull(siblings.indexOf(outgoing) + 1) == incoming) return@forEach
-        block.destroy(transition)
-    }
 }
 
 /**

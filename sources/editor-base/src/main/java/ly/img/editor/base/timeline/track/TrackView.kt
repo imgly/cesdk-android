@@ -129,12 +129,11 @@ fun TrackView(
         }
         var liveTrim by remember { mutableStateOf<LiveTrimState?>(null) }
 
-        // Keep sibling overrides visible until the engine refresh propagates committed
-        // positions back into `track.clips`. Clearing eagerly would recompose with stale
-        // offsets for a frame — siblings would snap back, then jump forward once the
-        // async refresh lands.
-        LaunchedEffect(track) {
-            snapshotFlow { track.clips.map { it.id to (it.timeOffset to it.duration) } }
+        // Keep the trim preview until committed clip positions arrive. History rebuilds replace the
+        // foreground track, so the same row must observe timing changes across track instances.
+        val currentTrack by rememberUpdatedState(track)
+        LaunchedEffect(track.id) {
+            snapshotFlow { currentTrack.clips.map { it.id to (it.timeOffset to it.duration) } }
                 .drop(1)
                 .collect { liveTrim = null }
         }

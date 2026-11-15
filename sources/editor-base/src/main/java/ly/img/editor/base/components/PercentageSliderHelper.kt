@@ -1,6 +1,12 @@
 package ly.img.editor.base.components
 
+import ly.img.editor.base.components.numeric.NumberStepperMath
+import ly.img.editor.base.components.numeric.formatNumber
+import ly.img.editor.base.components.numeric.withUnit
+import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
  * Helper to determine when to use a 'percentage slider',
@@ -27,7 +33,7 @@ internal object PercentageSliderHelper {
      * A special case of percentage slider, when min and max values are mirrored at 0.
      * In that case, a range of [-100..100] is displayed.
      */
-    private fun isSymmetricalPercentageSlider(
+    fun isSymmetricalPercentageSlider(
         min: Float,
         max: Float,
     ): Boolean {
@@ -69,25 +75,64 @@ internal object PercentageSliderHelper {
     private const val MAX_FRACTION_DIGITS = 2
 
     /**
-     * Get the number of fractional digits (after the decimal separator) from a number, capped at [MAX_FRACTION_DIGITS].
-     */
-    private fun countFractionalDigits(value: Float): Int {
-        val str = value.toString()
-        val dotIndex = str.indexOf('.')
-        if (dotIndex == -1) return 0
-        val fraction = str.substring(dotIndex + 1)
-        if (fraction == "0") return 0
-        return fraction.length.coerceAtMost(MAX_FRACTION_DIGITS)
-    }
-
-    /**
-     * Format a raw slider value for display, using the step to determine decimal places.
+     * Format a raw slider value for display, with the decimals that [step] needs, at most [MAX_FRACTION_DIGITS].
+     * Locale-aware, without grouping, and drops trailing zeros: `4`, `4.2`, `0.05`, `24,5` in German.
      */
     fun formatValue(
         value: Float,
         step: Float,
-    ): String {
-        val decimals = countFractionalDigits(step)
-        return String.format("%.${decimals}f", value)
+        locale: Locale = Locale.getDefault(),
+    ): String = formatNumber(
+        value = value.toDouble(),
+        decimals = min(NumberStepperMath.decimals(step.toDouble()), MAX_FRACTION_DIGITS),
+        locale = locale,
+    )
+
+    /** The longest readout the slider can show, so the readout reserves its width. */
+    fun widestReadoutText(
+        min: Float,
+        max: Float,
+        step: Float,
+        disableAutoPercentage: Boolean,
+        locale: Locale = Locale.getDefault(),
+    ): String = listOf(min, max, (min + step).coerceAtMost(max), (max - step).coerceAtLeast(min))
+        // One step inside each end, because 99.5 is wider than 100.
+        .map { readoutText(it, min, max, step, disableAutoPercentage, locale) }
+        .maxBy { it.length }
+
+    /**
+     * The number next to a slider: the rounded percentage on a percentage slider, otherwise the value with the decimals
+     * of [step]. It has no unit, the same as the Web editor: `50`, `-100`, `4`.
+     */
+    fun readoutText(
+        value: Float,
+        min: Float,
+        max: Float,
+        step: Float,
+        disableAutoPercentage: Boolean,
+        locale: Locale = Locale.getDefault(),
+    ): String = if (showsPercentage(min, max, disableAutoPercentage)) {
+        valueToPercentage(value, min, max).roundToInt().toString()
+    } else {
+        formatValue(value, step, locale)
     }
+
+    /** What TalkBack reads: the readout, with `%` on a percentage slider. */
+    fun spokenText(
+        value: Float,
+        min: Float,
+        max: Float,
+        step: Float,
+        disableAutoPercentage: Boolean,
+        locale: Locale = Locale.getDefault(),
+    ): String = withUnit(
+        text = readoutText(value, min, max, step, disableAutoPercentage, locale),
+        unit = "%".takeIf { showsPercentage(min, max, disableAutoPercentage) },
+    )
+
+    private fun showsPercentage(
+        min: Float,
+        max: Float,
+        disableAutoPercentage: Boolean,
+    ) = !disableAutoPercentage && isPercentageSlider(min, max)
 }
