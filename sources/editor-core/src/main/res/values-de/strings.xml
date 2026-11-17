@@ -6,7 +6,6 @@
     <string name="ly_img_editor_asset_label_blur_loop">Weichzeichnen</string>
     <string name="ly_img_editor_asset_label_breathing_loop">Atmen</string>
     <string name="ly_img_editor_asset_label_chop">Zerhacken</string>
-    <string name="ly_img_editor_asset_label_clock_wipe">Uhr-Wischen</string>
     <string name="ly_img_editor_asset_label_color_fade">Farbübergang</string>
     <string name="ly_img_editor_asset_label_color_wipe">Farb-Wischen</string>
     <string name="ly_img_editor_asset_label_crop_zoom">Zuschnitts-Zoom</string>
@@ -150,7 +149,6 @@
     <string name="ly_img_editor_dialog_no_internet_button_confirm">Schließen</string>
     <string name="ly_img_editor_dialog_no_internet_text">Eine Internetverbindung wird benötigt, um Design-Assets herunterzuladen.</string>
     <string name="ly_img_editor_dialog_no_internet_title">Keine Internetverbindung</string>
-    <string name="ly_img_editor_dialog_paste_error_unsupported_type">Dieser Dateityp wird nicht unterstützt.</string>
     <string name="ly_img_editor_dialog_permission_camera_button_confirm">Einstellungen</string>
     <string name="ly_img_editor_dialog_permission_camera_button_dismiss">Abbrechen</string>
     <string name="ly_img_editor_dialog_permission_camera_text">Um die Kamera zu verwenden, aktivieren Sie bitte den Kamerazugriff für diese App in Ihren Einstellungen unter \'Berechtigungen\'.</string>
@@ -208,7 +206,6 @@
     <string name="ly_img_editor_edit_text_button_underline">Unterstrichen</string>
     <string name="ly_img_editor_edit_text_label_letter_case">Groß-/Kleinschreibung</string>
     <string name="ly_img_editor_edit_text_label_list_style">Listenstil</string>
-    <string name="ly_img_editor_edit_text_label_script_style">Hoch-/Tiefstellung</string>
     <string name="ly_img_editor_edit_text_letter_case_option_lowercase">alles klein</string>
     <string name="ly_img_editor_edit_text_letter_case_option_none">Wie geschrieben</string>
     <string name="ly_img_editor_edit_text_letter_case_option_title_case">Großschreibung</string>
@@ -216,9 +213,6 @@
     <string name="ly_img_editor_edit_text_list_style_option_bulleted">Aufzählungsliste</string>
     <string name="ly_img_editor_edit_text_list_style_option_none">Keine</string>
     <string name="ly_img_editor_edit_text_list_style_option_numbered">Nummerierte Liste</string>
-    <string name="ly_img_editor_edit_text_script_style_option_normal">Normal</string>
-    <string name="ly_img_editor_edit_text_script_style_option_subscript">Tiefgestellt</string>
-    <string name="ly_img_editor_edit_text_script_style_option_superscript">Hochgestellt</string>
     <string name="ly_img_editor_edit_text_title">Text bearbeiten</string>
     <string name="ly_img_editor_error_activity_not_found">Keine App verfügbar, um diese Aktion auszuführen.</string>
     <string name="ly_img_editor_inspector_bar_button_adjustments">Farbkorrektur</string>
@@ -430,7 +424,6 @@
     <string name="ly_img_editor_sheet_effect_label_vignette_color">Farbe</string>
     <string name="ly_img_editor_sheet_effect_label_vignette_size">Größe</string>
     <string name="ly_img_editor_sheet_effect_title">Effekt</string>
-    <string name="ly_img_editor_sheet_fill_stroke_accessibility_label_gradient_angle">Verlaufswinkel</string>
     <string name="ly_img_editor_sheet_fill_stroke_color_picker_title_fill">Füllfarbe</string>
     <string name="ly_img_editor_sheet_fill_stroke_color_picker_title_stroke">Konturfarbe</string>
     <string name="ly_img_editor_sheet_fill_stroke_join_option_bevel">Abschrägung</string>
@@ -442,7 +435,6 @@
     <string name="ly_img_editor_sheet_fill_stroke_label_stroke">Kontur</string>
     <string name="ly_img_editor_sheet_fill_stroke_label_style">Stil</string>
     <string name="ly_img_editor_sheet_fill_stroke_label_type">Typ</string>
-    <string name="ly_img_editor_sheet_fill_stroke_label_width">Breite</string>
     <string name="ly_img_editor_sheet_fill_stroke_position_option_center">Zentriert</string>
     <string name="ly_img_editor_sheet_fill_stroke_position_option_inside">Innen</string>
     <string name="ly_img_editor_sheet_fill_stroke_position_option_outside">Außen</string>
@@ -502,6 +494,8 @@
     <string name="ly_img_editor_sheet_format_text_label_alignment">Ausrichtung</string>
     <string name="ly_img_editor_sheet_format_text_label_font">Schriftart</string>
     <string name="ly_img_editor_sheet_format_text_label_font_size">Schriftgröße</string>
+    <string name="ly_img_editor_sheet_format_text_label_font_size_pt">Schriftgröße (pt)</string>
+    <string name="ly_img_editor_sheet_format_text_label_font_size_px">Schriftgröße (px)</string>
     <string name="ly_img_editor_sheet_format_text_label_frame_behaviour">Textrahmen</string>
     <string name="ly_img_editor_sheet_format_text_label_frame_clipping">Kappen</string>
     <string name="ly_img_editor_sheet_format_text_label_letter_case">Groß-/Kleinschreibung</string>
@@ -509,7 +503,6 @@
     <string name="ly_img_editor_sheet_format_text_label_line_height">Zeilenhöhe</string>
     <string name="ly_img_editor_sheet_format_text_label_list_style">Listenstil</string>
     <string name="ly_img_editor_sheet_format_text_label_paragraph_spacing">Absatzabstand</string>
-    <string name="ly_img_editor_sheet_format_text_label_script_style">Hoch-/Tiefstellung</string>
     <string name="ly_img_editor_sheet_format_text_letter_case_option_lowercase">alles klein</string>
     <string name="ly_img_editor_sheet_format_text_letter_case_option_none">Wie geschrieben</string>
     <string name="ly_img_editor_sheet_format_text_letter_case_option_title_case">Großschreibung</string>
@@ -517,9 +510,6 @@
     <string name="ly_img_editor_sheet_format_text_list_style_option_none">Keine</string>
     <string name="ly_img_editor_sheet_format_text_list_style_option_ordered">Geordnet</string>
     <string name="ly_img_editor_sheet_format_text_list_style_option_unordered">Ungeordnet</string>
-    <string name="ly_img_editor_sheet_format_text_script_style_option_normal">Normal</string>
-    <string name="ly_img_editor_sheet_format_text_script_style_option_subscript">Tiefgestellt</string>
-    <string name="ly_img_editor_sheet_format_text_script_style_option_superscript">Hochgestellt</string>
     <string name="ly_img_editor_sheet_format_text_title">Format</string>
     <string name="ly_img_editor_sheet_layer_blend_mode_option_color">Farbe</string>
     <string name="ly_img_editor_sheet_layer_blend_mode_option_color_burn">Farbig nachbelichten</string>
@@ -603,19 +593,13 @@
     <string name="ly_img_editor_sheet_transition_label_easing">Beschleunigung</string>
     <string name="ly_img_editor_sheet_transition_label_intensity">Intensität</string>
     <string name="ly_img_editor_sheet_transition_label_morph">Morph</string>
-    <string name="ly_img_editor_sheet_transition_label_overlap">Clips überlappen</string>
     <string name="ly_img_editor_sheet_transition_label_zoom">Zoom</string>
     <string name="ly_img_editor_sheet_transition_title">Übergang</string>
     <string name="ly_img_editor_sheet_voiceover_button_add_recording">Aufnahme hinzufügen</string>
     <string name="ly_img_editor_sheet_voiceover_button_mute">Anderes Audio aus</string>
     <string name="ly_img_editor_sheet_voiceover_button_record">Aufnehmen</string>
     <string name="ly_img_editor_sheet_voiceover_button_unmute">Anderes Audio an</string>
-    <string name="ly_img_editor_sheet_volume_button_mute">Stummschalten</string>
-    <string name="ly_img_editor_sheet_volume_button_unmute">Stummschaltung aufheben</string>
     <string name="ly_img_editor_sheet_volume_title">Lautstärke</string>
-    <string name="ly_img_editor_stepper_accessibility_action_type_value">Wert eingeben</string>
-    <string name="ly_img_editor_stepper_button_decrease">%s verringern</string>
-    <string name="ly_img_editor_stepper_button_increase">%s erhöhen</string>
     <string name="ly_img_editor_timeline_add_audio_option_music">Audio</string>
     <string name="ly_img_editor_timeline_add_audio_option_voiceover">Voiceover</string>
     <string name="ly_img_editor_timeline_add_clip_option_camera">Kamera</string>

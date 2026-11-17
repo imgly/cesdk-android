@@ -58,42 +58,19 @@ data class Property(
     val valueType: PropertyValueType,
     val combineStrategy: PropertyValueCombineStrategy,
     val assetData: PropertyAssetData? = null,
-    val controlKind: PropertyControlKind = PropertyControlKind.Slider(),
 ) {
     constructor(
         title: PropertyText,
         key: String,
         valueType: PropertyValueType,
         assetData: PropertyAssetData? = null,
-        controlKind: PropertyControlKind = PropertyControlKind.Slider(),
     ) : this(
         title = title,
         keys = listOf(key),
         valueType = valueType,
         combineStrategy = PropertyValueCombineStrategy.First,
         assetData = assetData,
-        controlKind = controlKind,
     )
-}
-
-/**
- * How a [PropertyValueType.Float] renders. Declared with the property, not guessed from its range, so the same range
- * can be a slider for one property and a stepper for another. Both move by the value type's step.
- */
-sealed interface PropertyControlKind {
-    /** A drag control, for a value judged by eye. [detents] capture the drag with one haptic tick, such as `0`. */
-    @Immutable
-    data class Slider(
-        val detents: List<kotlin.Float> = emptyList(),
-    ) : PropertyControlKind
-
-    /** Buttons and a typed value, for a value whose number users know. */
-    @Immutable
-    data class Stepper(
-        val unit: kotlin.String? = null,
-        /** Decimals the field shows and a typed value keeps. `null` derives them from the step. */
-        val decimals: kotlin.Int? = null,
-    ) : PropertyControlKind
 }
 
 data class PropertyAssetData(

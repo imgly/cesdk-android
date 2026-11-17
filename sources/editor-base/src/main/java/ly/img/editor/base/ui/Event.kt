@@ -25,7 +25,6 @@ import ly.img.engine.FillType
 import ly.img.engine.FontUnit
 import ly.img.engine.HorizontalAlignment
 import ly.img.engine.ListStyle
-import ly.img.engine.ScriptStyle
 import ly.img.engine.StrokeCornerGeometry
 import ly.img.engine.StrokePosition
 import ly.img.engine.StrokeStyle
@@ -245,22 +244,6 @@ interface BlockEvent : Event {
         val color: Color,
     ) : BlockEvent
 
-    /**
-     * Paints the stroke with its color for [FillType.Color], or with a gradient fill of [type] otherwise.
-     */
-    data class OnChangeStrokeFillStyle(
-        val type: FillType,
-    ) : BlockEvent
-
-    data class OnChangeStrokeGradientColors(
-        val index: Int,
-        val color: Color,
-    ) : BlockEvent
-
-    data class OnChangeStrokeLinearGradientParams(
-        val rotationInDegrees: Float,
-    ) : BlockEvent
-
     data class OnChangeStrokeWidth(
         val width: Float,
     ) : BlockEvent
@@ -346,10 +329,6 @@ interface BlockEvent : Event {
 
     data class OnChangeListStyle(
         val listStyle: ListStyle,
-    ) : BlockEvent
-
-    data class OnChangeScriptStyle(
-        val scriptStyle: ScriptStyle,
     ) : BlockEvent
 
     data class OnChangeVerticalAlignment(
@@ -499,14 +478,12 @@ interface BlockEvent : Event {
         val block: DesignBlock,
     ) : BlockEvent
 
-    /** [timeOffset] and [duration] are drawn timeline values, as [Clip] holds them: without the transition trims. */
     data class OnUpdateTrim(
         val trimOffset: Duration,
         val timeOffset: Duration,
         val duration: Duration,
     ) : BlockEvent
 
-    /** [duration] is a drawn timeline value, as [Clip] holds it: without the transition trims. */
     data class OnUpdateDuration(
         val duration: Duration,
     ) : BlockEvent

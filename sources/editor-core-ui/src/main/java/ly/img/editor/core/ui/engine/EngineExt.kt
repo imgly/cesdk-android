@@ -4,22 +4,16 @@ import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.flow.first
 import ly.img.editor.core.component.data.ConicalGradientFill
 import ly.img.editor.core.component.data.Fill
-import ly.img.editor.core.component.data.GradientFill
 import ly.img.editor.core.component.data.LinearGradientFill
 import ly.img.editor.core.component.data.RadialGradientFill
 import ly.img.editor.core.component.data.SolidFill
 import ly.img.engine.BlockApi
-import ly.img.engine.CMYKColor
 import ly.img.engine.ColorSpace
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
-import ly.img.engine.EngineErrorCode
-import ly.img.engine.EngineException
 import ly.img.engine.FillType
-import ly.img.engine.GradientColorStop
 import ly.img.engine.RGBAColor
-import ly.img.engine.SpotColor
 
 suspend fun Engine.awaitEngineAndSceneLoad() {
     awaitStart()
@@ -126,36 +120,12 @@ fun RGBAColor.toComposeColor(): Color = Color(
 
 /**
  * An extension function for converting any [Engine] color into an Engine RGBA color.
- * While the CMYK profile loads, or when it cannot load, a CMYK color converts by the formula that the canvas draws with.
  * IMPORTANT! When modifying this function also modify similar function in InspectorBarExt.kt.
  *
  * @return the converted color.
  */
-fun ly.img.engine.Color.toRGBColor(engine: Engine): RGBAColor = this as? RGBAColor ?: try {
-    engine.editor.convertColorToColorSpace(this, ColorSpace.SRGB) as RGBAColor
-} catch (exception: EngineException) {
-    if (exception.code !in CMYK_PROFILE_ERRORS) throw exception
-    toUnmanagedRGBColor(engine)
-}
-
-/**
- * Converts a CMYK color, or a spot color with only a CMYK approximation, to sRGB by the formula that the canvas draws
- * with while the CMYK profile loads or after it failed to load.
- * IMPORTANT! When modifying this function also modify similar function in InspectorBarExt.kt.
- */
-private fun ly.img.engine.Color.toUnmanagedRGBColor(engine: Engine): RGBAColor {
-    val (cmyk, tint) = when (this) {
-        is CMYKColor -> this to tint
-        is SpotColor -> engine.editor.getSpotColorCMYK(name) to tint
-        else -> error("Only a CMYK or a spot color needs the CMYK profile, got $this")
-    }
-    val ink = { component: Float -> component.coerceIn(0F, 1F) * tint.coerceIn(0F, 1F) }
-    val key = 1F - ink(cmyk.k)
-    return ly.img.engine.Color.fromRGBA(r = (1F - ink(cmyk.c)) * key, g = (1F - ink(cmyk.m)) * key, b = (1F - ink(cmyk.y)) * key)
-}
-
-// The codes of a conversion that fails only because the CMYK profile is loading or failed to load.
-private val CMYK_PROFILE_ERRORS = setOf(EngineErrorCode.COLOR_PROFILE_NOT_LOADED, EngineErrorCode.COLOR_PROFILE_MISSING)
+fun ly.img.engine.Color.toRGBColor(engine: Engine): RGBAColor =
+    this as? RGBAColor ?: engine.editor.convertColorToColorSpace(this, ColorSpace.SRGB) as RGBAColor
 
 /**
  * An extension function for getting the [FillType] of the [designBlock]. Check the documentation of [FillType] for more information.
@@ -203,70 +173,39 @@ fun Engine.getFill(designBlock: DesignBlock): Fill? = if (!block.supportsFill(de
             SolidFill(rgbaColor.toComposeColor())
         }
 
-        else -> getGradientFill(block.getFill(designBlock))
+        FillType.LinearGradient -> {
+            val fill = block.getFill(designBlock)
+            LinearGradientFill(
+                startPointX = block.getFloat(fill, "fill/gradient/linear/startPointX"),
+                startPointY = block.getFloat(fill, "fill/gradient/linear/startPointY"),
+                endPointX = block.getFloat(fill, "fill/gradient/linear/endPointX"),
+                endPointY = block.getFloat(fill, "fill/gradient/linear/endPointY"),
+                colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+            )
+        }
+
+        FillType.RadialGradient -> {
+            val fill = block.getFill(designBlock)
+            RadialGradientFill(
+                centerX = block.getFloat(fill, "fill/gradient/radial/centerPointX"),
+                centerY = block.getFloat(fill, "fill/gradient/radial/centerPointY"),
+                radius = block.getFloat(fill, "fill/gradient/radial/radius"),
+                colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+            )
+        }
+
+        FillType.ConicalGradient -> {
+            val fill = block.getFill(designBlock)
+            ConicalGradientFill(
+                centerX = block.getFloat(fill, "fill/gradient/conical/centerPointX"),
+                centerY = block.getFloat(fill, "fill/gradient/conical/centerPointY"),
+                colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+            )
+        }
+
+        // Image fill and Video fill are not supported yet
+        else -> null
     }
-}
-
-/**
- * An extension function for getting the gradient that the fill block [fill] paints.
- *
- * @return the [GradientFill] of [fill], or null when [fill] is not a gradient fill.
- */
-private fun Engine.getGradientFill(fill: DesignBlock): GradientFill? {
-    val type = FillType.getOrNull(block.getType(fill))
-    // Image fill and Video fill are not supported yet
-    if (type != FillType.LinearGradient && type != FillType.RadialGradient && type != FillType.ConicalGradient) return null
-    // The editor shows the stops in sRGB, so a CMYK or spot color stop is converted.
-    val colorStops = block.getGradientColorStops(fill, "fill/gradient/colors")
-        .map { GradientColorStop(it.stop, it.color.toRGBColor(this)) }
-    return when (type) {
-        FillType.LinearGradient -> LinearGradientFill(
-            startPointX = block.getFloat(fill, "fill/gradient/linear/startPointX"),
-            startPointY = block.getFloat(fill, "fill/gradient/linear/startPointY"),
-            endPointX = block.getFloat(fill, "fill/gradient/linear/endPointX"),
-            endPointY = block.getFloat(fill, "fill/gradient/linear/endPointY"),
-            colorStops = colorStops,
-        )
-
-        FillType.RadialGradient -> RadialGradientFill(
-            centerX = block.getFloat(fill, "fill/gradient/radial/centerPointX"),
-            centerY = block.getFloat(fill, "fill/gradient/radial/centerPointY"),
-            radius = block.getFloat(fill, "fill/gradient/radial/radius"),
-            colorStops = colorStops,
-        )
-
-        else -> ConicalGradientFill(
-            centerX = block.getFloat(fill, "fill/gradient/conical/centerPointX"),
-            centerY = block.getFloat(fill, "fill/gradient/conical/centerPointY"),
-            colorStops = colorStops,
-        )
-    }
-}
-
-/**
- * An extension function that tells whether a fill block can paint the stroke of [designBlock], through
- * [BlockApi.setStrokeFill]. Only graphics and pages qualify: the engine refuses a stroke fill on text and captions, and
- * a line paints its own fill on its stroke.
- * IMPORTANT! When modifying this function also modify similar function in InspectorBarExt.kt.
- *
- * @param designBlock the design block that is being queried.
- * @return true if a fill block can paint the stroke of [designBlock].
- */
-fun BlockApi.canPaintStrokeWithFill(designBlock: DesignBlock): Boolean {
-    if (!supportsStroke(designBlock) || isLineOrigin(designBlock)) return false
-    val type = DesignBlockType.getOrNull(getType(designBlock))
-    return type == DesignBlockType.Graphic || type == DesignBlockType.Page
-}
-
-/**
- * An extension function for getting the gradient that paints the stroke of [designBlock].
- *
- * @param designBlock the design block that is being queried.
- * @return the [GradientFill] that paints the stroke, or null when the stroke color paints it.
- */
-fun Engine.getStrokeGradientFill(designBlock: DesignBlock): GradientFill? {
-    if (!block.canPaintStrokeWithFill(designBlock)) return null
-    return block.getStrokeFill(designBlock)?.let { getGradientFill(it) }
 }
 
 /**

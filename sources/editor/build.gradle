@@ -1,10 +1,5 @@
 apply from: "$projectDir/../editor-library.gradle"
 apply from: "$projectDir/../dokka.gradle"
-apply plugin: 'jacoco'
-
-jacoco {
-    toolVersion = libs.versions.jacoco.get()
-}
 
 buildConfig {
     className "EditorBuildConfig"
@@ -14,68 +9,11 @@ buildConfig {
 
 android {
     namespace = 'ly.img.editor'
-
-    sourceSets {
-        // The component tests run here on the JVM, and in the smoke-tests app's androidTest on a device.
-        // src/testShared holds what the smoke-tests app's guide tests need too.
-        test.kotlin.srcDirs += ["src/componentTest/java", "src/testShared/java"]
-    }
-
-    testOptions {
-        unitTests {
-            includeAndroidResources = true
-        }
-    }
 }
 
 dependencies {
     implementation project(":editor-base")
     api project(":editor-core")
-
-    testImplementation project(":camera-core")
-    testImplementation libs.junit
-    testImplementation platform(libs.compose.bom)
-    testImplementation libs.compose.test.junit4
-    testImplementation libs.compose.test.manifest
-    testImplementation libs.robolectric
-    testImplementation libs.test.androidx.core
-    testImplementation libs.espresso.core
-    testImplementation libs.espresso.intents
-    // No test uses it: it lifts Compose to the version that the smoke-tests app runs.
-    testImplementation libs.compose.navigation
-    // For the theme in src/test/AndroidManifest.xml.
-    testRuntimeOnly libs.test.appcompat
-}
-
-def ubqRootDir = "$rootDir/../.."
-apply from: "${ubqRootDir}/bindings/android/engine/host.gradle"
-androidHost.restrictUnitTests(project)
-def componentTestAssetDir = layout.buildDirectory.dir("componentTest/android_asset")
-// The assets of the smoke-tests app's test APK on a device.
-def componentTestApkAssetDir = file("src/componentTest/assets")
-def engineBuild = gradle.includedBuilds.find { it.name == "engine" }
-
-apply from: "${ubqRootDir}/bindings/android/imgly-assets.gradle"
-def assembleComponentTestImglyAssets = imglyAssets.register(
-    "assembleComponentTestImglyAssets", componentTestAssetDir.get().dir("imgly-assets").asFile, [UBQ_EXCLUDE_PREMIUM_TEMPLATES: "true"])
-def copyComponentTestEngineAssets = tasks.register("copyComponentTestEngineAssets", Sync) {
-    if (engineBuild != null) dependsOn(engineBuild.task(":engine:checkHostArtifacts"))
-    from androidHost.assetsDir
-    into componentTestAssetDir.map { it.dir("ly.img.cesdk") }
-}
-
-tasks.withType(Test).configureEach { test ->
-    // Gradle does not track the environment, so the assets behind UBQ_ANDROID_ASSET_DIR need their own input.
-    inputs.files(assembleComponentTestImglyAssets, copyComponentTestEngineAssets)
-        .withPropertyName("componentTestAssets")
-        .withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.dir(componentTestApkAssetDir).withPropertyName("componentTestApkAssets").withPathSensitivity(PathSensitivity.RELATIVE)
-    androidHost.configureTest(test, componentTestAssetDir.get().asFile)
-    environment "UBQ_COMPONENT_TEST_ASSET_DIR", componentTestApkAssetDir.absolutePath
-    // Robolectric loads the editor classes itself, so they have no code source, and JaCoCo skips them by default.
-    // Instrumenting the JDK's generated reflection classes then crashes the test JVM.
-    test.jacoco.includeNoLocationClasses = true
-    test.jacoco.excludes = ["jdk.internal.*"]
 }
 
 afterEvaluate {

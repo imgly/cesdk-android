@@ -15,17 +15,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import kotlinx.coroutines.launch
+import ly.img.editor.base.timeline.dragdrop.DragDropState
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
 import ly.img.editor.base.ui.BlockEvent
@@ -61,33 +59,6 @@ internal fun TimelineBaseView(
             visibleTracksCount * clipHeight + visibleTracksCount.toInt() * clipPadding
     }
 
-    val scrollState = rememberScrollState()
-    val playerState = timelineState.playerState
-
-    // A nested-scroll connection, not a snapshotFlow gated on `isScrollInProgress`: the flag clears in the same
-    // snapshot as the last fling step, so that gate drops the step. Drag auto-scroll uses `scrollBy`, which
-    // dispatches no nested scroll, so a clip drag needs no guard here.
-    val onePxInDp = 1f.toDp()
-    val seekOnUserScroll = remember(scrollState, timelineState, onePxInDp) {
-        object : NestedScrollConnection {
-            override fun onPostScroll(
-                consumed: Offset,
-                available: Offset,
-                source: NestedScrollSource,
-            ): Offset {
-                if (consumed.x != 0f) {
-                    val time = if (scrollState.value >= scrollState.maxValue) {
-                        timelineState.totalDuration
-                    } else {
-                        zoomState.toSeconds(scrollState.value * onePxInDp).coerceAtMost(timelineState.totalDuration)
-                    }
-                    playerState.setPlaybackTime(time)
-                }
-                return Offset.Zero
-            }
-        }
-    }
-
     BoxWithConstraints(
         Modifier
             .fillMaxWidth()
@@ -115,10 +86,11 @@ internal fun TimelineBaseView(
                 detectTapGestures {
                     onEvent(BlockEvent.OnDeselect)
                 }
-            }
-            .nestedScroll(seekOnUserScroll),
+            },
     ) {
+        val scrollState = rememberScrollState()
         val coroutineScope = rememberCoroutineScope()
+        val playerState = timelineState.playerState
 
         // Play/Pause playback on scroll end/start
         val isScrollInProgress = scrollState.isScrollInProgress
@@ -132,6 +104,19 @@ internal fun TimelineBaseView(
                     playerState.play()
                 }
             }
+        }
+
+        // Set playback time corresponding to scroll position
+        val onePxInDp = 1f.toDp()
+        LaunchedEffect(scrollState, zoomState) {
+            snapshotFlow { scrollState.value to scrollState.isScrollInProgress }
+                .collect { (scrollOffset, isScrolling) ->
+                    if (isScrolling && timelineState.dragDrop.phase !is DragDropState.Dragging) {
+                        val time = zoomState.toSeconds(maxOf(0, scrollOffset) * onePxInDp)
+                            .coerceAtMost(timelineState.totalDuration)
+                        playerState.setPlaybackTime(time)
+                    }
+                }
         }
 
         // Set scroll position corresponding to playback time

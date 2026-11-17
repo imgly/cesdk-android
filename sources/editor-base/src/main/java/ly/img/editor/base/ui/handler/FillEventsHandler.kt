@@ -1,14 +1,12 @@
 package ly.img.editor.base.ui.handler
 
 import androidx.compose.ui.graphics.Color
+import ly.img.editor.base.engine.changeLightnessBy
 import ly.img.editor.base.engine.effectiveTextRange
-import ly.img.editor.base.engine.gradientColorStopsFrom
 import ly.img.editor.base.engine.isCaption
 import ly.img.editor.base.engine.setConicalGradientFill
-import ly.img.editor.base.engine.setDefaultGradient
 import ly.img.editor.base.engine.setFillType
-import ly.img.editor.base.engine.setGradientColorAt
-import ly.img.editor.base.engine.setLinearGradientRotation
+import ly.img.editor.base.engine.setLinearGradientFill
 import ly.img.editor.base.engine.setRadialGradientFill
 import ly.img.editor.base.engine.toEngineColor
 import ly.img.editor.base.ui.BlockEvent.OnChangeConicalGradientParams
@@ -21,7 +19,6 @@ import ly.img.editor.base.ui.BlockEvent.OnDisableFill
 import ly.img.editor.base.ui.BlockEvent.OnEnableFill
 import ly.img.editor.core.ui.EventsHandler
 import ly.img.editor.core.ui.engine.getFillType
-import ly.img.editor.core.ui.engine.toRGBColor
 import ly.img.editor.core.ui.inject
 import ly.img.editor.core.ui.register
 import ly.img.engine.DesignBlock
@@ -29,6 +26,8 @@ import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
 import ly.img.engine.FillType
 import ly.img.engine.GradientColorStop
+import ly.img.engine.RGBAColor
+import kotlin.math.tan
 
 @Suppress("NAME_SHADOWING")
 fun EventsHandler.blockFillEvents(
@@ -37,6 +36,26 @@ fun EventsHandler.blockFillEvents(
 ) {
     val engine by inject(engine)
     val block by inject(block)
+
+    fun setGradientColorAtIndex(
+        engine: Engine,
+        fillBlock: DesignBlock,
+        index: Int,
+        color: Color,
+    ) {
+        val colors = engine.block.getGradientColorStops(fillBlock, "fill/gradient/colors")
+        engine.block.setGradientColorStops(
+            fillBlock,
+            "fill/gradient/colors",
+            colors.mapIndexed { colorIndex, gradientColorStop ->
+                if (colorIndex == index) {
+                    GradientColorStop(gradientColorStop.stop, color.toEngineColor())
+                } else {
+                    gradientColorStop
+                }
+            },
+        )
+    }
 
     fun enableFillIfDisabled() {
         if (!engine.block.isFillEnabled(block)) {
@@ -51,7 +70,13 @@ fun EventsHandler.blockFillEvents(
         if (currentFillType == type) return
 
         val colorStops = when (currentFillType) {
-            FillType.Color -> gradientColorStopsFrom(engine.block.getFillSolidColor(block))
+            FillType.Color -> {
+                val originalColor = engine.block.getFillSolidColor(block)
+                listOf(
+                    GradientColorStop(0f, originalColor),
+                    GradientColorStop(1f, originalColor.changeLightnessBy(0.4f)),
+                )
+            }
 
             FillType.LinearGradient,
             FillType.RadialGradient,
@@ -76,13 +101,35 @@ fun EventsHandler.blockFillEvents(
                 engine.block.setFillType(block, FillType.Color)
                 engine.block.setFillSolidColor(
                     block,
-                    colorStops.firstOrNull()?.color?.toRGBColor(engine) ?: Color.Black.toEngineColor(),
+                    colorStops.firstOrNull()?.color as? RGBAColor ?: Color.Black.toEngineColor(),
                 )
             }
-            FillType.LinearGradient,
-            FillType.RadialGradient,
-            FillType.ConicalGradient,
-            -> engine.block.setDefaultGradient(engine.block.setFillType(block, type), type, colorStops)
+            FillType.LinearGradient ->
+                engine.block.setLinearGradientFill(
+                    block,
+                    0.5f,
+                    0f,
+                    0.5f,
+                    1.0f,
+                    colorStops = colorStops,
+                )
+
+            FillType.RadialGradient ->
+                engine.block.setRadialGradientFill(
+                    block,
+                    0.5f,
+                    0.5f,
+                    0.5f,
+                    colorStops = colorStops,
+                )
+
+            FillType.ConicalGradient ->
+                engine.block.setConicalGradientFill(
+                    block,
+                    0.5f,
+                    0.5f,
+                    colorStops = colorStops,
+                )
 
             else -> throw UnsupportedOperationException("Fill type not supported")
         }
@@ -108,13 +155,49 @@ fun EventsHandler.blockFillEvents(
             fillType == FillType.LinearGradient ||
             fillType == FillType.RadialGradient
         ) {
-            engine.block.setGradientColorAt(engine.block.getFill(block), it.index, it.color.toEngineColor())
+            val fillBlock = engine.block.getFill(block)
+            setGradientColorAtIndex(engine, fillBlock, it.index, it.color)
         } else {
             throw UnsupportedOperationException("Fill type is not a gradient fill")
         }
     }
     register<OnChangeLinearGradientParams> {
-        engine.block.setLinearGradientRotation(engine.block.setFillType(block, FillType.LinearGradient), it.rotationInDegrees)
+        val absRotationInDegrees = ((it.rotationInDegrees % 360.0) + 360.0) % 360.0
+
+        val slope = tan(Math.toRadians(absRotationInDegrees))
+
+        val startX: Double
+        val startY: Double
+        val endX: Double
+        val endY: Double
+
+        when (absRotationInDegrees) {
+            in 0f..45f, in 315f..360f -> {
+                startX = 0.0
+                startY = 0.5 - 0.5 * slope
+                endX = 1.0
+                endY = 0.5 + 0.5 * slope
+            }
+            in 135.0f..225.0f -> {
+                startX = 1.0
+                startY = 0.5 + 0.5 * slope
+                endX = 0.0
+                endY = 0.5 - 0.5 * slope
+            }
+            in 45f..135.0f -> {
+                startX = 0.5 - 0.5 / slope
+                startY = 0.0
+                endX = 0.5 + 0.5 / slope
+                endY = 1.0
+            }
+            else -> { // 225.0f..315.0f
+                startX = 0.5 + 0.5 / slope
+                startY = 1.0
+                endX = 0.5 - 0.5 / slope
+                endY = 0.0
+            }
+        }
+        engine.block.setLinearGradientFill(block, startX.toFloat(), startY.toFloat(), endX.toFloat(), endY.toFloat())
     }
     register<OnChangeRadialGradientParams> {
         engine.block.setRadialGradientFill(block, it.centerX, it.centerY, it.radius)

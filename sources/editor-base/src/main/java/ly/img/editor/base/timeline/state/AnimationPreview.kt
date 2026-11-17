@@ -54,8 +54,7 @@ class AnimationPreview(
             engine.block.getDuration(outgoingBlock) / 2,
             engine.block.getDuration(incomingClip) / 2,
         ).seconds
-        val offset = if (engine.transitionOverlapApplies(outgoingBlock, incomingClip)) ZERO else duration / 2
-        play(outgoingBlock, duration, endAligned = true, startOffset = offset)
+        play(outgoingBlock, duration, endAligned = true)
     }
 
     /** Stops both a pending preview and the preview playback it started. */
@@ -74,7 +73,6 @@ class AnimationPreview(
         clip: DesignBlock,
         duration: Duration,
         endAligned: Boolean,
-        startOffset: Duration = ZERO,
     ) {
         stop()
         if (duration <= ZERO || !engine.block.supportsDuration(clip)) return
@@ -82,7 +80,7 @@ class AnimationPreview(
         val clipOffset = engine.block.getTimeOffset(clip).seconds
         val clipDuration = engine.block.getDuration(clip).seconds
         val previewDuration = duration.coerceAtMost(clipDuration)
-        val start = (if (endAligned) clipOffset + clipDuration - previewDuration else clipOffset) + startOffset
+        val start = if (endAligned) clipOffset + clipDuration - previewDuration else clipOffset
 
         engine.block.setPlaying(page, false)
         engine.block.setPlaybackTime(page, start.toDouble(DurationUnit.SECONDS))

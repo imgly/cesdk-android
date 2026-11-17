@@ -3,11 +3,9 @@ package ly.img.editor.base.ui
 import android.content.ContentValues
 import android.graphics.Bitmap
 import android.media.MediaScannerConnection
-import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -44,9 +42,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import ly.img.editor.base.applyForceCrop
-import ly.img.editor.base.clipboard.ClipboardActions
-import ly.img.editor.base.clipboard.ClipboardEvent
-import ly.img.editor.base.clipboard.EditorClipboard
 import ly.img.editor.base.components.createEditingTextCardUiState
 import ly.img.editor.base.dock.AdjustmentSheetContent
 import ly.img.editor.base.dock.BottomSheetContent
@@ -103,8 +98,6 @@ import ly.img.editor.base.engine.TRANSFORM_EDIT_MODE
 import ly.img.editor.base.engine.duplicate
 import ly.img.editor.base.engine.effectiveTextRange
 import ly.img.editor.base.engine.isCaption
-import ly.img.editor.base.engine.isDeleteAllowed
-import ly.img.editor.base.engine.isDuplicateAllowed
 import ly.img.editor.base.engine.isPlaceholder
 import ly.img.editor.base.engine.resetHistory
 import ly.img.editor.base.engine.separateAudio
@@ -174,7 +167,6 @@ import java.io.File
 import java.io.FileOutputStream
 import kotlin.math.abs
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.time.Duration.Companion.ZERO
 
 @OptIn(UnstableEditorApi::class)
@@ -195,7 +187,6 @@ class EditorUiViewModel(
         get() = configuration.colorPalette ?: emptyList()
 
     private val migrationHelper = EditorMigrationHelper()
-    private val clipboard by lazy { EditorClipboard(engine, editor.activity.applicationContext) }
     private var timelineState: TimelineState? = null
     private var firstLoad = true
     private var isStraighteningOrRotating = false
@@ -347,9 +338,6 @@ class EditorUiViewModel(
     private fun EventsHandler.editorEvents() {
         register<Event.OnError> { onError(it.throwable) }
         register<Event.OnToast> { sendSingleEvent(SingleEvent.Snackbar(it.text)) }
-        register<ClipboardEvent.Copy> { copySelection(it.cut) }
-        register<ClipboardEvent.Paste> { paste() }
-        register<ClipboardEvent.Drop> { drop(it.uris) }
         register<Event.OnBackPress> {
             onBackPress(
                 bottomSheetOffset = it.bottomSheetOffset,
@@ -361,24 +349,8 @@ class EditorUiViewModel(
         register<Event.OnCanvasMove> { onCanvasMove(it.move) }
         register<Event.OnCanvasTouch> { updateZoomState() }
         register<Event.OnResetZoom> {
-            if (!isSceneLoaded.value) {
-                return@register
-            }
-            val camera = engine.getCamera()
-            val canvasSize = engine.block.getFloat(camera, "camera/resolution/width") to
-                engine.block.getFloat(camera, "camera/resolution/height")
-            // A return from the background recreates the surface at the same size.
-            val isResize = canvasSize != lastCanvasSize
-            lastCanvasSize = canvasSize
-            when (viewMode) {
-                is EditorViewMode.Edit, is EditorViewMode.Pages -> if (engine.editor.getEditMode() == TRANSFORM_EDIT_MODE) {
-                    val keepsUserZoom = keepsUserZoomOnResize()
-                    zoom(forceZoomToPage = !keepsUserZoom, clampOnly = keepsUserZoom)
-                }
-                // The starter kit zooms in preview mode. A new instance tells it to zoom again for the new canvas.
-                is EditorViewMode.Preview -> if (isResize) {
-                    viewMode = EditorViewMode.Preview()
-                }
+            if (isSceneLoaded.value && engine.editor.getEditMode() == TRANSFORM_EDIT_MODE) {
+                zoom(forceZoomToPage = true)
             }
         }
         register<Event.OnKeyboardClose> { onKeyboardClose() }
@@ -896,126 +868,6 @@ class EditorUiViewModel(
         ?.let { createBlock(it, engine) }
 
     private fun requireDesignBlockForEvents(): DesignBlock = checkNotNull(getBlockForEvents()?.designBlock)
-
-    /**
-     * What the clipboard menu and keys may do now, by the rules of the web editor: a copy needs `lifecycle/duplicate`
-     * for each block and the role that manages pages for a page, and a cut needs `lifecycle/destroy` too.
-     */
-    internal fun clipboardActions(): ClipboardActions {
-        if (engine.editor.getEditMode() == TEXT_EDIT_MODE) return ClipboardActions.None
-        val selected = engine.block.findAllSelected()
-        val managesPages = engine.editor.getRole() == CREATOR_ROLE
-        val canCopy = selected.isNotEmpty() &&
-            selected.all {
-                engine.isDuplicateAllowed(it) && (managesPages || engine.block.getType(it) != DesignBlockType.Page.key)
-            }
-        return ClipboardActions(
-            canCopy = canCopy,
-            canCut = canCopy && selected.all(engine::isDeleteAllowed),
-            canPaste = currentPageOrNull() != null && clipboard.hasContent,
-        )
-    }
-
-    /** The page that a paste targets. The scene can be gone, such as while the editor closes. */
-    private fun currentPageOrNull(): DesignBlock? = if (engine.scene.get() == null) null else engine.scene.getCurrentPage()
-
-    private fun copySelection(cut: Boolean) {
-        val actions = clipboardActions()
-        if (!(if (cut) actions.canCut else actions.canCopy)) return
-        val blocks = engine.block.findAllSelected()
-        viewModelScope.launch {
-            try {
-                clipboard.copy(blocks)
-                if (!cut) return@launch
-                // The copied blocks go, not what is selected once both saves are done. Deleting a group deletes its
-                // children, so a selected child can be gone already.
-                blocks.forEach { if (engine.block.isValid(it)) engine.block.destroy(it) }
-                engine.editor.addUndoStep()
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                sendSingleEvent(SingleEvent.SnackbarError(exception))
-            }
-        }
-    }
-
-    private fun paste() {
-        if (engine.editor.getEditMode() == TEXT_EDIT_MODE) return
-        val page = currentPageOrNull() ?: return
-        viewModelScope.launch {
-            val result = try {
-                clipboard.paste(page)
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                sendSingleEvent(SingleEvent.SnackbarError(exception))
-                return@launch
-            }
-            if (result is EditorClipboard.Result.Upload) uploadPasted(result, page)
-        }
-    }
-
-    /**
-     * Whether the canvas takes a drop of [mimeTypes] now: it takes files only, as the web canvas does, and only where a
-     * paste could add them.
-     */
-    internal fun canDrop(mimeTypes: List<String>): Boolean {
-        if (engine.editor.getEditMode() == TEXT_EDIT_MODE || mimeTypes.none { !it.startsWith("text/") }) return false
-        val page = currentPageOrNull() ?: return false
-        return engine.block.isAllowedByScope(page, "editor/add")
-    }
-
-    private fun drop(uris: List<Uri>) {
-        val page = currentPageOrNull() ?: return
-        if (uris.isEmpty() || engine.editor.getEditMode() == TEXT_EDIT_MODE || !engine.block.isAllowedByScope(page, "editor/add")) return
-        viewModelScope.launch {
-            val result = try {
-                clipboard.readMedia(uris)
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                sendSingleEvent(SingleEvent.SnackbarError(exception))
-                return@launch
-            }
-            uploadPasted(result, page)
-        }
-    }
-
-    /**
-     * Adds pasted media through the upload path of the library, as a pick from the system picker does: each kind goes
-     * to its registered upload source, which takes the types that the picker takes.
-     */
-    private suspend fun uploadPasted(
-        result: EditorClipboard.Result.Upload,
-        page: DesignBlock,
-    ) {
-        var unsupported = result.unsupported
-        var added = false
-        val sources = engine.asset.findAllSources()
-        val uploads = listOf(AssetSourceType.ImageUploads, AssetSourceType.VideoUploads, AssetSourceType.AudioUploads)
-        for (media in result.media) {
-            if (media.mimeType == "image/svg+xml") {
-                try {
-                    clipboard.pasteSvg(media.uri, page)
-                    added = true
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    sendSingleEvent(SingleEvent.SnackbarError(exception))
-                }
-                continue
-            }
-            val source = uploads.firstOrNull { media.mimeType.startsWith(it.mimeTypeFilter.removeSuffix("*")) && it.sourceId in sources }
-            if (source == null) {
-                unsupported = true
-                continue
-            }
-            libraryViewModel.onEvent(LibraryEvent.OnAddUri(source, media.uri))
-            added = true
-        }
-        // As on the web, a copy of several files shows the message only when none was added.
-        if (unsupported && !added) sendSingleEvent(SingleEvent.Snackbar(R.string.ly_img_editor_dialog_paste_error_unsupported_type))
-    }
 
     private fun onCanvasMove(move: Boolean) {
         canvasMoveJob?.cancel()
@@ -1633,8 +1485,7 @@ class EditorUiViewModel(
         updateDimension(
             update = { it.copy(editor = Size(widthInDp.dp, heightInDp.dp)) },
         ) {
-            val keepsUserZoom = keepsUserZoomOnResize()
-            updateInsets(zoomToPage = !keepsUserZoom, clampOnly = keepsUserZoom)
+            updateInsets(zoomToPage = true)
         }
     }
 
@@ -1645,10 +1496,6 @@ class EditorUiViewModel(
         updateDimension(
             update = { it.copy(navigationBar = Size(widthInDp.dp, heightInDp.dp)) },
         ) {
-            // A width-only change is a window resize, which the canvas resize handles.
-            if (heightInDp == imgLyInsets.value.top) {
-                return@updateDimension
-            }
             updateInsets(
                 topInset = heightInDp,
                 zoomToPage = engine.scene.getZoomLevel() == fitToPageZoomLevel,
@@ -1710,13 +1557,8 @@ class EditorUiViewModel(
             this.closingSheetContent == null -> heightInDp.also { this.bottomStaticContentFullHeight = it }
             else -> bottomStaticContentFullHeight
         }
-        val bottomInset = max(bottomSheetHeight, heightInDp)
-        // As in onNavigationBarSizeChange.
-        if (bottomInset == imgLyInsets.value.bottom) {
-            return
-        }
         updateInsets(
-            bottomInset = bottomInset,
+            bottomInset = max(bottomSheetHeight, heightInDp),
             zoomToPage = engine.scene.getZoomLevel() == fitToPageZoomLevel,
         )
     }
@@ -1929,7 +1771,6 @@ class EditorUiViewModel(
         leftInset: Float = imgLyInsets.value.left,
         rightInset: Float = imgLyInsets.value.right,
         zoomToPage: Boolean = false,
-        clampOnly: Boolean = false,
     ) {
         imgLyInsets.value = Rect(
             top = topInset,
@@ -1953,63 +1794,24 @@ class EditorUiViewModel(
         // zooms to backdrop instead, there will be a jump. This way we leave entire control of preview
         // and pages modes fully on starter kit side.
         if (isSceneLoaded.value && publicState.value.viewMode is EditorViewMode.Edit) {
-            zoom(forceZoomToPage = zoomToPage, clampOnly = clampOnly)
+            zoom(forceZoomToPage = zoomToPage)
         }
     }
 
     private var zoomJob: Job? = null
     private var fitToPageZoomLevel = 0f
-    private var lastCanvasSize: Pair<Float, Float>? = null
 
-    /**
-     * Whether a window resize keeps the zoom that a gesture or the API set. A page at its last fit re-fits. So does a zoom
-     * at or below the new fit: the engine's minimum-zoom clamp raises an unzoomed page to it when the canvas grows.
-     */
-    private fun keepsUserZoomOnResize(): Boolean {
-        if (!isSceneLoaded.value || viewMode !is EditorViewMode.Edit || fitToPageZoomLevel <= 0F) {
-            return false
-        }
-        val zoomLevel = engine.scene.getZoomLevel()
-        if (abs(zoomLevel - fitToPageZoomLevel) <= 0.001F) {
-            return false
-        }
-        val fitZoomLevel = canvasFitZoomLevel() ?: return false
-        return zoomLevel > fitZoomLevel * 1.001F
-    }
-
-    /** The zoom level that fits the page into the current canvas, or null before the page has a size. */
-    private fun canvasFitZoomLevel(): Float? {
-        val page = engine.scene.getPages().getOrNull(pageIndex.value) ?: return null
-        val pageFrame = engine.block.getScreenSpaceBoundingBoxRect(listOf(page))
-        if (pageFrame.width() <= 0F || pageFrame.height() <= 0F) {
-            return null
-        }
-        val camera = engine.getCamera()
-        val pixelRatio = engine.block.getFloat(camera, "camera/pixelRatio")
-        val insets = publicState.value.insets
-        val width = engine.block.getFloat(camera, "camera/resolution/width") / pixelRatio - insets.left.value - insets.right.value
-        val height = engine.block.getFloat(camera, "camera/resolution/height") / pixelRatio - insets.top.value - insets.bottom.value
-        // The insets can fill the canvas, such as a keyboard in landscape, or the camera is not bound yet.
-        if (width <= 0F || height <= 0F) {
-            return null
-        }
-        return engine.scene.getZoomLevel() * min(width / pageFrame.width(), height / pageFrame.height())
-    }
-
-    /** @param clampOnly keeps the zoom level, also when nothing is selected. */
     @OptIn(UnstableEngineApi::class)
-    private fun zoom(
-        forceZoomToPage: Boolean = false,
-        clampOnly: Boolean = false,
-    ): Job {
+    private fun zoom(forceZoomToPage: Boolean = false): Job {
         zoomJob?.cancel()
         return viewModelScope
             .launch {
                 val page = engine.scene.getPages().getOrNull(pageIndex.value) ?: return@launch
                 val currentInsets = publicState.value.insets
                 val selectedBlock = getBlockForEvents()
-                val shouldZoomToPage = !clampOnly &&
-                    (forceZoomToPage || selectedBlock == null || engine.scene.getZoomLevel() == fitToPageZoomLevel)
+                val shouldZoomToPage = forceZoomToPage ||
+                    selectedBlock == null ||
+                    engine.scene.getZoomLevel() == fitToPageZoomLevel
                 val blocks = buildList {
                     add(page)
                     if (engine.editor.getEditMode() == TEXT_EDIT_MODE && selectedBlock?.type == BlockType.Text) {
@@ -2041,8 +1843,6 @@ class EditorUiViewModel(
                     )
                     engine.zoomToPage(pageIndex.value, currentInsets)
                     fitToPageZoomLevel = engine.scene.getZoomLevel()
-                } else if (clampOnly) {
-                    fitToPageZoomLevel = canvasFitZoomLevel() ?: fitToPageZoomLevel
                 }
 
                 val selectedDesignBlock = selectedBlock?.designBlock
@@ -2440,7 +2240,6 @@ class EditorUiViewModel(
 
     private fun onError(throwable: Throwable) {
         viewModelScope.launch {
-            Log.e("CESDK", "Editor/Engine error.", throwable)
             configuration.onError?.invoke(editorScope, throwable)
         }
     }
@@ -2620,6 +2419,3 @@ class EditorUiViewModel(
         private const val MAX_THUMBNAIL_CACHE_SIZE = 50
     }
 }
-
-/** The role that manages pages, as the web editor's `editor/managePages` allows. */
-private const val CREATOR_ROLE = "Creator"

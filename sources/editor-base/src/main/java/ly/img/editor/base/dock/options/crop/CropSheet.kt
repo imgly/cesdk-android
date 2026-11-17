@@ -156,7 +156,7 @@ fun CropSheet(
                         Icon(IconPack.Flip, contentDescription = stringResource(R.string.ly_img_editor_sheet_crop_button_flip))
                     }
                     ScalePicker(
-                        contentDescription = stringResource(R.string.ly_img_editor_sheet_crop_label_straighten),
+                        valuePrefix = stringResource(R.string.ly_img_editor_sheet_crop_label_straighten),
                         value = uiState.straightenAngle,
                         valueRange = -45f..45f,
                         // Use +-44.999 as bound to guarantee that `decomposedDegrees` is stable and thus

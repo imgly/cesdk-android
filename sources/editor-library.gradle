@@ -35,10 +35,6 @@ android {
     }
 }
 
-buildConfig {
-    useKotlinOutput { internalVisibility = false }
-}
-
 kotlin {
     compilerOptions {
         // Applied scripts are compiled before the Kotlin Gradle plugin contributes its DSL types;

@@ -5,12 +5,6 @@ android {
     defaultConfig {
         testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
     }
-
-    testOptions {
-        unitTests {
-            includeAndroidResources = true
-        }
-    }
 }
 
 dependencies {
@@ -25,11 +19,6 @@ dependencies {
     implementation project(":editor-debug-menu-dummy")
 
     testImplementation libs.junit
-    testImplementation platform(libs.compose.bom)
-    testImplementation libs.compose.test.junit4
-    testImplementation libs.compose.test.manifest
-    testImplementation libs.robolectric
-    testImplementation libs.test.androidx.core
     androidTestImplementation libs.junit
     androidTestImplementation libs.test.androidx.runner
 }

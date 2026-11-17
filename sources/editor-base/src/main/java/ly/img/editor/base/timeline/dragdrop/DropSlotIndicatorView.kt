@@ -42,14 +42,14 @@ fun DropSlotIndicatorView(
     val draggedClip = timelineState.dragDrop.draggedClip ?: return
 
     val zoomState = timelineState.zoomState
-    val previewDuration by remember(timelineState, trackId, draggedClip.rawDuration) {
+    val previewDuration by remember(timelineState, trackId, draggedClip.duration) {
         derivedStateOf {
             val target = (timelineState.dragDrop.phase as? DragDropState.Dragging)
                 ?.context?.dropTarget as? DropTarget.ExistingTrack
             if (target?.trackId == trackId) {
-                target.effectiveDuration ?: draggedClip.rawDuration
+                target.effectiveDuration ?: draggedClip.duration
             } else {
-                draggedClip.rawDuration
+                draggedClip.duration
             }
         }
     }

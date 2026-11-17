@@ -323,8 +323,7 @@ internal class CameraViewModel(
             pixelStreamFill1 = engine.block.getFill(primaryBlock)
         }
 
-        val scene = engine.scene.create()
-        engine.block.setEnum(scene, "scene/mode", "Video")
+        val scene = engine.scene.createForVideo()
         engine.editor.setGlobalScope(Scope.EditorSelect, GlobalScope.DENY)
         engine.editor.setSettingBoolean("touch/singlePointPanning", false)
         engine.editor.setSettingFloat("positionSnappingThreshold", 8f)

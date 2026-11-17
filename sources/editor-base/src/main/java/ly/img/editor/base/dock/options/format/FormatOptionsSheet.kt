@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import ly.img.editor.base.components.NestedSheetHeader
 import ly.img.editor.base.components.PropertyLink
 import ly.img.editor.base.components.PropertyPicker
-import ly.img.editor.base.components.PropertyStepper
+import ly.img.editor.base.components.PropertySlider
 import ly.img.editor.base.components.PropertySwitch
 import ly.img.editor.base.components.SectionHeader
 import ly.img.editor.base.components.ToggleIconButton
@@ -45,21 +45,17 @@ import ly.img.editor.core.ui.iconpack.Formatunderlined
 import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Listbullet
 import ly.img.editor.core.ui.iconpack.Listnumber
-import ly.img.editor.core.ui.iconpack.TextSubscript
-import ly.img.editor.core.ui.iconpack.TextSuperscript
 import ly.img.editor.core.ui.sheetScrollableContentModifier
 import ly.img.engine.FontStyle
 import ly.img.engine.FontUnit
 import ly.img.engine.FontWeight
 import ly.img.engine.HorizontalAlignment
 import ly.img.engine.ListStyle
-import ly.img.engine.ScriptStyle
 import ly.img.engine.TextCase
 
-// The engine has no maximum font size, so the ranges are open and a typed size is not cut.
 private object FontSizeRange {
-    val PIXEL = 8f..Float.POSITIVE_INFINITY
-    val POINT = 6f..Float.POSITIVE_INFINITY
+    val PIXEL = 8f..128f
+    val POINT = 6f..90f
 }
 
 @Composable
@@ -169,19 +165,19 @@ fun FormatOptionsSheet(
                     }
 
                     Spacer(Modifier.height(16.dp))
+                    val fontSizeLabelRes = when (uiState.fontSizeUnit) {
+                        FontUnit.PIXEL -> R.string.ly_img_editor_sheet_format_text_label_font_size_px
+                        FontUnit.POINT -> R.string.ly_img_editor_sheet_format_text_label_font_size_pt
+                    }
                     val fontSizeRange = when (uiState.fontSizeUnit) {
                         FontUnit.PIXEL -> FontSizeRange.PIXEL
                         FontUnit.POINT -> FontSizeRange.POINT
                     }
-                    PropertyStepper(
-                        title = stringResource(R.string.ly_img_editor_sheet_format_text_label_font_size),
+                    PropertySlider(
+                        title = stringResource(fontSizeLabelRes),
                         value = uiState.fontSize,
                         valueRange = fontSizeRange,
                         step = 0.1F,
-                        unit = when (uiState.fontSizeUnit) {
-                            FontUnit.PIXEL -> "px"
-                            FontUnit.POINT -> "pt"
-                        },
                         onValueChange = { onEvent(BlockEvent.OnChangeFontSize(it)) },
                         onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
                     )
@@ -253,7 +249,7 @@ fun FormatOptionsSheet(
                     }
 
                     Spacer(Modifier.height(16.dp))
-                    PropertyStepper(
+                    PropertySlider(
                         title = stringResource(R.string.ly_img_editor_sheet_format_text_label_letter_spacing),
                         value = uiState.letterSpacing,
                         onValueChange = { onEvent(BlockEvent.OnChangeLetterSpacing(it)) },
@@ -334,38 +330,7 @@ fun FormatOptionsSheet(
                     }
 
                     Spacer(Modifier.height(16.dp))
-                    Card(
-                        colors = UiDefaults.cardColors,
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = stringResource(R.string.ly_img_editor_sheet_format_text_label_script_style),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                            Row {
-                                scriptStyleOptions.forEach { (scriptStyle, icon, labelRes) ->
-                                    ToggleIconButton(
-                                        checked = uiState.scriptStyle == scriptStyle,
-                                        onCheckedChange = {
-                                            onEvent(BlockEvent.OnChangeScriptStyle(scriptStyle))
-                                        },
-                                    ) {
-                                        Icon(icon, contentDescription = stringResource(labelRes))
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.height(16.dp))
-                    PropertyStepper(
+                    PropertySlider(
                         title = stringResource(R.string.ly_img_editor_sheet_format_text_label_line_height),
                         value = uiState.lineHeight,
                         onValueChange = { onEvent(BlockEvent.OnChangeLineHeight(it)) },
@@ -375,7 +340,7 @@ fun FormatOptionsSheet(
                         enabled = !uiState.isTextOnPath,
                     )
                     Spacer(Modifier.height(16.dp))
-                    PropertyStepper(
+                    PropertySlider(
                         title = stringResource(R.string.ly_img_editor_sheet_format_text_label_paragraph_spacing),
                         value = uiState.paragraphSpacing,
                         onValueChange = { onEvent(BlockEvent.OnChangeParagraphSpacing(it)) },
@@ -457,12 +422,6 @@ fun FormatOptionsSheet(
     }
 }
 
-private val scriptStyleOptions = listOf(
-    Triple(ScriptStyle.NORMAL, IconPack.DefaultNone, R.string.ly_img_editor_sheet_format_text_script_style_option_normal),
-    Triple(ScriptStyle.SUPERSCRIPT, IconPack.TextSuperscript, R.string.ly_img_editor_sheet_format_text_script_style_option_superscript),
-    Triple(ScriptStyle.SUBSCRIPT, IconPack.TextSubscript, R.string.ly_img_editor_sheet_format_text_script_style_option_subscript),
-)
-
 private enum class ScreenState {
     Main,
     SelectFont,
@@ -493,7 +452,6 @@ fun DefaultPreview() {
             libraryCategory = LibraryCategory.Text,
             casing = TextCase.UPPER_CASE,
             listStyle = ListStyle.NONE,
-            scriptStyle = ScriptStyle.NORMAL,
             paragraphSpacing = 0f,
             fontFamilyWeight = FontWeight.NORMAL,
             availableWeights = emptyList(),

@@ -34,7 +34,6 @@ import ly.img.editor.core.ui.engine.getFillType
 import ly.img.editor.core.ui.engine.getKindEnum
 import ly.img.editor.core.ui.engine.isFillLooping
 import ly.img.editor.core.ui.utils.EPS_DURATION
-import ly.img.engine.BlockState
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockEvent
 import ly.img.engine.DesignBlockType
@@ -73,17 +72,7 @@ class TimelineState(
 
     private var pageChildren: List<DesignBlock> = emptyList()
 
-    init {
-        // A block state change emits no block event, so refresh(events) never sees it.
-        coroutineScope.launch {
-            engine.block.onStateChanged(emptyList()).collect(::refreshPendingStates)
-        }
-    }
-
     fun getThumbnailProvider(designBlock: DesignBlock) = thumbnailsManager.getProvider(designBlock)
-
-    internal fun transitionTrimCaps(clip: Clip): TransitionTrimCaps =
-        if (clip.transitionTrimLead == ZERO && clip.transitionTrimTail == ZERO) TransitionTrimCaps() else engine.transitionTrimCaps(clip.id)
 
     fun setZoom(zoom: Float) {
         zoomState.setZoom(zoom)
@@ -206,47 +195,13 @@ class TimelineState(
         }
     }
 
-    private fun refreshPendingStates(designBlocks: List<DesignBlock>) {
-        designBlocks.forEach { designBlock ->
-            val clip = dataSource.findClip(designBlock) ?: return@forEach
-            if (!engine.block.isValid(clip.id)) return@forEach
-            val isPending = isPending(clip.id, clip.clipType, wasPending = clip.isPending)
-            if (clip.isPending == isPending) return@forEach
-            val updatedClip = clip.copy(isPending = isPending)
-            updateClip(dataSource.findTrack(clip), updatedClip, clip)
-            if (selectedClip?.id == updatedClip.id) {
-                selectedClip = updatedClip
-            }
-        }
-    }
-
-    /**
-     * Only audio and video clips read the state of their block. A text or caption block is pending while its font
-     * loads, and a caption track can hold hundreds of clips. The state of a video clip's block includes its fill, which
-     * is pending while the engine decodes a frame after a seek, so the clip would flicker during playback. While the
-     * fill is pending, a video clip therefore keeps [wasPending].
-     */
-    private fun isPending(
-        designBlock: DesignBlock,
-        clipType: ClipType,
-        wasPending: Boolean,
-    ): Boolean = when (clipType) {
-        ClipType.Audio -> engine.block.getState(designBlock) is BlockState.Pending
-        ClipType.Video -> if (engine.block.getState(engine.block.getFill(designBlock)) is BlockState.Pending) {
-            wasPending
-        } else {
-            engine.block.getState(designBlock) is BlockState.Pending
-        }
-        else -> false
-    }
-
     /**
      * Clears drag-drop preview overrides. Stale once [dataSource] reflects committed engine state.
      * Skipped while dragging — a mid-drag refresh would otherwise wipe in-flight preview.
      */
     private fun clearOverridesIfIdle() {
         if (dragDrop.phase !is DragDropState.Dragging) {
-            dragDrop.clearPreview()
+            dragDrop.overrides.clear()
         }
     }
 
@@ -310,18 +265,15 @@ class TimelineState(
 
                     val transition = engine.block.getTransition(outgoing)
                     val hasTransition = engine.block.isValid(transition)
-                    val duration = if (hasTransition && engine.block.getType(transition) != "//ly.img.ubq/transition/none") {
-                        minOf(engine.block.getDuration(transition).seconds, outgoingClip.rawDuration / 2, incomingClip.rawDuration / 2)
-                            .coerceAtLeast(ZERO)
-                    } else {
-                        ZERO
-                    }
                     TransitionPairGeometry(
                         canShow = true,
                         hasTransition = hasTransition,
-                        joined = duration > ZERO,
-                        overlap = if (duration > ZERO && engine.transitionOverlapApplies(outgoing, incoming)) {
-                            duration
+                        overlap = if (hasTransition) {
+                            minOf(
+                                engine.block.getDuration(transition).seconds,
+                                outgoingClip.rawDuration / 2,
+                                incomingClip.rawDuration / 2,
+                            ).coerceAtLeast(ZERO)
                         } else {
                             ZERO
                         },
@@ -333,13 +285,8 @@ class TimelineState(
                 ?.let(engine.block::getParent)
                 ?.let(engine.block::getChildren)
                 .orEmpty()
-            val joinedPredecessors = mutableMapOf<DesignBlock, DesignBlock>()
             engineSiblings.zipWithNext().forEach pairLoop@{ (outgoing, incoming) ->
-                val pair = transitionPair(outgoing, incoming)
-                if (pair.joined) {
-                    joinedPredecessors[incoming] = outgoing
-                }
-                val overlap = pair.overlap
+                val overlap = transitionPair(outgoing, incoming).overlap
                 if (overlap == ZERO) return@pairLoop
                 trims[outgoing] = trims.getValue(outgoing).copy(tail = overlap / 2)
                 trims[incoming] = trims.getValue(incoming).copy(lead = overlap / 2)
@@ -358,15 +305,13 @@ class TimelineState(
                 if (clip.duration != duration ||
                     clip.timeOffset != timeOffset ||
                     clip.transitionTrimLead != transitionTrim.lead ||
-                    clip.transitionTrimTail != transitionTrim.tail ||
-                    clip.joinedPredecessor != joinedPredecessors[clip.id]
+                    clip.transitionTrimTail != transitionTrim.tail
                 ) {
                     val updatedClip = clip.copy(
                         duration = duration,
                         timeOffset = timeOffset,
                         transitionTrimLead = transitionTrim.lead,
                         transitionTrimTail = transitionTrim.tail,
-                        joinedPredecessor = joinedPredecessors[clip.id],
                     )
                     track.clips[index] = updatedClip
                     if (selectedClip?.id == updatedClip.id) {
@@ -450,7 +395,6 @@ class TimelineState(
     private data class TransitionPairGeometry(
         val canShow: Boolean = false,
         val hasTransition: Boolean = false,
-        val joined: Boolean = false,
         val overlap: Duration = ZERO,
     )
 
@@ -565,26 +509,26 @@ class TimelineState(
             }
         }
 
-        val fillId = if (engine.block.supportsFill(designBlock)) {
+        val fillId = if (engine.block.hasFill(designBlock)) {
             engine.block.getFill(designBlock)
         } else {
             null
         }
         val trimmableId = fillId ?: designBlock
 
-        val shapeId = if (engine.block.supportsShape(designBlock)) {
+        val shapeId = if (engine.block.hasShape(designBlock)) {
             engine.block.getShape(designBlock)
         } else {
             null
         }
 
-        val blurId = if (engine.block.supportsBlur(designBlock)) {
+        val blurId = if (engine.block.hasBlur(designBlock)) {
             engine.block.getBlur(designBlock)
         } else {
             null
         }
 
-        val effectIds = if (engine.block.supportsEffects(designBlock)) {
+        val effectIds = if (engine.block.hasEffects(designBlock)) {
             engine.block.getEffects(designBlock)
         } else {
             null
@@ -607,7 +551,7 @@ class TimelineState(
         val isBufferAudio = audioFileUri.startsWith("buffer://")
         val isLiveBufferRecording = isVoiceOver && isBufferAudio
 
-        val allowsTrimming = engine.block.supportsTrim(trimmableId)
+        val allowsTrimming = engine.block.hasTrim(trimmableId)
         val playbackSpeed =
             engine.block.getPlaybackControlBlock(designBlock)
                 ?.let(engine.block::getPlaybackSpeed)
@@ -691,7 +635,6 @@ class TimelineState(
             isLooping = isLooping,
             hasAnimation = anyAnimationBlock != null,
             isLiveBufferRecording = isLiveBufferRecording,
-            isPending = isPending(designBlock, clipType, wasPending = existingClip?.isPending == true),
             transitionTrimLead = transitionTrim.lead,
             transitionTrimTail = transitionTrim.tail,
         )

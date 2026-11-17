@@ -17,14 +17,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import ly.img.editor.base.components.PropertyPicker
 import ly.img.editor.base.components.PropertySlider
-import ly.img.editor.base.components.PropertyStepper
 import ly.img.editor.base.components.PropertySwitch
 import ly.img.editor.base.components.SectionHeader
 import ly.img.editor.base.components.colorpicker.ColorPickerButton
 import ly.img.editor.base.dock.options.fillstroke.ColorOptions
 import ly.img.editor.base.engine.DesignBlockWithProperties
 import ly.img.editor.base.engine.PropertyAndValue
-import ly.img.editor.base.engine.PropertyControlKind
 import ly.img.editor.base.engine.PropertyValue
 import ly.img.editor.base.engine.PropertyValueType
 import ly.img.editor.base.ui.BlockEvent
@@ -125,34 +123,20 @@ private fun FloatProperty(
 ) {
     val (property, value) = propertyAndValue
     val valueType = property.valueType as PropertyValueType.Float
-    val onValueChange = { newValue: Float ->
-        BlockEvent.OnChangeProperty(
-            designBlock = designBlock,
-            property = property,
-            newValue = PropertyValue.Float(newValue),
-        ).let { onEvent(it) }
-    }
-    when (val controlKind = property.controlKind) {
-        is PropertyControlKind.Slider -> PropertySlider(
-            title = property.title.value,
-            value = (value as PropertyValue.Float).value,
-            valueRange = valueType.range,
-            onValueChange = onValueChange,
-            onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
-            step = valueType.step,
-            detents = controlKind.detents,
-        )
-        is PropertyControlKind.Stepper -> PropertyStepper(
-            title = property.title.value,
-            value = (value as PropertyValue.Float).value,
-            valueRange = valueType.range,
-            onValueChange = onValueChange,
-            onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
-            step = valueType.step,
-            unit = controlKind.unit,
-            decimals = controlKind.decimals,
-        )
-    }
+    PropertySlider(
+        title = property.title.value,
+        value = (value as PropertyValue.Float).value,
+        valueRange = valueType.range,
+        onValueChange = { newValue ->
+            BlockEvent.OnChangeProperty(
+                designBlock = designBlock,
+                property = property,
+                newValue = PropertyValue.Float(newValue),
+            ).let { onEvent(it) }
+        },
+        onValueChangeFinished = { onEvent(BlockEvent.OnChangeFinish) },
+        step = valueType.step,
+    )
 }
 
 @Composable

@@ -1,11 +1,8 @@
 package ly.img.editor.base.timeline.state
 
-import kotlinx.coroutines.flow.firstOrNull
 import ly.img.editor.base.timeline.clip.Clip
 import ly.img.engine.DesignBlock
-import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
-import ly.img.engine.HistoryUpdate
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.seconds
@@ -17,13 +14,7 @@ internal fun Engine.canShowTransition(
     incomingStart: Duration,
 ): Boolean = block.supportsTransition(outgoing) &&
     block.supportsTransition(incoming) &&
-    clipsMeet(start = incomingStart, end = outgoingEnd)
-
-/** Whether a clip that starts at [start] meets or overlaps a clip that ends at [end]. */
-private fun clipsMeet(
-    start: Duration,
-    end: Duration,
-): Boolean = start <= end + 0.001.seconds
+    incomingStart <= outgoingEnd + 0.001.seconds
 
 internal fun Engine.transitionIncomingClip(outgoing: DesignBlock): DesignBlock? {
     if (!block.isValid(outgoing)) return null
@@ -62,11 +53,18 @@ internal fun Engine.transitionTrim(clip: DesignBlock): TransitionTrim {
     return TransitionTrim(lead = lead, tail = tail)
 }
 
-/** Maximum transition insets at either end, before the clip's own duration limits them. */
-internal fun Engine.transitionTrimCaps(clip: DesignBlock): TransitionTrimCaps {
+/**
+ * Converts a rendered timeline duration to raw engine timing using the transition inset that
+ * will apply after the duration changes. A transition edge is either capped or contributes one
+ * quarter of the raw clip duration, yielding three linear regions.
+ */
+internal fun Engine.transitionTiming(
+    clip: DesignBlock,
+    renderedDuration: Duration,
+): TransitionTiming {
     val siblings = block.getParent(clip)?.let(block::getChildren).orEmpty()
     val index = siblings.indexOf(clip)
-    if (index < 0) return TransitionTrimCaps()
+    if (index < 0) return TransitionTiming(rawDuration = renderedDuration)
 
     fun trimCap(
         outgoing: DesignBlock,
@@ -86,31 +84,21 @@ internal fun Engine.transitionTrimCaps(clip: DesignBlock): TransitionTrimCaps {
     val trailingCap = siblings.getOrNull(index + 1)
         ?.let { incoming -> trimCap(clip, incoming, incoming) }
         ?: ZERO
-    return TransitionTrimCaps(leadingCap, trailingCap)
-}
+    val smallerCap = minOf(leadingCap, trailingCap)
+    val largerCap = maxOf(leadingCap, trailingCap)
 
-internal data class TransitionTrimCaps(
-    val lead: Duration = ZERO,
-    val tail: Duration = ZERO,
-) {
-    private fun trim(rawDuration: Duration) = TransitionTrim(minOf(lead, rawDuration / 4), minOf(tail, rawDuration / 4))
-
-    fun renderedDuration(rawDuration: Duration): Duration {
-        val inset = trim(rawDuration)
-        return rawDuration - inset.lead - inset.tail
+    val rawDuration = when {
+        renderedDuration <= smallerCap * 2 -> renderedDuration * 2
+        renderedDuration <= largerCap * 3 - smallerCap -> (renderedDuration + smallerCap) * 4 / 3
+        else -> renderedDuration + smallerCap + largerCap
     }
-
-    /** Inverts the displayed width. Each edge either reaches its cap or hides a quarter of the raw duration. */
-    fun timing(renderedDuration: Duration): TransitionTiming {
-        val smallerCap = minOf(lead, tail)
-        val largerCap = maxOf(lead, tail)
-        val rawDuration = when {
-            renderedDuration <= smallerCap * 2 -> renderedDuration * 2
-            renderedDuration <= largerCap * 3 - smallerCap -> (renderedDuration + smallerCap) * 4 / 3
-            else -> renderedDuration + smallerCap + largerCap
-        }
-        return TransitionTiming(rawDuration, trim(rawDuration))
-    }
+    return TransitionTiming(
+        rawDuration = rawDuration,
+        trim = TransitionTrim(
+            lead = minOf(leadingCap, rawDuration / 4),
+            tail = minOf(trailingCap, rawDuration / 4),
+        ),
+    )
 }
 
 internal fun Engine.transitionOverlap(
@@ -118,41 +106,16 @@ internal fun Engine.transitionOverlap(
     incoming: DesignBlock,
 ): Duration {
     val outgoingDuration = block.getDuration(outgoing).seconds
+    val incomingDuration = block.getDuration(incoming).seconds
     val outgoingEnd = block.getTimeOffset(outgoing).seconds + outgoingDuration
     val incomingStart = block.getTimeOffset(incoming).seconds
-    if (!clipsMeet(start = incomingStart, end = outgoingEnd)) {
-        return ZERO
-    }
-    return transitionOverlapForDrop(outgoing, incoming)
-}
-
-/**
- * The saved overlap of the transition after [outgoing]. The engine ignores it next to a group clip, so a group cut
- * never overlaps.
- */
-internal fun Engine.transitionOverlapApplies(
-    outgoing: DesignBlock,
-    incoming: DesignBlock,
-): Boolean = block.getType(outgoing) != DesignBlockType.Group.key &&
-    block.getType(incoming) != DesignBlockType.Group.key &&
-    block.getBoolean(block.getTransition(outgoing), "transition/overlap")
-
-/** A drop resolves adjacency from its proposed layout, before the clips' engine offsets have moved. */
-internal fun Engine.transitionOverlapForDrop(
-    outgoing: DesignBlock,
-    incoming: DesignBlock,
-): Duration {
-    if (!block.supportsTransition(outgoing) ||
-        !block.supportsTransition(incoming) ||
-        !hasRealTransition(outgoing) ||
-        !transitionOverlapApplies(outgoing, incoming)
-    ) {
+    if (!canShowTransition(outgoing, incoming, outgoingEnd, incomingStart) || !hasRealTransition(outgoing)) {
         return ZERO
     }
     return minOf(
         block.getDuration(block.getTransition(outgoing)).seconds,
-        block.getDuration(outgoing).seconds / 2,
-        block.getDuration(incoming).seconds / 2,
+        outgoingDuration / 2,
+        incomingDuration / 2,
     ).coerceAtLeast(ZERO)
 }
 
@@ -167,112 +130,48 @@ internal fun Engine.transitionCuts(tracks: Iterable<DesignBlock>): Map<DesignBlo
 }
 
 /**
- * Waits for the next history update and tells whether one of [clips] has lost its transition by then. The engine
- * removes a transition whose clips no longer meet before it commits the undo step of an edit, so call this after the
- * edit, with the clips that had a transition before it.
- */
-internal suspend fun Engine.awaitTransitionRemoved(clips: Collection<DesignBlock>): Boolean {
-    if (clips.isEmpty()) return false
-    editor.onHistoryUpdatedWithKind().firstOrNull { it == HistoryUpdate.UPDATED } ?: return false
-    return clips.any { block.isValid(it) && !hasRealTransition(it) }
-}
-
-/**
- * The ends that a drag of the clip [clipId] draws at full length: the tail of the clip before it and the lead of the
- * clip after it, where it shares a transition with them. The drag can separate them.
+ * Destroys the transition of each cut in [cuts] whose clip is now followed by a different clip. A transition belongs
+ * to its cut, so it does not move to the new neighbour. Destroying it, unlike `removeTransition`, shifts no clip.
  *
- * @param sortedClips The clips of the dragged clip's track, sorted by [Clip.timeOffset].
- * @return The released trim of each such clip by id, see [withReleasedTrim].
+ * @return The number of destroyed transitions.
  */
-internal fun releaseTransitionTrim(
-    sortedClips: List<Clip>,
-    clipId: DesignBlock,
-): Map<DesignBlock, TransitionTrim> {
-    val index = sortedClips.indexOfFirst { it.id == clipId }
-    val clip = sortedClips.getOrNull(index) ?: return emptyMap()
-    return buildMap {
-        val previous = sortedClips.getOrNull(index - 1)
-        if (previous != null && clip.transitionTrimLead > ZERO && previous.transitionTrimTail > ZERO) {
-            put(previous.id, TransitionTrim(tail = previous.transitionTrimTail))
-        }
-        val next = sortedClips.getOrNull(index + 1)
-        if (next != null && clip.transitionTrimTail > ZERO && next.transitionTrimLead > ZERO) {
-            put(next.id, TransitionTrim(lead = next.transitionTrimLead))
-        }
+internal fun Engine.removeChangedTransitionCuts(cuts: Map<DesignBlock, DesignBlock?>): Int {
+    var removed = 0
+    cuts.forEach { (outgoing, incoming) ->
+        if (!block.isValid(outgoing)) return@forEach
+        val transition = block.getTransition(outgoing)
+        if (!block.isValid(transition)) return@forEach
+        val siblings = block.getParent(outgoing)?.let(block::getChildren).orEmpty()
+        if (siblings.getOrNull(siblings.indexOf(outgoing) + 1) == incoming) return@forEach
+        block.destroy(transition)
+        removed++
     }
+    return removed
 }
 
 /**
- * The clip with its [released] trim drawn at full length. A drop can remove the transition before the drag preview
- * clears, so the clip releases no more than the trim it has now.
- */
-internal fun Clip.withReleasedTrim(released: TransitionTrim): Clip {
-    val lead = minOf(released.lead, transitionTrimLead)
-    val tail = minOf(released.tail, transitionTrimTail)
-    return copy(
-        timeOffset = timeOffset - lead,
-        duration = duration + lead + tail,
-        transitionTrimLead = transitionTrimLead - lead,
-        transitionTrimTail = transitionTrimTail - tail,
-    )
-}
-
-/**
- * A clip of the target track of a drop. [timeOffset] and [duration] are the raw engine timing before the drop.
- * [drawnStart] and [drawnEnd] are where the drag draws the clip at the drop.
- */
-internal data class DropClip(
-    val id: DesignBlock,
-    val timeOffset: Duration,
-    val duration: Duration,
-    val drawnStart: Duration,
-    val drawnEnd: Duration,
-)
-
-/**
- * Converts the drawn layout of a drop to raw engine offsets. [clips] are the clips of the target track in track order.
- * A clip in [movedClips] starts where it is drawn, and the drag draws [draggedClip] at its full length. A clip that
- * meets the clip before it in the drawing, where one of the two moved, joins that clip, overlapped by their
- * transition. [draggedClip] joins a next clip that did not move the same way, so a drop against either partner keeps
- * the pair as it was. Any other clip keeps its raw offset. Then each clip moves right until it overlaps its
- * predecessor by no more than their transition, because a removed transition gives the outgoing clip back the tail
- * that the timeline trimmed.
+ * Converts the rendered offsets of a drop to raw engine offsets. [clips] are the clips of the target track in track
+ * order, with raw engine timing. A clip without a rendered offset keeps its raw offset. Then each clip moves right
+ * until it overlaps its predecessor by no more than their transition, because a removed transition gives the
+ * outgoing clip back the tail that the timeline trimmed.
  *
- * @param movedClips The dragged clip and the clips that the drop cascade moved.
  * @return The raw offsets that differ from the current ones.
  */
 internal fun computeDropOffsets(
-    clips: List<DropClip>,
-    draggedClip: DesignBlock,
-    movedClips: Set<DesignBlock>,
-    transitionOverlap: (outgoing: DesignBlock, incoming: DesignBlock) -> Duration,
+    clips: List<Clip>,
+    renderedOffsets: Map<DesignBlock, Duration>,
+    transitionOverlap: (outgoing: Clip, incoming: Clip) -> Duration,
 ): Map<DesignBlock, Duration> {
     val offsets = mutableMapOf<DesignBlock, Duration>()
-    var previous: DropClip? = null
+    var previous: Clip? = null
     var previousEnd = ZERO
-    var previousMoved = false
-    for ((index, clip) in clips.withIndex()) {
-        val overlap = previous?.let { transitionOverlap(it.id, clip.id) } ?: ZERO
-        val joinedStart = previousEnd - overlap
-        val isMoved = clip.id in movedClips
-        val next = clips.getOrNull(index + 1)
-        var start = if (isMoved) clip.drawnStart else clip.timeOffset
-        if (previous != null && (isMoved || previousMoved) && clipsMeet(start = clip.drawnStart, end = previous.drawnEnd)) {
-            start = joinedStart
-        } else if (clip.id == draggedClip &&
-            next != null &&
-            next.id !in movedClips &&
-            clipsMeet(start = next.drawnStart, end = clip.drawnEnd)
-        ) {
-            start = next.timeOffset + transitionOverlap(clip.id, next.id) - clip.duration
-        }
-        if (previous != null) {
-            start = maxOf(start, joinedStart)
-        }
+    for (clip in clips) {
+        val overlap = previous?.let { transitionOverlap(it, clip) } ?: ZERO
+        var start = renderedOffsets[clip.id]?.let { it - overlap / 2 } ?: clip.timeOffset
+        if (previous != null) start = maxOf(start, previousEnd - overlap)
         if (start != clip.timeOffset) offsets[clip.id] = start
         previous = clip
         previousEnd = start + clip.duration
-        previousMoved = isMoved || start != clip.timeOffset
     }
     return offsets
 }
