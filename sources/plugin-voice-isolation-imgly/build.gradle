@@ -1,0 +1,57 @@
+import java.security.MessageDigest
+
+apply from: "$projectDir/../editor-library.gradle"
+apply from: "$projectDir/../dokka.gradle"
+
+android {
+    namespace = 'ly.img.editor.plugin.voiceIsolation.imgly'
+}
+
+dependencies {
+    api project(":plugin-voice-isolation")
+    implementation(libs.onnxRuntime)
+    implementation(libs.jtransforms)
+
+    testImplementation libs.junit
+    // ONNX Runtime for Android has no natives for the JVM, so the unit tests use the desktop build of the same version.
+    testImplementation libs.onnxRuntimeJvm
+}
+
+configurations.matching { it.name.endsWith("UnitTestRuntimeClasspath") }.configureEach {
+    exclude group: "com.microsoft.onnxruntime", module: "onnxruntime-android"
+}
+
+// The reference test runs the model from the upstream archive whose files the CDN serves.
+def modelArchiveUrl = "https://github.com/Rikorose/DeepFilterNet/raw/v0.5.6/models/DeepFilterNet3_onnx.tar.gz"
+def modelArchiveSha256 = "c94d91f70911001c946e0fabb4aa9adc37045f45a03b56008cb0c8244cb63616"
+def modelArchive = layout.buildDirectory.file("deepFilterNet3/DeepFilterNet3_onnx.tar.gz")
+def modelDir = layout.buildDirectory.dir("deepFilterNet3/model")
+
+def downloadModel = tasks.register("downloadDeepFilterNet3") {
+    outputs.file(modelArchive)
+    doLast {
+        def file = modelArchive.get().asFile
+        file.parentFile.mkdirs()
+        new URL(modelArchiveUrl).withInputStream { input -> file.withOutputStream { it << input } }
+        def sha256 = MessageDigest.getInstance("SHA-256").digest(file.bytes).encodeHex().toString()
+        if (sha256 != modelArchiveSha256) {
+            file.delete()
+            throw new GradleException("$modelArchiveUrl has SHA-256 $sha256, expected $modelArchiveSha256.")
+        }
+    }
+}
+
+def unpackModel = tasks.register("unpackDeepFilterNet3", Sync) {
+    dependsOn(downloadModel)
+    from(tarTree(resources.gzip(modelArchive))) {
+        include "**/enc.onnx", "**/erb_dec.onnx", "**/df_dec.onnx", "**/config.ini"
+        eachFile { it.path = it.name }
+    }
+    includeEmptyDirs = false
+    into(modelDir)
+}
+
+tasks.withType(Test).configureEach {
+    dependsOn(unpackModel)
+    systemProperty "voiceIsolation.modelDir", modelDir.get().asFile.path
+}

@@ -41,6 +41,7 @@ private const val DROP_SHADOW_ALPHA = 80
 
 /**
  * Clip shaped overlay that follows the finger while a drag is active; renders nothing while idle.
+ * It shows the clip at its full [ly.img.editor.base.timeline.clip.Clip.rawDuration] from its drawn start.
  *
  * Stays pinned to the grab point by subtracting `grabOffsetX/Y` (captured at gesture start);
  * without this, grabbing a clip at an edge would snap to centre under the finger. Never
@@ -60,7 +61,7 @@ fun FloatingClipOverlay(timelineState: TimelineState) {
     if (clip.clipType == ClipType.Caption) return
 
     val zoomState = timelineState.zoomState
-    val widthPx = zoomState.toPx(clip.duration)
+    val widthPx = zoomState.toPx(clip.rawDuration)
     val height = TimelineConfiguration.clipHeight
     // Pointer over bg with a non-bg-compatible source (audio): visual hint only — the
     // resolver still falls back to a foreground target. `derivedStateOf` skips the

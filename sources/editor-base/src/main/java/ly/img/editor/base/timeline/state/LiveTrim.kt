@@ -22,7 +22,9 @@ data class LiveTrimState(
 /**
  * Computes sibling shifts that keep the dragged clip from overlapping its neighbors. Unlocked
  * clips on each side are pushed outward by the minimum amount; the cascade stops at the first
- * locked clip ([Clip.isLocked] `true`), which never moves.
+ * locked clip ([Clip.isLocked] `true`), which never moves. A successor that shares a transition
+ * with the clip before it follows that clip's end, because a trim keeps the clips of a transition
+ * joined.
  *
  * @param sorted Track clips sorted by `timeOffset` ascending; must include the dragged clip.
  * @param trim Dragged clip bounds.
@@ -30,7 +32,8 @@ data class LiveTrimState(
  * Background track previews pass `false` so predecessors can visually slide past zero — the
  * engine re-packs them on commit regardless.
  * @param packFollowingClips When `true`, each unlocked successor is packed immediately after
- * the previous clip. Background tracks use this because they have no timeline gaps.
+ * the previous clip, also without a transition. Background tracks use this because they have no
+ * timeline gaps.
  * @param transitionOverlap Raw overlap to preserve between adjacent clips. The timeline preview
  * uses the default because its clip extents are already transition-projected; engine commits pass
  * the actual overlap.
@@ -50,7 +53,7 @@ internal fun computeLiveTrimOverrides(
     val overrides = mutableMapOf<DesignBlock, Duration>()
 
     // [sorted] is ordered by start time. Once an adjacent pair fits with its requested overlap,
-    // further clips on that side do not need shifting.
+    // further clips on that side do not need shifting, except successors that a transition joins.
 
     // Walk left
     var next = sorted[pivotIndex]
@@ -75,7 +78,8 @@ internal fun computeLiveTrimOverrides(
         val neighbor = sorted[i]
         if (neighbor.isLocked) break
         val desiredStart = previousEnd - transitionOverlap(previous, neighbor)
-        if (!packFollowingClips && neighbor.timeOffset >= desiredStart) break
+        val isJoined = neighbor.joinedPredecessor == previous.id
+        if (!packFollowingClips && !isJoined && neighbor.timeOffset >= desiredStart) break
         if (neighbor.timeOffset != desiredStart) {
             overrides[neighbor.id] = desiredStart
         }

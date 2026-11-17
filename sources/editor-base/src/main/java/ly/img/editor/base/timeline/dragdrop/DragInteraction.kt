@@ -83,33 +83,14 @@ internal fun recomputeDragPreview(
             )
             val backgroundTrackId = timelineState.dataSource.backgroundTrack.id
             val isBgTarget = targetTrack.id == backgroundTrackId
-            val isBgSource = ctx.sourceTrackId == backgroundTrackId
-            val slot = if (isBgTarget) {
-                val draggedOriginalIndex = if (isBgSource) {
-                    // Bg is packed and sorted by timeOffset, so the clip's index in
-                    // sortedSiblings equals the count of bg clips before it in time.
-                    sortedSiblings.count { it.timeOffset < clip.timeOffset }
-                } else {
-                    // FG-source clip wasn't in bg pre-drag — pass `size` so every locked
-                    // bg sibling acts as a left wall and the clip can land anywhere past
-                    // the rightmost lock.
-                    sortedSiblings.size
-                }
-                computeBackgroundDropSlot(
-                    sortedSiblings = sortedSiblings,
-                    insertIndex = idx,
-                    draggedDuration = clip.duration,
-                    draggedOriginalIndex = draggedOriginalIndex,
-                )
-            } else {
-                computeDropSlot(
-                    sortedSiblings = sortedSiblings,
-                    insertIndex = idx,
-                    desiredStart = desiredStart,
-                    draggedDuration = clip.duration,
-                    isLiveBufferRecording = clip.isLiveBufferRecording,
-                )
-            }
+            val slot = computeTrackDropSlot(
+                sortedSiblings = sortedSiblings,
+                insertIndex = idx,
+                desiredStart = desiredStart,
+                dragged = clip,
+                isBackgroundTarget = isBgTarget,
+                isBackgroundSource = ctx.sourceTrackId == backgroundTrackId,
+            )
             if (slot == null) {
                 // Reject: slot below `minClipDuration` or a live-buffer clip can't
                 // shrink. Clear overrides so the snap-back is clean.
@@ -148,12 +129,7 @@ internal fun recomputeDragPreview(
                     }
                     timelineState.dragDrop.overrides.putAll(cascade)
                 }
-                DropTarget.ExistingTrack(
-                    trackId = targetTrack.id,
-                    insertIndex = slot.insertIndex,
-                    timeOffset = slot.dropStart,
-                    effectiveDuration = slot.effectiveDuration.takeIf { it != clip.duration },
-                )
+                slot.toTarget(trackId = targetTrack.id, draggedDuration = clip.rawDuration)
             }
         }
         is DropZone.NewTrack -> {

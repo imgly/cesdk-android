@@ -8,14 +8,18 @@ import ly.img.editor.core.ScopedProperty
 import ly.img.editor.core.component.Dock
 import ly.img.editor.core.component.EditorComponent
 import ly.img.editor.core.component.HorizontalListBuilderModify
+import ly.img.editor.core.component.InspectorBar
 import ly.img.editor.core.component.modify
 import ly.img.editor.core.component.remember
 import ly.img.editor.core.configuration.EditorConfiguration
 import ly.img.editor.core.configuration.EditorConfigurationBuilder
 
 /**
- * Plugin for background removal. This plugin adds a dedicated button to the [Dock] that removes
- * the background from the current page.
+ * Plugin for background removal. This plugin adds a button to the [Dock] that removes the background of the current
+ * page's image. Add [InspectorBar.Button.rememberBackgroundRemoval] with [inspectorBarModifier] to remove the
+ * background of the selected image or page. The results are PNG files in the app's cache directory, which Android can
+ * clear. To keep them, upload the `file://` URIs that `engine.editor.findAllMediaURIs()` returns, and point the scene
+ * to the uploads with `engine.editor.relocateResource`.
  */
 open class BackgroundRemovalPlugin : EditorConfigurationBuilder() {
     /**
@@ -34,6 +38,13 @@ open class BackgroundRemovalPlugin : EditorConfigurationBuilder() {
     var dockModifier: HorizontalListBuilderModify<EditorComponent<*>>.(BackgroundRemovalConfig) -> Unit = {
         addFirst { Dock.Button.rememberBackgroundRemoval(config = it) }
     }
+
+    /**
+     * The [InspectorBar] modifier in order to place the [InspectorBar.Button.rememberBackgroundRemoval] button.
+     * By default, it is `null`, and the plugin leaves the inspector bar unchanged. To prepend the button, set
+     * `inspectorBarModifier = { addFirst { InspectorBar.Button.rememberBackgroundRemoval(config = it) } }`.
+     */
+    var inspectorBarModifier: (HorizontalListBuilderModify<EditorComponent<*>>.(BackgroundRemovalConfig) -> Unit)? = null
 
     /**
      * Initializes the configured background remover after the parent configuration is created.
@@ -55,6 +66,22 @@ open class BackgroundRemovalPlugin : EditorConfigurationBuilder() {
         }
         androidx.compose.runtime.remember(sourceDock, updatedListBuilder) {
             sourceDock.copy(listBuilder = updatedListBuilder)
+        }
+    }
+
+    /**
+     * Returns the editor inspector bar with the background removal button inserted by [inspectorBarModifier], or the
+     * parent's inspector bar when [inspectorBarModifier] is `null`.
+     */
+    override var inspectorBar: ScopedProperty<EditorScope, EditorComponent<*>?>? = impl@{
+        val modifier = inspectorBarModifier ?: return@impl parentConfiguration?.inspectorBar
+        val config = requireConfig()
+        val sourceInspectorBar = parentConfiguration?.inspectorBar as? InspectorBar ?: InspectorBar.remember()
+        val updatedListBuilder = sourceInspectorBar.listBuilder.modify {
+            modifier(config)
+        }
+        androidx.compose.runtime.remember(sourceInspectorBar, updatedListBuilder) {
+            sourceInspectorBar.copy(listBuilder = updatedListBuilder)
         }
     }
 

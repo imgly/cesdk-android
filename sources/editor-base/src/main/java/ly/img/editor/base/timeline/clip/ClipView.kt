@@ -43,6 +43,7 @@ import ly.img.editor.base.timeline.clip.trim.ClipTrimOutlineView
 import ly.img.editor.base.timeline.dragdrop.DragDropState
 import ly.img.editor.base.timeline.dragdrop.DropTarget
 import ly.img.editor.base.timeline.dragdrop.context
+import ly.img.editor.base.timeline.dragdrop.isUnmovedDrop
 import ly.img.editor.base.timeline.state.LiveTrimState
 import ly.img.editor.base.timeline.state.TimelineConfiguration
 import ly.img.editor.base.timeline.state.TimelineState
@@ -112,7 +113,7 @@ fun ClipView(
     DisposableEffect(Unit) {
         onDispose {
             if (timelineState.dragDrop.phase.context?.clipId == clip.id) {
-                timelineState.dragDrop.overrides.clear()
+                timelineState.dragDrop.clearPreview()
                 timelineState.dragDrop.phase = DragDropState.Idle
             }
         }
@@ -278,10 +279,12 @@ fun ClipView(
                 timelineState.playerState.pause()
             }
 
-            // The commit branch leaves `dragDrop.overrides` populated; they're cleared downstream
-            // after OnApplyDrop's engine refresh so siblings stay at their preview positions until then.
+            // The commit branch leaves `dragDrop.overrides` and `transitionPartners` populated; they're cleared
+            // downstream after OnApplyDrop's engine refresh so siblings stay at their preview geometry until then.
             fun endMoveDrag(cancelled: Boolean) {
                 clipDragType = null
+                // A gesture that restarts reports a cancel even while idle, so only the clip that owns the drag ends it.
+                val context = timelineState.dragDrop.phase.context?.takeIf { it.clipId == clip.id } ?: return
                 if (movePlayerWasPlaying) {
                     timelineState.playerState.play()
                 }
@@ -289,7 +292,7 @@ fun ClipView(
                 val target = if (cancelled) {
                     null
                 } else {
-                    timelineState.dragDrop.phase.context?.dropTarget
+                    context.dropTarget
                 }
                 val captionMoveOffset = if (clip.clipType == ClipType.Caption) {
                     (target as? DropTarget.ExistingTrack)?.timeOffset
@@ -298,7 +301,7 @@ fun ClipView(
                 }
 
                 if (captionMoveOffset != null) {
-                    timelineState.dragDrop.overrides.clear()
+                    timelineState.dragDrop.clearPreview()
                     timelineState.dragDrop.overrides[clip.id] = captionMoveOffset
                     offset = zoomState.toPx(captionMoveOffset)
                     onEvent(
@@ -311,28 +314,31 @@ fun ClipView(
                     viewForHapticFeedback.performHapticFeedback(dropFinishHaptic)
                 } else if (target == null) {
                     // No drop — `offset` already matches engine truth, so just clear overrides.
-                    timelineState.dragDrop.overrides.clear()
+                    timelineState.dragDrop.clearPreview()
                 } else {
-                    // Pre-snap to bridge the frame between alpha → 1.0 (phase = Idle below) and the
-                    // async refresh updating `clip.timeOffset` — otherwise the clip flashes at its
-                    // source position before jumping to the target.
-                    val snapTime = when (target) {
-                        is DropTarget.ExistingTrack -> target.timeOffset
-                        is DropTarget.NewTrack -> target.timeOffset
-                    }
-                    offset = zoomState.toPx(snapTime)
-
-                    val sourceTrack = timelineState.dataSource.findTrack(clip)
                     val isNoOpReorder = target is DropTarget.ExistingTrack &&
-                        target.trackId == sourceTrack.id &&
-                        target.effectiveDuration == null &&
-                        snapTime == clip.timeOffset
+                        isUnmovedDrop(
+                            target = target,
+                            sourceTrackId = context.sourceTrackId,
+                            sortedSiblings = context.targetSortedSiblings[context.sourceTrackId].orEmpty(),
+                            dragged = clip,
+                            isBackgroundTrack = context.sourceTrackId == timelineState.dataSource.backgroundTrack.id,
+                        )
 
                     if (isNoOpReorder) {
                         // Avoid dispatching a no-op move: re-inserting a clip can detach its transition
                         // even when its position and duration have not changed.
-                        timelineState.dragDrop.overrides.clear()
+                        timelineState.dragDrop.clearPreview()
                     } else {
+                        // Pre-snap to bridge the frame between alpha → 1.0 (phase = Idle below) and the
+                        // async refresh updating `clip.timeOffset` and `clip.duration` — otherwise the clip
+                        // flashes at its source position and drawn length before jumping to the target.
+                        val (snapTime, snapDuration) = when (target) {
+                            is DropTarget.ExistingTrack -> target.timeOffset to (target.effectiveDuration ?: clip.rawDuration)
+                            is DropTarget.NewTrack -> target.timeOffset to clip.rawDuration
+                        }
+                        offset = zoomState.toPx(snapTime)
+                        widthState.value = zoomState.toPx(snapDuration)
                         onEvent(
                             BlockEvent.OnApplyDrop(
                                 clip = clip,

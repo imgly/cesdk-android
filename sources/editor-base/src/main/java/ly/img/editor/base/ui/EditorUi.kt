@@ -50,11 +50,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -64,6 +67,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import ly.img.editor.base.clipboard.ClipboardActions
+import ly.img.editor.base.clipboard.ClipboardEvent
+import ly.img.editor.base.clipboard.ClipboardFocus
+import ly.img.editor.base.clipboard.ClipboardMenu
+import ly.img.editor.base.clipboard.clipboardShortcuts
 import ly.img.editor.base.components.EditingTextCard
 import ly.img.editor.base.dock.AdjustmentSheetContent
 import ly.img.editor.base.dock.CustomBottomSheetContent
@@ -639,7 +647,23 @@ fun EditorScope.EditorUi(
                     },
                 ) { paddingValues ->
                     contentPadding = paddingValues
-                    Box {
+                    var clipboardMenuOffset by remember { mutableStateOf<Offset?>(null) }
+                    val clipboardFocusRequester = remember { FocusRequester() }
+                    val clipboardEnabled = uiState.isSceneLoaded && !uiState.isEditingText
+                    ClipboardFocus(clipboardEnabled, clipboardFocusRequester)
+                    Box(
+                        Modifier.clipboardShortcuts(
+                            enabled = clipboardEnabled,
+                            focusRequester = clipboardFocusRequester,
+                            actionLabels = Triple(
+                                stringResource(android.R.string.cut),
+                                stringResource(android.R.string.copy),
+                                stringResource(android.R.string.paste),
+                            ),
+                            onCopy = { viewModel.send(ClipboardEvent.Copy(it)) },
+                            onPaste = { viewModel.send(ClipboardEvent.Paste) },
+                        ),
+                    ) {
                         val orientation = LocalConfiguration.current.orientation
                         val blocksCanvasAndTimelineInteraction =
                             bottomSheetContent?.type is SheetType.Voiceover &&
@@ -653,6 +677,9 @@ fun EditorScope.EditorUi(
                             onMoveEnd = { viewModel.send(Event.OnCanvasMove(false)) },
                             onTouch = { viewModel.send(Event.OnCanvasTouch) },
                             onSizeChanged = { viewModel.send(Event.OnResetZoom) },
+                            onLongPress = { if (clipboardEnabled) clipboardMenuOffset = it },
+                            canDrop = { clipboardEnabled && viewModel.canDrop(it) },
+                            onDrop = { viewModel.send(ClipboardEvent.Drop(it)) },
                             loadScene = {
                                 isOverlayVisible = true
                                 viewModel.send(
@@ -661,6 +688,16 @@ fun EditorScope.EditorUi(
                                     ),
                                 )
                             },
+                        )
+                        ClipboardMenu(
+                            offset = clipboardMenuOffset,
+                            // Read when the menu opens, so the actions match the selection of the long press.
+                            actions = remember(clipboardMenuOffset) {
+                                if (clipboardMenuOffset == null) ClipboardActions.None else viewModel.clipboardActions()
+                            },
+                            onCopy = { viewModel.send(ClipboardEvent.Copy(it)) },
+                            onPaste = { viewModel.send(ClipboardEvent.Paste) },
+                            onDismiss = { clipboardMenuOffset = null },
                         )
                         if (pageTransition.image != null) {
                             Box(Modifier.fillMaxSize().background(canvasColor))

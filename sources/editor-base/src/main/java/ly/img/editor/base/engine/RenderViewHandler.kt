@@ -10,6 +10,7 @@ class RenderViewHandler(
     private val view: SurfaceView,
 ) {
     private var surfaceCallback: SurfaceHolder.Callback? = null
+    private var sizeChangedRunnable: Runnable? = null
 
     /** Adds a callback to be notified of surface size changes.
      *
@@ -17,6 +18,7 @@ class RenderViewHandler(
      */
     fun addCallback(onSizeChanged: () -> Unit) {
         val runnable = Runnable { onSizeChanged() }
+        sizeChangedRunnable = runnable
         surfaceCallback = object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
             }
@@ -35,6 +37,10 @@ class RenderViewHandler(
             }
         }
         view.holder.addCallback(surfaceCallback)
+        // A recreated activity already has its surface, so report it once, after the caller binds the engine.
+        if (view.holder.surface.isValid) {
+            view.post(runnable)
+        }
     }
 
     /**
@@ -43,5 +49,7 @@ class RenderViewHandler(
     fun removeCallback() {
         surfaceCallback?.let { view.holder.removeCallback(it) }
         surfaceCallback = null
+        sizeChangedRunnable?.let { view.removeCallbacks(it) }
+        sizeChangedRunnable = null
     }
 }

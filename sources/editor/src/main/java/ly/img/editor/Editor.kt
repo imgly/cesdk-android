@@ -20,6 +20,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -44,7 +45,7 @@ import ly.img.engine.EngineException
  * The default baseUri value used in [Editor] composable.
  */
 val defaultBaseUri: Uri by lazy {
-    "https://cdn.img.ly/packages/imgly/cesdk-android/1.85.4/assets".toUri()
+    "https://cdn.img.ly/packages/imgly/cesdk-android/1.87.0-rc.1/assets".toUri()
 }
 
 /**
@@ -156,7 +157,9 @@ private inline fun EditorScope.EngineInitializer(
             delay(300)
             status = EngineInitStatus.Loading
         }
-        launch {
+        // The engine starts only on the main thread. Under createAndroidComposeRule, an effect resumes on the thread
+        // that ended its last suspension.
+        launch(Dispatchers.Main.immediate) {
             try {
                 val start = System.currentTimeMillis()
                 editorContext.engine.start(
@@ -172,6 +175,7 @@ private inline fun EditorScope.EngineInitializer(
                 if (exception is CancellationException) {
                     throw exception
                 }
+                Log.e("CESDK", "Engine initialization failed.", exception)
                 loadingJob.cancelAndJoin()
                 status = EngineInitStatus.Error(exception)
             }
@@ -214,10 +218,7 @@ private fun EditorScope.complete(source: EditorConfiguration): EditorConfigurati
                 Log.w("CESDK", "EditorConfigurationBuilder.onExport is not implemented.")
                 Unit
             },
-            onError = source.onError ?: {
-                Log.e("CESDK", "Editor/Engine error.", it)
-                Unit
-            },
+            onError = source.onError ?: {},
             onClose = source.onClose ?: {
                 editorContext.eventHandler.send(EditorEvent.CloseEditor())
             },

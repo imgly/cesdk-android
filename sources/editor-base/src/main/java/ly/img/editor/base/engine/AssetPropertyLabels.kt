@@ -35,6 +35,7 @@ object AssetPropertyLabels {
         "/intensity" to R.string.ly_img_editor_sheet_transition_label_intensity,
         "/bandCount" to R.string.ly_img_editor_sheet_transition_label_band_count,
         "/color" to R.string.ly_img_editor_sheet_transition_label_color,
+        "/overlap" to R.string.ly_img_editor_sheet_transition_label_overlap,
         "/morph" to R.string.ly_img_editor_sheet_transition_label_morph,
         "/corner" to R.string.ly_img_editor_sheet_transition_label_corner,
     )

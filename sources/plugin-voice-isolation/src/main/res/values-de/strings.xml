@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<resources>
+    <string name="ly_img_plugin_voice_isolation_error_failed">Die Stimme konnte nicht isoliert werden.</string>
+    <string name="ly_img_plugin_voice_isolation_error_model_download">Das Modell zur Stimmisolierung konnte nicht geladen werden.</string>
+    <string name="ly_img_plugin_voice_isolation_error_no_audio">Der Clip hat keinen Ton.</string>
+    <string name="ly_img_plugin_voice_isolation_inspector_bar_button">Stimme isolieren</string>
+</resources>

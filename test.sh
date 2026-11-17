@@ -9,8 +9,8 @@ finish_arg_parsing
 
 [[ $CHEAP_ONLY -eq 1 ]] && exit 0
 
-# Smoke-tests in apps/cesdk_android/smoke-tests-app/src/androidTest/ drive the
-# editor UI (ShowcasesTest, GuidesTest). CI runs them on Firebase Test Lab.
+# The smoke-tests app's androidTest APK holds ShowcasesTest, the guide tests (src/guidesTest) and the editor
+# component tests (sources/editor/src/componentTest). The nightly runs it on the CI emulator.
 if [[ -z "${ANDROID_HOME:-}${ANDROID_SDK_ROOT:-}" ]] || ! command -v adb &>/dev/null; then
   >&2 echo "apps/cesdk_android: Android SDK not on PATH"
   >&2 echo "  Install via: ./scripts/dev/install-android-sdk.sh"
@@ -28,29 +28,15 @@ fi
 # test exit code and re-raise it at the end.
 TEST_EXIT=0
 dry_runnable apps/cesdk_android/gradlew -p apps/cesdk_android \
-  smoke-tests-app:connectedDebugAndroidTest || TEST_EXIT=$?
+  smoke-tests-app:connectedDebugAndroidTest -PtestOrchestrator || TEST_EXIT=$?
 
-# editorCoverageReport reads the app's connected-test output dir by default.
-dry_runnable apps/cesdk_android/gradlew -p apps/cesdk_android editorCoverageReport
+COVERAGE_EXIT=0
+dry_runnable scripts/coverage/cesdk_android_lcov.sh \
+  "${REPO_ROOT}/apps/cesdk_android/smoke-tests-app/build/outputs/code_coverage/debugAndroidTest/connected" \
+  apps/cesdk_android/coverage/lcov.info || COVERAGE_EXIT=$?
 
-# One --source-root per editor module src dir so jacoco_xml_to_lcov.py resolves
-# <package>/<file> to apps/cesdk_android/sources/ paths the --filter matches.
-JACOCO_XML="apps/cesdk_android/build/reports/coverage/editor/report.xml"
-if [[ -f "${JACOCO_XML}" ]]; then
-  SOURCE_ROOT_ARGS=()
-  for module in apps/cesdk_android/sources/*/; do
-    # Skip *-dummy modules (substituted for the real one in the app), whose
-    # sources would duplicate the real module's under the same package.
-    [[ "${module}" == *-dummy/ ]] && continue
-    for src in "${module}src/main/java" "${module}src/main/kotlin"; do
-      [[ -d "$src" ]] && SOURCE_ROOT_ARGS+=(--source-root "$src")
-    done
-  done
-  dry_runnable mkdir -p apps/cesdk_android/coverage
-  dry_runnable python3 scripts/coverage/jacoco_xml_to_lcov.py \
-    "${JACOCO_XML}" apps/cesdk_android/coverage/lcov.info \
-    "${SOURCE_ROOT_ARGS[@]}" \
-    --filter "apps/cesdk_android/sources/"
+# A test run that fails before any test leaves no coverage data, so its exit code goes first.
+if [[ "${TEST_EXIT}" -ne 0 ]]; then
+  exit "${TEST_EXIT}"
 fi
-
-exit "${TEST_EXIT}"
+exit "${COVERAGE_EXIT}"

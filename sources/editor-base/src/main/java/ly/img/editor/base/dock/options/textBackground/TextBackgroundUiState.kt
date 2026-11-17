@@ -4,11 +4,14 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import ly.img.editor.base.engine.DesignBlockWithProperties
 import ly.img.editor.base.engine.Property
+import ly.img.editor.base.engine.PropertyControlKind
 import ly.img.editor.base.engine.PropertyText
 import ly.img.editor.base.engine.PropertyValue
 import ly.img.editor.base.engine.PropertyValueCombineStrategy
 import ly.img.editor.base.engine.PropertyValueType
+import ly.img.editor.base.engine.abbreviation
 import ly.img.editor.base.engine.combineWithValue
+import ly.img.editor.base.engine.lengthDecimals
 import ly.img.editor.core.R
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockType
@@ -44,6 +47,13 @@ data class TextBackgroundUiState(
                     frameWidth / 2 + maxHorizontalPadding
                 }.let { max(it, engine.block.getFloat(designBlock, "backgroundColor/cornerRadius")) }
             }
+            // Padding and corner radius are lengths in the scene's design unit.
+            val designUnit = engine.scene.getDesignUnit()
+            // The step stays 0.1 in every unit.
+            val lengthStepper = PropertyControlKind.Stepper(
+                unit = designUnit.abbreviation,
+                decimals = designUnit.lengthDecimals,
+            )
             return DesignBlockWithProperties(
                 designBlock = designBlock,
                 objectType = DesignBlockType.Text,
@@ -66,6 +76,7 @@ data class TextBackgroundUiState(
                             ),
                             valueType = PropertyValueType.Float(range = 0F..maxVerticalPadding),
                             combineStrategy = PropertyValueCombineStrategy.Min,
+                            controlKind = lengthStepper,
                         ).combineWithValue(engine, designBlock).let(::add)
                         Property(
                             title = PropertyText.Resource(R.string.ly_img_editor_sheet_text_background_label_horizontal_padding),
@@ -75,6 +86,7 @@ data class TextBackgroundUiState(
                             ),
                             valueType = PropertyValueType.Float(range = 0F..maxHorizontalPadding),
                             combineStrategy = PropertyValueCombineStrategy.Min,
+                            controlKind = lengthStepper,
                         ).combineWithValue(engine, designBlock).let(::add)
                         Property(
                             title = PropertyText.Resource(R.string.ly_img_editor_sheet_text_background_label_round_corners),
@@ -82,6 +94,7 @@ data class TextBackgroundUiState(
                             valueType = PropertyValueType.Float(
                                 range = 0F..maxCornerRadius,
                             ),
+                            controlKind = lengthStepper,
                         ).combineWithValue(engine, designBlock).let(::add)
                     }
                 },

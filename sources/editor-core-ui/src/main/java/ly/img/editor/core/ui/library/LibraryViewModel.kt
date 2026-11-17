@@ -494,8 +494,6 @@ class LibraryViewModel(
     ) {
         setBlockName(asset, designBlock)
 
-        val defaultClipDuration = 5.0
-        var resolvedClipDuration = asset.getDuration() ?: defaultClipDuration
         val page = engine.getCurrentPage()
 
         if (inBackgroundTrack) {
@@ -518,17 +516,13 @@ class LibraryViewModel(
                 max(0.0, min(playbackTime, totalDuration - minClipDuration))
             }
 
-            val maxClipDuration = totalDuration - clampedOffset
-            val assetDuration = asset.getDuration() ?: max(defaultClipDuration, maxClipDuration)
-
-            // If there is nothing in the scene yet, we allow the full asset duration,
-            // otherwise shorten to fit remaining time:
-            resolvedClipDuration = if (totalDuration == 0.0) assetDuration else min(assetDuration, maxClipDuration)
             engine.block.setTimeOffset(designBlock, offset = clampedOffset)
             placeDesignBlock(designBlock)
         }
 
-        engine.block.setDuration(designBlock, duration = resolvedClipDuration)
+        asset.getDuration()?.let { duration ->
+            engine.block.setDuration(designBlock, duration)
+        }
 
         val fillBlock = if (DesignBlockType.get(engine.block.getType(designBlock)) == DesignBlockType.Audio) {
             // Prevent audio blocks from being considered in the z-index reordering
@@ -541,7 +535,15 @@ class LibraryViewModel(
         }
 
         fillBlock?.let { fill ->
-            refreshDuration(designBlock, fill, resolvedClipDuration, inBackgroundTrack)
+            runCatching {
+                engine.block.forceLoadAVResource(fill)
+                if (fill == designBlock && asset.getDuration() == null) {
+                    engine.block.setDuration(
+                        designBlock,
+                        min(engine.block.getDuration(designBlock), engine.block.getAVResourceTotalDuration(fill)),
+                    )
+                }
+            }
         }
     }
 

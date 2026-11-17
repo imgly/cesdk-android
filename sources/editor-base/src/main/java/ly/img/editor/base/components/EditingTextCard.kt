@@ -61,8 +61,11 @@ import ly.img.editor.core.ui.iconpack.IconPack
 import ly.img.editor.core.ui.iconpack.Listbullet
 import ly.img.editor.core.ui.iconpack.Listnumber
 import ly.img.editor.core.ui.iconpack.Lowercasing
+import ly.img.editor.core.ui.iconpack.TextSubscript
+import ly.img.editor.core.ui.iconpack.TextSuperscript
 import ly.img.editor.core.ui.iconpack.Uppercasing
 import ly.img.engine.ListStyle
+import ly.img.engine.ScriptStyle
 import ly.img.engine.TextCase
 import ly.img.engine.UnstableEngineApi
 
@@ -101,6 +104,7 @@ private fun FormattingRow(
             TextFormatToggles(uiState, onEvent)
             TextCaseButton(uiState, onEvent)
             TextListStyleButton(uiState, onEvent)
+            TextScriptStyleButton(uiState, onEvent)
         }
 
         // Scrim that fades the scrolling row into the surface colour just
@@ -368,6 +372,62 @@ private fun TextListStyleButton(
                     if (uiState.listStyle != ListStyle.ORDERED) {
                         onEvent(BlockEvent.OnChangeListStyle(ListStyle.ORDERED))
                     }
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun TextScriptStyleButton(
+    uiState: EditingTextCardUiState.Formatting,
+    onEvent: (EditorEvent) -> Unit,
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+    val buttonIcon = when (uiState.scriptStyle) {
+        ScriptStyle.SUBSCRIPT -> IconPack.TextSubscript
+        else -> IconPack.TextSuperscript
+    }
+    Box {
+        IconToggleButton(
+            checked = uiState.scriptStyle != ScriptStyle.NORMAL,
+            onCheckedChange = { menuExpanded = true },
+            colors = editingTextCardToggleColors(),
+        ) {
+            Icon(
+                buttonIcon,
+                contentDescription = stringResource(R.string.ly_img_editor_edit_text_label_script_style),
+            )
+        }
+        EditingTextCardDropdownMenu(
+            expanded = menuExpanded,
+            onDismissRequest = { menuExpanded = false },
+        ) {
+            PropertyItem(
+                checked = uiState.scriptStyle == ScriptStyle.NORMAL,
+                textRes = R.string.ly_img_editor_edit_text_script_style_option_normal,
+                icon = IconPack.DefaultNone,
+                onClick = {
+                    menuExpanded = false
+                    onEvent(BlockEvent.OnChangeScriptStyle(ScriptStyle.NORMAL))
+                },
+            )
+            PropertyItem(
+                checked = uiState.scriptStyle == ScriptStyle.SUPERSCRIPT,
+                textRes = R.string.ly_img_editor_edit_text_script_style_option_superscript,
+                icon = IconPack.TextSuperscript,
+                onClick = {
+                    menuExpanded = false
+                    onEvent(BlockEvent.OnChangeScriptStyle(ScriptStyle.SUPERSCRIPT))
+                },
+            )
+            PropertyItem(
+                checked = uiState.scriptStyle == ScriptStyle.SUBSCRIPT,
+                textRes = R.string.ly_img_editor_edit_text_script_style_option_subscript,
+                icon = IconPack.TextSubscript,
+                onClick = {
+                    menuExpanded = false
+                    onEvent(BlockEvent.OnChangeScriptStyle(ScriptStyle.SUBSCRIPT))
                 },
             )
         }

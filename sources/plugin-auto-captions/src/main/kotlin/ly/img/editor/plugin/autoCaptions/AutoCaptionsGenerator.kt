@@ -231,25 +231,6 @@ internal object AutoCaptionsGenerator {
         return audios
     }
 
-    private suspend fun <T> withScratchHistory(
-        engine: Engine,
-        block: suspend () -> T,
-    ): T {
-        val previous = runCatching { engine.editor.getActiveHistory() }.getOrNull()
-        val scratch = previous?.let { runCatching { engine.editor.createHistory() }.getOrNull() }
-        scratch?.let { engine.editor.setActiveHistory(it) }
-        try {
-            return block()
-        } finally {
-            scratch?.let {
-                runCatching {
-                    engine.editor.setActiveHistory(previous)
-                    engine.editor.destroyHistory(it)
-                }
-            }
-        }
-    }
-
     /**
      * Every block on the current page that could carry audible content, tagged with the source it counts as. Audio
      * is found by type because its kind varies (the editor stamps voiceovers `voiceover`); video by fill type.
@@ -335,8 +316,8 @@ internal object AutoCaptionsGenerator {
      * Extracts a video's audio track into a detached audio block and reads its buffer. A video's audio-track count
      * can only be probed once the resource is loaded, so that check follows the load.
      *
-     * Destroying the block does *not* release the buffer the extraction minted — only `destroyBuffer` does — so
-     * both are freed on every path out, throws and cancellation included.
+     * Destroying the block does *not* release the buffer the extraction minted — only `destroyBuffer` does. So the
+     * block goes before the first suspension, and the buffer on every path out, throws and cancellation included.
      */
     private suspend fun readVideoAudio(
         block: DesignBlock,
@@ -349,27 +330,22 @@ internal object AutoCaptionsGenerator {
         engine.block.forceLoadAVResource(fill)
         if (engine.block.getAudioTrackCountFromVideo(fill) <= 0) return null
 
-        // `createAudioFromVideo` pushes an undo step of its own, so the extraction runs against a scratch history
-        // the user never sees. Scoped to one video: the active history is swapped for as long as it is held.
-        return withScratchHistory(engine) {
-            val audioBlock = engine.block.createAudioFromVideo(
-                videoFill = fill,
-                trackIndex = 0,
-                // The whole track, untrimmed: cue timestamps are source seconds and `timelineCues` applies the window.
-                options = AudioFromVideoOptions(keepTrimSettings = false, muteOriginalVideo = false),
-            )
-            val bufferUri = runCatching { audioFileUri(audioBlock, engine) }.getOrNull()
-            try {
-                if (bufferUri == null || !writeAudio(bufferUri, engine, destination)) {
-                    return@withScratchHistory null
-                }
-                blockAudio(destination, "audio/mp4", Source.Video, of = block, trimmedBy = fill, engine = engine)
-            } finally {
-                runCatching { engine.block.destroy(audioBlock) }
-                // Scheme check: only a minted buffer may be destroyed, never a URI resolving to a user's own file.
-                if (bufferUri != null && AudioReader.of(bufferUri.scheme) == AudioReader.Buffer) {
-                    runCatching { engine.editor.destroyBuffer(bufferUri) }
-                }
+        val audioBlock = engine.block.createAudioFromVideo(
+            videoFill = fill,
+            trackIndex = 0,
+            // The whole track, untrimmed: cue timestamps are source seconds and `timelineCues` applies the window.
+            options = AudioFromVideoOptions(keepTrimSettings = false, muteOriginalVideo = false),
+        )
+        val bufferUri = runCatching { audioFileUri(audioBlock, engine) }.getOrNull()
+        // The editor stays usable while captions generate, so an undo step during the copy would record the block.
+        runCatching { engine.block.destroy(audioBlock) }
+        try {
+            if (bufferUri == null || !writeAudio(bufferUri, engine, destination)) return null
+            return blockAudio(destination, "audio/mp4", Source.Video, of = block, trimmedBy = fill, engine = engine)
+        } finally {
+            // Scheme check: only a minted buffer may be destroyed, never a URI resolving to a user's own file.
+            if (bufferUri != null && AudioReader.of(bufferUri.scheme) == AudioReader.Buffer) {
+                runCatching { engine.editor.destroyBuffer(bufferUri) }
             }
         }
     }

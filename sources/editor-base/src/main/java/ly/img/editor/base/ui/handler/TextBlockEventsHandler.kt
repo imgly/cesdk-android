@@ -16,6 +16,7 @@ import ly.img.editor.base.ui.BlockEvent.OnChangeLetterSpacing
 import ly.img.editor.base.ui.BlockEvent.OnChangeLineHeight
 import ly.img.editor.base.ui.BlockEvent.OnChangeListStyle
 import ly.img.editor.base.ui.BlockEvent.OnChangeParagraphSpacing
+import ly.img.editor.base.ui.BlockEvent.OnChangeScriptStyle
 import ly.img.editor.base.ui.BlockEvent.OnChangeSizeMode
 import ly.img.editor.base.ui.BlockEvent.OnChangeTextOnPathFlipped
 import ly.img.editor.base.ui.BlockEvent.OnChangeTextOnPathOffset
@@ -186,6 +187,16 @@ fun EventsHandler.textBlockEvents(
         val cases = engine.block.getTextCases(block, range.first, range.last)
         if (cases.any { case -> case != casing }) {
             engine.block.setTextCase(block, casing, range.first, range.last)
+            engine.editor.addUndoStep()
+        }
+    }
+
+    register<OnChangeScriptStyle> {
+        val scriptStyle = it.scriptStyle
+        val range = engine.block.effectiveTextRange(block)
+        val styles = engine.block.getTextScriptStyles(block, range.first, range.last)
+        if (styles.any { style -> style != scriptStyle }) {
+            engine.block.setTextScriptStyle(block, scriptStyle, range.first, range.last)
             engine.editor.addUndoStep()
         }
     }

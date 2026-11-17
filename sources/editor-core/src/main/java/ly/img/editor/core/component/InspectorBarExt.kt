@@ -66,14 +66,19 @@ import ly.img.editor.core.library.data.AssetSourceType
 import ly.img.editor.core.sheet.SheetType
 import ly.img.editor.core.ui.EditorIcon
 import ly.img.engine.BlockApi
+import ly.img.engine.CMYKColor
 import ly.img.engine.ColorSpace
 import ly.img.engine.DesignBlock
 import ly.img.engine.DesignBlockEvent
 import ly.img.engine.DesignBlockType
 import ly.img.engine.Engine
+import ly.img.engine.EngineErrorCode
+import ly.img.engine.EngineException
 import ly.img.engine.FillType
+import ly.img.engine.GradientColorStop
 import ly.img.engine.RGBAColor
 import ly.img.engine.ShapeType
+import ly.img.engine.SpotColor
 import ly.img.engine.UnstableEngineApi
 import java.text.BreakIterator
 import kotlin.time.Duration.Companion.seconds
@@ -760,9 +765,39 @@ fun InspectorBar.Button.rememberSplit(builder: InspectorBar.ButtonBuilder.() -> 
         builder()
     }
 
+/**
+ * An extension function for converting any [Engine] color into an Engine RGBA color.
+ * While the CMYK profile loads, or when it cannot load, a CMYK color converts by the formula that the canvas draws with.
+ * IMPORTANT! When modifying this function also modify similar function in EngineExt.kt of editor-core-ui.
+ */
+private fun ly.img.engine.Color.toRGBColor(engine: Engine): RGBAColor = this as? RGBAColor ?: try {
+    engine.editor.convertColorToColorSpace(this, ColorSpace.SRGB) as RGBAColor
+} catch (exception: EngineException) {
+    if (exception.code !in CMYK_PROFILE_ERRORS) throw exception
+    toUnmanagedRGBColor(engine)
+}
+
+/**
+ * Converts a CMYK color, or a spot color with only a CMYK approximation, to sRGB by the formula that the canvas draws
+ * with while the CMYK profile loads or after it failed to load.
+ * IMPORTANT! When modifying this function also modify similar function in EngineExt.kt of editor-core-ui.
+ */
+private fun ly.img.engine.Color.toUnmanagedRGBColor(engine: Engine): RGBAColor {
+    val (cmyk, tint) = when (this) {
+        is CMYKColor -> this to tint
+        is SpotColor -> engine.editor.getSpotColorCMYK(name) to tint
+        else -> error("Only a CMYK or a spot color needs the CMYK profile, got $this")
+    }
+    val ink = { component: Float -> component.coerceIn(0F, 1F) * tint.coerceIn(0F, 1F) }
+    val key = 1F - ink(cmyk.k)
+    return ly.img.engine.Color.fromRGBA(r = (1F - ink(cmyk.c)) * key, g = (1F - ink(cmyk.m)) * key, b = (1F - ink(cmyk.y)) * key)
+}
+
+// The codes of a conversion that fails only because the CMYK profile is loading or failed to load.
+private val CMYK_PROFILE_ERRORS = setOf(EngineErrorCode.COLOR_PROFILE_NOT_LOADED, EngineErrorCode.COLOR_PROFILE_MISSING)
+
 internal fun ly.img.engine.Color.toComposeColor(engine: Engine): Color {
-    val rgbaEngineColor = this as? RGBAColor
-        ?: engine.editor.convertColorToColorSpace(this, ColorSpace.SRGB) as RGBAColor
+    val rgbaEngineColor = toRGBColor(engine)
     return Color(
         red = rgbaEngineColor.r,
         green = rgbaEngineColor.g,
@@ -781,6 +816,16 @@ private fun BlockApi.getFillType(designBlock: DesignBlock): FillType? = if (!thi
 } else {
     FillType.get(this.getType(this.getFill(designBlock)))
 }
+
+/**
+ * An extension function that returns the color stops of the gradient fill block [fill] in sRGB.
+ *
+ * @param fill the gradient fill block that is queried.
+ */
+private fun Engine.getSrgbGradientColorStops(fill: DesignBlock): List<GradientColorStop> =
+    block.getGradientColorStops(fill, "fill/gradient/colors").map { stop ->
+        GradientColorStop(stop.stop, stop.color.toRGBColor(this))
+    }
 
 /**
  * An extension function that returns [Fill] of the design block.
@@ -808,7 +853,7 @@ internal fun Engine.getFill(designBlock: DesignBlock): Fill? = if (!block.suppor
                 startPointY = block.getFloat(fill, "fill/gradient/linear/startPointY"),
                 endPointX = block.getFloat(fill, "fill/gradient/linear/endPointX"),
                 endPointY = block.getFloat(fill, "fill/gradient/linear/endPointY"),
-                colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+                colorStops = getSrgbGradientColorStops(fill),
             )
         }
 
@@ -818,7 +863,7 @@ internal fun Engine.getFill(designBlock: DesignBlock): Fill? = if (!block.suppor
                 centerX = block.getFloat(fill, "fill/gradient/radial/centerPointX"),
                 centerY = block.getFloat(fill, "fill/gradient/radial/centerPointY"),
                 radius = block.getFloat(fill, "fill/gradient/radial/radius"),
-                colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+                colorStops = getSrgbGradientColorStops(fill),
             )
         }
 
@@ -827,7 +872,7 @@ internal fun Engine.getFill(designBlock: DesignBlock): Fill? = if (!block.suppor
             ConicalGradientFill(
                 centerX = block.getFloat(fill, "fill/gradient/conical/centerPointX"),
                 centerY = block.getFloat(fill, "fill/gradient/conical/centerPointY"),
-                colorStops = block.getGradientColorStops(fill, "fill/gradient/colors"),
+                colorStops = getSrgbGradientColorStops(fill),
             )
         }
 
@@ -835,6 +880,26 @@ internal fun Engine.getFill(designBlock: DesignBlock): Fill? = if (!block.suppor
         else -> null
     }
 }
+
+/**
+ * An extension function that tells whether a fill block can paint the stroke of the design block.
+ * IMPORTANT! When modifying this function also modify similar function in EngineExt.kt.
+ *
+ * @param designBlock the design block that is queried.
+ */
+private fun BlockApi.canPaintStrokeWithFill(designBlock: DesignBlock): Boolean {
+    if (!supportsStroke(designBlock) || isLineOrigin(designBlock)) return false
+    val type = DesignBlockType.getOrNull(getType(designBlock))
+    return type == DesignBlockType.Graphic || type == DesignBlockType.Page
+}
+
+/**
+ * An extension function that returns the fill block that paints the stroke of the design block.
+ *
+ * @param designBlock the design block that is queried.
+ */
+private fun BlockApi.getStrokeFillOrNull(designBlock: DesignBlock): DesignBlock? =
+    if (canPaintStrokeWithFill(designBlock)) getStrokeFill(designBlock) else null
 
 /**
  * An extension function that returns stroke color of the design block.
@@ -845,6 +910,21 @@ internal fun Engine.getStrokeColor(designBlock: DesignBlock): Color? {
     if (!block.supportsStroke(designBlock)) return null
     return block.getColor(designBlock, "stroke/color").toComposeColor(this)
 }
+
+/**
+ * An extension function that returns the color that the icon shows for the stroke of the design block: the color of
+ * the first stop when a gradient paints the stroke, otherwise its stroke color.
+ *
+ * @param designBlock the design block that is queried.
+ */
+private fun Engine.getStrokeIconColor(designBlock: DesignBlock): Color? {
+    val firstStop = block.getStrokeFillOrNull(designBlock)
+        ?.takeIf { FillType.getOrNull(block.getType(it)) in GRADIENT_FILL_TYPES }
+        ?.let { block.getGradientColorStops(it, "fill/gradient/colors").firstOrNull() }
+    return firstStop?.color?.toComposeColor(this) ?: getStrokeColor(designBlock)
+}
+
+private val GRADIENT_FILL_TYPES = setOf(FillType.LinearGradient, FillType.RadialGradient, FillType.ConicalGradient)
 
 /**
  * An extension function that constructs [EditorIcon.FillStroke] icon from [designBlock] based on
@@ -889,7 +969,7 @@ private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon
             else -> getFill(designBlock)
         },
         stroke = if (showStroke && block.isStrokeEnabled(designBlock)) {
-            getStrokeColor(designBlock)
+            getStrokeIconColor(designBlock)
         } else {
             null
         },
@@ -897,21 +977,29 @@ private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon
 }
 
 /**
- * The events of [designBlock] and of its fill, while [designBlock] is the selected block. A colour and the gradient
- * stops are properties of the fill block, so a subscription to [designBlock] alone does not report them. The fill can
- * be replaced, so the subscription restarts for every new fill. Each restart begins with an emission, otherwise the
- * event that replaced the fill is lost in the switch.
+ * The events of [designBlock], of its fill and of the fill that paints its stroke, while [designBlock] is the selected
+ * block. A colour and the gradient stops are properties of a fill block, so a subscription to [designBlock] alone does
+ * not report them. A fill can be replaced, so the subscription restarts for every new fill. Each restart begins with an
+ * emission, otherwise the event that replaced the fill is lost in the switch.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 private fun Engine.subscribeToBlockAndItsFill(designBlock: DesignBlock): Flow<List<DesignBlockEvent>> {
     // When the design block is unselected/deleted, the lambdas are entered before the parent scope is updated.
     fun isSelected() = designBlock == block.findAllSelected().firstOrNull()
     return event.subscribe(listOf(designBlock))
-        .filter { isSelected() }
+        // The start emission passes the filter too, otherwise it reads a block that a delete removed before the
+        // collection started, such as a cut right after the selection.
         .onStart { emit(emptyList()) }
-        .map { if (block.supportsFill(designBlock)) block.getFill(designBlock) else null }
+        .filter { isSelected() }
+        .map {
+            listOfNotNull(
+                designBlock,
+                if (block.supportsFill(designBlock)) block.getFill(designBlock) else null,
+                block.getStrokeFillOrNull(designBlock),
+            )
+        }
         .distinctUntilChanged()
-        .flatMapLatest { fill -> event.subscribe(listOfNotNull(designBlock, fill)).onStart { emit(emptyList()) } }
+        .flatMapLatest { blocks -> event.subscribe(blocks).onStart { emit(emptyList()) } }
         .filter { isSelected() }
 }
 

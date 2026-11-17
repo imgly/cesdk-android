@@ -17,6 +17,7 @@ import ly.img.engine.FontUnit
 import ly.img.engine.FontWeight
 import ly.img.engine.HorizontalAlignment
 import ly.img.engine.ListStyle
+import ly.img.engine.ScriptStyle
 import ly.img.engine.SizeMode
 import ly.img.engine.TextCase
 import ly.img.engine.TextDecorationLine
@@ -34,6 +35,7 @@ data class FormatUiState(
     val isStrikethrough: Boolean,
     val casing: TextCase,
     val listStyle: ListStyle?,
+    val scriptStyle: ScriptStyle,
     val horizontalAlignment: HorizontalAlignment,
     val effectiveHorizontalAlignment: HorizontalAlignment,
     val verticalAlignment: VerticalAlignment,
@@ -121,6 +123,9 @@ internal fun createFormatUiState(
             engine.block.getTextCases(designBlock, range.first, range.last).firstOrNull() ?: TextCase.NORMAL
         },
         listStyle = engine.block.resolveTextListStyle(designBlock),
+        scriptStyle = engine.block.effectiveTextRange(designBlock).let { range ->
+            engine.block.getTextScriptStyles(designBlock, range.first, range.last).firstOrNull() ?: ScriptStyle.NORMAL
+        },
         paragraphSpacing = engine.block.getFloat(designBlock, "${namespace}paragraphSpacing"),
         fontFamilyWeight = currentFont?.weight,
         availableWeights = typeface?.fonts?.sortedBy { it.weight.value + if (it.style == FontStyle.ITALIC) 1000 else 0 }?.map {

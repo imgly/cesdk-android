@@ -201,7 +201,7 @@ class SystemGalleryAssetSource(
                         val width = runCatching { resultCursor.getInt(widthIndex) }.getOrNull()?.takeIf { it > 0 }
                         val height = runCatching { resultCursor.getInt(heightIndex) }.getOrNull()?.takeIf { it > 0 }
                         val duration = if (isVideo && durationIndex != -1) {
-                            runCatching { resultCursor.getLong(durationIndex) / 1000 }.getOrNull()
+                            runCatching { resultCursor.getLong(durationIndex) / 1000.0 }.getOrNull()
                         } else {
                             null
                         }
@@ -248,7 +248,7 @@ class SystemGalleryAssetSource(
         isVideo: Boolean,
         width: Int?,
         height: Int?,
-        duration: Long?,
+        duration: Double?,
         mimeType: String?,
     ): Asset {
         val meta = mutableMapOf(
@@ -304,7 +304,7 @@ class SystemGalleryAssetSource(
             val width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull()
             val height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull()
             val durationSeconds = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
-                ?.let { (it / 1000).takeIf { value -> value > 0 } }
+                ?.let { (it / 1000.0).takeIf { value -> value > 0 } }
             ExtraMetadata(
                 width = width?.takeIf { it > 0 },
                 height = height?.takeIf { it > 0 },
@@ -321,7 +321,7 @@ class SystemGalleryAssetSource(
     private data class ExtraMetadata(
         val width: Int? = null,
         val height: Int? = null,
-        val duration: Long? = null,
+        val duration: Double? = null,
     )
 
     private object BundleKeys {
