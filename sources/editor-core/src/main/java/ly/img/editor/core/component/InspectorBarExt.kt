@@ -24,6 +24,7 @@ import ly.img.editor.core.ScopedProperty
 import ly.img.editor.core.component.data.ConicalGradientFill
 import ly.img.editor.core.component.data.EditorIcon
 import ly.img.editor.core.component.data.Fill
+import ly.img.editor.core.component.data.GradientFill
 import ly.img.editor.core.component.data.LinearGradientFill
 import ly.img.editor.core.component.data.RadialGradientFill
 import ly.img.editor.core.component.data.Selection
@@ -846,39 +847,43 @@ internal fun Engine.getFill(designBlock: DesignBlock): Fill? = if (!block.suppor
             SolidFill(rgbaColor.toComposeColor(this))
         }
 
-        FillType.LinearGradient -> {
-            val fill = block.getFill(designBlock)
-            LinearGradientFill(
-                startPointX = block.getFloat(fill, "fill/gradient/linear/startPointX"),
-                startPointY = block.getFloat(fill, "fill/gradient/linear/startPointY"),
-                endPointX = block.getFloat(fill, "fill/gradient/linear/endPointX"),
-                endPointY = block.getFloat(fill, "fill/gradient/linear/endPointY"),
-                colorStops = getSrgbGradientColorStops(fill),
-            )
-        }
-
-        FillType.RadialGradient -> {
-            val fill = block.getFill(designBlock)
-            RadialGradientFill(
-                centerX = block.getFloat(fill, "fill/gradient/radial/centerPointX"),
-                centerY = block.getFloat(fill, "fill/gradient/radial/centerPointY"),
-                radius = block.getFloat(fill, "fill/gradient/radial/radius"),
-                colorStops = getSrgbGradientColorStops(fill),
-            )
-        }
-
-        FillType.ConicalGradient -> {
-            val fill = block.getFill(designBlock)
-            ConicalGradientFill(
-                centerX = block.getFloat(fill, "fill/gradient/conical/centerPointX"),
-                centerY = block.getFloat(fill, "fill/gradient/conical/centerPointY"),
-                colorStops = getSrgbGradientColorStops(fill),
-            )
-        }
+        FillType.LinearGradient, FillType.RadialGradient, FillType.ConicalGradient ->
+            getGradientFill(block.getFill(designBlock))
 
         // Image fill and Video fill are not supported yet
         else -> null
     }
+}
+
+/**
+ * An extension function that returns the gradient that the fill block [fill] paints.
+ *
+ * @param fill the fill block that is queried.
+ * @return the [GradientFill] of [fill], or null when [fill] is not a gradient fill.
+ */
+private fun Engine.getGradientFill(fill: DesignBlock): GradientFill? = when (FillType.getOrNull(block.getType(fill))) {
+    FillType.LinearGradient -> LinearGradientFill(
+        startPointX = block.getFloat(fill, "fill/gradient/linear/startPointX"),
+        startPointY = block.getFloat(fill, "fill/gradient/linear/startPointY"),
+        endPointX = block.getFloat(fill, "fill/gradient/linear/endPointX"),
+        endPointY = block.getFloat(fill, "fill/gradient/linear/endPointY"),
+        colorStops = getSrgbGradientColorStops(fill),
+    )
+
+    FillType.RadialGradient -> RadialGradientFill(
+        centerX = block.getFloat(fill, "fill/gradient/radial/centerPointX"),
+        centerY = block.getFloat(fill, "fill/gradient/radial/centerPointY"),
+        radius = block.getFloat(fill, "fill/gradient/radial/radius"),
+        colorStops = getSrgbGradientColorStops(fill),
+    )
+
+    FillType.ConicalGradient -> ConicalGradientFill(
+        centerX = block.getFloat(fill, "fill/gradient/conical/centerPointX"),
+        centerY = block.getFloat(fill, "fill/gradient/conical/centerPointY"),
+        colorStops = getSrgbGradientColorStops(fill),
+    )
+
+    else -> null
 }
 
 /**
@@ -912,8 +917,9 @@ internal fun Engine.getStrokeColor(designBlock: DesignBlock): Color? {
 }
 
 /**
- * An extension function that returns the color that the icon shows for the stroke of the design block: the color of
- * the first stop when a gradient paints the stroke, otherwise its stroke color.
+ * An extension function that returns the single color of the stroke of the design block: the color of the first stop
+ * when a gradient paints the stroke, otherwise its stroke color. The icon draws a linear or radial gradient stroke
+ * whole, and this color for every other stroke.
  *
  * @param designBlock the design block that is queried.
  */
@@ -951,6 +957,7 @@ private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon
         !hideFillForLine &&
         block.isAllowedByScope(designBlock, "fill/change")
     val fillEnabled = showFill && block.isFillEnabled(designBlock)
+    val strokeEnabled = showStroke && block.isStrokeEnabled(designBlock)
     val type = DesignBlockType.getOrNull(block.getType(designBlock))
     val isTextLike = type == DesignBlockType.Text || type == DesignBlockType.Caption
     return EditorIcon.FillStroke(
@@ -968,11 +975,8 @@ private fun Engine.getFillStrokeButtonIcon(designBlock: DesignBlock): EditorIcon
                     ?: getFill(designBlock)
             else -> getFill(designBlock)
         },
-        stroke = if (showStroke && block.isStrokeEnabled(designBlock)) {
-            getStrokeIconColor(designBlock)
-        } else {
-            null
-        },
+        stroke = if (strokeEnabled) getStrokeIconColor(designBlock) else null,
+        strokeFill = if (strokeEnabled) block.getStrokeFillOrNull(designBlock)?.let { getGradientFill(it) } else null,
     )
 }
 

@@ -49,7 +49,9 @@ sealed interface EditorIcon {
      * @param showFill if true the circle for the fill is shown. If [fill] is null, then a transparent circle will be drawn.
      * @param showStroke if true the circle for the stroke is shown. If [stroke] is null, then a transparent circle will be drawn.
      * @param fill the fill of the icon. A multi-color [SolidFill] is rendered as stacked stripes.
-     * @param stroke the stroke color of the icon.
+     * @param stroke the stroke color of the icon. For a gradient stroke, it is the color of the first stop.
+     * @param strokeFill the gradient that paints the stroke, or null when [stroke] paints it. When it is set, the icon
+     * draws it instead of [stroke].
      */
     @Stable
     data class FillStroke(
@@ -57,5 +59,6 @@ sealed interface EditorIcon {
         val showStroke: Boolean,
         val fill: Fill?,
         val stroke: Color?,
+        val strokeFill: GradientFill? = null,
     ) : EditorIcon
 }

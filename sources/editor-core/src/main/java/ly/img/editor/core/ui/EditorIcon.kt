@@ -35,6 +35,7 @@ import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ly.img.editor.core.R
+import ly.img.editor.core.component.data.ConicalGradientFill
 import ly.img.editor.core.component.data.EditorIcon
 import ly.img.editor.core.component.data.Fill
 import ly.img.editor.core.component.data.LinearGradientFill
@@ -88,13 +89,7 @@ fun EditorIcon(
             if (icon.showFill && icon.showStroke) {
                 Box(modifier = modifier) {
                     FillButton(fill = icon.fill, buttonSize = 24.dp, selectionStrokeWidth = 0.dp)
-                    ColorButton(
-                        color = icon.stroke,
-                        buttonSize = 24.dp,
-                        selectionStrokeWidth = 0.dp,
-                        punchHole = true,
-                        modifier = Modifier.padding(start = 12.dp),
-                    )
+                    StrokeButton(icon = icon, modifier = Modifier.padding(start = 12.dp))
                 }
             } else if (icon.showFill) {
                 FillButton(
@@ -104,17 +99,38 @@ fun EditorIcon(
                     selectionStrokeWidth = 0.dp,
                 )
             } else if (icon.showStroke) {
-                ColorButton(
-                    modifier = modifier,
-                    color = icon.stroke,
-                    buttonSize = 24.dp,
-                    selectionStrokeWidth = 0.dp,
-                    punchHole = true,
-                )
+                StrokeButton(icon = icon, modifier = modifier)
             } else {
                 throw IllegalStateException("FillStrokeIcon has neither stroke nor fill.")
             }
         }
+    }
+}
+
+@Composable
+private fun StrokeButton(
+    icon: EditorIcon.FillStroke,
+    modifier: Modifier,
+) {
+    // FillButton has no conical brush and draws a checkerboard, so a conical stroke shows the first stop instead.
+    // A gradient shader throws for fewer than two stops, so a one-stop gradient shows its stop color too.
+    val strokeFill = icon.strokeFill?.takeIf { it !is ConicalGradientFill && it.colorStops.size > 1 }
+    if (strokeFill != null) {
+        FillButton(
+            modifier = modifier,
+            fill = strokeFill,
+            buttonSize = 24.dp,
+            selectionStrokeWidth = 0.dp,
+            punchHole = true,
+        )
+    } else {
+        ColorButton(
+            modifier = modifier,
+            color = icon.stroke,
+            buttonSize = 24.dp,
+            selectionStrokeWidth = 0.dp,
+            punchHole = true,
+        )
     }
 }
 
