@@ -3,6 +3,7 @@ package ly.img.editor.base.components.numeric
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.roundToLong
 
@@ -38,6 +39,32 @@ internal object NumberStepperMath {
         value: Double,
         bounds: ClosedFloatingPointRange<Double>,
     ): Double = value.coerceIn(bounds.start, bounds.endInclusive)
+
+    /**
+     * [bounds] with each finite end moved inward onto [decimals], so a clamped value matches the shown number.
+     * Returns [bounds] unchanged when no shown value fits between the ends.
+     */
+    fun inwardRounded(
+        bounds: ClosedFloatingPointRange<Double>,
+        decimals: Int,
+    ): ClosedFloatingPointRange<Double> {
+        val scale = 10.0.pow(decimals)
+
+        fun onShownGrid(
+            end: Double,
+            up: Boolean,
+        ): Double {
+            if (!end.isFinite()) return end
+            val scaled = end * scale
+            // A tolerance: `6.2f` widens to `6.1999998…` and `6.4f` to `6.4000001…`, so rounding either one can move
+            // past a shown value.
+            val tolerance = 1e-6 * max(1.0, abs(scaled))
+            return (if (up) ceil(scaled - tolerance) else floor(scaled + tolerance)) / scale
+        }
+        val lower = onShownGrid(bounds.start, up = true)
+        val upper = onShownGrid(bounds.endInclusive, up = false)
+        return if (lower <= upper) lower..upper else bounds
+    }
 
     /** Nearest multiple of [step] measured from [origin]. */
     fun snapped(

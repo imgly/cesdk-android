@@ -140,6 +140,23 @@ class NumberStepperFieldTest {
         assertEquals(listOf(true, false), editing)
     }
 
+    /** A maximum off the shown decimals clamps a typed value to the shown grid, so the next press moves the number. */
+    @Test
+    fun aTypedValueAboveAnOffGridMaximumStopsAtTheLastShownValue() {
+        setField(5f, range = 0f..6.04f)
+
+        field().performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNode(hasSetTextAction()).performTextInput("12")
+        compose.onNode(hasSetTextAction()).performImeAction()
+        // The commit ends edit mode on the next frame, and `pressAt` stops the clock, so wait for that frame first.
+        compose.waitForIdle()
+        pressAt(xFromEnd = MINUS_FROM_END, holdMs = 50)
+        pressAt(xFromEnd = PLUS_FROM_END, holdMs = 50)
+        pressAt(xFromEnd = PLUS_FROM_END, holdMs = 50)
+
+        assertEquals(listOf(6f, 5f, 6f), changes)
+    }
+
     @OptIn(ExperimentalTestApi::class)
     @Test
     fun aHardwareEnterCommitsOnKeyUpSoNoOtherControlReceivesTheKeyUp() {

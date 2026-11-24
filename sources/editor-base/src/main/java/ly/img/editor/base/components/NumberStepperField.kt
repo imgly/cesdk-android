@@ -119,7 +119,10 @@ fun NumberStepperField(
     onTypedValueClamped: () -> Unit = {},
 ) {
     val resolvedDecimals = decimals ?: NumberStepperMath.decimals(step.toDouble())
-    val bounds = valueRange.start.toDouble()..valueRange.endInclusive.toDouble()
+    val rawBounds = valueRange.start.toDouble()..valueRange.endInclusive.toDouble()
+    // Moved inward onto the shown decimals, so a bound off that grid cannot store hidden decimals. A field without
+    // buttons keeps the exact bounds, so a typed duration still reaches the exact speed limit.
+    val bounds = if (showsButtons) NumberStepperMath.inwardRounded(rawBounds, resolvedDecimals) else rawBounds
     // The caller's value reaches here after an engine round trip, so a hold steps from the last value it sent.
     var current by remember { mutableFloatStateOf(value) }
     var lastValue by remember { mutableFloatStateOf(value) }
@@ -180,8 +183,8 @@ fun NumberStepperField(
     // TalkBack moves by the reported range divided by its steps. A range with no maximum has no end to report, so it
     // ends one step above the value, otherwise that move is infinite. A loaded value can lie below the minimum.
     val reportedEnd =
-        if (valueRange.endInclusive.isFinite()) valueRange.endInclusive else maxOf(current, valueRange.start) + step
-    val stepCount = ((reportedEnd - valueRange.start) / step).roundToInt() - 1
+        if (valueRange.endInclusive.isFinite()) bounds.endInclusive.toFloat() else maxOf(current, bounds.start.toFloat()) + step
+    val stepCount = ((reportedEnd - bounds.start.toFloat()) / step).roundToInt() - 1
     val valueColor = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
     val capsuleColor = MaterialTheme.colorScheme.surfaceVariant
     val textStyle = MaterialTheme.typography.bodyLarge.copy(
@@ -201,7 +204,7 @@ fun NumberStepperField(
                     stateDescription = valueWithUnit
                     if (!enabled) disabled()
                     progressBarRangeInfo =
-                        ProgressBarRangeInfo(current, valueRange.start..reportedEnd, stepCount.coerceAtLeast(0))
+                        ProgressBarRangeInfo(current, bounds.start.toFloat()..reportedEnd, stepCount.coerceAtLeast(0))
                     if (enabled) {
                         // SetProgress sets a value. TalkBack sends the next step, other services can send any value.
                         setProgress { target ->
@@ -321,7 +324,7 @@ fun NumberStepperField(
                 Row(Modifier.matchParentSize(), verticalAlignment = Alignment.CenterVertically) {
                     StepperButton(
                         icon = IconPack.Minus,
-                        enabled = enabled && current > valueRange.start,
+                        enabled = enabled && current > bounds.start.toFloat(),
                         onPress = onPress,
                         onTrigger = { step(NumberStepperMath.Direction.Down) },
                         onPressingChanged = { latestOnEditingChanged(it) },
@@ -335,7 +338,7 @@ fun NumberStepperField(
                     )
                     StepperButton(
                         icon = IconPack.Plus,
-                        enabled = enabled && current < valueRange.endInclusive,
+                        enabled = enabled && current < bounds.endInclusive.toFloat(),
                         onPress = onPress,
                         onTrigger = { step(NumberStepperMath.Direction.Up) },
                         onPressingChanged = { latestOnEditingChanged(it) },
